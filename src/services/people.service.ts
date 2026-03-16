@@ -191,16 +191,24 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
         // Inbound = Receiving repayment/Income for them = They owe us LESS (Decrease balance)
         const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (fromAccId === debtAccountId)
 
+        // Cashback sharing logic: Only subtract from debt if cashback is meant to be shared with them
+        const sharePercent = Number(txn.cashback_share_percent ?? txn.metadata?.cashback_share_percent ?? 0)
+        const shareFixed = Number(txn.cashback_share_fixed ?? txn.metadata?.cashback_share_fixed ?? 0)
+        const hasShare = sharePercent > 0 || shareFixed > 0
+        const sharedCashback = hasShare ? ((rawAmount * (sharePercent > 1 ? sharePercent/100 : sharePercent)) + shareFixed) : 0
+        
+        const effectiveLend = rawAmount - sharedCashback
+
         if (isOutbound) {
           stats.baseLend += rawAmount
           stats.cashback += cashback
-          stats.totalBalance += netAmount
-          cycleBalances.set(normalizedTag, (cycleBalances.get(normalizedTag) || 0) + netAmount);
+          stats.totalBalance += effectiveLend
+          cycleBalances.set(normalizedTag, (cycleBalances.get(normalizedTag) || 0) + effectiveLend);
 
           if (isCurrentCycle) {
-            stats.currentCycleDebt += netAmount
+            stats.currentCycleDebt += effectiveLend
           } else {
-            stats.outstandingDebt += netAmount
+            stats.outstandingDebt += effectiveLend
           }
         } else if (isInbound) {
           stats.repaid += rawAmount

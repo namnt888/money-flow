@@ -33,7 +33,10 @@ import {
     UserSquare2,
     ArrowRight,
     Copy,
-    Database
+    Database,
+    Check,
+    FileSpreadsheet,
+    ExternalLink
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -104,6 +107,7 @@ export function AccountRowV2({
     const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
     const [people, setPeople] = useState<Person[]>([]);
     const [shops, setShops] = useState<Shop[]>([]);
+    const [copied, setCopied] = useState(false);
 
     const handleEditTransaction = (id: string) => {
         if (people.length === 0 || shops.length === 0) {
@@ -410,14 +414,8 @@ function renderCell(
                         </div>
                         <div className="flex items-center justify-between min-w-0 flex-1 gap-3">
                             <div className="flex items-center gap-2 min-w-0">
-                                {account.type === 'credit_card' && <CreditCard className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
-                                {account.type === 'bank' && <Banknote className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
-                                {account.type === 'ewallet' && <Wallet className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
-                                {account.type === 'savings' && <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                                {account.type === 'debt' && <HandCoins className="w-3.5 h-3.5 text-rose-500 shrink-0" />}
-
-                                <div className="flex flex-col gap-1 min-w-0">
-                                    <div className="flex items-center gap-2">
+                                 <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 group/name-row">
                                          <div className="flex items-center gap-1 shrink-0 opacity-100 transition-opacity">
                                              <TooltipProvider>
                                                  <Tooltip>
@@ -425,16 +423,32 @@ function renderCell(
                                                          <Button
                                                              variant="outline"
                                                              size="sm"
-                                                             className="h-5 text-[9px] font-black uppercase text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border-slate-200 px-1.5"
+                                                             className={cn(
+                                                                 "h-5 text-[9px] font-black uppercase transition-all border-slate-200 px-1.5",
+                                                                 copied ? "text-emerald-600 bg-emerald-50 border-emerald-200" : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                                             )}
                                                              onClick={(e) => {
                                                                  e.stopPropagation();
                                                                  navigator.clipboard.writeText(account.id);
-                                                                 import('sonner').then(({ toast }) => toast.success('Copied ID', {
+                                                                 setCopied(true);
+                                                                 import('sonner').then(({ toast }) => toast.success('Copied Account ID', {
                                                                      description: account.id
                                                                  }));
+                                                                 setTimeout(() => setCopied(false), 2000);
                                                              }}
                                                          >
-                                                             <Copy className="h-3 w-3 mr-1" />
+                                                             {copied ? (
+                                                                 <Check className="h-3 w-3 mr-1 text-emerald-600" />
+                                                             ) : (
+                                                                 <>
+                                                                     {account.type === 'credit_card' && <CreditCard className="w-3 h-3 mr-1 text-indigo-500" />}
+                                                                     {account.type === 'bank' && <Banknote className="w-3 h-3 mr-1 text-blue-500" />}
+                                                                     {account.type === 'ewallet' && <Wallet className="w-3 h-3 mr-1 text-purple-500" />}
+                                                                     {account.type === 'savings' && <ArrowUpRight className="w-3 h-3 mr-1 text-emerald-500" />}
+                                                                     {account.type === 'debt' && <HandCoins className="w-3 h-3 mr-1 text-rose-500" />}
+                                                                     {!['credit_card', 'bank', 'ewallet', 'savings', 'debt'].includes(account.type || '') && <Copy className="h-3 w-3 mr-1" />}
+                                                                 </>
+                                                             )}
                                                              ID
                                                          </Button>
                                                      </TooltipTrigger>
@@ -442,7 +456,53 @@ function renderCell(
                                                          <p className="text-[10px] font-bold">Copy ID: {account.id}</p>
                                                      </TooltipContent>
                                                  </Tooltip>
+                                             </TooltipProvider>
+                                         </div>
 
+                                         <Link
+                                             href={`/accounts/${account.id}`}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate group-hover/row:translate-x-0.5 transform duration-200"
+                                             onClick={(e) => e.stopPropagation()}
+                                         >
+                                             {account.name}
+                                         </Link>
+
+                                         {pendingCount > 0 && (
+                                            <Link
+                                                href={`/accounts/${account.id}?pending=1`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 shrink-0"
+                                                title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <AlertCircle className="h-2.5 w-2.5" />
+                                                {pendingCount} Pending
+                                            </Link>
+                                         )}
+
+                                              <TooltipProvider>
+                                                 <Tooltip>
+                                                     <TooltipTrigger asChild>
+                                                         <button
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 window.open(`/accounts/${account.id}`, "_blank", "noopener,noreferrer");
+                                                             }}
+                                                             className="h-5 w-5 text-slate-300 hover:text-blue-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                                                         >
+                                                             <ExternalLink className="h-3 w-3" />
+                                                         </button>
+                                                     </TooltipTrigger>
+                                                     <TooltipContent className="bg-slate-900 border-none">
+                                                         <p className="text-[10px] font-bold">Open Account Details (new tab)</p>
+                                                     </TooltipContent>
+                                                 </Tooltip>
+                                             </TooltipProvider>
+
+                                             <TooltipProvider>
                                                  <Tooltip>
                                                      <TooltipTrigger asChild>
                                                          <button
@@ -451,7 +511,7 @@ function renderCell(
                                                                  const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=accounts&filter=${encodeURIComponent(account.id)}&sort=-%40rowid`;
                                                                  window.open(url, "_blank", "noopener,noreferrer");
                                                              }}
-                                                             className="h-5 text-slate-300 hover:text-indigo-600 transition-all px-1 inline-flex items-center"
+                                                             className="h-5 w-5 text-slate-300 hover:text-indigo-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
                                                          >
                                                              <Database className="h-3 w-3" />
                                                          </button>
@@ -462,27 +522,7 @@ function renderCell(
                                                  </Tooltip>
                                              </TooltipProvider>
                                          </div>
-
-                                         <Link
-                                             href={`/accounts/${account.id}`}
-                                             target="_blank"
-                                             rel="noopener noreferrer"
-                                             className="font-black text-base leading-none hover:underline hover:text-indigo-600 transition-colors truncate"
-                                             onClick={(e) => e.stopPropagation()}
-                                         >
-                                             {account.name}
-                                         </Link>
-                                         {pendingCount > 0 && (
-                                            <Link
-                                                href={`/accounts/${account.id}?pending=1`}
-                                                className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100"
-                                                title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <AlertCircle className="h-2.5 w-2.5" />
-                                                {pendingCount} Pending
-                                            </Link>
-                                        )}
+                                    </div>
                                     </div>
                                     {(account.receiver_name || account.account_number) && (
                                         <div className="flex items-center gap-1.5 min-w-0">
@@ -611,11 +651,9 @@ function renderCell(
                                 })()}
                             </div>
                         </div>
-                    </div>
 
-                    {
-                        isExpanded && children.length > 0 && (
-                            <div className="ml-10 flex flex-col gap-1 border-l-2 border-indigo-100 pl-3 py-1">
+                        {isExpanded && children.length > 0 && (
+                            <div className="ml-10 flex flex-col gap-1 border-l-2 border-indigo-100 pl-3 py-1 mt-2">
                                 {children.map((child: Account) => (
                                     <div key={child.id} className="flex items-center justify-between gap-2 py-0.5">
                                         <div className="flex items-center gap-2 min-w-0">
@@ -645,12 +683,11 @@ function renderCell(
                                     </div>
                                 ))}
                             </div>
-                        )
-                    }
-                </div >
-            );
-        }
-        case 'role': {
+                        )}
+                    </div>
+                );
+            }
+            case 'role': {
             return (
                 <div className="flex flex-row items-center justify-center min-w-[190px] group/role-cell">
                     {/* Role Badge (Left) */}

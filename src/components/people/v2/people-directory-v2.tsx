@@ -133,6 +133,13 @@ export function PeopleDirectoryV2({
                     valB = b.current_debt_balance || 0;
                 }
 
+                // If values are equal, fallback to default priority: has sheet
+                if (valA === valB) {
+                    const hasSheetA = (a.google_sheet_url?.trim() || a.sheet_link?.trim() || (a.cycle_sheets && a.cycle_sheets.length > 0)) ? 1 : 0;
+                    const hasSheetB = (b.google_sheet_url?.trim() || b.sheet_link?.trim() || (b.cycle_sheets && b.cycle_sheets.length > 0)) ? 1 : 0;
+                    if (hasSheetA !== hasSheetB) return hasSheetB - hasSheetA;
+                }
+
                 if (typeof valA === 'string' && typeof valB === 'string') {
                     return sortConfig.direction === 'asc'
                         ? valA.localeCompare(valB)
@@ -144,16 +151,21 @@ export function PeopleDirectoryV2({
                     : (valA < valB ? 1 : -1);
             });
         } else {
-            // Default Sort: by current_debt (highest first), prioritizing those with sheet configs
+            // Default Sort: prioritize those with sheet configs, then by balance (highest first)
             result.sort((a, b) => {
-                const hasSheetA = !!a.google_sheet_url || !!a.sheet_link;
-                const hasSheetB = !!b.google_sheet_url || !!b.sheet_link;
+                const hasSheetA = (a.google_sheet_url?.trim() || a.sheet_link?.trim() || (a.cycle_sheets && a.cycle_sheets.length > 0)) ? 1 : 0;
+                const hasSheetB = (b.google_sheet_url?.trim() || b.sheet_link?.trim() || (b.cycle_sheets && b.cycle_sheets.length > 0)) ? 1 : 0;
                 
-                if (hasSheetA !== hasSheetB) return hasSheetB ? 1 : -1;
+                if (hasSheetA !== hasSheetB) return hasSheetB - hasSheetA;
 
-                const currentDebtA = (a.current_cycle_debt || 0) + (a.outstanding_debt || 0);
-                const currentDebtB = (b.current_cycle_debt || 0) + (b.outstanding_debt || 0);
-                return currentDebtB - currentDebtA;
+                const balanceA = a.current_debt_balance || 0;
+                const balanceB = b.current_debt_balance || 0;
+                
+                if (balanceA !== balanceB) return balanceB - balanceA;
+
+                const totalDebtA = (a.current_cycle_debt || 0) + (a.outstanding_debt || 0);
+                const totalDebtB = (b.current_cycle_debt || 0) + (b.outstanding_debt || 0);
+                return totalDebtB - totalDebtA;
             });
         }
 

@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Person } from "@/types/moneyflow.types";
 import { PeopleColumnConfig } from "@/hooks/usePeopleColumnPreferences";
@@ -7,7 +9,7 @@ import { PeopleRowDetailsV2 } from "./people-row-details-v2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, User, CheckCircle2, HandCoins, Banknote, ExternalLink, RotateCw, FileSpreadsheet, Calendar, RefreshCcw, Landmark, Info, Copy, Database } from "lucide-react";
+import { Edit, User, CheckCircle2, HandCoins, Banknote, ExternalLink, RotateCw, FileSpreadsheet, Calendar, RefreshCcw, Landmark, Info, Copy, Database, Check } from "lucide-react";
 import { cn, formatMoneyVND, formatVNLongAmount } from "@/lib/utils";
 import { getPersonRouteId } from '@/lib/person-route';
 import { SubscriptionBadges } from "./subscription-badges";
@@ -48,7 +50,7 @@ const VNLongAmount = ({ amount, className }: { amount: number, className?: strin
 };
 
 const AmountCellV2 = ({ amount, className }: { amount: number, className?: string }) => {
-    if (amount === 0) {
+    if (amount === 0 || amount === null || amount === undefined) {
         return (
             <span className="tabular-nums font-medium text-slate-400 opacity-20 text-xs text-center w-full">
                 —
@@ -91,6 +93,7 @@ export function PeopleRowV2({
     onSync,
     accounts = [],
 }: PeopleRowProps) {
+    const [copied, setCopied] = useState(false);
     const handleRowClick = (e: React.MouseEvent) => {
         // Only expand on row click if not clicking action buttons
         const target = e.target as HTMLElement;
@@ -131,7 +134,7 @@ export function PeopleRowV2({
                             col.key === 'name' && "sticky left-10 z-10 bg-inherit"
                         )}
                     >
-                        {renderCell(person, col.key, onEdit, onLend, onRepay, onSync, accounts)}
+                        {renderCell(person, col.key, onEdit, onLend, onRepay, { copied, setCopied }, onSync, accounts)}
                     </td>
                 ))}
             </tr>
@@ -150,13 +153,14 @@ export function PeopleRowV2({
         </>
     );
 }
-function renderCell(person: Person, key: string, onEdit: (p: Person) => void, onLend: (p: Person) => void, onRepay: (p: Person) => void, onSync?: (pid: string) => void, accounts?: Account[]) {
+function renderCell(person: Person, key: string, onEdit: (p: Person) => void, onLend: (p: Person) => void, onRepay: (p: Person) => void, copyState: { copied: boolean, setCopied: (v: boolean) => void }, onSync?: (pid: string) => void, accounts?: Account[]) {
     const remainsAmt = person.current_debt_balance || 0;
+    const { copied, setCopied } = copyState;
 
     switch (key) {
         case 'name':
             return (
-                <div className="flex items-center gap-3 group/name">
+                <div className="flex items-center gap-3 group/name w-full">
                     <Avatar className="h-10 w-10 rounded-none border border-slate-200 flex-shrink-0 cursor-pointer" onClick={() => onEdit(person)}>
                         <AvatarImage src={person.image_url || undefined} alt={person.name} className="object-cover" />
                         <AvatarFallback className="text-xs bg-primary/10 text-primary rounded-none">
@@ -164,7 +168,7 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-                        <div className="flex items-center gap-2 w-full">
+                        <div className="flex items-center gap-2 w-full group/name-row">
                             <div className="flex items-center gap-1 shrink-0">
                                 <TooltipProvider>
                                     <Tooltip>
@@ -172,16 +176,25 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-5 text-[9px] font-black uppercase text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border-slate-200 px-1.5"
+                                                className={cn(
+                                                    "h-5 text-[9px] font-black uppercase transition-all border-slate-200 px-1.5",
+                                                    copied ? "text-emerald-600 bg-emerald-50 border-emerald-200" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                                )}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     navigator.clipboard.writeText(person.id);
-                                                    import('sonner').then(({ toast }) => toast.success('Copied ID', {
+                                                    setCopied(true);
+                                                    import('sonner').then(({ toast }) => toast.success('Copied Person ID', {
                                                         description: person.id
                                                     }));
+                                                    setTimeout(() => setCopied(false), 2000);
                                                 }}
                                             >
-                                                <Copy className="h-3 w-3 mr-1" />
+                                                {copied ? (
+                                                    <Check className="h-3 w-3 mr-1 text-emerald-600" />
+                                                ) : (
+                                                    <User className="h-3 w-3 mr-1 text-slate-400" />
+                                                )}
                                                 ID
                                             </Button>
                                         </TooltipTrigger>
@@ -189,7 +202,61 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                                             <p className="text-[10px] font-bold">Copy ID: {person.id}</p>
                                         </TooltipContent>
                                     </Tooltip>
+                                </TooltipProvider>
+                            </div>
 
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`/people/${getPersonRouteId(person)}`, "_blank", "noopener,noreferrer");
+                                    }}
+                                    className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate text-left"
+                                >
+                                    {person.name}
+                                </button>
+
+                            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    window.open(`/people/${getPersonRouteId(person)}`, "_blank", "noopener,noreferrer");
+                                                }}
+                                                className="h-5 w-5 text-slate-300 hover:text-blue-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                                            >
+                                                <ExternalLink className="h-3 w-3" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 border-none">
+                                            <p className="text-[10px] font-bold">Open details in new tab</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+
+                                {(person.google_sheet_url || person.sheet_link) && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <a
+                                                    href={person.google_sheet_url || person.sheet_link || '#'}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="h-5 w-5 text-slate-300 hover:text-emerald-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <FileSpreadsheet className="h-3 w-3" />
+                                                </a>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="bg-slate-900 border-none">
+                                                <p className="text-[10px] font-bold">Open Google Sheet</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+
+                                <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <button
@@ -198,7 +265,7 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                                                     const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_people_001&filter=${encodeURIComponent(person.id)}&sort=-%40rowid`;
                                                     window.open(url, "_blank", "noopener,noreferrer");
                                                 }}
-                                                className="h-5 text-slate-300 hover:text-indigo-600 transition-all px-1 inline-flex items-center"
+                                                className="h-5 w-5 text-slate-300 hover:text-indigo-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
                                             >
                                                 <Database className="h-3 w-3" />
                                             </button>
@@ -208,20 +275,8 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                            </div>
 
-                            <Link
-                                href={`/people/${getPersonRouteId(person)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {person.name}
-                            </Link>
-
-                            <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
-                                {person.is_group && <span className="text-[10px] text-muted-foreground bg-slate-100 px-1 rounded">Group</span>}
+                                {person.is_group && <span className="text-[10px] font-black text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">Group</span>}
                                 <SubscriptionBadges
                                     subscriptions={person.subscription_details || []}
                                     maxDisplay={2}
@@ -280,10 +335,10 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                 </div>
             );
         }
-        case 'current_debt': // Outstanding
+        case 'current_debt': // Rewards
             return (
                 <AmountCellV2
-                    amount={person.current_cycle_debt || 0}
+                    amount={person.total_cashback || 0}
                     className="text-amber-600 font-bold"
                 />
             );
@@ -294,19 +349,14 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                     className="text-slate-500 font-bold"
                 />
             );
-        case 'cashback': // Settled (Repaid Portion)
-            const settled = (person.total_repaid || 0);
+        case 'cashback': // Repaid Portion
+            const repaid = (person.total_repaid || 0);
             return (
                 <div className="flex flex-col items-end">
                     <AmountCellV2
-                        amount={settled}
+                        amount={repaid}
                         className="text-emerald-600 font-bold"
                     />
-                    {person.total_cashback > 0 && (
-                        <span className="text-[9px] font-bold text-amber-600 uppercase">
-                             +{formatMoneyVND(person.total_cashback)} Rewards
-                        </span>
-                    )}
                 </div>
             );
         case 'net_lend': // Prev Debt
