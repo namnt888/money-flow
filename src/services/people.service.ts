@@ -184,10 +184,12 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
       if (normalizedTag) {
         const currentCycleBalance = cycleBalances.get(normalizedTag) || 0;
         
-        // Outbound (Lend/Expense)
-        const isOutbound = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (fromAccId === debtAccountId)
-        // Inbound (Repay/Repayment/Income)
-        const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (toAccId === debtAccountId)
+        // Identify if money is entering or leaving the "debt pool" for this person
+        // Outbound = Lending money/Paying expense for them = They owe us MORE (Increase balance)
+        const isOutbound = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (toAccId === debtAccountId)
+        
+        // Inbound = Receiving repayment/Income for them = They owe us LESS (Decrease balance)
+        const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (fromAccId === debtAccountId)
 
         if (isOutbound) {
           stats.baseLend += rawAmount
@@ -255,6 +257,7 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
         ...person,
         debt_account_id: debtAccount?.id ?? null,
         current_debt_balance: finalTotalBalance,
+        balance: finalTotalBalance, // Standard field for remains
         current_cycle_debt: finalCurrentCycleDebt,
         outstanding_debt: finalOutstandingDebt,
         total_base_debt: Math.round(stats?.baseLend ?? 0),

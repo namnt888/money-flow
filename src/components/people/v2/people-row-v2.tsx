@@ -151,7 +151,7 @@ export function PeopleRowV2({
     );
 }
 function renderCell(person: Person, key: string, onEdit: (p: Person) => void, onLend: (p: Person) => void, onRepay: (p: Person) => void, onSync?: (pid: string) => void, accounts?: Account[]) {
-    const remainsAmt = person.total_balance || 0;
+    const remainsAmt = person.current_debt_balance || 0;
 
     switch (key) {
         case 'name':

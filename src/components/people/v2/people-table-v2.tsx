@@ -120,6 +120,11 @@ export function PeopleTableV2({
         // Sort members within groups
         Object.values(groups).forEach(group => {
             group.members.sort((a, b) => {
+                // Priority: has sheet config
+                const hasSheetA = !!a.google_sheet_url || !!a.sheet_link;
+                const hasSheetB = !!b.google_sheet_url || !!b.sheet_link;
+                if (hasSheetA !== hasSheetB) return hasSheetB ? 1 : -1;
+
                 let valA: any = (a as any)[sortConfig.key] ?? 0;
                 let valB: any = (b as any)[sortConfig.key] ?? 0;
 

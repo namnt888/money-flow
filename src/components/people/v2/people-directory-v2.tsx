@@ -93,7 +93,7 @@ export function PeopleDirectoryV2({
 
     // Filtering Logic
     const filteredPeople = useMemo(() => {
-        let result = people;
+        let result = [...people];
 
         // Archive Filter (from toggle)
         result = result.filter(p => showArchived ? p.is_archived : !p.is_archived);
@@ -128,6 +128,9 @@ export function PeopleDirectoryV2({
                 } else if (sortConfig.key === 'current_debt') {
                     valA = a.current_cycle_debt || 0;
                     valB = b.current_cycle_debt || 0;
+                } else if (sortConfig.key === 'balance') {
+                    valA = a.current_debt_balance || 0;
+                    valB = b.current_debt_balance || 0;
                 }
 
                 if (typeof valA === 'string' && typeof valB === 'string') {

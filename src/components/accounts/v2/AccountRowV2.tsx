@@ -31,7 +31,9 @@ import {
     CircleDashed,
     Crown,
     UserSquare2,
-    ArrowRight
+    ArrowRight,
+    Copy,
+    Database
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
