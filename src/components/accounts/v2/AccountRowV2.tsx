@@ -188,21 +188,7 @@ export function AccountRowV2({
                         "px-4 py-3 align-middle text-sm font-normal text-foreground",
                         idx < visibleColumns.length - 1 && "border-r border-slate-200"
                     )}>
-                        {renderCell(
-                            account,
-                            col.key,
-                            { onEdit, onLend, onRepay, onPay, onTransfer },
-                            familyBalance,
-                            allAccounts,
-                            isExpanded,
-                            categories,
-                            setIsTransactionsModalOpen,
-                            isTransactionsModalOpen,
-                            onEditTransaction,
-                            modalRefreshKey,
-                            initialPeople,
-                            pendingSummaryMap
-                        )}
+                        {renderCell(col.key)}
                     </td>
                 ))}
             </tr>
@@ -240,40 +226,10 @@ export function AccountRowV2({
                 />
             )}
         </>
-    );
-}
 
-interface AccountRowActions {
-    onEdit: (account: Account) => void;
-    onLend: (account: Account) => void;
-    onRepay: (account: Account) => void;
-    onPay: (account: Account) => void;
-    onTransfer: (account: Account) => void;
-}
-
-function renderCell(
-    account: Account,
-    key: AccountColumnKey,
-    actions: AccountRowActions,
-    familyBalance?: number,
-    allAccounts?: Account[],
-    isExpanded?: boolean,
-    categories?: Category[],
-    setIsTransactionsModalOpen?: (open: boolean) => void,
-    isTransactionsModalOpen?: boolean,
-    onEditTransaction?: (id: string) => void,
-    modalRefreshKey?: number,
-    people?: Person[],
-    pendingSummaryMap?: Record<string, {
-        count: number
-        totalAmount: number
-        accountName?: string | null
-    }>
-) {
-    const { onEdit, onLend, onRepay, onPay, onTransfer } = actions;
-    const stats = account.stats;
-
-    const badgeBase = "h-6 px-3 text-[10px] font-semibold uppercase tracking-wide rounded-full border flex items-center justify-center gap-1 min-w-[96px]";
+    const renderCell = (key: AccountColumnKey) => {
+        const stats = account.stats;
+        const badgeBase = "h-6 px-3 text-[10px] font-semibold uppercase tracking-wide rounded-full border flex items-center justify-center gap-1 min-w-[96px]";
 
     const renderRoleBadge = (role: 'parent' | 'child' | 'standalone') => {
         const base = "h-7 px-3 text-[10px] font-black uppercase tracking-[0.15em] rounded-lg border-2 flex items-center justify-center gap-2 w-[115px] shadow-sm transition-all duration-300";
@@ -483,6 +439,7 @@ function renderCell(
                                             </Link>
                                          )}
 
+                                          <div className="ml-auto flex items-center gap-1 shrink-0">
                                               <TooltipProvider>
                                                  <Tooltip>
                                                      <TooltipTrigger asChild>
@@ -650,7 +607,6 @@ function renderCell(
                                     }
                                 })()}
                             </div>
-                        </div>
 
                         {isExpanded && children.length > 0 && (
                             <div className="ml-10 flex flex-col gap-1 border-l-2 border-indigo-100 pl-3 py-1 mt-2">
@@ -1180,6 +1136,14 @@ function renderCell(
         default:
             return <span className="text-slate-300">—</span>;
     }
+}
+
+interface AccountRowActions {
+    onEdit: (account: Account) => void;
+    onLend: (account: Account) => void;
+    onRepay: (account: Account) => void;
+    onPay: (account: Account) => void;
+    onTransfer: (account: Account) => void;
 }
 
 interface ActionButtonsProps {
