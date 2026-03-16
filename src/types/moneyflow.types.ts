@@ -179,6 +179,8 @@ export type Person = {
   total_net_debt?: number | null
   total_repaid?: number | null
   current_debt_balance?: number | null
+  past_due_count?: number | null
+  metadata?: any
 }
 
 export type SubscriptionMember = {
@@ -278,6 +280,39 @@ export type TransactionWithDetails = TransactionRow & {
   account_billing_cycle?: string | null;
   derived_cycle_tag?: string | null;
   parent_transaction_id?: string | null;
+}
+
+export type InstallmentStatus = 'active' | 'completed' | 'settled_early' | 'cancelled';
+export type InstallmentType = 'credit_card' | 'p2p_lending';
+
+export interface Installment {
+    id: string;
+    created_at: string;
+    original_transaction_id: string | null;
+    owner_id: string;
+    debtor_id: string | null;
+    name: string;
+    total_amount: number;
+    conversion_fee: number;
+    term_months: number;
+    total_months?: number; // Alias for term_months
+    months_paid?: number;
+    monthly_amount: number;
+    start_date: string;
+    remaining_amount: number;
+    next_due_date: string | null;
+    status: InstallmentStatus;
+    type: InstallmentType;
+    original_transaction?: {
+        account_id?: string;
+        account?: {
+            name: string;
+        } | null;
+        person?: {
+            name: string;
+        } | null;
+    } | null;
+    expand?: any; // For flexible expansions
 }
 
 export type CashbackCard = {

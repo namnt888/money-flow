@@ -416,16 +416,61 @@ function renderCell(
 
                                 <div className="flex flex-col gap-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <Link
-                                            href={`/accounts/${account.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="font-black text-base leading-none hover:underline hover:text-indigo-600 transition-colors truncate"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            {account.name}
-                                        </Link>
-                                        {pendingCount > 0 && (
+                                         <div className="flex items-center gap-1 shrink-0 opacity-100 transition-opacity">
+                                             <TooltipProvider>
+                                                 <Tooltip>
+                                                     <TooltipTrigger asChild>
+                                                         <Button
+                                                             variant="outline"
+                                                             size="sm"
+                                                             className="h-5 text-[9px] font-black uppercase text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border-slate-200 px-1.5"
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 navigator.clipboard.writeText(account.id);
+                                                                 import('sonner').then(({ toast }) => toast.success('Copied ID', {
+                                                                     description: account.id
+                                                                 }));
+                                                             }}
+                                                         >
+                                                             <Copy className="h-3 w-3 mr-1" />
+                                                             ID
+                                                         </Button>
+                                                     </TooltipTrigger>
+                                                     <TooltipContent className="bg-slate-900 border-none">
+                                                         <p className="text-[10px] font-bold">Copy ID: {account.id}</p>
+                                                     </TooltipContent>
+                                                 </Tooltip>
+
+                                                 <Tooltip>
+                                                     <TooltipTrigger asChild>
+                                                         <button
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=accounts&filter=${encodeURIComponent(account.id)}&sort=-%40rowid`;
+                                                                 window.open(url, "_blank", "noopener,noreferrer");
+                                                             }}
+                                                             className="h-5 text-slate-300 hover:text-indigo-600 transition-all px-1 inline-flex items-center"
+                                                         >
+                                                             <Database className="h-3 w-3" />
+                                                         </button>
+                                                     </TooltipTrigger>
+                                                     <TooltipContent className="bg-slate-900 border-none">
+                                                         <p className="text-[10px] font-bold">Open Account DB (new tab)</p>
+                                                     </TooltipContent>
+                                                 </Tooltip>
+                                             </TooltipProvider>
+                                         </div>
+
+                                         <Link
+                                             href={`/accounts/${account.id}`}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="font-black text-base leading-none hover:underline hover:text-indigo-600 transition-colors truncate"
+                                             onClick={(e) => e.stopPropagation()}
+                                         >
+                                             {account.name}
+                                         </Link>
+                                         {pendingCount > 0 && (
                                             <Link
                                                 href={`/accounts/${account.id}?pending=1`}
                                                 className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100"

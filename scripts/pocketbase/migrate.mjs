@@ -563,6 +563,7 @@ async function migrate() {
                 final_price: parseFloat(t.final_price || 0),
                 cashback_amount: parseFloat(t.cashback_share_fixed || 0),
                 is_installment: t.is_installment || false,
+                installment_plan_id: t.installment_plan_id ? toPocketBaseId(t.installment_plan_id, 'installments') : null,
                 parent_transaction_id: t.parent_transaction_id ? toPocketBaseId(t.parent_transaction_id, 'transactions') : null,
                 debt_cycle_tag: t.tag ?? null,
                 persisted_cycle_tag: persistedCycleTag ?? null,

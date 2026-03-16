@@ -14,10 +14,10 @@ const defaultPeopleColumns: PeopleColumnConfig[] = [
     { key: 'name', label: 'Name', defaultWidth: 160, minWidth: 140, frozen: true },
     { key: 'base_lend', label: 'Base Lend', defaultWidth: 140, minWidth: 120 },
     { key: 'cashback', label: 'Settled', defaultWidth: 140, minWidth: 120 },
-    { key: 'net_lend', label: 'Outstanding', defaultWidth: 140, minWidth: 120 },
+    { key: 'net_lend', label: 'Prev Debt', defaultWidth: 140, minWidth: 120 },
     { key: 'balance', label: 'Remains', defaultWidth: 150, minWidth: 120 },
-    { key: 'current_tag', label: 'Current Tag', defaultWidth: 200, minWidth: 180 },
-    { key: 'current_debt', label: 'Current Cycle', defaultWidth: 140, minWidth: 120 },
+    { key: 'current_tag', label: 'Current Tag', defaultWidth: 300, minWidth: 280 },
+    { key: 'current_debt', label: 'Outstanding', defaultWidth: 140, minWidth: 120 },
     { key: 'action', label: 'Actions', defaultWidth: 100, minWidth: 80, frozen: true },
 ];
 

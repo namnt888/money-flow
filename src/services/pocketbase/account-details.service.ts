@@ -6,6 +6,7 @@ import {
   Person,
   Shop,
   TransactionWithDetails,
+  Installment,
 } from "@/types/moneyflow.types";
 import { AccountSpendingStats, RuleProgress } from "@/types/cashback.types";
 import {
@@ -25,6 +26,8 @@ import {
   toPocketBaseId,
 } from "./server";
 import { resolvePocketBasePersonRecord } from "./people.service";
+import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
+import { createClient } from "@/lib/supabase/server";
 
 type PocketBaseRecord = Record<string, any>;
 
@@ -121,6 +124,48 @@ function mapShop(record: PocketBaseRecord): Shop {
     image_url: record.image_url || null,
     default_category_id: record.default_category_id || null,
     is_archived: Boolean(record.is_archived || false),
+  };
+}
+
+function mapInstallment(record: PocketBaseRecord): Installment {
+  const expandedTxn = record.expand?.original_transaction_id;
+  const expandedAccount = expandedTxn?.expand?.account_id;
+  const expandedPerson = expandedTxn?.expand?.person_id;
+
+  return {
+    id: record.id,
+    created_at: record.created || record.created_at,
+    original_transaction_id: record.original_transaction_id || null,
+    owner_id: record.owner_id || "",
+    debtor_id: record.debtor_id || null,
+    name: record.name || "Untitled Plan",
+    total_amount: Number(record.total_amount || 0),
+    conversion_fee: Number(record.conversion_fee || 0),
+    term_months: Number(record.term_months || 0),
+    total_months: Number(record.term_months || 0),
+    months_paid: Number(record.months_paid || 0),
+    monthly_amount: Number(record.monthly_amount || 0),
+    start_date: record.start_date || record.created,
+    remaining_amount: Number(record.remaining_amount || 0),
+    next_due_date: record.next_due_date || null,
+    status: record.status || "active",
+    type: record.type || "credit_card",
+    expand: record.expand || null,
+    original_transaction: expandedTxn
+      ? {
+          account_id: expandedTxn.account_id,
+          account: expandedAccount
+            ? {
+                name: expandedAccount.name,
+              }
+            : null,
+          person: expandedPerson
+            ? {
+                name: expandedPerson.name,
+              }
+            : null,
+        }
+      : null,
   };
 }
 
@@ -261,6 +306,7 @@ function mapTransaction(
     cashback_amount: Number(record.cashback_amount || 0),
     cashback_share_amount: record.cashback_amount ?? null,
     is_installment: Boolean(record.is_installment || false),
+    installment_plan_id: record.installment_plan_id || null,
     parent_transaction_id: record.parent_transaction_id || null,
     metadata: {
       ...(record.metadata || {}),
@@ -368,14 +414,36 @@ async function resolvePocketBaseAccountRecord(
 }
 
 export async function getPocketBaseCategories(): Promise<Category[]> {
-  // log removed for production-like feel
-  // Removed sort parameter - PocketBase has issues with sorting, results sorted client-side anyway
-  const records = await listAllRecords("categories");
-  const items = records
-    .map(mapCategory)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  console.log("[DB:PB] categories.list →", items.length, "records");
-  return items;
+  return executeWithFallback(
+    async () => {
+      logSource("PB", "categories.list");
+      const records = await listAllRecords("categories");
+      return records
+        .map(mapCategory)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
+    async () => {
+      logSource("SB", "categories.list fallback");
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        type: (item.type || "expense").toLowerCase() as Category["type"],
+        icon: item.icon,
+        image_url: item.image_url,
+        kind: item.kind,
+        is_archived: Boolean(item.is_archived),
+        slug: item.id,
+      }));
+    },
+    "categories.list"
+  );
 }
 
 export async function createPocketBaseCategory(
@@ -527,14 +595,50 @@ export async function getPocketBasePeople(): Promise<Person[]> {
 }
 
 export async function getPocketBaseShops(): Promise<Shop[]> {
-  console.log("[DB:PB] shops.list");
-  // Removed sort parameter - PocketBase has issues with sorting, results sorted client-side anyway
-  const records = await listAllRecords("shops");
-  const items = records
-    .map(mapShop)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  console.log("[DB:PB] shops.list →", items.length, "records");
-  return items;
+  return executeWithFallback(
+    async () => {
+      logSource("PB", "shops.list");
+      const records = await listAllRecords("shops");
+      return records
+        .map(mapShop)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
+    async () => {
+      logSource("SB", "shops.list fallback");
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("shops")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        image_url: item.image_url,
+        default_category_id: item.default_category_id,
+        is_archived: Boolean(item.is_archived),
+      }));
+    },
+    "shops.list"
+  );
+}
+
+export async function getPocketBaseInstallmentPlan(id: string): Promise<Installment | null> {
+  try {
+    const pbId = toPocketBaseId(id, 'installments');
+    const record = await pocketbaseGetById<PocketBaseRecord>('installments', pbId, 
+      'account_id,original_transaction_id,original_transaction_id.account_id,original_transaction_id.person_id'
+    );
+    return record ? mapInstallment(record) : null;
+  } catch (error) {
+    console.warn("[DB:PB] getPocketBaseInstallmentPlan failed", { id, error });
+    return null;
+  }
+}
+
+export async function getPocketBaseTransactionsByPlan(planId: string): Promise<TransactionWithDetails[]> {
+  return loadPocketBaseTransactions({ installmentPlanId: planId });
 }
 
 export async function createPocketBaseShop(
@@ -806,9 +910,9 @@ export async function createPocketBaseAccount(
     cb_min_spend?: number | null;
     cb_cycle_type?: string;
   },
-): Promise<boolean> {
+): Promise<{ success: boolean; id?: string; error?: string }> {
   const pbId = toPocketBaseId(supabaseAccountId);
-  const pbOwnerId = data.owner_id ? toPocketBaseId(data.owner_id) : null;
+  // NOTE: do NOT toPocketBaseId for owner_id — it is optional and omitted for new accounts
   const pbParentId = data.parent_account_id
     ? toPocketBaseId(data.parent_account_id)
     : null;
@@ -824,7 +928,7 @@ export async function createPocketBaseAccount(
     type: data.type,
   });
   try {
-    await pocketbaseRequest<Record<string, unknown>>(
+    const record = await pocketbaseRequest<Record<string, unknown>>(
       "/api/collections/accounts/records",
       {
         method: "POST",
@@ -834,7 +938,7 @@ export async function createPocketBaseAccount(
           name: data.name,
           type: data.type,
           currency: data.currency ?? "VND",
-          owner_id: pbOwnerId,
+          // owner_id intentionally omitted — new accounts don't have a relation target
           credit_limit: data.credit_limit ?? null,
           current_balance: data.current_balance ?? 0,
           total_in: data.total_in ?? 0,
@@ -861,10 +965,12 @@ export async function createPocketBaseAccount(
         },
       },
     );
-    return true;
+    console.log("[DB:PB] accounts.create SUCCESS id:", record.id);
+    return { success: true, id: record.id as string };
   } catch (err) {
-    console.error("[DB:PB] accounts.create failed:", err);
-    return false;
+    const msg = (err as Error).message ?? String(err);
+    console.error("[DB:PB] accounts.create failed:", msg);
+    return { success: false, error: msg };
   }
 }
 
@@ -1599,12 +1705,28 @@ export async function loadPocketBaseTransactions(options: {
     );
   }
 
-  // Phase 2+: Other filters not yet implemented
+  // Phase 2: Add support for categoryId, shopId, installmentPlanId
   if (options.categoryId || options.shopId || options.installmentPlanId) {
-    console.warn(
-      "[loadPocketBaseTransactions] Phase 2 filters not yet implemented, falling back to Supabase",
-    );
-    return [];
+    const filterParts: string[] = [];
+    
+    if (options.categoryId) {
+       filterParts.push(`category_id='${toPocketBaseId(options.categoryId, "categories")}'`);
+    }
+    if (options.shopId) {
+       filterParts.push(`shop_id='${toPocketBaseId(options.shopId, "shops")}'`);
+    }
+    if (options.installmentPlanId) {
+       filterParts.push(`installment_plan_id='${toPocketBaseId(options.installmentPlanId, "installments")}'`);
+    }
+
+    if (filterParts.length === 0) return [];
+
+    const records = await listAllRecords("transactions", {
+      sort: "-date",
+      expand: "account_id,to_account_id,category_id,shop_id,person_id,parent_transaction_id",
+      filter: filterParts.join(" && "),
+    });
+    return records.map((item) => mapTransaction(item, ""));
   }
 
   // No filters - not supported in Phase 1

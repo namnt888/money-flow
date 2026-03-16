@@ -1,6 +1,8 @@
 'use server'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient } from '@/lib/supabase/server'
+import { executeWithFallback, logSource } from '@/lib/pocketbase/fallback-helpers'
 
 import { revalidatePath } from 'next/cache'
 import {
@@ -69,6 +71,8 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
     const activePeople = includeArchived ? people : people.filter(p => !p.is_archived)
     const personIds = activePeople.map(p => p.id)
 
+    console.log(`[DB:PB] Found ${activePeople.length} people and ${personIds.length} person IDs`)
+
     if (personIds.length === 0) return []
 
     // 2. Fetch Debt Accounts from PocketBase
@@ -92,7 +96,9 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
       sort: '-occurred_at'
     })
     const allTxns = txnsResponse.items
+    console.log(`[DB:PB] Fetched ${allTxns.length} transactions for debt calculation`)
 
+    let matchedCount = 0
     // 4. Calculate Balances
     const personStats = new Map<string, {
       baseLend: number,
@@ -102,6 +108,8 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
       outstandingDebt: number, // Total net debt minus current cycle
       totalBalance: number
     }>()
+    
+    const personCycleStats = new Map<string, Map<string, number>>()
     
     // Cycle Logic
     const now = new Date()
@@ -114,7 +122,6 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
 
       const type = String(txn.type || '').toLowerCase()
       
-      // Determine which person this belongs to
       // Determine which person this belongs to
       let personId: string | null = null
       
@@ -137,6 +144,7 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
 
       if (!personId) return
 
+      matchedCount++
       // Initialize stats for this person
       if (!personStats.has(personId)) {
         personStats.set(personId, {
@@ -147,9 +155,12 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
           outstandingDebt: 0,
           totalBalance: 0
         })
+        personCycleStats.set(personId, new Map<string, number>())
       }
       
       const stats = personStats.get(personId)!
+      const cycleBalances = personCycleStats.get(personId)!
+
       const rawAmount = Math.abs(Number(txn.amount || 0))
       const fromAccId = txn.account_id
       const toAccId = txn.to_account_id || txn.target_account_id
@@ -169,51 +180,90 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
       const normalizedTag = normalizeMonthTag(tag) ?? tag
       const isCurrentCycle = tag ? (normalizedTag === currentMonthTag) : (txnDate && txnDate >= currentMonthStart)
 
-      // BALANCE CALCULATION logic (Consistent with detailed view)
-      // Outbound (Lend/Expense)
-      const isOutbound = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (fromAccId === debtAccountId)
-      // Inbound (Repay/Repayment/Income)
-      const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (toAccId === debtAccountId)
-
-      if (isOutbound) {
-        stats.baseLend += rawAmount
-        stats.cashback += cashback
-        stats.totalBalance += netAmount
-
-        if (isCurrentCycle) {
-          stats.currentCycleDebt += netAmount
-        } else {
-          stats.outstandingDebt += netAmount
-        }
-      } else if (isInbound) {
-        stats.repaid += rawAmount
-        stats.totalBalance -= rawAmount
+      // Update cycle-specific balance
+      if (normalizedTag) {
+        const currentCycleBalance = cycleBalances.get(normalizedTag) || 0;
         
-        if (isCurrentCycle) {
-          stats.currentCycleDebt -= rawAmount
-        } else {
-          stats.outstandingDebt -= rawAmount
+        // Outbound (Lend/Expense)
+        const isOutbound = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (fromAccId === debtAccountId)
+        // Inbound (Repay/Repayment/Income)
+        const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (toAccId === debtAccountId)
+
+        if (isOutbound) {
+          stats.baseLend += rawAmount
+          stats.cashback += cashback
+          stats.totalBalance += netAmount
+          cycleBalances.set(normalizedTag, (cycleBalances.get(normalizedTag) || 0) + netAmount);
+
+          if (isCurrentCycle) {
+            stats.currentCycleDebt += netAmount
+          } else {
+            stats.outstandingDebt += netAmount
+          }
+        } else if (isInbound) {
+          stats.repaid += rawAmount
+          stats.totalBalance -= rawAmount
+          cycleBalances.set(normalizedTag, (cycleBalances.get(normalizedTag) || 0) - rawAmount);
+          
+          if (isCurrentCycle) {
+            stats.currentCycleDebt -= rawAmount
+          } else {
+            stats.outstandingDebt -= rawAmount
+          }
         }
       }
     })
 
+    console.log(`[DB:PB] Matched ${matchedCount} transactions to people`)
+
     // 5. Build Final Objects
     return activePeople.map(person => {
       const stats = personStats.get(person.id)
+      const cycleBalances = personCycleStats.get(person.id)
       const debtAccount = debtAccounts.find(acc => acc.owner_id === person.id)
+
+      // Calculate past due count: number of cycles before current that have balance > 0
+      let pastDueCount = 0;
+      if (cycleBalances) {
+          cycleBalances.forEach((balance, tag) => {
+              if (tag < currentMonthTag && balance > 5) { // Small threshold to avoid rounding noise
+                  pastDueCount++;
+              }
+          });
+      }
+
+      const roundedTotalBalance = Math.round(stats?.totalBalance ?? 0);
+      const roundedOutstandingDebt = Math.round(stats?.outstandingDebt ?? 0);
+      const roundedCurrentCycleDebt = Math.round(stats?.currentCycleDebt ?? 0);
+
+      // Final zeroing for noise
+      const finalTotalBalance = Math.abs(roundedTotalBalance) < 5 ? 0 : roundedTotalBalance;
+      const finalOutstandingDebt = Math.abs(roundedOutstandingDebt) < 5 ? 0 : roundedOutstandingDebt;
+      const finalCurrentCycleDebt = Math.abs(roundedCurrentCycleDebt) < 5 ? 0 : roundedCurrentCycleDebt;
+
+      const monthly_debts: MonthlyDebtSummary[] = Array.from(cycleBalances?.entries() || [])
+        .map(([tag, balance]) => ({
+            tag,
+            tagLabel: tag,
+            amount: Math.round(balance),
+            status: tag < currentMonthTag && balance > 5 ? 'active' : 'settled'
+        }))
+        .filter(d => Math.abs(d.amount) > 5)
+        .sort((a, b) => (b.tag || '').localeCompare(a.tag || ''));
 
       return {
         ...person,
         debt_account_id: debtAccount?.id ?? null,
-        current_debt_balance: stats?.totalBalance ?? 0,
-        current_cycle_debt: stats?.currentCycleDebt ?? 0,
-        outstanding_debt: stats?.outstandingDebt ?? 0,
-        total_base_debt: stats?.baseLend ?? 0,
-        total_cashback: stats?.cashback ?? 0,
-        total_repaid: stats?.repaid ?? 0,
-        total_net_debt: (stats?.baseLend ?? 0) - (stats?.cashback ?? 0),
+        current_debt_balance: finalTotalBalance,
+        current_cycle_debt: finalCurrentCycleDebt,
+        outstanding_debt: finalOutstandingDebt,
+        total_base_debt: Math.round(stats?.baseLend ?? 0),
+        total_cashback: Math.round(stats?.cashback ?? 0),
+        total_repaid: Math.round(stats?.repaid ?? 0),
+        total_net_debt: Math.round((stats?.baseLend ?? 0) - (stats?.cashback ?? 0)),
         current_cycle_label: currentMonthTag,
-        monthly_debts: []
+        past_due_count: pastDueCount,
+        monthly_debts: monthly_debts
       }
     })
 
@@ -262,14 +312,36 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     
     const pbId = personRecord.id
 
-    // 2. Fetch Memberships from SB (Waiting for PB migration of service_members)
-    // TODO: Migrate service_members to PB
-    const responseMembers = await pocketbaseList<any>('service_members', {
-      filter: `person_id='${pbId}'`,
-      expand: 'service_id'
-    }).catch(() => ({ items: [] })) // Fallback if table doesn't exist yet
+    // 2. Fetch Memberships from PB with SB Fallback
+    const responseMembers = await executeWithFallback(
+      async () => {
+        logSource('PB', 'people.memberships', { pbId })
+        const res = await pocketbaseList<any>('service_members', {
+          filter: `person_id='${pbId}'`,
+          expand: 'service_id'
+        })
+        return res.items
+      },
+      async () => {
+        logSource('SB', 'people.memberships fallback', { id })
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('service_members')
+          .select('service_id')
+          .eq('person_id', id)
+        return data || []
+      },
+      'people.memberships'
+    )
 
-    const subscription_ids = responseMembers.items.map(m => m.service_id)
+    const subscription_details = responseMembers.map((m: any) => ({
+      id: m.service_id,
+      name: m.expand?.service_id?.name || 'Unknown',
+      slots: m.slots || 1,
+      image_url: m.expand?.service_id?.image_url || null
+    }))
+
+    const subscription_ids = responseMembers.map((m: any) => m.service_id)
 
     // 3. Fetch Debt Account
     const debtAccountResponse = await pocketbaseList<any>('accounts', {
@@ -299,7 +371,61 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
       })
     }
 
-    return {
+    // 5. Fetch Recent Activity (Transaction History)
+    const recentTxnsResponse = await pocketbaseList<any>('transactions', {
+        filter: `(person_id='${pbId}' || account_id='${debtAccountId}' || to_account_id='${debtAccountId}') && status!='void'`,
+        sort: '-occurred_at',
+        perPage: 10
+    })
+    const recentTxns = recentTxnsResponse.items
+
+    // 6. Detailed Debt Analysis (Matched with getPeople logic)
+    let totalBaseLend = 0;
+    let totalCashback = 0;
+    let totalRepaid = 0;
+    let currentCycleDebt = 0;
+    let outstandingDebt = 0;
+    
+    const now = new Date()
+    const currentMonthTag = toYYYYMMFromDate(now)
+
+    if (debtAccountId) {
+        const allStatsTxns = await pocketbaseList<any>('transactions', {
+            filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}' || person_id='${pbId}') && status!='void'`,
+            perPage: 1000
+        });
+
+        allStatsTxns.items.forEach(txn => {
+            const type = String(txn.type || '').toLowerCase();
+            const rawAmount = Math.abs(Number(txn.amount || 0));
+            
+            const pVal = Number(txn.cashback_share_percent ?? txn.metadata?.cashback_share_percent ?? 0);
+            const fVal = Number(txn.cashback_share_fixed ?? txn.metadata?.cashback_share_fixed ?? 0);
+            const normP = pVal > 1 ? pVal / 100 : pVal;
+            const cb = (rawAmount * normP) + fVal;
+            const net = rawAmount - cb;
+
+            const tag = txn.debt_cycle_tag || txn.tag || txn.persisted_cycle_tag || txn.metadata?.tag || '';
+            const normalizedTag = normalizeMonthTag(tag) ?? tag;
+            const isCurrent = (normalizedTag === currentMonthTag);
+
+            const isOut = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (txn.account_id === debtAccountId);
+            const isIn = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (txn.to_account_id === debtAccountId);
+
+            if (isOut) {
+                totalBaseLend += rawAmount;
+                totalCashback += cb;
+                if (isCurrent) currentCycleDebt += net;
+                else outstandingDebt += net;
+            } else if (isIn) {
+                totalRepaid += rawAmount;
+                if (isCurrent) currentCycleDebt -= rawAmount;
+                else outstandingDebt -= rawAmount;
+            }
+        });
+    }
+
+    return ({
       id: personRecord.id,
       pocketbase_id: personRecord.id,
       name: personRecord.name,
@@ -314,9 +440,23 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
       is_owner: personRecord.is_owner ?? false,
       is_archived: personRecord.is_archived ?? false,
       subscription_ids,
+      subscription_details,
+      subscription_count: subscription_details.length,
       debt_account_id: debtAccountId ?? null,
-      balance: Math.abs(balance), // Debt balance is usually shown as positive
-    }
+      balance: totalBaseLend - totalCashback - totalRepaid,
+      total_base_debt: totalBaseLend,
+      total_cashback: totalCashback,
+      total_repaid: totalRepaid,
+      total_net_debt: totalBaseLend - totalCashback,
+      current_cycle_debt: currentCycleDebt,
+      outstanding_debt: outstandingDebt,
+      current_debt_balance: totalBaseLend - totalCashback - totalRepaid,
+      current_cycle_label: currentMonthTag,
+      // Metadata for details UI
+      metadata: {
+          recent_transactions: recentTxns
+      }
+    } as any)
   } catch (error) {
     console.error('[DB:PB] getPersonWithSubs failed:', error)
     return null

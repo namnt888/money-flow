@@ -78,7 +78,7 @@ export async function repayBatchDebt(
                 account_id: pbBankAccountId,
                 person_id: pbPersonId,
                 amount: excess,
-                tag: null,
+                tag: '',
                 linked_transaction_id: parent.id,
                 status: 'posted',
                 metadata: {
@@ -100,7 +100,7 @@ export async function repayBatchDebt(
                     id: created.id,
                     occurred_at: created.occurred_at,
                     note: created.note,
-                    tag: created.tag || null,
+                    tag: created.tag || '',
                     amount: Math.abs(Number(created.amount || 0)),
                     original_amount: Math.abs(Number(created.amount || 0)),
                     type: created.type,

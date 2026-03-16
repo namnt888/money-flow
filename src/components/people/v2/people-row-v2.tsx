@@ -7,7 +7,7 @@ import { PeopleRowDetailsV2 } from "./people-row-details-v2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, User, CheckCircle2, HandCoins, Banknote, ExternalLink, RotateCw, FileSpreadsheet, Calendar, RefreshCcw, Landmark, Info } from "lucide-react";
+import { Edit, User, CheckCircle2, HandCoins, Banknote, ExternalLink, RotateCw, FileSpreadsheet, Calendar, RefreshCcw, Landmark, Info, Copy, Database } from "lucide-react";
 import { cn, formatMoneyVND, formatVNLongAmount } from "@/lib/utils";
 import { getPersonRouteId } from '@/lib/person-route';
 import { SubscriptionBadges } from "./subscription-badges";
@@ -47,38 +47,36 @@ const VNLongAmount = ({ amount, className }: { amount: number, className?: strin
     );
 };
 
-const AmountCellV2 = ({ amount, badgeClassName, showLongText = true }: { amount: number, badgeClassName?: string, showLongText?: boolean }) => {
+const AmountCellV2 = ({ amount, className }: { amount: number, className?: string }) => {
     if (amount === 0) {
         return (
-            <Badge variant="outline" className="tabular-nums tracking-tight font-medium bg-slate-50 text-slate-500 opacity-40 border-slate-100 px-2 py-0.5">
-                0
-            </Badge>
+            <span className="tabular-nums font-medium text-slate-400 opacity-20 text-xs text-center w-full">
+                —
+            </span>
         );
     }
 
     return (
-        <div className="flex flex-col items-start gap-0.5 justify-center py-0.5">
-            <Badge variant="outline" className={cn("tabular-nums tracking-tight font-bold border-slate-200 px-2 py-0.5", badgeClassName)}>
-                {formatMoneyVND(amount)}
-            </Badge>
-            {showLongText && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="cursor-help transition-all hover:opacity-80">
-                                <VNLongAmount amount={amount} className="text-[10px] truncate max-w-[120px]" />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="bg-slate-900 text-white border-none p-2 shadow-xl">
-                            <p className="text-xs font-bold flex items-center gap-1.5">
-                                <Info className="h-3.5 w-3.5 text-blue-400" />
-                                <VNLongAmount amount={amount} className="text-white" />
-                            </p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
+        <TooltipProvider delayDuration={0}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div className="flex flex-col items-start gap-0.5 justify-center py-0.5 cursor-help transition-opacity hover:opacity-80">
+                        <span className={cn("tabular-nums tracking-tight font-medium text-slate-600", className)}>
+                            {formatMoneyVND(amount)}
+                        </span>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-slate-900 text-white border-none p-2 shadow-xl">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Exact Amount</span>
+                        <div className="flex items-center gap-1.5 font-bold">
+                            <Info className="h-3.5 w-3.5 text-blue-400" />
+                            <VNLongAmount amount={amount} className="text-white" />
+                        </div>
+                    </div>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 };
 
@@ -130,9 +128,7 @@ export function PeopleRowV2({
                         className={cn(
                             "px-4 py-3 align-middle text-sm font-normal text-foreground",
                             idx < visibleColumns.length - 1 ? 'border-r border-slate-200' : '',
-                            col.key === 'current_debt' && "bg-amber-50/40",
-                            col.key === 'balance' && "bg-blue-50/30",
-                            col.key === 'name' && "sticky left-10 z-10 bg-inherit" // Part of freeze name logic if needed, but let's keep it simple
+                            col.key === 'name' && "sticky left-10 z-10 bg-inherit"
                         )}
                     >
                         {renderCell(person, col.key, onEdit, onLend, onRepay, onSync, accounts)}
@@ -154,25 +150,71 @@ export function PeopleRowV2({
         </>
     );
 }
-
 function renderCell(person: Person, key: string, onEdit: (p: Person) => void, onLend: (p: Person) => void, onRepay: (p: Person) => void, onSync?: (pid: string) => void, accounts?: Account[]) {
+    const remainsAmt = person.total_balance || 0;
+
     switch (key) {
         case 'name':
             return (
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 rounded-none border border-slate-200 flex-shrink-0">
+                <div className="flex items-center gap-3 group/name">
+                    <Avatar className="h-10 w-10 rounded-none border border-slate-200 flex-shrink-0 cursor-pointer" onClick={() => onEdit(person)}>
                         <AvatarImage src={person.image_url || undefined} alt={person.name} className="object-cover" />
                         <AvatarFallback className="text-xs bg-primary/10 text-primary rounded-none">
                             {person.name?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
                         </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-2 overflow-hidden w-full pr-1">
-                                <Link
-                                    href={`/people/${getPersonRouteId(person)}`}
+                    <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                        <div className="flex items-center gap-2 w-full">
+                            <div className="flex items-center gap-1 shrink-0">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-5 text-[9px] font-black uppercase text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border-slate-200 px-1.5"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigator.clipboard.writeText(person.id);
+                                                    import('sonner').then(({ toast }) => toast.success('Copied ID', {
+                                                        description: person.id
+                                                    }));
+                                                }}
+                                            >
+                                                <Copy className="h-3 w-3 mr-1" />
+                                                ID
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 border-none">
+                                            <p className="text-[10px] font-bold">Copy ID: {person.id}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_people_001&filter=${encodeURIComponent(person.id)}&sort=-%40rowid`;
+                                                    window.open(url, "_blank", "noopener,noreferrer");
+                                                }}
+                                                className="h-5 text-slate-300 hover:text-indigo-600 transition-all px-1 inline-flex items-center"
+                                            >
+                                                <Database className="h-3 w-3" />
+                                            </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 border-none">
+                                            <p className="text-[10px] font-bold">Open People DB (new tab)</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+
+                            <Link
+                                href={`/people/${getPersonRouteId(person)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate flex-1"
+                                className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {person.name}
@@ -189,111 +231,100 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                     </div>
                 </div>
             );
-        case 'current_tag':
+        case 'current_tag': {
+            const overdueCount = person.past_due_count || 0;
+            const now = new Date();
+            const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const cycleSheet = person.cycle_sheets?.find(s => s.cycle_tag === currentTag);
             return (
                 <div className="flex items-center gap-2">
-                    {/* ManageSheetButton with Split Mode */}
-                    {person.sheet_link ? (
-                        <div className="flex items-center gap-1.5 h-full">
-                            {(() => {
-                                const now = new Date();
-                                const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                                const cycleSheet = person.cycle_sheets?.find(s => s.cycle_tag === currentTag);
-                                return (
-                                    <ManageSheetButton
-                                        personId={person.id}
-                                        cycleTag={currentTag}
-                                        initialSheetUrl={cycleSheet?.sheet_url}
-                                        scriptLink={person.sheet_link}
-                                        googleSheetUrl={person.google_sheet_url}
-                                        sheetFullImg={person.sheet_full_img}
-                                        showBankAccount={person.sheet_show_bank_account ?? undefined}
-                                        sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
-                                        showQrImage={person.sheet_show_qr_image ?? undefined}
-                                        accounts={accounts}
-                                        buttonClassName="h-8 text-xs px-3"
-                                        size="sm"
-                                        showCycleAction={true}
-                                        splitMode={true}
-                                    />
-                                );
-                            })()}
-                        </div>
-                    ) : (
-                        <div className="w-[170px] min-w-[170px]">
-                            <Badge
-                                variant="outline"
-                                className="h-8 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 bg-white border-2 border-slate-200 rounded-md tracking-tight shadow-none"
-                            >
-                                <Calendar className="h-3 w-3 opacity-70" />
-                                {person.current_cycle_label || 'NO TAG'}
-                            </Badge>
-                        </div>
-                    )}
+                    <div className="w-[280px] min-w-[280px] flex items-center">
+                        {person.sheet_link ? (
+                            <div className="flex items-center gap-1.5 w-full">
+                                <ManageSheetButton
+                                    personId={person.id}
+                                    cycleTag={currentTag}
+                                    initialSheetUrl={cycleSheet?.sheet_url}
+                                    scriptLink={person.sheet_link}
+                                    googleSheetUrl={person.google_sheet_url}
+                                    sheetFullImg={person.sheet_full_img}
+                                    showBankAccount={person.sheet_show_bank_account ?? undefined}
+                                    sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
+                                    showQrImage={person.sheet_show_qr_image ?? undefined}
+                                    accounts={accounts}
+                                    buttonClassName="h-8 text-xs px-3 w-full"
+                                    size="sm"
+                                    showCycleAction={true}
+                                    splitMode={true}
+                                />
+                                {overdueCount > 0 && (
+                                    <Badge variant="outline" className="h-5 px-1.5 border-rose-200 bg-rose-50 text-rose-600 text-[10px] font-black border-dashed flex-shrink-0">
+                                        +{overdueCount}
+                                    </Badge>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center gap-2 h-9 border border-slate-200 bg-white rounded-lg shadow-sm px-2">
+                                <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 uppercase tracking-tight">
+                                    <Calendar className="h-3 w-3 opacity-50" />
+                                    {person.current_cycle_label || 'NO TAG'}
+                                </span>
+                                {overdueCount > 0 && (
+                                    <Badge variant="outline" className="h-4 px-1 border-rose-200 bg-rose-50 text-rose-600 text-[9px] font-black border-dashed flex-shrink-0">
+                                        +{overdueCount}
+                                    </Badge>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
-        case 'current_debt':
+        }
+        case 'current_debt': // Outstanding
             return (
                 <AmountCellV2
                     amount={person.current_cycle_debt || 0}
-                    badgeClassName="bg-slate-50 text-slate-500"
+                    className="text-amber-600 font-bold"
                 />
             );
         case 'base_lend':
             return (
                 <AmountCellV2
                     amount={person.total_base_debt || 0}
-                    badgeClassName="bg-slate-50 text-slate-500"
+                    className="text-slate-500 font-bold"
                 />
             );
-        case 'cashback': // Settled
+        case 'cashback': // Settled (Repaid Portion)
+            const settled = (person.total_repaid || 0);
             return (
-                <AmountCellV2
-                    amount={person.total_cashback || 0}
-                    badgeClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
-                />
+                <div className="flex flex-col items-end">
+                    <AmountCellV2
+                        amount={settled}
+                        className="text-emerald-600 font-bold"
+                    />
+                    {person.total_cashback > 0 && (
+                        <span className="text-[9px] font-bold text-amber-600 uppercase">
+                             +{formatMoneyVND(person.total_cashback)} Rewards
+                        </span>
+                    )}
+                </div>
             );
-        case 'net_lend': // Outstanding
+        case 'net_lend': // Prev Debt
             return (
                 <AmountCellV2
-                    amount={person.total_net_debt || 0}
-                    badgeClassName="bg-indigo-50 text-indigo-600 border-indigo-100"
+                    amount={person.outstanding_debt || 0}
+                    className="text-sky-600 font-bold"
                 />
             );
         case 'balance': // Remains
-            // Show TOTAL debt (current + outstanding)
-            const totalDebt = (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
             return (
-                <div className="flex flex-col items-start gap-1 justify-center py-1">
-                    <Badge
-                        variant="outline"
-                        className={cn(
-                            "tabular-nums tracking-tight font-medium border-0 px-2 py-0.5 text-[15px] leading-none",
-                            totalDebt > 0
-                                ? "bg-red-50 text-red-600 ring-1 ring-inset ring-red-200"
-                                : "bg-slate-50 text-slate-500 opacity-40 grayscale"
-                        )}
-                    >
-                        {formatMoneyVND(totalDebt)}
-                    </Badge>
-                    {totalDebt > 0 && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="cursor-help transition-all hover:opacity-80">
-                                        <VNLongAmount amount={totalDebt} className="text-[12px] truncate max-w-[160px]" />
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="right" className="bg-slate-900 text-white border-none p-2 shadow-xl">
-                                    <p className="text-xs font-bold flex items-center gap-1.5">
-                                        <Info className="h-3.5 w-3.5 text-blue-400" />
-                                        <VNLongAmount amount={totalDebt} className="text-white" />
-                                    </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                <AmountCellV2
+                    amount={remainsAmt}
+                    className={cn(
+                        "font-black text-xs",
+                        remainsAmt > 0 ? "text-rose-600" : (remainsAmt < 0 ? "text-emerald-600" : "text-slate-400")
                     )}
-                </div>
+                />
             );
         case 'action':
             return (
@@ -362,4 +393,3 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
             return '—';
     }
 }
-

@@ -77,20 +77,23 @@ export async function createAccount(params: CreateAccountParams) {
 
   try {
     console.log('[DB:PB] accounts.create SENDING', { tempId, name: params.name, type: params.type, holder_person_id: params.holder_person_id })
-    const success = await createPocketBaseAccount(tempId, {
+    const result = await createPocketBaseAccount(tempId, {
       ...params,
-      owner_id: 'SYSTEM_MIGRATED',
+      // Do NOT send owner_id for new accounts — PB validates it as a relation
+      // and 'SYSTEM_MIGRATED' is not a valid record ID
       current_balance: 0,
       is_active: true,
       statement_day: params.statementDay,
       due_date: params.dueDate,
     } as any)
 
-    if (!success) throw new Error('Failed to create account in PocketBase')
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to create account in PocketBase')
+    }
 
-    console.log('[DB:PB] accounts.create SUCCESS', { name: params.name })
+    console.log('[DB:PB] accounts.create SUCCESS', { name: params.name, id: result.id })
     revalidatePath('/accounts')
-    return { success: true }
+    return { success: true, id: result.id }
   } catch (error) {
     console.error('[DB:PB] accounts.create FAILED', { error: String(error) })
     return { success: false, error: (error as Error).message }

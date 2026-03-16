@@ -11,6 +11,7 @@ import {
   Sparkles,
   Calendar,
   BarChart3,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { SingleTransactionFormValues } from "../types";
@@ -98,34 +99,33 @@ export function CashbackSection({
     useWatch({ control: form.control, name: "service_fee" }) || 0;
   const totalGrossAmount = Math.abs(amount) + serviceFee;
 
-  // FETCH CYCLE STATS WHEN DATE OR ACCOUNT CHANGES
-  useEffect(() => {
+  const fetchStats = async () => {
     if (!sourceAccountId || !occurredAt) {
       setCycleStats(null);
       return;
     }
-
-    const fetchStats = async () => {
-      setIsLoadingStats(true);
-      try {
-        const dateParam =
-          occurredAt instanceof Date
-            ? occurredAt.toISOString()
-            : new Date(occurredAt).toISOString();
-        const res = await fetch(
-          `/api/cashback/stats?accountId=${sourceAccountId}&date=${dateParam}&mode=snapshot`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setCycleStats(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch cycle stats for slide", err);
-      } finally {
-        setIsLoadingStats(false);
+    setIsLoadingStats(true);
+    try {
+      const dateParam =
+        occurredAt instanceof Date
+          ? occurredAt.toISOString()
+          : new Date(occurredAt).toISOString();
+      const res = await fetch(
+        `/api/cashback/stats?accountId=${sourceAccountId}&date=${dateParam}&mode=snapshot`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setCycleStats(data);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch cycle stats for slide", err);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
+  // FETCH CYCLE STATS WHEN DATE OR ACCOUNT CHANGES
+  useEffect(() => {
     fetchStats();
   }, [sourceAccountId, occurredAt, transactionType]);
 
@@ -166,7 +166,7 @@ export function CashbackSection({
 
   const displayPolicy = potentialPolicy ?? policy;
 
-  const { actualBankReward, previewBankReward, remainsCap } = useMemo(() => {
+  const { actualBankReward, previewBankReward, remainsCap, rawReward, isCappedByRule, isCappedByCycle } = useMemo(() => {
     const estimateWithPolicy = (
       candidatePolicy: typeof policy | null,
       remains: number,
@@ -178,7 +178,13 @@ export function CashbackSection({
         candidatePolicy.maxReward !== null
           ? Math.min(raw, candidatePolicy.maxReward)
           : raw;
-      return Math.min(cappedByRule, remains);
+          
+      return {
+          reward: Math.min(cappedByRule, remains),
+          rawRuleReward: cappedByRule,
+          isCappedByRule: candidatePolicy?.maxReward !== undefined && candidatePolicy.maxReward !== null && raw > candidatePolicy.maxReward,
+          isCappedByCycle: remains !== Infinity && cappedByRule > remains
+      };
     };
 
     const isUnlimitedBudget = Boolean(activeAccount?.cb_is_unlimited);
@@ -188,10 +194,16 @@ export function CashbackSection({
     const remains =
       rawRemains === null || rawRemains === undefined ? Infinity : rawRemains;
 
+    const actual = estimateWithPolicy(policy, remains);
+    const preview = estimateWithPolicy(displayPolicy, remains);
+
     return {
       remainsCap: rawRemains,
-      actualBankReward: estimateWithPolicy(policy, remains),
-      previewBankReward: estimateWithPolicy(displayPolicy, remains),
+      actualBankReward: actual.reward,
+      previewBankReward: preview.reward,
+      rawReward: totalGrossAmount * (displayPolicy?.rate ?? 0),
+      isCappedByRule: preview.isCappedByRule,
+      isCappedByCycle: preview.isCappedByCycle,
     };
   }, [totalGrossAmount, policy, displayPolicy, activeAccount, cycleStats]);
 
@@ -603,9 +615,27 @@ export function CashbackSection({
             )}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">
-                Profit Analytics
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em]">
+                  Profit Analytics
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fetchStats();
+                  }}
+                  disabled={isLoadingStats}
+                  className={cn(
+                    "p-1 hover:bg-slate-200 rounded-md transition-colors",
+                    isLoadingStats && "animate-spin opacity-50 text-indigo-500"
+                  )}
+                  title="Force Sync Stats"
+                >
+                  <RefreshCw className="h-3 w-3 text-slate-400" />
+                </button>
+              </div>
               {netProfitValue < 0 ? (
                 <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 shadow-sm">
                   <AlertTriangle className="h-3 w-3" />
@@ -717,9 +747,19 @@ export function CashbackSection({
                             Bank Reward (Est)
                           </span>
                         </div>
-                        <span className="font-black text-slate-900 tabular-nums tracking-tight">
-                          {formatVN(previewBankReward)}
-                        </span>
+                        <div className="flex flex-col items-end">
+                            <span className={cn(
+                                "font-black tabular-nums tracking-tight",
+                                (isCappedByRule || isCappedByCycle) ? "text-amber-600" : "text-slate-900"
+                            )}>
+                                {formatVN(previewBankReward)}
+                            </span>
+                            {(isCappedByRule || isCappedByCycle) && (
+                                <span className="text-[8px] font-black text-amber-500 uppercase tracking-tighter -mt-0.5">
+                                    Capped {isCappedByRule ? "by Rule" : "by Cycle"}
+                                </span>
+                            )}
+                        </div>
                       </div>
                       {actualBankReward === 0 &&
                         activeAccount?.type === "credit_card" &&
@@ -753,9 +793,16 @@ export function CashbackSection({
                       <div className="bg-white/10 p-2 rounded text-[11px] font-mono">
                         {formatVN(totalGrossAmount)} ×{" "}
                         {(displayPolicy?.rate ? displayPolicy.rate * 100 : 0).toFixed(2)}%
-                        {displayPolicy?.maxReward
-                          ? ` (Cap: ${formatVN(displayPolicy.maxReward)})`
-                          : ""}
+                        {isCappedByRule && (
+                            <div className="text-amber-400">
+                                (Wait: Capped by Rule to {formatVN(displayPolicy?.maxReward || 0)})
+                            </div>
+                        )}
+                        {isCappedByCycle && (
+                            <div className="text-amber-400">
+                                (Wait: Cycle Budget Remains {formatVN(remainsCap || 0)})
+                            </div>
+                        )}
                         <div className="mt-1 pt-1 border-t border-white/10 text-emerald-400 font-bold">
                           = {formatVN(previewBankReward)}
                         </div>

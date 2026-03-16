@@ -149,8 +149,28 @@ export function AccountDetailViewV2({
     const [isLoadingPending, setIsLoadingPending] = useState(true)
     const pendingQueryOpenedRef = useRef(false)
 
+    const availableYears = React.useMemo(() => {
+        const years = new Set<string>()
+        initialTransactions.forEach(txn => {
+            const tag = resolveTransactionCycleTag(txn, account)
+            if (tag && /^\d{4}-\d{2}$/.test(tag)) {
+                years.add(tag.split('-')[0])
+            }
+        })
+        const currentYear = new Date().getFullYear().toString()
+        years.add(currentYear)
+        return Array.from(years).sort().reverse()
+    }, [initialTransactions, account])
+
     const summary = useMemo(() => {
-        const targetYear = selectedYear ? parseInt(selectedYear) : (selectedCycle && selectedCycle !== 'all' ? parseInt(selectedCycle.split('-')[0]) : new Date().getFullYear());
+        // Fallback to the latest year with data if none selected
+        const fallbackYear = availableYears.length > 0 ? parseInt(availableYears[0]) : new Date().getFullYear();
+        const targetYear = selectedYear 
+            ? parseInt(selectedYear) 
+            : (selectedCycle && selectedCycle !== 'all' 
+                ? parseInt(selectedCycle.split('-')[0]) 
+                : fallbackYear);
+
         const categoryMap = new Map(categories.map(c => [c.id, c]))
 
         let cardYearlyCashbackTotal = 0;
@@ -165,6 +185,8 @@ export function AccountDetailViewV2({
         let yearPureExpenseTotal = 0;
         let yearLentTotal = 0;
         let yearRepaidTotal = 0;
+        let yearTotalInflow = 0;
+        let yearTotalOutflow = 0;
 
         initialTransactions.forEach(tx => {
             const status = String(tx?.status || '').toLowerCase()
@@ -172,9 +194,11 @@ export function AccountDetailViewV2({
 
             const rawDate = tx?.occurred_at || tx?.date || tx?.created_at
             const date = rawDate ? new Date(rawDate) : null
+            if (!date || isNaN(date.getTime())) return;
+
             const amount = Math.abs(Number(tx?.amount || 0))
             const type = String(tx?.type || '').toLowerCase()
-            const year = date?.getFullYear();
+            const year = date.getFullYear();
 
             const note = String(tx?.notes || tx?.note || '').toLowerCase()
             const isInitial = note.includes('create initial') ||
@@ -184,13 +208,18 @@ export function AccountDetailViewV2({
 
             if (isInitial) return;
 
+            // Stats for target year
             if (year === targetYear) {
-                if (type === 'debt') yearLentTotal += amount
-                if (type === 'repayment') yearRepaidTotal += amount
-                if (type === 'income') {
-                    yearPureIncomeTotal += amount
+                const isTargetAccount = tx.target_account_id === account.id || tx.to_account_id === account.id;
+                const isSourceAccount = tx.account_id === account.id || tx.source_account_id === account.id;
 
-                    // Yearly ACTUAL Claimed Cashback (Income)
+                const isIncoming = (type === 'income') || (type === 'repayment') || (type === 'transfer' && isTargetAccount);
+                const isOutgoing = (type === 'expense') || (type === 'debt') || (type === 'transfer' && isSourceAccount);
+
+                // Pure Income/Expense (Earnings vs Spendings)
+                if (type === 'income') {
+                    yearPureIncomeTotal += amount;
+                    // Actual Claimed Cashback
                     const categoryId = tx?.category_id
                     const category = categoryId ? categoryMap.get(categoryId) : null
                     const categoryName = category?.name?.toLowerCase() || ''
@@ -198,15 +227,15 @@ export function AccountDetailViewV2({
                         cashbackTotal += amount
                     }
                 }
-
-                if (type === 'expense' || type === 'debt') {
-                    if (type === 'expense') yearPureExpenseTotal += amount
-                    if (type === 'expense') yearEligibleSpendForEstimate += amount
-
-                    const sharedAmount = Number(tx?.cashback_share_amount || 0)
-
-                    if (sharedAmount > 0) {
-                        cardYearlyCashbackGivenTotal += sharedAmount
+                
+                if (type === 'expense') {
+                    yearPureExpenseTotal += amount;
+                    yearEligibleSpendForEstimate += amount
+                    
+                    // Actual Shared/Given Cashback
+                    const sharedAmountField = Number(tx?.cashback_share_amount || 0)
+                    if (sharedAmountField > 0) {
+                        cardYearlyCashbackGivenTotal += sharedAmountField
                     } else {
                         const categoryId = tx?.category_id
                         const category = categoryId ? categoryMap.get(categoryId) : null
@@ -216,20 +245,29 @@ export function AccountDetailViewV2({
                         }
                     }
                 }
-            }
 
-            if (type === 'debt') {
-                debtTotal += amount
-                if (year === targetYear) {
-                    yearDebtTotal += amount
-                }
-            }
+                if (type === 'repayment') yearRepaidTotal += amount;
+                if (type === 'debt') yearLentTotal += amount;
+                
+                if (isIncoming) yearTotalInflow += amount;
+                if (isOutgoing) yearTotalOutflow += amount;
 
-            if (type === 'expense' || type === 'transfer') {
-                expensesTotal += amount
-                if (year === targetYear) {
-                    yearExpensesTotal += amount
+                // Track all expenses for waiver
+                if (type === 'expense' || type === 'transfer') {
+                    if (isOutgoing) {
+                        yearExpensesTotal += amount;
+                        expensesTotal += amount;
+                    }
                 }
+                
+                if (type === 'debt') {
+                    debtTotal += amount;
+                    yearDebtTotal += amount;
+                }
+            } else {
+                // Lifetime stats (not for the target year)
+                if (type === 'debt') debtTotal += amount;
+                if (type === 'expense' || type === 'transfer') expensesTotal += amount;
             }
         })
 
@@ -261,9 +299,11 @@ export function AccountDetailViewV2({
             cardYearlyCashbackTotal,
             cardYearlyCashbackGivenTotal,
             netProfitYearly,
+            yearTotalInflow,
+            yearTotalOutflow,
             pendingCount: pendingItems.length + pendingRefundCount
         }
-    }, [initialTransactions, categories, selectedYear, pendingItems.length, pendingRefundCount, selectedCycle])
+    }, [initialTransactions, categories, selectedYear, pendingItems.length, pendingRefundCount, selectedCycle, availableYears])
 
     useEffect(() => {
         document.title = `${account.name} History`
@@ -375,18 +415,6 @@ export function AccountDetailViewV2({
         }
     }
 
-    const availableYears = React.useMemo(() => {
-        const years = new Set<string>()
-        initialTransactions.forEach(txn => {
-            const tag = resolveTransactionCycleTag(txn, account)
-            if (tag && /^\d{4}-\d{2}$/.test(tag)) {
-                years.add(tag.split('-')[0])
-            }
-        })
-        const currentYear = new Date().getFullYear().toString()
-        years.add(currentYear)
-        return Array.from(years).sort().reverse()
-    }, [initialTransactions, account])
 
     // Initialize selectedYear to first available year if not set
     useEffect(() => {

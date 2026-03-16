@@ -415,29 +415,24 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                     />
                 </div>
 
-                {/* Type Filter Dropdown - Hover Show */}
+                {/* Type Filter Group - Replace Dropdown with Tab Buttons */}
                 {(activeTab === "categories" || activeTab === "shops") && (
-                    <div
-                        className="min-w-[130px]"
-                        onMouseEnter={() => setIsTypeFilterOpen(true)}
-                        onMouseLeave={() => setIsTypeFilterOpen(false)}
-                    >
-                        <Select
-                            open={isTypeFilterOpen}
-                            onOpenChange={setIsTypeFilterOpen}
-                            items={typeFilterItems.map(item => ({
-                                value: item.value,
-                                label: (
-                                    <div className="flex items-center gap-2">
-                                        {item.icon}
-                                        <span className="font-bold text-[11px] uppercase tracking-wider">{item.label}</span>
-                                    </div>
-                                )
-                            }))}
-                            value={currentTypeFilter}
-                            onValueChange={(v) => setTypeFilter(v || "all")}
-                            className="h-9 bg-slate-50 border-slate-200"
-                        />
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg shrink-0">
+                        {typeFilterItems.map((item) => (
+                            <button
+                                key={item.value}
+                                onClick={() => setTypeFilter(item.value)}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all text-[10px] font-black uppercase tracking-tight",
+                                    currentTypeFilter === item.value 
+                                        ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" 
+                                        : "text-slate-500 hover:text-slate-800"
+                                )}
+                            >
+                                {item.icon}
+                                <span className="hidden lg:inline">{item.label}</span>
+                            </button>
+                        ))}
                     </div>
                 )}
 
@@ -501,7 +496,7 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                         className="h-9 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-black uppercase tracking-[0.1em] text-[10px] px-3 rounded-lg shadow-sm active:scale-95 transition-all"
                     >
                         <Plus className="mr-1.5 h-3.5 w-3.5 stroke-[3px]" />
-                        Quick
+                        Add Txns
                     </Button>
 
                     <Button

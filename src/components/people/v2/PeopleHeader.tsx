@@ -246,6 +246,7 @@ export function PeopleHeader({
                                 remains={stats.remains}
                                 paidRollover={stats.paidRollover}
                                 receiveRollover={stats.receiveRollover}
+                                outstandingDebt={person.outstanding_debt}
                                 tabs={activeCycle ? [
                                     {
                                         key: 'current',
@@ -271,6 +272,7 @@ export function PeopleHeader({
                                             remains: stats.remains,
                                             paidRollover: stats.paidRollover,
                                             receiveRollover: stats.receiveRollover,
+                                            outstandingDebt: person.outstanding_debt,
                                         },
                                     }
                                 ] : undefined}

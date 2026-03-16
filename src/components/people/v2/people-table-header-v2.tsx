@@ -116,10 +116,19 @@ export function PeopleTableHeaderV2({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                     placeholder="Search people..."
-                    className="pl-9 h-10 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-lg"
+                    className="pl-9 pr-9 h-10 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-lg"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                 />
+                {searchQuery && (
+                    <button
+                        onClick={() => onSearchChange("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
+                        aria-label="Clear search"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                )}
             </div>
 
             {/* Year Filter */}

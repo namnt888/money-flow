@@ -452,6 +452,12 @@ export async function loadTransactions(options: {
   context?: "person" | "account" | "general";
   includeVoided?: boolean;
 }): Promise<TransactionWithDetails[]> {
+  console.log('[DB:PB] transactions.load', {
+    transactionId: options.transactionId,
+    accountId: options.accountId,
+    personId: options.personId,
+    limit: options.limit
+  });
   try {
     const pbParams: any = {
       sort: "-date",

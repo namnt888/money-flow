@@ -41,7 +41,8 @@ export async function executeWithFallback<T>(
     return result
   } catch (error) {
     if (isPocketBase400Or404(error)) {
-      console.warn(`[source:PB] ${context} failed (${(error as any)?.status || '?'})`, error)
+      const status = (error as any)?.status || '?';
+      console.warn(`[source:PB] ${context} failed (${status}): ${(error as any)?.message || String(error)}`)
       console.log(`[source:SB] ${context} - falling back to Supabase`)
       try {
         const result = await sbQuery()

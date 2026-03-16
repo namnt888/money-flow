@@ -29,7 +29,7 @@ import {
   Copy,
   CheckCheck,
   Sigma,
-  Files,
+  Files as LucideFiles,
   Link2,
   Database,
   Info,
@@ -205,6 +205,8 @@ interface UnifiedTransactionTableProps {
   setLoadingMessage?: (message: string) => void;
   onSuccess?: () => Promise<void> | void;
   searchQuery?: string;
+  hideFilters?: boolean;
+  compact?: boolean;
 }
 
 export type UnifiedTransactionTableRef = {
@@ -253,6 +255,8 @@ export const UnifiedTransactionTable = React.forwardRef<
       setIsGlobalLoading,
       setLoadingMessage,
       searchQuery,
+      hideFilters = false,
+      compact = false,
     },
     ref,
   ) => {
@@ -2023,7 +2027,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                 externalOnDuplicate?.(txn);
               }}
             >
-              <Files className="h-3.5 w-3.5" />
+              <LucideFiles className="h-3.5 w-3.5" />
             </button>
           </CustomTooltip>
 
@@ -3199,7 +3203,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                           content={`Duplicated from ID: ${duplicatedFromId}`}
                                         >
                                           <span className="inline-flex items-center gap-1.5 px-2 h-[22px] min-w-[70px] justify-center rounded-full bg-slate-50 text-slate-400 border border-slate-200 text-[10px] font-bold whitespace-nowrap transition-all duration-200 shadow-sm hover:text-slate-600 hover:border-slate-300">
-                                            <Files className="h-3 w-3" />
+                                            <LucideFiles className="h-3 w-3" />
                                             CLONE{" "}
                                             {String(duplicatedFromId).slice(
                                               0,

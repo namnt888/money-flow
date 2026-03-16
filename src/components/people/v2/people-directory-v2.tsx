@@ -141,8 +141,13 @@ export function PeopleDirectoryV2({
                     : (valA < valB ? 1 : -1);
             });
         } else {
-            // Default Sort: by current_debt (highest first)
+            // Default Sort: by current_debt (highest first), prioritizing those with sheet configs
             result.sort((a, b) => {
+                const hasSheetA = !!a.google_sheet_url || !!a.sheet_link;
+                const hasSheetB = !!b.google_sheet_url || !!b.sheet_link;
+                
+                if (hasSheetA !== hasSheetB) return hasSheetB ? 1 : -1;
+
                 const currentDebtA = (a.current_cycle_debt || 0) + (a.outstanding_debt || 0);
                 const currentDebtB = (b.current_cycle_debt || 0) + (b.outstanding_debt || 0);
                 return currentDebtB - currentDebtA;
