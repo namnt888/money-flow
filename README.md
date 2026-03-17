@@ -2,17 +2,14 @@
 
 Money Flow 3 is a comprehensive personal finance application focused on transaction management, debt tracking, and spending analytics.
 
-## Update 2026-03-15
-- Batch phase sync UX fixed (`Sync Master` + immediate checklist refresh on active phase).
-- People cycle sheet sync hardened for stale PocketBase linked account references.
-- Debt cycle tagged repayment allocation improved for custom tags.
-- Flow badges in unified transaction table aligned consistently.
+## Update 2026-03-18
+- People Details UI Redesign: Consolidated header into a single compact bar, restored Cycle/Sheet dropdowns to Control Bar.
+- Fixed Bug 400: Resolved PocketBase fetching issues in People Details.
+- Reward Progress: Dynamic circular progress in header (Repay % or Cashback status).
+- Handover Cleanup: Consolidated old docs into `.agent/handovers/mmyyyy/`.
 
-### Next-Agent Plan Pack (read first)
-- `docs/handovers/HANDOVER_2026-03-15_BATCH_DEBT_SYNC_AND_NEXT_AGENT.md`
-- `docs/plans/INSTALLMENT_DB_AUDIT_PLAN_2026-03-15.md`
-- `docs/plans/SERVICE_CRON_RESEARCH_PLAN_2026-03-15.md`
-- `docs/plans/BOT_QA_REFACTOR_PLAN_2026-03-15.md`
+### Latest Handover (Mar 18, 2026)
+- [People Details UI & Fixes](./.agent/handovers/032026/people-17032026-fix-details-400.md)
 
 ### Branch naming rule (mandatory)
 - New working branches must include `ddmmyyyy`.
@@ -53,7 +50,7 @@ Money Flow 3 is a comprehensive personal finance application focused on transact
 1. **[MASTER_CONTEXT_LOAD.md](./.agent/prompts/MASTER_CONTEXT_LOAD.md)**: Run this first to initialize your session with full repo context.
 2. **[TASK_TEMPLATE.md](./.agent/prompts/TASK_TEMPLATE.md)**: Use this template for defining and executing specific tasks.
 3. **[ONBOARDING.md](./.agent/prompts/ONBOARDING.md)**: Core onboarding guide and reading list.
-4. **[handover_pocketbase_fix.md](./.agent/handovers/handover_pocketbase_fix.md)**: CRITICAL handover notes for PocketBase migration state.
+4. **[Latest Handover](./.agent/handovers/032026/people-17032026-fix-details-400.md)**: CRITICAL handover notes for current state.
 
 
 ### 📖 For Developers & Users
