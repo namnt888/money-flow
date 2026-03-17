@@ -89,3 +89,9 @@ Installments: Installments are linked to transaction_lines. Do not double-count 
    - Use `.logs/` folder for temporary files (gitignored)
    - Clean up `.logs/` before completing tasks
    - See `.agent/rules/cleanup_rules.md` for detailed rules
+
+10. Handover Documentation
+   - **Naming Convention**: Handover filename MUST match the branch name (e.g., `feature-xyz.md`).
+   - **Directory Structure**: Store handovers in `.agent/handovers/mmyyyy/` (e.g., `.agent/handovers/032026/`).
+   - **Format**: Follow the `AGENT_HANDOVER_PROMPTS.md` template or use a clear markdown structure summarizing changes, tests, and next steps.
+   - **Cleanup**: Clean up old handovers and archive folders regularly as per USER request.

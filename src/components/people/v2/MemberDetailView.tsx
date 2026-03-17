@@ -346,32 +346,40 @@ export function MemberDetailView({
         setSelectedAccountId(value)
         if (!value) {
             const params = new URLSearchParams(searchParams.toString())
-            params.set('tag', 'all')
+            // Don't force 'all' if user clears account but is already in a cycle
+            if (!urlTag) params.set('tag', 'all')
             params.delete('year')
             params.delete('dateFrom')
             params.delete('dateTo')
             startTransition(() => {
                 router.push(`?${params.toString()}`, { scroll: false })
             })
-            toast.info('Switched debt cycle to All History')
             return
         }
 
-        if (urlTag !== 'all') {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set('tag', 'all')
-            if (!params.get('year')) {
-                params.set('year', selectedYear ?? new Date().getFullYear().toString())
-            }
-            startTransition(() => {
-                router.push(`?${params.toString()}`, { scroll: false })
-            })
-            toast.info(`Switched debt cycle to all ${params.get('year')} for account filter`)
-        }
+        // If an account is selected, we keep the cycle context if it exists
+        // The TransactionControlBar will attempt to find a relevant cycle if highlight matches.
     }
 
-    // Calculate stats for Header based on Selected Year or All Time
+    // Calculate stats for Header based on Selected Cycle, Year or All Time
     const headerStats = useMemo(() => {
+        // If we have a specific tag (like 2026-03), use only that cycle's stats
+        if (urlTag && urlTag !== 'all' && urlTag.includes('-')) {
+            const cycle = debtCycles.find(c => c.tag === urlTag)
+            if (cycle) {
+                return {
+                    originalLend: cycle.stats.originalLend || 0,
+                    cashback: cycle.stats.cashback || 0,
+                    netLend: cycle.stats.lend || 0,
+                    repay: cycle.stats.repay || 0,
+                    remains: cycle.remains || 0,
+                    paidRollover: cycle.stats.paidRollover || 0,
+                    receiveRollover: cycle.stats.receiveRollover || 0,
+                }
+            }
+        }
+
+        // Fallback to year aggregate or all time
         const targetCycles = selectedYear
             ? debtCycles.filter(c => c.tag.startsWith(selectedYear))
             : debtCycles
@@ -385,7 +393,7 @@ export function MemberDetailView({
             paidRollover: acc.paidRollover + (cycle.stats.paidRollover || 0),
             receiveRollover: acc.receiveRollover + (cycle.stats.receiveRollover || 0),
         }), { originalLend: 0, cashback: 0, netLend: 0, repay: 0, remains: 0, paidRollover: 0, receiveRollover: 0 })
-    }, [debtCycles, selectedYear])
+    }, [debtCycles, selectedYear, urlTag])
 
     // Absolute Active Cycle Logic
     const activeCycle = useMemo(() => {
@@ -536,13 +544,13 @@ export function MemberDetailView({
 
         return {
             earned,
-            cap: config.maxBudget ?? null,
+            cap: config.maxBudget ?? 0,
             currentSpend,
-            minSpend,
+            minSpend: minSpend ?? 0,
             needToSpend,
             remaining: config.maxBudget !== null && config.maxBudget !== undefined
                 ? Math.max(0, config.maxBudget - earned)
-                : null,
+                : 0,
         }
     }, [accounts, selectedAccountId, selectedYear, activeCycleTag, transactions, getEffectiveTxnTag])
 
@@ -651,14 +659,17 @@ export function MemberDetailView({
                 person={person}
                 balanceLabel={balanceLabel}
                 activeCycle={activeCycle}
+                allCycles={debtCycles}
+                accounts={accounts}
                 stats={headerStats}
                 selectedYear={selectedYear}
                 availableYears={availableYears}
                 onYearChange={handleYearChange}
+                onCycleChange={handleCycleChange}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 onEdit={() => setIsPersonSlideOpen(true)}
-                cashbackStatus={selectedAccountCashbackStatus}
+                cashbackStatus={selectedAccountCashbackStatus ?? undefined}
                 isSyncing={isGlobalLoading || isPending}
                 syncingText={isGlobalLoading ? (loadingMessage || 'Syncing...') : 'Loading...'}
             />
