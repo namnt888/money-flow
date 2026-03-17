@@ -161,6 +161,108 @@ export function PeopleRowDetailsV2({ person, isExpanded }: PeopleRowDetailsProps
                         </div>
                     </div>
                 </div>
+            <div className="p-4 bg-slate-50/50 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {/* Column 1: Profile + Services + Financial Breakdown (merged) */}
+                    <div className="space-y-4">
+                        {/* Member Profiles */}
+                        <div>
+                            <h4 className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Member Profiles</h4>
+                            <div className="flex flex-col gap-2">
+                                <TooltipProvider>
+                                    {person.google_sheet_url && (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <a
+                                                    href={person.google_sheet_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors bg-emerald-50 px-2 py-1 rounded w-fit"
+                                                >
+                                                    <ExternalLink className="h-3 w-3" />
+                                                    Google Sheet Link
+                                                </a>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Open Google Sheet in new tab</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
+                                </TooltipProvider>
+                                <Link
+                                    href={`/people/${getPersonRouteId(person)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-slate-100 px-2 py-1 rounded w-fit"
+                                >
+                                    <ArrowRight className="h-3 w-3" />
+                                    Full Details Page
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Active Services */}
+                        <div>
+                            <h4 className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Active Services</h4>
+                            {person.subscription_details && person.subscription_details.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {person.subscription_details.map((sub, idx) => (
+                                        <div key={`${sub.id}-${idx}`} className="flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded shadow-sm">
+                                            {sub.image_url ? (
+                                                <img src={sub.image_url} alt="" className="w-4 h-4 rounded-sm object-cover" />
+                                            ) : (
+                                                <div className="w-4 h-4 rounded-sm bg-indigo-50 flex items-center justify-center">
+                                                    <CreditCard className="h-2 w-2 text-indigo-500" />
+                                                </div>
+                                            )}
+                                            <span className="text-[11px] font-bold text-slate-700">{sub.name}</span>
+                                            <Badge variant="outline" className="h-3.5 px-1 text-[9px] border-indigo-100 bg-indigo-50 text-indigo-600 font-black">
+                                                x{sub.slots}
+                                            </Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-400 italic">No active subscriptions</p>
+                            )}
+                        </div>
+
+                        {/* Financial Breakdown */}
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+                            <h4 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Financial Breakdown</h4>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded bg-amber-50 flex items-center justify-center">
+                                        <Receipt className="h-3 w-3 text-amber-600" />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-600">Current Cycle</span>
+                                    {person.current_cycle_label && (
+                                        <span className="text-[9px] px-1 bg-amber-50 text-amber-600 rounded font-bold">{person.current_cycle_label}</span>
+                                    )}
+                                </div>
+                                <span className="text-sm font-bold text-slate-900">{formatMoneyVND(person.current_cycle_debt || 0)} ₫</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded bg-slate-50 flex items-center justify-center">
+                                        <History className="h-3 w-3 text-slate-500" />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-600">Previous Debt</span>
+                                </div>
+                                <span className="text-sm font-bold text-slate-500">{formatMoneyVND(person.outstanding_debt || 0)} ₫</span>
+                            </div>
+                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                                <span className="text-xs font-black text-slate-900">Total Outstanding</span>
+                                <span className={cn(
+                                    "text-lg font-black tracking-tight",
+                                    totalOutstanding > 0 ? "text-rose-600" : "text-emerald-600"
+                                )}>
+                                    {formatMoneyVND(totalOutstanding)} ₫
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                 {/* Column 3: Recent Activity */}
                 <div className="space-y-2">

@@ -70,8 +70,8 @@ export function usePersonDetails({
                 const absAmount = Math.abs(amount)
                 const isDebt = type === 'debt'
 
-                const isLend = (isDebt && amount < 0) || (type === 'expense' && !!txn.person_id)
-                const isRepay = (isDebt && amount > 0) || type === 'repayment' || (type === 'income' && !!txn.person_id)
+                    const isLend = type === 'debt' || (type === 'expense' && !!txn.person_id)
+                    const isRepay = type === 'repayment' || (type === 'income' && !!txn.person_id)
 
                 // Cashback calculation
                 let cashback = 0
@@ -164,7 +164,7 @@ export function usePersonDetails({
                 (acc, txn) => {
                     const amount = Math.abs(Number(txn.amount) || 0)
                     const type = txn.type
-                    const isOutboundDebt = (type === 'debt' && (Number(txn.amount) || 0) < 0) || (type === 'expense' && !!txn.person_id)
+                        const isOutboundDebt = type === 'debt' || (type === 'expense' && !!txn.person_id)
                     const note = (txn.note || '').toLowerCase()
                     const isRollover = note.includes('rollover')
 
@@ -197,6 +197,8 @@ export function usePersonDetails({
 
                     if (type === 'repayment' || (type === 'debt' && (Number(txn.amount) || 0) > 0) || (type === 'income' && !!txn.person_id)) {
                         acc.repay += amount
+                        if (type === 'repayment' || (type === 'income' && !!txn.person_id)) {
+                            acc.repay += amount
                         if (isRollover) acc.paidRollover += amount
                     }
 

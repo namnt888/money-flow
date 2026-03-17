@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 import {
   pocketbaseList,
   pocketbaseGetById,
@@ -25,6 +26,10 @@ import type {
 } from '@/types/moneyflow.types'
 
 type Person = MoneyflowPerson & { email?: string | null }
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+}
 
 /**
  * Revalidate paths related to a person
@@ -174,6 +179,9 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
       const isOutbound = (['debt', 'expense'].includes(type) && (Number(txn.amount) || 0) < 0) || (fromAccId === debtAccountId)
       // Inbound (Repay/Repayment/Income)
       const isInbound = (['repayment', 'repay'].includes(type)) || (['debt', 'income'].includes(type) && (Number(txn.amount) || 0) > 0) || (toAccId === debtAccountId)
+        // BALANCE CALCULATION logic (type-based, no sign dependency)
+        const isOutbound = ['debt', 'expense'].includes(type) || (fromAccId === debtAccountId)
+        const isInbound = ['repayment', 'repay'].includes(type) || (type === 'income' && !!txn.person_id) || (toAccId === debtAccountId)
 
       if (isOutbound) {
         stats.baseLend += rawAmount
@@ -195,6 +203,27 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
           stats.outstandingDebt -= rawAmount
         }
       }
+        if (isOutbound) {
+          stats.baseLend += rawAmount
+          stats.cashback += cashback
+          stats.totalBalance += netAmount
+          if (isCurrentCycle) {
+            stats.currentCycleDebt += netAmount
+            stats.currentCycleLend = (stats.currentCycleLend || 0) + rawAmount
+            stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cashback
+          } else {
+            stats.outstandingDebt += netAmount
+          }
+        } else if (isInbound) {
+          stats.repaid += rawAmount
+          stats.totalBalance -= rawAmount
+          if (isCurrentCycle) {
+            stats.currentCycleDebt -= rawAmount
+            stats.currentCycleRepay = (stats.currentCycleRepay || 0) + rawAmount
+          } else {
+            stats.outstandingDebt -= rawAmount
+          }
+        }
     })
 
     // 5. Build Final Objects
@@ -215,6 +244,22 @@ export async function getPeople(options?: { includeArchived?: boolean }): Promis
         current_cycle_label: currentMonthTag,
         monthly_debts: []
       }
+        return {
+          ...person,
+          debt_account_id: debtAccount?.id ?? null,
+          current_debt_balance: stats?.totalBalance ?? 0,
+          current_cycle_debt: stats?.currentCycleDebt ?? 0,
+          current_cycle_lend: (stats as any)?.currentCycleLend ?? 0,
+          current_cycle_cashback: (stats as any)?.currentCycleCashback ?? 0,
+          current_cycle_repay: (stats as any)?.currentCycleRepay ?? 0,
+          outstanding_debt: stats?.outstandingDebt ?? 0,
+          total_base_debt: stats?.baseLend ?? 0,
+          total_cashback: stats?.cashback ?? 0,
+          total_repaid: stats?.repaid ?? 0,
+          total_net_debt: (stats?.baseLend ?? 0) - (stats?.cashback ?? 0),
+          current_cycle_label: currentMonthTag,
+          monthly_debts: []
+        }
     })
 
   } catch (error) {
@@ -262,14 +307,27 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     
     const pbId = personRecord.id
 
-    // 2. Fetch Memberships from SB (Waiting for PB migration of service_members)
-    // TODO: Migrate service_members to PB
-    const responseMembers = await pocketbaseList<any>('service_members', {
-      filter: `person_id='${pbId}'`,
-      expand: 'service_id'
-    }).catch(() => ({ items: [] })) // Fallback if table doesn't exist yet
+    let sourcePersonId: string | null = null
+    if (typeof personRecord?.source_id === 'string' && isUuid(personRecord.source_id)) {
+      sourcePersonId = personRecord.source_id
+    } else if (typeof personRecord?.slug === 'string' && isUuid(personRecord.slug)) {
+      sourcePersonId = personRecord.slug
+    } else if (isUuid(id)) {
+      sourcePersonId = id
+    }
 
-    const subscription_ids = responseMembers.items.map(m => m.service_id)
+    let subscription_ids: string[] = []
+    if (sourcePersonId) {
+      const supabase = createClient()
+      const { data: memberRows } = await supabase
+        .from('service_members')
+        .select('service_id')
+        .eq('person_id', sourcePersonId)
+
+      subscription_ids = (memberRows ?? [])
+        .map((row: { service_id: string | null }) => row.service_id)
+        .filter((serviceId): serviceId is string => Boolean(serviceId))
+    }
 
     // 3. Fetch Debt Account
     const debtAccountResponse = await pocketbaseList<any>('accounts', {

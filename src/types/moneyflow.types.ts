@@ -179,6 +179,19 @@ export type Person = {
   total_net_debt?: number | null
   total_repaid?: number | null
   current_debt_balance?: number | null
+    current_debt?: number | null
+    current_cycle_debt?: number | null
+    current_cycle_lend?: number | null
+    current_cycle_cashback?: number | null
+    current_cycle_repay?: number | null
+    outstanding_debt?: number | null
+    current_cycle_label?: string | null
+    // Breakdown
+    total_base_debt?: number | null
+    total_cashback?: number | null
+    total_net_debt?: number | null
+    total_repaid?: number | null
+    current_debt_balance?: number | null
 }
 
 export type SubscriptionMember = {

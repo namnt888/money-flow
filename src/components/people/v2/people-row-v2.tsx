@@ -242,27 +242,26 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
         case 'base_lend':
             return (
                 <AmountCellV2
-                    amount={person.total_base_debt || 0}
+                    amount={person.current_cycle_lend || 0}
                     badgeClassName="bg-slate-50 text-slate-500"
                 />
             );
-        case 'cashback': // Settled
+        case 'cashback':
             return (
                 <AmountCellV2
-                    amount={person.total_cashback || 0}
+                    amount={person.current_cycle_cashback || 0}
                     badgeClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
                 />
             );
-        case 'net_lend': // Outstanding
+        case 'net_lend':
             return (
                 <AmountCellV2
-                    amount={person.total_net_debt || 0}
+                    amount={(person.current_cycle_lend || 0) - (person.current_cycle_cashback || 0)}
                     badgeClassName="bg-indigo-50 text-indigo-600 border-indigo-100"
                 />
             );
-        case 'balance': // Remains
-            // Show TOTAL debt (current + outstanding)
-            const totalDebt = (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
+        case 'balance': {
+            const totalDebt = person.current_cycle_debt || 0;
             return (
                 <div className="flex flex-col items-start gap-1 justify-center py-1">
                     <Badge
@@ -295,6 +294,7 @@ function renderCell(person: Person, key: string, onEdit: (p: Person) => void, on
                     )}
                 </div>
             );
+        }
         case 'action':
             return (
                 <TooltipProvider>
