@@ -25,7 +25,7 @@ export async function getRecentShopIdsByCategoryId(categoryId: string): Promise<
             sort: '-date',
             perPage: 50
         })
-        const ids = response.items.map(t => t.shop_id).filter(Boolean)
+        const ids = response.items.map(t => t.shop_id).filter((id): id is string => !!id)
         return Array.from(new Set(ids)).slice(0, 10)
     } catch (err) {
         console.error('PB: getRecentShopIdsByCategoryId failed:', err)
@@ -41,7 +41,7 @@ export async function getRecentCategoriesByShopId(shopId: string): Promise<strin
             sort: '-date',
             perPage: 50
         })
-        const ids = response.items.map(t => t.category_id).filter(Boolean)
+        const ids = response.items.map(t => t.category_id).filter((id): id is string => !!id)
         return Array.from(new Set(ids)).slice(0, 5)
     } catch (err) {
         console.error('PB: getRecentCategoriesByShopId failed:', err)

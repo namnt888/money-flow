@@ -1,5 +1,7 @@
-import React from 'react';
-import Link from 'next/link';
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
 import { Person } from "@/types/moneyflow.types";
 import { PeopleColumnConfig } from "@/hooks/usePeopleColumnPreferences";
 import { ExpandIcon } from "@/components/transaction/ui/ExpandIcon";
@@ -7,359 +9,546 @@ import { PeopleRowDetailsV2 } from "./people-row-details-v2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, User, CheckCircle2, HandCoins, Banknote, ExternalLink, RotateCw, FileSpreadsheet, Calendar, RefreshCcw, Landmark, Info } from "lucide-react";
+import {
+  Edit,
+  User,
+  CheckCircle2,
+  HandCoins,
+  Banknote,
+  ExternalLink,
+  RotateCw,
+  FileSpreadsheet,
+  Calendar,
+  RefreshCcw,
+  Landmark,
+  Info,
+  Copy,
+  Database,
+  Check,
+} from "lucide-react";
 import { cn, formatMoneyVND, formatVNLongAmount } from "@/lib/utils";
-import { getPersonRouteId } from '@/lib/person-route';
+import { getPersonRouteId } from "@/lib/person-route";
 import { SubscriptionBadges } from "./subscription-badges";
 import { ManageSheetButton } from "@/components/people/manage-sheet-button";
 import { Account } from "@/types/moneyflow.types";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 
 interface PeopleRowProps {
-    person: Person;
-    visibleColumns: PeopleColumnConfig[];
-    isExpanded: boolean;
-    onToggleExpand: (id: string) => void;
-    onEdit: (person: Person) => void;
-    onLend: (person: Person) => void;
-    onRepay: (person: Person) => void;
-    onSync: (personId: string) => Promise<void>;
-    accounts?: Account[];
+  person: Person;
+  visibleColumns: PeopleColumnConfig[];
+  isExpanded: boolean;
+  onToggleExpand: (id: string) => void;
+  onEdit: (person: Person) => void;
+  onLend: (person: Person) => void;
+  onRepay: (person: Person) => void;
+  onSync: (personId: string) => Promise<void>;
+  accounts?: Account[];
 }
 
-const VNLongAmount = ({ amount, className }: { amount: number, className?: string }) => {
-    const text = formatVNLongAmount(amount);
-    if (!text) return null;
-    const parts = text.split(/(\d+)/g);
-    return (
-        <span className={cn("inline-flex items-center gap-0.5", className)}>
-            {parts.map((part, i) => (
-                /^\d+$/.test(part)
-                    ? <strong key={i} className="font-black text-rose-600/90">{part}</strong>
-                    : <span key={i} className="text-slate-400 font-medium">{part}</span>
-            ))}
-        </span>
-    );
+const VNLongAmount = ({
+  amount,
+  className,
+}: {
+  amount: number;
+  className?: string;
+}) => {
+  const text = formatVNLongAmount(amount);
+  if (!text) return null;
+  const parts = text.split(/(\d+)/g);
+  return (
+    <span className={cn("inline-flex items-center gap-0.5", className)}>
+      {parts.map((part, i) =>
+        /^\d+$/.test(part) ? (
+          <strong key={i} className="font-black text-rose-600/90">
+            {part}
+          </strong>
+        ) : (
+          <span key={i} className="text-slate-400 font-medium">
+            {part}
+          </span>
+        ),
+      )}
+    </span>
+  );
 };
 
-const AmountCellV2 = ({ amount, badgeClassName, showLongText = true }: { amount: number, badgeClassName?: string, showLongText?: boolean }) => {
-    if (amount === 0) {
-        return (
-            <Badge variant="outline" className="tabular-nums tracking-tight font-medium bg-slate-50 text-slate-500 opacity-40 border-slate-100 px-2 py-0.5">
-                0
-            </Badge>
-        );
-    }
-
+const AmountCellV2 = ({
+  amount,
+  className,
+}: {
+  amount: number;
+  className?: string;
+}) => {
+  if (amount === 0 || amount === null || amount === undefined) {
     return (
-        <div className="flex flex-col items-start gap-0.5 justify-center py-0.5">
-            <Badge variant="outline" className={cn("tabular-nums tracking-tight font-bold border-slate-200 px-2 py-0.5", badgeClassName)}>
-                {formatMoneyVND(amount)}
-            </Badge>
-            {showLongText && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="cursor-help transition-all hover:opacity-80">
-                                <VNLongAmount amount={amount} className="text-[10px] truncate max-w-[120px]" />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="bg-slate-900 text-white border-none p-2 shadow-xl">
-                            <p className="text-xs font-bold flex items-center gap-1.5">
-                                <Info className="h-3.5 w-3.5 text-blue-400" />
-                                <VNLongAmount amount={amount} className="text-white" />
-                            </p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
+      <span className="tabular-nums font-medium text-slate-400 opacity-20 text-xs text-center w-full">
+        —
+      </span>
     );
+  }
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex flex-col items-start gap-0.5 justify-center py-0.5 cursor-help transition-opacity hover:opacity-80">
+            <span
+              className={cn(
+                "tabular-nums tracking-tight font-medium text-slate-600",
+                className,
+              )}
+            >
+              {formatMoneyVND(amount)}
+            </span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
+          className="bg-slate-900 text-white border-none p-2 shadow-xl"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              Exact Amount
+            </span>
+            <div className="flex items-center gap-1.5 font-bold">
+              <Info className="h-3.5 w-3.5 text-blue-400" />
+              <VNLongAmount amount={amount} className="text-white" />
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 };
 
 export function PeopleRowV2({
-    person,
-    visibleColumns,
-    isExpanded,
-    onToggleExpand,
-    onEdit,
-    onLend,
-    onRepay,
-    onSync,
-    accounts = [],
+  person,
+  visibleColumns,
+  isExpanded,
+  onToggleExpand,
+  onEdit,
+  onLend,
+  onRepay,
+  onSync,
+  accounts = [],
 }: PeopleRowProps) {
-    const handleRowClick = (e: React.MouseEvent) => {
-        // Only expand on row click if not clicking action buttons
-        const target = e.target as HTMLElement;
-        if (!target.closest('.action-cell')) {
-            onToggleExpand(person.id);
-        }
-    };
-
-    const handleExpandToggle = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onToggleExpand(person.id);
-    };
-
-    return (
-        <>
-            <tr
-                className={cn(
-                    "group transition-colors hover:bg-muted/50 cursor-pointer border-b",
-                    isExpanded && "bg-muted/50"
-                )}
-                onClick={handleRowClick}
-            >
-                {/* Expand Column (always first) */}
-                <td className="sticky left-0 z-20 bg-inherit w-10 px-2 py-3 text-center border-r border-slate-200">
-                    <ExpandIcon
-                        isExpanded={isExpanded}
-                        onClick={handleExpandToggle}
-                    />
-                </td>
-
-                {/* Dynamic Columns */}
-                {visibleColumns.map((col, idx) => (
-                    <td
-                        key={`${person.id}-${col.key}`}
-                        className={cn(
-                            "px-4 py-3 align-middle text-sm font-normal text-foreground",
-                            idx < visibleColumns.length - 1 ? 'border-r border-slate-200' : '',
-                            col.key === 'current_debt' && "bg-amber-50/40",
-                            col.key === 'balance' && "bg-blue-50/30",
-                            col.key === 'name' && "sticky left-10 z-10 bg-inherit" // Part of freeze name logic if needed, but let's keep it simple
-                        )}
-                    >
-                        {renderCell(person, col.key, onEdit, onLend, onRepay, onSync, accounts)}
-                    </td>
-                ))}
-            </tr>
-
-            {/* Expanded Details Row */}
-            {isExpanded && (
-                <tr className="bg-muted/30">
-                    <td colSpan={visibleColumns.length + 1} className="p-0 border-b">
-                        <PeopleRowDetailsV2
-                            person={person}
-                            isExpanded={isExpanded}
-                        />
-                    </td>
-                </tr>
-            )}
-        </>
-    );
-}
-
-function renderCell(person: Person, key: string, onEdit: (p: Person) => void, onLend: (p: Person) => void, onRepay: (p: Person) => void, onSync?: (pid: string) => void, accounts?: Account[]) {
-    switch (key) {
-        case 'name':
-            return (
-                <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 rounded-none border border-slate-200 flex-shrink-0">
-                        <AvatarImage src={person.image_url || undefined} alt={person.name} className="object-cover" />
-                        <AvatarFallback className="text-xs bg-primary/10 text-primary rounded-none">
-                            {person.name?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-2 overflow-hidden w-full pr-1">
-                                <Link
-                                    href={`/people/${getPersonRouteId(person)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate flex-1"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {person.name}
-                            </Link>
-
-                            <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
-                                {person.is_group && <span className="text-[10px] text-muted-foreground bg-slate-100 px-1 rounded">Group</span>}
-                                <SubscriptionBadges
-                                    subscriptions={person.subscription_details || []}
-                                    maxDisplay={2}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        case 'current_tag':
-            return (
-                <div className="flex items-center gap-2">
-                    {/* ManageSheetButton with Split Mode */}
-                    {person.sheet_link ? (
-                        <div className="flex items-center gap-1.5 h-full">
-                            {(() => {
-                                const now = new Date();
-                                const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                                const cycleSheet = person.cycle_sheets?.find(s => s.cycle_tag === currentTag);
-                                return (
-                                    <ManageSheetButton
-                                        personId={person.id}
-                                        cycleTag={currentTag}
-                                        initialSheetUrl={cycleSheet?.sheet_url}
-                                        scriptLink={person.sheet_link}
-                                        googleSheetUrl={person.google_sheet_url}
-                                        sheetFullImg={person.sheet_full_img}
-                                        showBankAccount={person.sheet_show_bank_account ?? undefined}
-                                        sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
-                                        showQrImage={person.sheet_show_qr_image ?? undefined}
-                                        accounts={accounts}
-                                        buttonClassName="h-8 text-xs px-3"
-                                        size="sm"
-                                        showCycleAction={true}
-                                        splitMode={true}
-                                    />
-                                );
-                            })()}
-                        </div>
-                    ) : (
-                        <div className="w-[170px] min-w-[170px]">
-                            <Badge
-                                variant="outline"
-                                className="h-8 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 bg-white border-2 border-slate-200 rounded-md tracking-tight shadow-none"
-                            >
-                                <Calendar className="h-3 w-3 opacity-70" />
-                                {person.current_cycle_label || 'NO TAG'}
-                            </Badge>
-                        </div>
-                    )}
-                </div>
-            );
-        case 'current_debt':
-            return (
-                <AmountCellV2
-                    amount={person.current_cycle_debt || 0}
-                    badgeClassName="bg-slate-50 text-slate-500"
-                />
-            );
-        case 'base_lend':
-            return (
-                <AmountCellV2
-                    amount={person.total_base_debt || 0}
-                    badgeClassName="bg-slate-50 text-slate-500"
-                />
-            );
-        case 'cashback': // Settled
-            return (
-                <AmountCellV2
-                    amount={person.total_cashback || 0}
-                    badgeClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
-                />
-            );
-        case 'net_lend': // Outstanding
-            return (
-                <AmountCellV2
-                    amount={person.total_net_debt || 0}
-                    badgeClassName="bg-indigo-50 text-indigo-600 border-indigo-100"
-                />
-            );
-        case 'balance': // Remains
-            // Show TOTAL debt (current + outstanding)
-            const totalDebt = (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
-            return (
-                <div className="flex flex-col items-start gap-1 justify-center py-1">
-                    <Badge
-                        variant="outline"
-                        className={cn(
-                            "tabular-nums tracking-tight font-medium border-0 px-2 py-0.5 text-[15px] leading-none",
-                            totalDebt > 0
-                                ? "bg-red-50 text-red-600 ring-1 ring-inset ring-red-200"
-                                : "bg-slate-50 text-slate-500 opacity-40 grayscale"
-                        )}
-                    >
-                        {formatMoneyVND(totalDebt)}
-                    </Badge>
-                    {totalDebt > 0 && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="cursor-help transition-all hover:opacity-80">
-                                        <VNLongAmount amount={totalDebt} className="text-[12px] truncate max-w-[160px]" />
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="right" className="bg-slate-900 text-white border-none p-2 shadow-xl">
-                                    <p className="text-xs font-bold flex items-center gap-1.5">
-                                        <Info className="h-3.5 w-3.5 text-blue-400" />
-                                        <VNLongAmount amount={totalDebt} className="text-white" />
-                                    </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                </div>
-            );
-        case 'action':
-            return (
-                <TooltipProvider>
-                    <div className="action-cell flex items-center gap-1">
-                        <Tooltip delayDuration={300}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onLend(person);
-                                    }}
-                                >
-                                    <HandCoins className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-rose-900 text-white border-rose-800">
-                                <p>Lend Money</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip delayDuration={300}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onRepay(person);
-                                    }}
-                                >
-                                    <Banknote className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-blue-900 text-white border-blue-800">
-                                <p>Repay Debt</p>
-                            </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip delayDuration={300}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-slate-100"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEdit(person);
-                                    }}
-                                >
-                                    <Edit className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Edit Details</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                </TooltipProvider>
-            );
-        default:
-            return '—';
+  const [copied, setCopied] = useState(false);
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Only expand on row click if not clicking action buttons
+    const target = e.target as HTMLElement;
+    if (!target.closest(".action-cell")) {
+      onToggleExpand(person.id);
     }
-}
+  };
 
+  const handleExpandToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleExpand(person.id);
+  };
+
+  return (
+    <>
+      <tr
+        className={cn(
+          "group transition-colors hover:bg-muted/50 cursor-pointer border-b",
+          isExpanded && "bg-muted/50",
+        )}
+        onClick={handleRowClick}
+      >
+        {/* Expand Column (always first) */}
+        <td className="sticky left-0 z-20 bg-inherit w-10 px-2 py-3 text-center border-r border-slate-200">
+          <ExpandIcon isExpanded={isExpanded} onClick={handleExpandToggle} />
+        </td>
+
+        {/* Dynamic Columns */}
+        {visibleColumns.map((col, idx) => (
+          <td
+            key={`${person.id}-${col.key}`}
+            className={cn(
+              "px-4 py-3 align-middle text-sm font-normal text-foreground",
+              idx < visibleColumns.length - 1
+                ? "border-r border-slate-200"
+                : "",
+              col.key === "name" && "sticky left-10 z-10 bg-inherit",
+            )}
+          >
+            {renderCell(
+              person,
+              col.key,
+              onEdit,
+              onLend,
+              onRepay,
+              { copied, setCopied },
+              onSync,
+              accounts,
+            )}
+          </td>
+        ))}
+      </tr>
+
+      {/* Expanded Details Row */}
+      {isExpanded && (
+        <tr className="bg-muted/30">
+          <td colSpan={visibleColumns.length + 1} className="p-0 border-b">
+            <PeopleRowDetailsV2 person={person} isExpanded={isExpanded} />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+function renderCell(
+  person: Person,
+  key: string,
+  onEdit: (p: Person) => void,
+  onLend: (p: Person) => void,
+  onRepay: (p: Person) => void,
+  copyState: { copied: boolean; setCopied: (v: boolean) => void },
+  onSync?: (pid: string) => void,
+  accounts?: Account[],
+) {
+  const currentBaseLend = person.current_cycle_base_lend ?? 0;
+  const currentRepaid = person.current_cycle_repaid ?? 0;
+  const currentCashback = person.current_cycle_cashback ?? 0;
+  const prevDebt = person.outstanding_debt ?? 0;
+  const currentCycleDebt = person.current_cycle_debt ?? 0;
+  const totalBalance = person.current_debt_balance ?? 0;
+  const { copied, setCopied } = copyState;
+
+  switch (key) {
+    case "name":
+      return (
+        <div className="flex items-center gap-3 group/name w-full">
+          <Avatar
+            className="h-10 w-10 rounded-none border border-slate-200 flex-shrink-0 cursor-pointer"
+            onClick={() => onEdit(person)}
+          >
+            <AvatarImage
+              src={person.image_url || undefined}
+              alt={person.name}
+              className="object-cover"
+            />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary rounded-none">
+              {person.name?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+            <div className="flex items-center gap-2 w-full group/name-row">
+              <div className="flex items-center gap-1 shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-5 text-[9px] font-black uppercase transition-all border-slate-200 px-1.5",
+                          copied
+                            ? "text-emerald-600 bg-emerald-50 border-emerald-200"
+                            : "text-slate-400 hover:text-blue-600 hover:bg-blue-50",
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(person.id);
+                          setCopied(true);
+                          import("sonner").then(({ toast }) =>
+                            toast.success("Copied Person ID", {
+                              description: person.id,
+                            }),
+                          );
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                      >
+                        {copied ? (
+                          <Check className="h-3 w-3 mr-1 text-emerald-600" />
+                        ) : (
+                          <User className="h-3 w-3 mr-1 text-slate-400" />
+                        )}
+                        ID
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 border-none text-white">
+                      <p className="text-[10px] font-bold">
+                        Copy ID: {person.id}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(
+                    `/people/${getPersonRouteId(person)}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }}
+                className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate text-left"
+              >
+                {person.name}
+              </button>
+
+              <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(
+                            `/people/${getPersonRouteId(person)}`,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }}
+                        className="h-5 w-5 text-slate-300 hover:text-blue-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 border-none text-white">
+                      <p className="text-[10px] font-bold">
+                        Open details in new tab
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                {(person.google_sheet_url || person.sheet_link) && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={
+                            person.google_sheet_url || person.sheet_link || "#"
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="h-5 w-5 text-slate-300 hover:text-emerald-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FileSpreadsheet className="h-3 w-3" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-900 border-none text-white">
+                        <p className="text-[10px] font-bold">
+                          Open Google Sheet
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_people_001&filter=${encodeURIComponent(person.id)}&sort=-%40rowid`;
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        }}
+                        className="h-5 w-5 text-slate-300 hover:text-indigo-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                      >
+                        <Database className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 border-none text-white">
+                      <p className="text-[10px] font-bold">
+                        Open People DB (new tab)
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                {person.is_group && (
+                  <span className="text-[10px] font-black text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                    Group
+                  </span>
+                )}
+                <SubscriptionBadges
+                  subscriptions={person.subscription_details || []}
+                  maxDisplay={2}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case "current_tag": {
+      const overdueCount = person.past_due_count || 0;
+      const now = new Date();
+      const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const cycleSheet = person.cycle_sheets?.find(
+        (s) => s.cycle_tag === currentTag,
+      );
+      return (
+        <div className="flex items-center gap-2">
+          <div className="w-[280px] min-w-[280px] flex items-center">
+            {person.sheet_link ? (
+              <div className="flex items-center gap-1.5 w-full">
+                <ManageSheetButton
+                  personId={person.id}
+                  cycleTag={currentTag}
+                  initialSheetUrl={cycleSheet?.sheet_url}
+                  scriptLink={person.sheet_link}
+                  googleSheetUrl={person.google_sheet_url}
+                  sheetFullImg={person.sheet_full_img}
+                  showBankAccount={person.sheet_show_bank_account ?? undefined}
+                  sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
+                  showQrImage={person.sheet_show_qr_image ?? undefined}
+                  accounts={accounts}
+                  buttonClassName="h-8 text-xs px-3 w-full"
+                  size="sm"
+                  showCycleAction={true}
+                  splitMode={true}
+                />
+                {overdueCount > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-5 px-1.5 border-rose-200 bg-rose-50 text-rose-600 text-[10px] font-black border-dashed flex-shrink-0"
+                  >
+                    +{overdueCount}
+                  </Badge>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center gap-2 h-9 border border-slate-200 bg-white rounded-lg shadow-sm px-2">
+                <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 uppercase tracking-tight">
+                  <Calendar className="h-3 w-3 opacity-50" />
+                  {person.current_cycle_label || "NO TAG"}
+                </span>
+                {overdueCount > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 border-rose-200 bg-rose-50 text-rose-600 text-[9px] font-black border-dashed flex-shrink-0"
+                  >
+                    +{overdueCount}
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    case "current_debt": // Outstanding (including historical)
+      return (
+        <AmountCellV2
+          amount={totalBalance}
+          className="text-amber-600 font-bold"
+        />
+      );
+    case "base_lend":
+      return (
+        <AmountCellV2
+          amount={currentBaseLend}
+          className="text-slate-500 font-bold"
+        />
+      );
+    case "repayment": // Total Repaid
+      return (
+        <AmountCellV2
+          amount={currentRepaid}
+          className="text-emerald-600 font-bold"
+        />
+      );
+    case "cashback_total": // Total Cashback
+      return (
+        <AmountCellV2
+          amount={currentCashback}
+          className="text-amber-500 font-bold"
+        />
+      );
+    case "net_lend": // Prev Debt
+      return (
+        <AmountCellV2 amount={prevDebt} className="text-sky-600 font-bold" />
+      );
+    case "balance": // Remains (Net remaining for current cycle)
+      return (
+        <AmountCellV2
+          amount={currentCycleDebt}
+          className={cn(
+            "font-black text-xs",
+            currentCycleDebt > 0
+              ? "text-rose-600"
+              : currentCycleDebt < 0
+                ? "text-emerald-600"
+                : "text-slate-400",
+          )}
+        />
+      );
+    case "action":
+      return (
+        <TooltipProvider>
+          <div className="action-cell flex items-center gap-1">
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLend(person);
+                  }}
+                >
+                  <HandCoins className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-rose-900 text-white border-rose-800">
+                <p>Lend Money</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRepay(person);
+                  }}
+                >
+                  <Banknote className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-blue-900 text-white border-blue-800">
+                <p>Repay Debt</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-slate-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(person);
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Details</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+      );
+    default:
+      return "—";
+  }
+}

@@ -55,21 +55,21 @@ export async function resolvePocketBasePersonRecord(sourceOrPocketBaseId: string
   if (!sourceOrPocketBaseId) return null
 
   try {
-    return await pocketbaseGetById<PocketBaseRecord>('people', sourceOrPocketBaseId)
+    return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', sourceOrPocketBaseId)
   } catch {
     // continue
   }
 
   try {
     const pbId = toPocketBaseId(sourceOrPocketBaseId)
-    return await pocketbaseGetById<PocketBaseRecord>('people', pbId)
+    return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', pbId)
   } catch {
     // continue
   }
 
   try {
     const escapedId = sourceOrPocketBaseId.replace(/'/g, "\\'")
-    const bySlug = await pocketbaseList<PocketBaseRecord>('people', {
+    const bySlug = await pocketbaseList<PocketBaseRecord>('pvl_people_001', {
       perPage: 1,
       page: 1,
       filter: `slug='${escapedId}'`,
@@ -84,7 +84,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
   return executeWithFallback(
     async () => {
       logSource('PB', 'people.list')
-      const response = await pocketbaseList<PocketBaseRecord>('people', {
+      const response = await pocketbaseList<PocketBaseRecord>('pvl_people_001', {
         perPage: 500,
         page: 1,
       })
@@ -254,7 +254,7 @@ export async function createPocketBasePerson(
     group_parent_id: data.group_parent_id ? toPocketBaseId(data.group_parent_id) : null,
   }
   logSource('PB', 'people.create', { id: pbId, name: data.name })
-  return await pocketbaseCreate<PocketBaseRecord>('people', payload)
+  return await pocketbaseCreate<PocketBaseRecord>('pvl_people_001', payload)
 }
 
 export async function updatePocketBasePerson(
@@ -271,7 +271,7 @@ export async function updatePocketBasePerson(
         body.group_parent_id = toPocketBaseId(body.group_parent_id)
       }
 
-      await pocketbaseUpdate<PocketBaseRecord>('people', String(record.id), body)
+      await pocketbaseUpdate<PocketBaseRecord>('pvl_people_001', String(record.id), body)
       return true
     },
     async () => {
@@ -287,7 +287,7 @@ export async function deletePocketBasePerson(sourceOrPocketBaseId: string): Prom
     async () => {
       const record = await resolvePocketBasePersonRecord(sourceOrPocketBaseId)
       if (!record?.id) return false
-      await pocketbaseDelete('people', String(record.id))
+      await pocketbaseDelete('pvl_people_001', String(record.id))
       return true
     },
     async () => {

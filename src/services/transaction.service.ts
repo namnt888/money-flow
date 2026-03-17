@@ -81,8 +81,8 @@ export const getUnifiedTransactions = loadTransactions;
 
 export async function getTransactionById(id: string, _includeRel?: boolean): Promise<TransactionWithDetails | null> {
   try {
-    const pbId = toPocketBaseId(id, 'transactions');
-    const record = await pocketbaseGetById<any>('transactions', pbId, 
+    const pbId = toPocketBaseId(id, 'pvl_txn_001');
+    const record = await pocketbaseGetById<any>('pvl_txn_001', pbId, 
       'category_id,account_id,target_account_id,person_id,shop_id,transaction_history,cashback_entries'
     );
     if (!record) return null;
@@ -452,6 +452,12 @@ export async function loadTransactions(options: {
   context?: "person" | "account" | "general";
   includeVoided?: boolean;
 }): Promise<TransactionWithDetails[]> {
+  console.log('[DB:PB] transactions.load', {
+    transactionId: options.transactionId,
+    accountId: options.accountId,
+    personId: options.personId,
+    limit: options.limit
+  });
   try {
     const pbParams: any = {
       sort: "-date",
@@ -586,7 +592,7 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
       edited_at: new Date().toISOString(),
     };
     
-    await pocketbaseUpdate('transactions', pbId, {
+    await pocketbaseUpdate('pvl_txn_001', pbId, {
       ...normalized,
       date: normalized.occurred_at,
       occurred_at: normalized.occurred_at,
@@ -819,7 +825,7 @@ export async function deleteTransactionCascade(id: string): Promise<boolean> {
     }
 
     // Delete PB transaction
-    await pocketbaseDelete('transactions', pbId);
+    await pocketbaseDelete('pvl_txn_001', pbId);
 
     const affectedAccounts = new Set<string>();
     affectedAccounts.add(existing.account_id);

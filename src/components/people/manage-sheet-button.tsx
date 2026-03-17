@@ -378,6 +378,11 @@ export function ManageSheetButton({
           return
         }
 
+        if (!data) {
+          toast.error('Sync failed: No response from server', { id: toastId })
+          return
+        }
+
         const nextUrl = data.sheetUrl ?? sheetUrl
         if (data.sheetUrl) {
           setSheetUrl(data.sheetUrl)

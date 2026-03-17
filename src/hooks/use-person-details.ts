@@ -1,277 +1,335 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { TransactionWithDetails, Person, PersonCycleSheet } from '@/types/moneyflow.types'
-import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
+import { useMemo } from "react";
+import {
+  TransactionWithDetails,
+  Person,
+  PersonCycleSheet,
+} from "@/types/moneyflow.types";
+import { isYYYYMM, normalizeMonthTag } from "@/lib/month-tag";
 
 export interface DebtCycle {
-    tag: string
-    transactions: TransactionWithDetails[]
-    latestDate: number
-    tagDateVal: number
-    stats: {
-        lend: number
-        repay: number
-        originalLend: number
-        cashback: number
-        paidRollover: number
-        receiveRollover: number
-    }
-    serverStatus?: any
-    remains: number
-    isSettled: boolean
+  tag: string;
+  transactions: TransactionWithDetails[];
+  latestDate: number;
+  tagDateVal: number;
+  stats: {
+    lend: number;
+    repay: number;
+    originalLend: number;
+    cashback: number;
+    paidRollover: number;
+    receiveRollover: number;
+  };
+  serverStatus?: any;
+  remains: number;
+  isSettled: boolean;
 }
 
 interface UsePersonDetailsProps {
-    person: Person
-    transactions: TransactionWithDetails[]
-    debtTags: any[]
-    cycleSheets: PersonCycleSheet[]
-    urlTag?: string | null
+  person: Person;
+  transactions: TransactionWithDetails[];
+  debtTags: any[];
+  cycleSheets: PersonCycleSheet[];
+  urlTag?: string | null;
 }
 
 export function usePersonDetails({
-    person,
-    transactions,
-    debtTags,
-    cycleSheets,
-    urlTag,
+  person,
+  transactions,
+  debtTags,
+  cycleSheets,
+  urlTag,
 }: UsePersonDetailsProps) {
-    const getTxnCycleTag = (txn: TransactionWithDetails): string => {
-        const metadata = txn.metadata as any
-        const metadataDebtCycle = metadata?.debt_cycle_tag as string | undefined
-        const metadataPersisted = metadata?.persisted_cycle_tag as string | undefined
-        const persisted = (txn as any).persisted_cycle_tag as string | undefined
-        const debtCycle = (txn as any).debt_cycle_tag as string | undefined
-        const metadataTag = (metadata?.tag as string | undefined)
-        const rawTag = debtCycle || metadataDebtCycle || txn.tag || persisted || metadataPersisted || metadataTag || ''
-        const normalized = normalizeMonthTag(rawTag)
-        return normalized?.trim() ? normalized.trim() : (rawTag?.trim() ? rawTag.trim() : 'Untagged')
+  const getTxnCycleTag = (txn: TransactionWithDetails): string => {
+    const metadata = (txn.metadata as any) || {};
+    const metadataDebtCycle = metadata.debt_cycle_tag as string | undefined;
+    const metadataPersisted = metadata.persisted_cycle_tag as string | undefined;
+    const persisted = (txn as any).persisted_cycle_tag as string | undefined;
+    const debtCycle = (txn as any).debt_cycle_tag as string | undefined;
+    const metadataTag = metadata.tag as string | undefined;
+    const rawTag =
+      debtCycle ||
+      metadataDebtCycle ||
+      txn.tag ||
+      persisted ||
+      metadataPersisted ||
+      metadataTag ||
+      "";
+    const normalized = normalizeMonthTag(rawTag);
+    if (normalized && normalized.trim()) {
+      return normalized.trim();
     }
+    if (rawTag && rawTag.trim()) {
+      return rawTag.trim();
+    }
+    return "Untagged";
+  };
 
-    // Map for O(1) lookup of Server Side Status
-    const debtTagsMap = useMemo(() => {
-        const m = new Map<string, any>()
-        debtTags.forEach(t => m.set(t.tag, t))
-        return m
-    }, [debtTags])
+  // Map for O(1) lookup of Server Side Status
+  const debtTagsMap = useMemo(() => {
+    const m = new Map<string, any>();
+    debtTags.forEach((t) => {
+      if (t && t.tag) {
+        m.set(t.tag, t);
+      }
+    });
+    return m;
+  }, [debtTags]);
 
-    const activeTransactions = useMemo(
-        () => transactions.filter((txn) => txn.status !== 'void'),
-        [transactions]
-    )
+  const activeTransactions = useMemo(
+    () => transactions.filter((txn) => txn.status !== "void"),
+    [transactions],
+  );
 
-    // Calculate overall metrics
-    const metrics = useMemo(() => {
-        const totals = transactions.reduce(
-            (acc, txn) => {
-                const type = txn.type
-                const amount = Number(txn.amount) || 0
-                const absAmount = Math.abs(amount)
-                const isDebt = type === 'debt'
+  // Calculate overall metrics
+  const metrics = useMemo(() => {
+    return activeTransactions.reduce(
+      (acc, txn) => {
+        const absAmount = Math.abs(Number(txn.amount) || 0);
+        const metadata = (txn.metadata as any) || {};
 
-                const isLend = (isDebt && amount < 0) || (type === 'expense' && !!txn.person_id)
-                const isRepay = (isDebt && amount > 0) || type === 'repayment' || (type === 'income' && !!txn.person_id)
+        // --- UNIFIED CLASSIFICATION LOGIC (GLOSSARY COMPLIANT) ---
+        const note = (txn.note || "").toLowerCase();
+        const type_lower = (txn.type || "").toLowerCase();
+        
+        const isRollover = note.includes("rollover");
+        const isCashback = type_lower === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
+        // "trả" or "repay"
+        const isRepayment = ["repayment", "repay"].includes(type_lower) || (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay"))) && !isCashback;
+        const isSpend = (type_lower === "expense" || type_lower === "debt") && !isRollover && !isCashback && !isRepayment;
 
-                // Cashback calculation
-                let cashback = 0
-                if (txn.final_price !== null && txn.final_price !== undefined) {
-                    const effectiveFinal = Math.abs(Number(txn.final_price))
-                    if (absAmount > effectiveFinal) {
-                        cashback = absAmount - effectiveFinal
-                    }
-                } else if (txn.cashback_share_amount) {
-                    cashback = Number(txn.cashback_share_amount)
-                } else if (txn.cashback_share_percent && txn.cashback_share_percent > 0) {
-                    cashback = absAmount * txn.cashback_share_percent
-                }
-
-                // Include income-based cashback
-                if (type === 'income' && (txn.note?.toLowerCase().includes('cashback') || (txn.metadata as any)?.is_cashback)) {
-                    cashback += absAmount
-                }
-
-                if (isLend) {
-                    const effectiveLend = txn.final_price !== null && txn.final_price !== undefined
-                        ? Math.abs(Number(txn.final_price))
-                        : absAmount
-                    acc.lend += effectiveLend
-                } else if (isRepay) {
-                    acc.repay += absAmount
-                }
-
-                if (cashback > 0) {
-                    acc.cashback += cashback
-                }
-
-                // Count paid transactions (repayments and income with person)
-                if (type === 'repayment' || (type === 'income' && !!txn.person_id)) {
-                    acc.paidCount += 1
-                }
-
-                return acc
-            },
-            { lend: 0, repay: 0, cashback: 0, paidCount: 0 }
-        )
-
-        return totals
-    }, [activeTransactions])
-
-    // Group transactions by cycle tag
-    const debtCycles = useMemo(() => {
-        const groups = new Map<string, TransactionWithDetails[]>()
-
-        // Ensure current month and urlTag are always present
-        const now = new Date()
-        const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-        groups.set(currentMonthTag, [])
-        if (urlTag && isYYYYMM(urlTag)) {
-            groups.set(urlTag, [])
+        // Cashback calculation (Simplified but consistent)
+        let cb = 0;
+        if (txn.final_price !== null && txn.final_price !== undefined) {
+          const effectiveFinal = Math.abs(Number(txn.final_price));
+          if (absAmount > effectiveFinal) {
+            cb = absAmount - effectiveFinal;
+          }
+        } else {
+          const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
+          const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
+          const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
+          if (shareAmount > 0) {
+            cb = shareAmount;
+          } else if (sharePercent > 0 || shareFixed > 0) {
+            const normalizedPercent = sharePercent > 1 ? sharePercent / 100 : sharePercent;
+            cb = absAmount * normalizedPercent + shareFixed;
+          }
         }
 
-        activeTransactions.forEach(txn => {
-            const tag = getTxnCycleTag(txn)
-            if (!groups.has(tag)) {
-                groups.set(tag, [])
-            }
-            groups.get(tag)?.push(txn)
-        })
+        if (isSpend) {
+          const net = absAmount - cb;
+          acc.lend += net;
+          acc.cashback += cb;
+        } else if (isCashback) {
+          acc.cashback += absAmount;
+          acc.lend -= absAmount;
+        } else if (isRepayment) {
+          acc.repay += absAmount;
+          if (isRollover) {
+            acc.paidRollover += absAmount;
+          }
+        } else if (isRollover) {
+          // Outbound/Neutral Rollover
+          acc.lend += absAmount;
+        }
 
-        return Array.from(groups.entries()).map(([tag, txns]) => {
-            // Find latest date in this group
-            let latestDate = 0
-            if (txns.length > 0) {
-                latestDate = txns.reduce((max, txn) => {
-                    const d = new Date(txn.occurred_at ?? txn.created_at).getTime()
-                    return d > max ? d : max
-                }, 0)
-            } else if (isYYYYMM(tag)) {
-                const [y, m] = tag.split('-').map(Number)
-                latestDate = new Date(y, m - 1, 1).getTime()
-            }
+        if (type_lower === "repayment" || (type_lower === "income" && !!txn.person_id)) {
+          acc.paidCount += 1;
+        }
 
-            let tagDateVal = 0
-            if (isYYYYMM(tag)) {
-                const [yearStr, monthStr] = tag.split('-')
-                const year = Number(yearStr)
-                const month = Number(monthStr)
-                if (Number.isFinite(year) && Number.isFinite(month) && month >= 1 && month <= 12) {
-                    tagDateVal = new Date(year, month - 1, 1).getTime()
-                }
-            }
+        return acc;
+      },
+      { lend: 0, repay: 0, cashback: 0, paidCount: 0, paidRollover: 0 },
+    );
+  }, [activeTransactions]);
 
-            const stats = txns.reduce(
-                (acc, txn) => {
-                    const amount = Math.abs(Number(txn.amount) || 0)
-                    const type = txn.type
-                    const isOutboundDebt = (type === 'debt' && (Number(txn.amount) || 0) < 0) || (type === 'expense' && !!txn.person_id)
-                    const note = (txn.note || '').toLowerCase()
-                    const isRollover = note.includes('rollover')
+  // Group transactions by cycle tag
+  const debtCycles = useMemo(() => {
+    const groups = new Map<string, TransactionWithDetails[]>();
 
-                    // Cashback Calculation
-                    let cashback = 0
-                    if (txn.final_price !== null && txn.final_price !== undefined) {
-                        const effectiveFinal = Math.abs(Number(txn.final_price))
-                        if (amount > effectiveFinal) {
-                            cashback = amount - effectiveFinal
-                        }
-                    } else if (txn.cashback_share_amount) {
-                        cashback = Number(txn.cashback_share_amount)
-                    } else if (txn.cashback_share_percent && txn.cashback_share_percent > 0) {
-                        cashback = amount * txn.cashback_share_percent
-                    }
-                    if (type === 'income' && (txn.note?.toLowerCase().includes('cashback') || (txn.metadata as any)?.is_cashback)) {
-                        cashback += amount
-                    }
-
-                    if (isOutboundDebt) {
-                        // FIX: Ensure lend is ALWAYS Net Lend (Original - Isolate-able Cashback)
-                        const effectiveNetLend = (txn.final_price !== null && txn.final_price !== undefined)
-                            ? Math.abs(Number(txn.final_price))
-                            : (amount - cashback)
-                        
-                        acc.lend += effectiveNetLend
-                        acc.originalLend += amount
-                        if (isRollover) acc.receiveRollover += amount
-                    }
-
-                    if (type === 'repayment' || (type === 'debt' && (Number(txn.amount) || 0) > 0) || (type === 'income' && !!txn.person_id)) {
-                        acc.repay += amount
-                        if (isRollover) acc.paidRollover += amount
-                    }
-
-                    if (cashback > 0) {
-                        acc.cashback += cashback
-                    }
-
-                    return acc
-                },
-                { lend: 0, repay: 0, originalLend: 0, cashback: 0, paidRollover: 0, receiveRollover: 0 }
-            )
-
-            // Get Server Status if available
-            let serverStatus = debtTagsMap.get(tag)
-            if (!serverStatus) {
-                const normalized = normalizeMonthTag(tag)
-                if (normalized) serverStatus = debtTagsMap.get(normalized)
-            }
-
-            // Prefer server-calculated remaining principal (FIFO) when available
-            const serverRemainingPrincipal = serverStatus && Number.isFinite(Number(serverStatus.remainingPrincipal))
-                ? Number(serverStatus.remainingPrincipal)
-                : null
-            const remains = stats.lend - stats.repay
-
-            const isSettled = serverStatus ? serverStatus.status === 'settled' : (txns.length === 0 ? false : Math.abs(remains) < 100)
-
-            return {
-                tag,
-                transactions: txns,
-                latestDate,
-                tagDateVal,
-                stats,
-                serverStatus,
-                remains,
-                isSettled
-            } as DebtCycle
-        }).sort((a, b) => {
-            // Priority: Date Descending
-            if (a.tagDateVal > 0 && b.tagDateVal > 0) return b.tagDateVal - a.tagDateVal
-            if (a.tagDateVal > 0) return -1
-            if (b.tagDateVal > 0) return 1
-            return b.latestDate - a.latestDate
-        })
-    }, [activeTransactions, debtTagsMap, urlTag])
-
-    // Available years for filtering
-    const availableYears = useMemo(() => {
-        const years = new Set<string>()
-        activeTransactions.forEach(txn => {
-            const tag = getTxnCycleTag(txn)
-            if (isYYYYMM(tag)) {
-                years.add(tag.split('-')[0])
-            } else if (tag && tag !== 'Untagged') {
-                years.add('Other')
-            }
-        })
-        const currentYear = new Date().getFullYear().toString()
-        years.add(currentYear)
-        return Array.from(years).sort().reverse()
-    }, [activeTransactions])
-
-    // Current cycle info
-    const currentCycle = useMemo(() => {
-        const now = new Date()
-        const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-        return debtCycles.find(c => c.tag === currentTag) || debtCycles[0]
-    }, [debtCycles])
-
-    return {
-        metrics,
-        debtCycles,
-        availableYears,
-        currentCycle,
-        balance: person.balance ?? 0,
-        cycleSheets,
+    // Ensure current month and urlTag are always present
+    const now = new Date();
+    const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    groups.set(currentMonthTag, []);
+    if (urlTag && isYYYYMM(urlTag)) {
+      groups.set(urlTag, []);
     }
+
+    activeTransactions.forEach((txn) => {
+      const tag = getTxnCycleTag(txn);
+      if (!groups.has(tag)) {
+        groups.set(tag, []);
+      }
+      groups.get(tag)?.push(txn);
+    });
+
+    return Array.from(groups.entries())
+      .map(([tag, txns]) => {
+        // Find latest date in this group
+        let latestDate = 0;
+        if (txns && txns.length > 0) {
+          latestDate = txns.reduce((max, txn) => {
+            const d = new Date(txn.occurred_at ?? txn.created_at).getTime();
+            return d > max ? d : max;
+          }, 0);
+        } else if (isYYYYMM(tag)) {
+          const parts = tag.split("-");
+          const y = Number(parts[0]);
+          const m = Number(parts[1]);
+          latestDate = new Date(y, m - 1, 1).getTime();
+        }
+
+        let tagDateVal = 0;
+        if (isYYYYMM(tag)) {
+          const parts = tag.split("-");
+          const year = Number(parts[0]);
+          const month = Number(parts[1]);
+          if (
+            Number.isFinite(year) &&
+            Number.isFinite(month) &&
+            month >= 1 &&
+            month <= 12
+          ) {
+            tagDateVal = new Date(year, month - 1, 1).getTime();
+          }
+        }
+
+        const stats = txns.reduce(
+          (acc, txn) => {
+            // --- UNIFIED CLASSIFICATION LOGIC (GLOSSARY COMPLIANT) ---
+            const note = (txn.note || "").toLowerCase();
+            const type_lower = (txn.type || "").toLowerCase();
+            const absAmount = Math.abs(Number(txn.amount) || 0);
+            const metadata = (txn.metadata as any) || {};
+
+            const isRollover = note.includes("rollover");
+            const isCashback = type_lower === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
+            const isRepayment = ["repayment", "repay"].includes(type_lower) || (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay"))) && !isCashback;
+            const isSpend = (type_lower === "expense" || type_lower === "debt") && !isRollover && !isCashback && !isRepayment;
+
+            // Cashback Calculation
+            let cb = 0;
+            if (txn.final_price !== null && txn.final_price !== undefined) {
+              const effectiveFinal = Math.abs(Number(txn.final_price));
+              if (absAmount > effectiveFinal) {
+                cb = absAmount - effectiveFinal;
+              }
+            } else {
+              const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
+              const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
+              const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
+              if (shareAmount > 0) {
+                cb = shareAmount;
+              } else if (sharePercent > 0 || shareFixed > 0) {
+                const normalizedPercent = sharePercent > 1 ? sharePercent / 100 : sharePercent;
+                cb = absAmount * normalizedPercent + shareFixed;
+              }
+            }
+
+            if (isSpend) {
+              const net = absAmount - cb;
+              acc.lend += net;
+              acc.originalLend += absAmount;
+              acc.cashback += cb;
+            } else if (isCashback) {
+              acc.cashback += absAmount;
+              acc.lend -= absAmount;
+            } else if (isRepayment) {
+              acc.repay += absAmount;
+              if (isRollover) {
+                acc.paidRollover += absAmount;
+              }
+            } else if (isRollover) {
+              acc.lend += absAmount;
+              acc.receiveRollover += absAmount;
+            }
+
+            return acc;
+          },
+          {
+            lend: 0,
+            repay: 0,
+            originalLend: 0,
+            cashback: 0,
+            paidRollover: 0,
+            receiveRollover: 0,
+          },
+        );
+
+        // Get Server Status if available
+        let serverStatus = debtTagsMap.get(tag);
+        if (!serverStatus) {
+          const normalized = normalizeMonthTag(tag);
+          if (normalized) {
+            serverStatus = debtTagsMap.get(normalized);
+          }
+        }
+
+        const remains = stats.lend - stats.repay;
+
+        const isSettled = serverStatus
+          ? serverStatus.status === "settled"
+          : (txns && txns.length === 0)
+            ? false
+            : Math.abs(remains) < 100;
+
+        return {
+          tag,
+          transactions: txns,
+          latestDate,
+          tagDateVal,
+          stats,
+          serverStatus,
+          remains,
+          isSettled,
+        } as DebtCycle;
+      })
+      .sort((a, b) => {
+        // Priority: Date Descending
+        if (a.tagDateVal > 0 && b.tagDateVal > 0) {
+          return b.tagDateVal - a.tagDateVal;
+        }
+        if (a.tagDateVal > 0) {
+          return -1;
+        }
+        if (b.tagDateVal > 0) {
+          return 1;
+        }
+        return b.latestDate - a.latestDate;
+      });
+  }, [activeTransactions, debtTagsMap, urlTag]);
+
+  // Available years for filtering
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    activeTransactions.forEach((txn) => {
+      const tag = getTxnCycleTag(txn);
+      if (isYYYYMM(tag)) {
+        years.add(tag.split("-")[0]);
+      } else if (tag && tag !== "Untagged") {
+        years.add("Other");
+      }
+    });
+    const currentYear = new Date().getFullYear().toString();
+    years.add(currentYear);
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [activeTransactions]);
+
+  // Current cycle info
+  const currentCycle = useMemo(() => {
+    const now = new Date();
+    const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return debtCycles.find((c) => c.tag === currentTag) || debtCycles[0];
+  }, [debtCycles]);
+
+  return {
+    metrics,
+    debtCycles,
+    availableYears,
+    currentCycle,
+    balance: person.balance ?? 0,
+    cycleSheets,
+  };
 }

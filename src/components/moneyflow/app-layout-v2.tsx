@@ -21,7 +21,7 @@ import { coloredNavItems } from '@/components/navigation/nav-icon-system'
 
 export function AppLayoutV2({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const pathname = usePathname()
 
   // Dynamic Favicon for Page Navigation

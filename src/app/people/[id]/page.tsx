@@ -31,7 +31,7 @@ export async function generateMetadata({
   const { id } = await params
   if (id === 'details') return { title: 'Redirecting...' }
   const { tab } = await searchParams
-  const person = (await getPocketBasePersonDetails(id)) ?? (await getPersonWithSubs(id))
+  const person = await getPersonWithSubs(id)
 
   if (!person) return { title: 'Person Not Found' }
 
@@ -116,7 +116,7 @@ async function PeopleDetailContent({
   }
 
   // Fetch person details
-  const person = (await getPocketBasePersonDetails(personId)) ?? (await getPersonWithSubs(personId))
+  const person = await getPersonWithSubs(personId)
 
   if (!person) {
     notFound()

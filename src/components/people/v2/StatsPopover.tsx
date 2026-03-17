@@ -9,8 +9,9 @@ interface StatsPopoverProps {
     netLend: number
     repay: number
     remains: number
-    paidRollover?: number
-    receiveRollover?: number
+    paidRollover?: number | null
+    receiveRollover?: number | null
+    outstandingDebt?: number | null
     children?: React.ReactNode
     tabs?: Array<{
         key: string
@@ -21,8 +22,9 @@ interface StatsPopoverProps {
             netLend: number
             repay: number
             remains: number
-            paidRollover?: number
-            receiveRollover?: number
+            paidRollover?: number | null
+            receiveRollover?: number | null
+            outstandingDebt?: number | null
         }
     }>
 }
@@ -39,6 +41,7 @@ export function StatsPopover({
     remains,
     paidRollover,
     receiveRollover,
+    outstandingDebt,
     children,
     tabs,
 }: StatsPopoverProps) {
@@ -52,6 +55,7 @@ export function StatsPopover({
         remains,
         paidRollover,
         receiveRollover,
+        outstandingDebt,
     }
 
     return (
@@ -101,7 +105,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-white border border-slate-100 p-2 rounded-lg shadow-sm z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-slate-400" />
-                            <span className="text-xs font-medium text-slate-600">Original Spend</span>
+                            <span className="text-xs font-medium text-slate-600">Original Amount</span>
                         </div>
                         <span className="text-sm font-bold text-slate-900">
                             {numberFormatter.format(view.originalLend)}
@@ -117,7 +121,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-amber-50 border border-amber-100 p-2 rounded-lg z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-amber-500" />
-                            <span className="text-xs font-medium text-amber-700">Less Cashback</span>
+                            <span className="text-xs font-medium text-amber-700">Cashback Total</span>
                         </div>
                         <span className="text-sm font-bold text-amber-700">
                             -{numberFormatter.format(view.cashback)}
@@ -133,7 +137,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-blue-50 border border-blue-100 p-2 rounded-lg z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-blue-500" />
-                            <span className="text-xs font-medium text-blue-700">Net Lend</span>
+                            <span className="text-xs font-medium text-blue-700">Net Amount</span>
                         </div>
                         <span className="text-sm font-bold text-blue-700">
                             {numberFormatter.format(view.netLend)}
@@ -145,7 +149,7 @@ export function StatsPopover({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-xs font-medium text-emerald-700">Total Repay</span>
+                                <span className="text-xs font-medium text-emerald-700">Repayment</span>
                             </div>
                             <span className="text-sm font-bold text-emerald-700">
                                 -{numberFormatter.format(view.repay)}
@@ -182,6 +186,32 @@ export function StatsPopover({
                         </>
                     )}
 
+                    {/* Step 6: Historical Debt (If any) */}
+                    {(view.outstandingDebt || 0) !== 0 && (
+                        <>
+                            <div className="flex justify-center -my-1">
+                                <ArrowRight className="h-3 w-3 text-slate-300 rotate-90" />
+                            </div>
+                            <div className="flex flex-col gap-2 bg-amber-50/30 border border-amber-100 p-2 rounded-lg z-10 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-amber-400" />
+                                        <span className="text-xs font-medium text-amber-700">Previous Debt</span>
+                                    </div>
+                                    <span className={cn(
+                                        "text-sm font-bold",
+                                        view.outstandingDebt! > 0 ? "text-amber-600" : "text-emerald-600"
+                                    )}>
+                                        {numberFormatter.format(view.outstandingDebt || 0)}
+                                    </span>
+                                </div>
+                                <div className="pl-4 text-[10px] text-amber-500/80 italic">
+                                    Balance from previous months
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     {/* Divider */}
                     <div className="h-px bg-slate-200 my-2" />
 
@@ -189,7 +219,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-rose-50 border border-rose-200 p-3 rounded-lg z-10 shadow-sm">
                         <div className="flex items-center gap-2">
                             <div className="h-2.5 w-2.5 rounded-full bg-rose-600" />
-                            <span className="text-sm font-bold text-rose-800">REMAINS</span>
+                            <span className="text-sm font-bold text-rose-800">REMAINING AMOUNT</span>
                         </div>
                         <span className="text-lg font-bold text-rose-600">
                             {numberFormatter.format(view.remains)}

@@ -200,7 +200,7 @@ export function PeopleHeader({
                         {/* Stats Grid */}
                         <div className="grid grid-cols-4 gap-x-6 gap-y-0.5 px-6 border-r border-slate-200">
                             <div className="flex flex-col">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Orig. Spend</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Original Amount</span>
                                 <span className="text-[12px] font-bold text-slate-700 tabular-nums">
                                     {numberFormatter.format(isSpecificCycleView && activeCycle ? activeCycle.stats.originalLend : stats.originalLend)}
                                 </span>
@@ -218,7 +218,7 @@ export function PeopleHeader({
                                 </span>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Total Repay</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Repayment</span>
                                 <span className="text-[12px] font-bold text-emerald-600 tabular-nums">
                                     -{numberFormatter.format(isSpecificCycleView && activeCycle ? activeCycle.stats.repay : stats.repay)}
                                 </span>
@@ -228,7 +228,7 @@ export function PeopleHeader({
                         {/* REMAINS Card */}
                         <div className="flex items-center gap-4 pl-2 shrink-0">
                             <div className="flex flex-col">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">REMAINS</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">REMAINING AMOUNT</span>
                                 {displayedBalance === 0 ? (
                                     <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-200">Settled</span>
                                 ) : (
@@ -246,6 +246,7 @@ export function PeopleHeader({
                                 remains={stats.remains}
                                 paidRollover={stats.paidRollover}
                                 receiveRollover={stats.receiveRollover}
+                                outstandingDebt={person.outstanding_debt}
                                 tabs={activeCycle ? [
                                     {
                                         key: 'current',
@@ -271,6 +272,7 @@ export function PeopleHeader({
                                             remains: stats.remains,
                                             paidRollover: stats.paidRollover,
                                             receiveRollover: stats.receiveRollover,
+                                            outstandingDebt: person.outstanding_debt,
                                         },
                                     }
                                 ] : undefined}

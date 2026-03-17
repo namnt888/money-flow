@@ -87,6 +87,8 @@ interface AccountDetailHeaderV2Props {
     cardYearlyCashbackTotal?: number;
     cardYearlyCashbackGivenTotal?: number;
     netProfitYearly?: number;
+    yearTotalInflow?: number;
+    yearTotalOutflow?: number;
   };
   isLoadingPending?: boolean;
 }
@@ -1317,21 +1319,22 @@ export function AccountDetailHeaderV2({
                     <div className="flex justify-between items-center px-1">
                       <div className="flex flex-col">
                         <span className="text-[10px] font-black text-sky-600 uppercase tracking-widest">
-                          Net Income
+                          {((summary?.yearPureIncomeTotal || 0) > 0 || (summary?.yearPureExpenseTotal || 0) > 0)
+                            ? "Pure Net" 
+                            : "Cashflow Net"}
                         </span>
                         <span
                           className={cn(
                             "text-lg font-black tabular-nums transition-all",
-                            (summary?.yearPureIncomeTotal || 0) -
-                              (summary?.yearPureExpenseTotal || 0) >=
-                              0
-                              ? "text-emerald-600"
-                              : "text-rose-600",
+                            ((summary?.yearPureIncomeTotal || 0) > 0 || (summary?.yearPureExpenseTotal || 0) > 0)
+                              ? ((summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0) >= 0 ? "text-emerald-600" : "text-rose-600")
+                              : ((summary?.yearTotalInflow || 0) - (summary?.yearTotalOutflow || 0) >= 0 ? "text-emerald-600" : "text-rose-600")
                           )}
                         >
                           {formatMoneyVND(
-                            (summary?.yearPureIncomeTotal || 0) -
-                              (summary?.yearPureExpenseTotal || 0),
+                            (summary?.yearPureIncomeTotal || 0) > 0 || (summary?.yearPureExpenseTotal || 0) > 0
+                              ? (summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0)
+                              : (summary?.yearTotalInflow || 0) - (summary?.yearTotalOutflow || 0)
                           )}
                         </span>
                       </div>
@@ -1346,7 +1349,9 @@ export function AccountDetailHeaderV2({
                           Incoming
                         </span>
                         <span className="text-[11px] font-black text-emerald-600">
-                          +{formatVNShort(summary?.yearPureIncomeTotal || 0)}
+                          +{(summary?.yearPureIncomeTotal || 0) > 0 
+                            ? formatVNShort(summary?.yearPureIncomeTotal || 0) 
+                            : formatVNShort(summary?.yearTotalInflow || 0)}
                         </span>
                       </div>
                       <div className="flex flex-col text-right">
@@ -1354,7 +1359,9 @@ export function AccountDetailHeaderV2({
                           Outgoing
                         </span>
                         <span className="text-[11px] font-black text-rose-500">
-                          -{formatVNShort(summary?.yearPureExpenseTotal || 0)}
+                          -{(summary?.yearPureExpenseTotal || 0) > 0 
+                            ? formatVNShort(summary?.yearPureExpenseTotal || 0) 
+                            : formatVNShort(summary?.yearTotalOutflow || 0)}
                         </span>
                       </div>
                     </div>
@@ -1406,6 +1413,19 @@ export function AccountDetailHeaderV2({
                             (summary?.yearPureIncomeTotal || 0) -
                               (summary?.yearPureExpenseTotal || 0),
                           )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs pt-1 font-bold border-t border-white/5 mt-1">
+                        <span className="text-white/40 uppercase tracking-widest text-[8px]">
+                          Cashflow Net (All)
+                        </span>
+                        <span className={cn(
+                          "text-[10px]",
+                          (summary?.yearTotalInflow || 0) - (summary?.yearTotalOutflow || 0) >= 0
+                            ? "text-emerald-400"
+                            : "text-rose-400"
+                        )}>
+                          {formatMoneyVND((summary?.yearTotalInflow || 0) - (summary?.yearTotalOutflow || 0))}
                         </span>
                       </div>
                     </div>
