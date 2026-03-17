@@ -104,7 +104,7 @@ export async function getPeople(options?: {
       // Note: we fetch more since we need to calculate historical stats
       filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
       perPage: 2000,
-      sort: "-occurred_at",
+      sort: "-date",
     });
     const allTxns = txnsResponse.items;
     console.log(
@@ -466,7 +466,7 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     let balance = 0;
     if (debtAccountId) {
       const txnsResponse = await pocketbaseList<any>("transactions", {
-        filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}' || target_account_id='${debtAccountId}') && status!='void'`,
+        filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}') && status!='void'`,
         perPage: 1000,
       });
 
@@ -483,9 +483,13 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     }
 
     // 5. Fetch Recent Activity (Transaction History)
+    const filterParts = [`person_id='${pbId}'`];
+    if (debtAccountId) {
+      filterParts.push(`account_id='${debtAccountId}'`, `to_account_id='${debtAccountId}'`);
+    }
     const recentTxnsResponse = await pocketbaseList<any>("transactions", {
-      filter: `(person_id='${pbId}' || account_id='${debtAccountId}' || to_account_id='${debtAccountId}') && status!='void'`,
-      sort: "-occurred_at",
+      filter: `(${filterParts.join(" || ")}) && status!='void'`,
+      sort: "-date",
       perPage: 10,
     });
     const recentTxns = recentTxnsResponse.items;
@@ -506,7 +510,7 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     const currentMonthTag = toYYYYMMFromDate(now);
 
     if (debtAccountId) {
-      const allStatsTxns = await pocketbaseList<any>("pvl_txn_001", {
+      const allStatsTxns = await pocketbaseList<any>("transactions", {
         filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}' || person_id='${pbId}') && status!='void'`,
         perPage: 1000,
       });
