@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type PeopleColumnKey = 'name' | 'current_tag' | 'current_debt' | 'base_lend' | 'cashback' | 'net_lend' | 'balance' | 'action';
+export type PeopleColumnKey = 'name' | 'current_tag' | 'current_debt' | 'base_lend' | 'repayment' | 'cashback_total' | 'net_lend' | 'balance' | 'action';
 
 export interface PeopleColumnConfig {
     key: PeopleColumnKey;
@@ -12,12 +12,13 @@ export interface PeopleColumnConfig {
 
 const defaultPeopleColumns: PeopleColumnConfig[] = [
     { key: 'name', label: 'Name', defaultWidth: 160, minWidth: 140, frozen: true },
-    { key: 'base_lend', label: 'Base Lend', defaultWidth: 140, minWidth: 120 },
-    { key: 'cashback', label: 'Settled', defaultWidth: 140, minWidth: 120 },
-    { key: 'net_lend', label: 'Prev Debt', defaultWidth: 140, minWidth: 120 },
-    { key: 'balance', label: 'Remains', defaultWidth: 150, minWidth: 120 },
+    { key: 'base_lend', label: 'Original Amount', defaultWidth: 140, minWidth: 120 },
+    { key: 'repayment', label: 'Repayment', defaultWidth: 140, minWidth: 120 },
+    { key: 'cashback_total', label: 'Cashback Total', defaultWidth: 130, minWidth: 110 },
+    { key: 'balance', label: 'Remaining Amount', defaultWidth: 140, minWidth: 120 },
     { key: 'current_tag', label: 'Current Tag', defaultWidth: 300, minWidth: 280 },
-    { key: 'current_debt', label: 'Outstanding', defaultWidth: 140, minWidth: 120 },
+    { key: 'current_debt', label: 'Outstanding Debt', defaultWidth: 140, minWidth: 120 },
+    { key: 'net_lend', label: 'Previous Debt', defaultWidth: 130, minWidth: 110 },
     { key: 'action', label: 'Actions', defaultWidth: 100, minWidth: 80, frozen: true },
 ];
 
@@ -29,10 +30,11 @@ export function usePeopleColumnPreferences() {
     const [visibleColumns, setVisibleColumns] = useState<Record<PeopleColumnKey, boolean>>({
         name: true,
         current_tag: true,
-        current_debt: true,
+        current_debt: false, // BUG #5: Hide from row
         base_lend: true,
-        cashback: true,
-        net_lend: true,
+        repayment: true,
+        cashback_total: true,
+        net_lend: false, // BUG #5: Hide from row
         balance: true,
         action: true,
     });
@@ -104,10 +106,11 @@ export function usePeopleColumnPreferences() {
         setVisibleColumns({
             name: true,
             current_tag: true,
-            current_debt: true,
+            current_debt: false,
             base_lend: true,
-            cashback: true,
-            net_lend: true,
+            repayment: true,
+            cashback_total: true,
+            net_lend: false,
             balance: true,
             action: true,
         });

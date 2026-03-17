@@ -1,100 +1,124 @@
-MỤC TIÊU CHUNG
-- Hoàn thiện UX/UI & logic trang /people (IMG1/IMG2/IMG3).
-- Rà soát & điều chỉnh Slide Txn v2 (Profit Analytics & Cashback Performance).
-- Sửa lỗi tạo mới account ở /accounts (AccountSlideV2, PocketBase).
-- Chia theo pha, mỗi pha có VERIFY riêng; ưu tiên dữ liệu từ PocketBase (PB).
+🚨 INTEGRATED TASK — PEOPLE DETAILS BROKEN (6/6 BUGS) 🚨
+READ CAREFULLY. DO NOT SKIP STEPS.
 
-────────────────────────────────────────────────────────────────
-PHA 3 — /people (ENHANCE SAU FIX)
+PAGE AFFECTED:
+- /people
+- /people/[id]  (example: http://localhost:3001/people/wlv4acbrq11l8de)
+- Repro: mở People list → Open person in new tab
 
-A) Remains (IMG1)
-- Cell Remains hiển thị chấm (dot) làm indicator.
-- Hover/focus: chỉ hiện **tooltip bằng chữ** (số đã format); **tooltip không lặp icon dot**.
-- A11y: hỗ trợ bàn phím, tooltip không che thao tác.
+====================================================
+CURRENT STATUS
+====================================================
 
-B) Section expand (IMG2)
-- Bỏ nút “Collapse Stats”; **stats luôn hiển thị**.
-- Phạm vi mặc định: **Entire Year** (cả năm), không giới hạn current/previous.
-- Nếu có chỉ báo dư nợ cũ “(+N)”: khi mở chi tiết, **stats hiển thị đủ N kỳ** chưa trả hết, có cách xem từng kỳ.
-- Layout giữ ổn định, không đẩy “Recent Activity” lệch vị trí.
+Page /people/[id] hiện tại GÃY NẶNG:
+- Build fail / runtime fail
+- Khi render được thì số liệu SAI HOÀN TOÀN
+- Tổng cộng **6 BUG RIÊNG BIỆT**, không được gộp nhầm
 
-C) Group “people có sheet config ở trên đầu”
-- Thêm khu vực group/config ở phần đầu /people:
-  • Thể hiện tình trạng sheet config theo người/nhóm.
-  • Lối tắt mở sheet config.
-  • Không phá vỡ layout bảng.
+====================================================
+THE 6 REAL BUGS (DO NOT MIX)
+====================================================
 
-D) Outstanding hiển thị “0.06” (IMG3) — RESEARCH & FIX
-- Kiểm tra công thức Outstanding; soát parse/format locale (vi-VN), đơn vị (VND vs triệu), scale/round, double‑format.
-- Đối chiếu số thô từ PB với số sau compute ở service/UI để tìm điểm lệch.
-- Kỳ vọng: giá trị đúng đơn vị, không “0.06” phi thực tế; tooltip có thể hiện breakdown ngắn gọn.
+❌ BUG #1 — JS PARSE ERROR (HARD BLOCKER)
+- Errors:
+  • Parsing ecmascript source code failed
+  • Expression expected
+  • Expected ',', got 'const'
+  • Unexpected token '}'
+- Files:
+  • src/hooks/use-person-details.ts
+  • src/components/people/v2/MemberDetailView.tsx
+- Root cause:
+  • const / if đặt trực tiếp trong expression
+  • reduce() / JSX bị dùng sai cú pháp
+- Status:
+  ⛔ App không render được
+- Rule:
+  👉 FIX BUG #1 FIRST OR STOP
 
-E) Cycle pills — đồng nhất độ dài
-- Pill cycle **không có sheet config** phải **dài bằng** pill có sheet config (độ rộng thống nhất, label không co).
+----------------------------------------------------
 
-VERIFY — PHA 3
-- Remains: bình thường dot; hover/focus thấy tooltip số (không có dot trong tooltip).
-- Stats: luôn hiển thị (Entire Year); khi có (+N) thì thấy đủ N kỳ chưa trả.
-- Group sheet config: ở đầu trang, không phá layout.
-- Outstanding: không còn hiển thị “0.06” sai.
-- Cycle pills: chiều dài thống nhất.
+❌ BUG #2 — RUNTIME Reference / TDZ ERROR
+- Errors:
+  • Cannot access 'rawAmount' before initialization
+- File:
+  • src/services/people.service.ts
+- Root cause:
+  • let/const dùng trước khi khai báo
+- Status:
+  ⛔ Crash khi load page
 
-────────────────────────────────────────────────────────────────
-PHA 4 — Slide Txn v2 (Profit Analytics & Cashback Performance)
+----------------------------------------------------
 
-A) Nút “Sync”
-- Thêm nút “Sync” buộc refetch toàn bộ dữ liệu liên quan **từ PocketBase** theo accountId + cycle (ví dụ 25.02–24.03).
-- Trong “Sync”: có loading; disable thao tác; log rõ nguồn fetch `source=PB`; sau khi xong, recompute tất cả chỉ số.
-- Fail → hiện banner lỗi, cho phép retry.
+❌ BUG #3 — WRONG DATA SCOPE (CURRENT vs AGGREGATE)
+- Symptoms:
+  • People ROW hiển thị:
+    - Original Amount = 289,647,940 (WRONG)
+    - Repayment = 289,150,883
+    - Cashback = 898,733
+- Reality:
+  • Đây là ENTIRE YEAR / MULTI-CYCLE aggregate
+  • ROW phải là CURRENT CYCLE (~1.8M)
+- Root cause:
+  • reuse aggregate selector cho row
+- Status:
+  ❌ Business logic major bug
 
-B) Profit Analytics — kiểm tra & sửa công thức/luồng
-- Xác nhận input cho cycle: tổng spend, shared, bank reward (est), prev debt…; filter đúng window thời gian (UTC/local), category match (“Online Shopping”), exclude/refund/fee hợp lý.
-- Rà soát cache/memo: tránh giữ state cũ làm “Total Shared / Remains Cashback / Target” không đổi.
-- Sau Sync, các thẻ trong “Cycle Budget” phải cập nhật đúng dữ liệu kỳ.
+----------------------------------------------------
 
-C) Cashback Performance — hiển thị áp CAP
-- Nếu cấu hình thẻ: hoàn tiền 10% **cap 300.000**:
-  • Giá trị “Earned” trên UI = **min(rawEarned, cap) = 300.000**.
-  • Tooltip hiển thị breakdown: “Earned by cycle rules”, phép tính 10%, “Rule sum fallback”, “Total”, và “Applied Cap: 300.000”.
-- Đảm bảo rounding & format tiền tệ nhất quán.
+❌ BUG #4 — HEADER INCONSISTENCY (/people vs /people/[id])
+- /people uses:
+  • Original Amount
+  • Repayment
+  • Cashback
+  • Remaining Amount
+- /people/[id] header uses:
+  • Orig. Spend
+  • Net Lend
+  • Total Repay
+- Root cause:
+  • header detail chưa refactor theo glossary
+- Status:
+  ❌ Inconsistent logic & UX
 
-VERIFY — PHA 4
-- Trước Sync: ghi nhận số hiện tại.
-- Sau Sync: chỉ số cập nhật khớp với txn cycle (ví dụ có 3 txn Online Shopping).
-- Cashback: UI hiển thị số đã áp cap; tooltip nêu đủ breakdown + cap.
-- Profit Analytics: Total Shared, Remains Cashback, Spendable Target đổi đúng theo dữ liệu sau Sync.
-- Edge cases: 0 txn hợp lệ (Earned=0, Remains Cashback=cap), có refund/void, chuyển cycle.
+----------------------------------------------------
 
-────────────────────────────────────────────────────────────────
-PHA 5 — /accounts (BUG CREATE ACCOUNT FAIL — AccountSlideV2)
+❌ BUG #5 — PREV DEBT COLUMN SHOULD NOT EXIST IN ROW
+- Symptoms:
+  • Prev Debt vẫn xuất hiện ở People table row
+  • Giá trị “—” hoặc sai ngữ nghĩa
+- Root cause:
+  • Glossary mới đã loại Prev Debt khỏi ROW
+  • UI + mapping chưa cleanup
+- Rule:
+  • Prev Debt chỉ được tồn tại ở EXPAND / DETAILS (nếu cần)
 
-LOG
-- Error Type: Console Error
-- Message: `[AccountSlideV2] Create failed "Failed to create account in PocketBase"`
-- Callsite: `handleSave` tại `src_components_accounts_v2_*.js:4353:29`
-- Môi trường: Next.js 16.0.10 (Turbopack), Dev
+----------------------------------------------------
 
-YÊU CẦU
-1) Research luồng `handleSave`:
-   - Xác định hàm gọi PB: collection, payload (fields bắt buộc, quan hệ, file).
-   - Ghi log chi tiết từ PB: status code, validation error theo field, rule trigger.
+❌ BUG #6 — REMAINING VALUE NOT VERIFIABLE
+- Symptom:
+  • Remains = 1,784,577 (looks OK)
+- BUT:
+  • Base, Repay, Cashback đều sai scope
+  • → Remains chỉ đúng NGẪU NHIÊN
+- Status:
+  ⚠️ Không được xác nhận cho tới khi #1–#5 xong
 
-2) Kiểm tra schema & quyền PB:
-   - Required/unique, relation integrity, rule “create”, kích thước/loại file nếu có.
-   - Xác thực: token (admin/user), quyền collection.
+====================================================
+MANDATORY FIX ORDER (NO EXCEPTIONS)
+====================================================
 
-3) Sửa & UX:
-   - Nếu validation fail → hiển thị lỗi chỉ rõ field; không throw chung chung.
-   - Nếu network/transient → retry/backoff hợp lý.
-   - Thành công → toast/notification, refetch list, focus về item mới.
+STEP 1 — SYNTAX STABILITY
+✅ Fix BUG #1 + BUG #2 ONLY
+- Không sửa logic tiền
+- Không sửa UI
+- Mục tiêu:
+  • next build PASS
+  • Page render được
 
-VERIFY — PHA 5
-- Tạo account với payload hợp lệ → Thành công, không còn log lỗi.
-- Thiếu field bắt buộc → Có thông báo chi tiết field lỗi; không crash.
-- Sau tạo mới → Danh sách cập nhật, mở được slide txn của account vừa tạo.
+----------------------------------------------------
 
-────────────────────────────────────────────────────────────────
-GHI CHÚ TRIỂN KHAI
-- Không cần xuất code trong báo cáo; chỉ cần nêu phạm vi file/logic đã chạm, thay đổi gì và tại sao (1–2 dòng/mục).
-- Giữ style system/a11y; thống nhất tooltip; hạn chế thay đổi màu/spacing lớn.
-- Dữ liệu ưu tiên PocketBase; log rõ ràng nguồn (`source=PB`); tránh dùng cache cũ.
+STEP 2 — SCOPE SEPARATION
+- PEOPLE TABLE ROW:
+  • CURRENT CYCLE ONLY
+  • Original Amount (current)

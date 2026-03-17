@@ -105,7 +105,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-white border border-slate-100 p-2 rounded-lg shadow-sm z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-slate-400" />
-                            <span className="text-xs font-medium text-slate-600">Original Spend</span>
+                            <span className="text-xs font-medium text-slate-600">Original Amount</span>
                         </div>
                         <span className="text-sm font-bold text-slate-900">
                             {numberFormatter.format(view.originalLend)}
@@ -121,7 +121,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-amber-50 border border-amber-100 p-2 rounded-lg z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-amber-500" />
-                            <span className="text-xs font-medium text-amber-700">Less Cashback</span>
+                            <span className="text-xs font-medium text-amber-700">Cashback Total</span>
                         </div>
                         <span className="text-sm font-bold text-amber-700">
                             -{numberFormatter.format(view.cashback)}
@@ -137,7 +137,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-blue-50 border border-blue-100 p-2 rounded-lg z-10">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-blue-500" />
-                            <span className="text-xs font-medium text-blue-700">Net Lend</span>
+                            <span className="text-xs font-medium text-blue-700">Net Amount</span>
                         </div>
                         <span className="text-sm font-bold text-blue-700">
                             {numberFormatter.format(view.netLend)}
@@ -149,7 +149,7 @@ export function StatsPopover({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-xs font-medium text-emerald-700">Total Repay</span>
+                                <span className="text-xs font-medium text-emerald-700">Repayment</span>
                             </div>
                             <span className="text-sm font-bold text-emerald-700">
                                 -{numberFormatter.format(view.repay)}
@@ -219,7 +219,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between bg-rose-50 border border-rose-200 p-3 rounded-lg z-10 shadow-sm">
                         <div className="flex items-center gap-2">
                             <div className="h-2.5 w-2.5 rounded-full bg-rose-600" />
-                            <span className="text-sm font-bold text-rose-800">REMAINS</span>
+                            <span className="text-sm font-bold text-rose-800">REMAINING AMOUNT</span>
                         </div>
                         <span className="text-lg font-bold text-rose-600">
                             {numberFormatter.format(view.remains)}
