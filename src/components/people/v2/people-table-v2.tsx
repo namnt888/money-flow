@@ -120,6 +120,11 @@ export function PeopleTableV2({
         // Sort members within groups
         Object.values(groups).forEach(group => {
             group.members.sort((a, b) => {
+                // Priority: has sheet config
+                const hasSheetA = (a.google_sheet_url?.trim() || a.sheet_link?.trim() || (a.cycle_sheets && a.cycle_sheets.length > 0)) ? 1 : 0;
+                const hasSheetB = (b.google_sheet_url?.trim() || b.sheet_link?.trim() || (b.cycle_sheets && b.cycle_sheets.length > 0)) ? 1 : 0;
+                if (hasSheetA !== hasSheetB) return hasSheetB - hasSheetA;
+
                 let valA: any = (a as any)[sortConfig.key] ?? 0;
                 let valB: any = (b as any)[sortConfig.key] ?? 0;
 
@@ -130,6 +135,16 @@ export function PeopleTableV2({
                 } else if (sortConfig.key === 'current_debt') {
                     valA = a.current_cycle_debt || 0;
                     valB = b.current_cycle_debt || 0;
+                } else if (sortConfig.key === 'balance') {
+                    valA = a.current_debt_balance || 0;
+                    valB = b.current_debt_balance || 0;
+                }
+
+                // If values are equal, fallback to default priority: has sheet
+                if (valA === valB) {
+                    const hasSheetA = (a.google_sheet_url?.trim() || a.sheet_link?.trim() || (a.cycle_sheets && a.cycle_sheets.length > 0)) ? 1 : 0;
+                    const hasSheetB = (b.google_sheet_url?.trim() || b.sheet_link?.trim() || (b.cycle_sheets && b.cycle_sheets.length > 0)) ? 1 : 0;
+                    if (hasSheetA !== hasSheetB) return hasSheetB - hasSheetA;
                 }
 
                 if (typeof valA === 'string' && typeof valB === 'string') {

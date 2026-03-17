@@ -14,7 +14,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { SingleTransactionFormValues } from "../types";
 import { Combobox, ComboboxGroup } from "@/components/ui/combobox";
-import { getActiveInstallments, Installment } from "@/services/installment.service";
+import { getActiveInstallments } from "@/services/installment.service";
+import { Installment } from "@/types/moneyflow.types";
 import { CreateInstallmentDialog } from "@/components/installments/create-installment-dialog";
 
 type InstallmentSelectorProps = {

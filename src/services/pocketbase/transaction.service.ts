@@ -38,8 +38,9 @@ type PocketBaseTransaction = {
   persisted_cycle_tag?: string | null;
   debt_cycle_tag?: string;
   statement_cycle_tag?: string;
-  is_installment: boolean;
-  parent_transaction_id: string;
+  is_installment?: boolean;
+  installment_plan_id?: string | null;
+  parent_transaction_id?: string | null;
   metadata: {
     persisted_cycle_tag?: string | null;
     cashback_mode?: CashbackMode | null;
@@ -102,6 +103,7 @@ export type PocketBaseTransactionMutationInput = {
   shop_id?: string | null;
   metadata?: Json | null;
   is_installment?: boolean;
+  installment_plan_id?: string | null;
   linked_transaction_id?: string | null;
   persisted_cycle_tag?: string | null;
   debt_cycle_tag?: string | null;
@@ -142,6 +144,7 @@ function buildPocketBaseMutationPayload(input: PocketBaseTransactionMutationInpu
     shop_id: input.shop_id ?? '',
     cashback_amount: 0,
     is_installment: Boolean(input.is_installment),
+    installment_plan_id: input.installment_plan_id ?? '',
     parent_transaction_id: input.linked_transaction_id ?? '',
     persisted_cycle_tag: input.persisted_cycle_tag ?? null,
     debt_cycle_tag: input.debt_cycle_tag ?? null,
@@ -186,7 +189,7 @@ export function mapPocketBaseTransactionRow(
     debt_cycle_tag: record.debt_cycle_tag || null,
     statement_cycle_tag: record.statement_cycle_tag || null,
     is_installment: record.is_installment || null,
-    installment_plan_id: null, // PB uses parent_transaction_id instead
+    installment_plan_id: record.installment_plan_id || null,
     cashback_share_percent: cashbackSharePercent,
     cashback_share_fixed: cashbackShareFixed,
     cashback_share_amount: null, // Calculated later

@@ -53,17 +53,6 @@ export function MemberDetailView({
     shops,
     subscriptions = [],
 }: MemberDetailViewProps) {
-        const getEffectiveTxnTag = (txn: TransactionWithDetails): string => {
-            const metadata = txn.metadata as any
-            const metadataDebtCycle = metadata?.debt_cycle_tag as string | undefined
-            const metadataPersisted = metadata?.persisted_cycle_tag as string | undefined
-            const persisted = (txn as any).persisted_cycle_tag as string | undefined
-            const debtCycle = (txn as any).debt_cycle_tag as string | undefined
-            const metadataTag = (metadata?.tag as string | undefined)
-            const rawTag = debtCycle || metadataDebtCycle || txn.tag || persisted || metadataPersisted || metadataTag || ''
-            return normalizeMonthTag(rawTag) || rawTag
-        }
-
     const router = useRouter()
     const searchParams = useSearchParams()
     const urlTag = searchParams.get('tag')
@@ -89,36 +78,59 @@ export function MemberDetailView({
 
     const [isPending, startTransition] = useTransition()
 
-    // Browser Tab Spinner Enhancement (Overwrites page icon during active sync/rollover)
-    // Also displays the person's profile image as the favicon when not loading
+    // Helper function for tag extraction
+    const getEffectiveTxnTag = useMemo(() => {
+        return (txn: TransactionWithDetails): string => {
+            const metadata = (txn.metadata as any) || {}
+            const metadataDebtCycle = metadata.debt_cycle_tag as string | undefined
+            const metadataPersisted = metadata.persisted_cycle_tag as string | undefined
+            const persisted = (txn as any).persisted_cycle_tag as string | undefined
+            const debtCycle = (txn as any).debt_cycle_tag as string | undefined
+            const metadataTag = (metadata.tag as string | undefined)
+            const rawTag = debtCycle || metadataDebtCycle || txn.tag || persisted || metadataPersisted || metadataTag || ''
+            return normalizeMonthTag(rawTag) || rawTag
+        }
+    }, [])
+
+    // Browser Tab Spinner Enhancement
     useAppFavicon(isSubmitting || isGlobalLoading || isPending, person.image_url ?? undefined)
 
     // Derive active month/year from URL (Single Source of Truth)
     const urlYear = searchParams.get('year')
     const activeCycleTag = useMemo(() => {
-        if (urlTag) return urlTag
+        if (urlTag) {
+            return urlTag
+        }
 
         const hasCurrentData = transactions.some((txn) => {
             const normalizedTag = normalizeMonthTag(getEffectiveTxnTag(txn) || '')
             return normalizedTag === currentMonthTag
         })
-        if (hasCurrentData) return currentMonthTag
+        if (hasCurrentData) {
+            return currentMonthTag
+        }
 
-        const latestTag = transactions
+        const sortedTags = transactions
             .map((txn) => normalizeMonthTag(getEffectiveTxnTag(txn) || ''))
             .filter((tag): tag is string => Boolean(tag))
-            .sort((a, b) => b.localeCompare(a))[0]
+            .sort((a, b) => b.localeCompare(a))
 
-        return latestTag || currentMonthTag
-    }, [urlTag, transactions, currentMonthTag])
+        return sortedTags[0] || currentMonthTag
+    }, [urlTag, transactions, currentMonthTag, getEffectiveTxnTag])
 
     const selectedYear = useMemo(() => {
-        if (urlYear) return urlYear // Explicit year param takes priority
-        if (urlTag === 'all') return null
-        if (urlTag && urlTag.includes('-')) return urlTag.split('-')[0]
-
-        if (activeCycleTag.includes('-')) return activeCycleTag.split('-')[0]
-
+        if (urlYear) {
+            return urlYear
+        }
+        if (urlTag === 'all') {
+            return null
+        }
+        if (urlTag && urlTag.includes('-')) {
+            return urlTag.split('-')[0]
+        }
+        if (activeCycleTag.includes('-')) {
+            return activeCycleTag.split('-')[0]
+        }
         return new Date().getFullYear().toString()
     }, [urlTag, urlYear, activeCycleTag])
 
@@ -137,7 +149,6 @@ export function MemberDetailView({
             if (t.source_account_id) ids.add(t.source_account_id)
             if (t.target_account_id) ids.add(t.target_account_id)
             if (t.account_id) ids.add(t.account_id)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const toAccountId = (t as any).to_account_id as string | undefined
             if (toAccountId) ids.add(toAccountId)
         })
@@ -159,10 +170,9 @@ export function MemberDetailView({
         const tabLabel = activeTab === 'history' ? 'History' : activeTab === 'split-bill' ? 'Split Bill' : 'Transactions'
         document.title = `${person.name} ${tabLabel}`
 
-        // Set custom breadcrumb name: "Lâm detail history"
         const path = `/people/${getPersonRouteId(person)}`
         setCustomName(path, `${person.name} detail history`)
-    }, [person.id, person.name, person.pocketbase_id, activeTab, setCustomName])
+    }, [person.id, person.name, person.pocketbase_id, activeTab, setCustomName, person])
 
     const { addRecentItem } = useRecentItems()
 
@@ -175,12 +185,11 @@ export function MemberDetailView({
                 image_url: person.image_url
             })
         }
-    }, [person.id, person.name, addRecentItem])
+    }, [person.id, person.name, person.image_url, addRecentItem])
 
-    // 4. Update Navigation Handlers
+    // Update Navigation Handlers
     const handleCycleChange = (tag: string) => {
         if (tag !== 'all') {
-            // Clear filters when tag is selected
             setSelectedAccountId(undefined)
             setDateMode('all')
             setDateRangeValue(undefined)
@@ -200,7 +209,6 @@ export function MemberDetailView({
     const handleCycleSelect = (tag: string, year: string | null) => {
         const params = new URLSearchParams(searchParams.toString())
         
-        // Clear secondary filters when cycle is explicitly selected
         params.delete('accountId')
         params.delete('dateFrom')
         params.delete('dateTo')
@@ -246,11 +254,6 @@ export function MemberDetailView({
         })
     }
 
-    const handleBack = () => {
-        router.back()
-    }
-
-    // Passively sync date range from URL if present
     useEffect(() => {
         if (dateFrom && dateTo) {
             try {
@@ -267,7 +270,6 @@ export function MemberDetailView({
                 setDateValue(parsedFrom)
                 setDateMode('range')
             } catch (err) {
-                console.error('Failed to parse date range:', err)
                 setDateRangeFilter(undefined)
                 setDateRangeValue(undefined)
                 setDateMode('all')
@@ -277,23 +279,20 @@ export function MemberDetailView({
             setDateRangeValue(undefined)
             setDateMode('all')
         }
-    }, [dateFrom, dateTo, searchParams])
+    }, [dateFrom, dateTo])
 
     const updateDateRangeParams = (nextFrom: string, nextTo: string) => {
         const params = new URLSearchParams(searchParams.toString())
-
         if (nextFrom) {
             params.set('dateFrom', nextFrom)
         } else {
             params.delete('dateFrom')
         }
-
         if (nextTo) {
             params.set('dateTo', nextTo)
         } else {
             params.delete('dateTo')
         }
-
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
@@ -305,7 +304,6 @@ export function MemberDetailView({
         params.delete('year')
         params.delete('dateFrom')
         params.delete('dateTo')
-        
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
@@ -318,13 +316,10 @@ export function MemberDetailView({
     const handlePickerRangeChange = (nextRange: DateRange | undefined) => {
         setDateRangeValue(nextRange)
         if (nextRange?.from && nextRange?.to) {
-            const from = nextRange.from.toISOString().slice(0, 10)
-            const to = nextRange.to.toISOString().slice(0, 10)
-            updateDateRangeParams(from, to)
-            return
-        }
-
-        if (!nextRange?.from && !nextRange?.to) {
+            const fromStr = nextRange.from.toISOString().slice(0, 10)
+            const toStr = nextRange.to.toISOString().slice(0, 10)
+            updateDateRangeParams(fromStr, toStr)
+        } else if (!nextRange?.from && !nextRange?.to) {
             handleClearDateRange()
         }
     }
@@ -349,7 +344,6 @@ export function MemberDetailView({
 
     const handleAccountChange = (value?: string) => {
         setSelectedAccountId(value)
-
         if (!value) {
             const params = new URLSearchParams(searchParams.toString())
             params.set('tag', 'all')
@@ -383,23 +377,23 @@ export function MemberDetailView({
             : debtCycles
 
         return targetCycles.reduce((acc, cycle) => ({
-            originalLend: acc.originalLend + cycle.stats.originalLend,
-            cashback: acc.cashback + cycle.stats.cashback,
-            netLend: acc.netLend + cycle.stats.lend,
-            repay: acc.repay + cycle.stats.repay,
-            remains: acc.remains + cycle.remains,
-            paidRollover: acc.paidRollover + cycle.stats.paidRollover,
-            receiveRollover: acc.receiveRollover + cycle.stats.receiveRollover,
+            originalLend: acc.originalLend + (cycle.stats.originalLend || 0),
+            cashback: acc.cashback + (cycle.stats.cashback || 0),
+            netLend: acc.netLend + (cycle.stats.lend || 0),
+            repay: acc.repay + (cycle.stats.repay || 0),
+            remains: acc.remains + (cycle.remains || 0),
+            paidRollover: acc.paidRollover + (cycle.stats.paidRollover || 0),
+            receiveRollover: acc.receiveRollover + (cycle.stats.receiveRollover || 0),
         }), { originalLend: 0, cashback: 0, netLend: 0, repay: 0, remains: 0, paidRollover: 0, receiveRollover: 0 })
     }, [debtCycles, selectedYear])
 
-    // Absolute Active Cycle Logic (No fuzzy fallbacks)
+    // Absolute Active Cycle Logic
     const activeCycle = useMemo(() => {
         if (urlTag === 'all') {
             return {
                 tag: selectedYear ? `All for ${selectedYear}` : "All History",
                 remains: headerStats.remains,
-                transactions: [], // Not used for 'all' mode
+                transactions: [], 
                 stats: {
                     lend: headerStats.netLend,
                     repay: headerStats.repay,
@@ -413,15 +407,11 @@ export function MemberDetailView({
                 tagDateVal: 0,
             }
         }
-
-        // Find specific tag. If it has a tag in URL, it MUST exist in debtCycles (thanks to hook refactor)
-        // If no tag in URL, we fallback to currentCycle for the 'default' view
         return debtCycles.find(c => c.tag === (urlTag || activeCycleTag)) || currentCycle
     }, [urlTag, debtCycles, headerStats, selectedYear, activeCycleTag, currentCycle])
 
     const applyFilters = (txns: TransactionWithDetails[]) => {
         let result = txns
-
         if (statusFilter === 'void') {
             result = result.filter(t => t.status === 'void')
         } else if (statusFilter === 'pending') {
@@ -447,7 +437,6 @@ export function MemberDetailView({
 
         if (selectedAccountId) {
             result = result.filter(t => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const toAccountId = (t as any).to_account_id as string | undefined
                 return t.source_account_id === selectedAccountId
                     || t.target_account_id === selectedAccountId
@@ -466,7 +455,6 @@ export function MemberDetailView({
             )
         }
 
-        // Apply date range filter if set (from URL params)
         if (dateRangeFilter) {
             result = result.filter(t => {
                 const rawDate = t.occurred_at || t.created_at
@@ -476,29 +464,21 @@ export function MemberDetailView({
                 return isWithinInterval(txDate, { start: dateRangeFilter.from, end: dateRangeFilter.to })
             })
         }
-
         return result
     }
 
-    // Transactions for active cycle or all (if selectedYear is null)
     const cycleTransactions = useMemo(() => {
-        // Mode 1: All Time (selectedYear === null)
         if (selectedYear === null) {
             return applyFilters(transactions)
         }
-
-        // Mode 2: All for specific year
         if (activeCycleTag === 'all') {
             const yearTransactions = transactions.filter(t => getEffectiveTxnTag(t)?.startsWith(selectedYear))
             return applyFilters(yearTransactions)
         }
-
-        // Mode 3: Specific Cycle
         const cycle = debtCycles.find(c => c.tag === activeCycleTag)
         if (!cycle) return []
-
         return applyFilters(cycle.transactions)
-    }, [activeCycleTag, debtCycles, selectedYear, searchTerm, filterType, statusFilter, selectedAccountId, dateRangeFilter, transactions])
+    }, [activeCycleTag, debtCycles, selectedYear, searchTerm, filterType, statusFilter, selectedAccountId, dateRangeFilter, transactions, getEffectiveTxnTag])
 
     const historyTransactions = useMemo(() => {
         const base = transactions.filter(t => {
@@ -508,20 +488,17 @@ export function MemberDetailView({
             return t.occurred_at?.startsWith(selectedYear) ?? false
         })
         return applyFilters(base)
-    }, [transactions, selectedYear, searchTerm, filterType, statusFilter, selectedAccountId, dateRangeFilter])
+    }, [transactions, selectedYear, searchTerm, filterType, statusFilter, selectedAccountId, dateRangeFilter, getEffectiveTxnTag])
 
     const selectedAccountCashbackStatus = useMemo(() => {
         if (!selectedAccountId) return null
-
         const selectedAccount = accounts.find((account) => account.id === selectedAccountId)
         if (!selectedAccount) return null
-
         const config = normalizeCashbackConfig(selectedAccount.cashback_config, selectedAccount)
         const minSpend = config.minSpendTarget ?? null
 
         const sourceTransactions = (() => {
             if (selectedYear === null) return transactions
-
             if (activeCycleTag === 'all') {
                 return transactions.filter((txn) => {
                     const effectiveTag = getEffectiveTxnTag(txn)
@@ -529,12 +506,10 @@ export function MemberDetailView({
                     return txn.occurred_at?.startsWith(selectedYear) ?? false
                 })
             }
-
             return transactions.filter((txn) => getEffectiveTxnTag(txn) === activeCycleTag)
         })()
 
         const accountTransactions = sourceTransactions.filter((txn) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const toAccountId = (txn as any).to_account_id as string | undefined
             return txn.account_id === selectedAccountId
                 || txn.source_account_id === selectedAccountId
@@ -557,7 +532,6 @@ export function MemberDetailView({
         }, 0)
 
         const needToSpend = minSpend && minSpend > 0 ? Math.max(0, minSpend - currentSpend) : 0
-
         if (currentSpend <= 0 && earned <= 0 && needToSpend <= 0) return null
 
         return {
@@ -570,7 +544,7 @@ export function MemberDetailView({
                 ? Math.max(0, config.maxBudget - earned)
                 : null,
         }
-    }, [accounts, selectedAccountId, selectedYear, activeCycleTag, transactions])
+    }, [accounts, selectedAccountId, selectedYear, activeCycleTag, transactions, getEffectiveTxnTag])
 
 
     // Slide Handlers
@@ -592,7 +566,6 @@ export function MemberDetailView({
             ? transactions.find(x => x.id === input)
             : input
         if (!t) return
-
         setSlideMode('duplicate')
         setSelectedTxn(t)
         setSlideOverrideType(undefined)
@@ -600,7 +573,6 @@ export function MemberDetailView({
     }
 
     const handleSlideSuccess = () => {
-        // setIsSlideOpen(false) // Handled by onSubmissionStart for immediate feel
         setSelectedTxn(null)
         setSlideOverrideType(undefined)
         router.refresh()
@@ -634,9 +606,9 @@ export function MemberDetailView({
         }
         if (!selectedTxn) return undefined
         const isTypeIn = ['income', 'repayment'].includes(selectedTxn.type);
-        const selectedTxnFallbackTag = selectedTxn.tag
-            || (selectedTxn as any).persisted_cycle_tag
-            || (selectedTxn as any).debt_cycle_tag
+        const selectedTxnFallbackTag = (selectedTxn.tag)
+            || ((selectedTxn as any).persisted_cycle_tag)
+            || ((selectedTxn as any).debt_cycle_tag)
             || ((selectedTxn.metadata as any)?.tag)
             || undefined
 
@@ -656,21 +628,21 @@ export function MemberDetailView({
             cashback_share_fixed: selectedTxn.cashback_share_fixed,
             metadata: slideMode === 'duplicate' ? { duplicated_from_id: selectedTxn.id } : selectedTxn.metadata,
         }
-    }, [selectedTxn, slideMode, slideOverrideType, person.id])
+    }, [selectedTxn, slideMode, slideOverrideType, person, activeCycle])
 
-    // Calculate paid count from cycleTransactions matching PaidTransactionsModal logic
     const paidCount = useMemo(() => {
         if (!activeCycle) return 0
         return activeCycle.transactions.filter(t => {
             if (t.type !== 'repayment' && t.type !== 'income') return false
-            const metadata = t.metadata as any
-            return metadata?.is_settled === true || metadata?.paid_at !== null
+            const metadata = (t.metadata as any) || {}
+            return metadata.is_settled === true || metadata.paid_at !== null
         }).length
     }, [activeCycle])
 
     const activeCycleSheet = useMemo(() => {
+        if (!activeCycle?.tag) return undefined
         return cycleSheets.find(s => s.cycle_tag === activeCycle.tag)
-    }, [cycleSheets, activeCycle.tag])
+    }, [cycleSheets, activeCycle])
 
     return (
         <div className="flex flex-col h-full bg-slate-50">
@@ -768,11 +740,8 @@ export function MemberDetailView({
                 </>
             )}
 
-
-
             {activeTab === 'history' && (
                 <div className="flex-1 overflow-y-auto px-4 py-3">
-                    {/* Reuse filtering logic or search for history? Passing all transactions */}
                     <SimpleTransactionTable
                         transactions={historyTransactions}
                         accounts={accounts}
@@ -801,7 +770,7 @@ export function MemberDetailView({
                 </div>
             )}
 
-            {/* Paid Transactions Modal - Show only current cycle transactions */}
+            {/* Paid Transactions Modal */}
             <PaidTransactionsModal
                 open={showPaidModal}
                 onOpenChange={setShowPaidModal}
@@ -851,11 +820,11 @@ const FlowLegend = () => (
     <div className="px-6 py-2 border-t border-slate-200 bg-white flex items-center gap-6 text-[11px] text-slate-500 font-medium shrink-0 shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-2 group cursor-help">
             <span className="inline-flex items-center justify-center rounded-[4px] h-5 w-11 text-[9px] font-black bg-orange-50 border border-orange-200 text-orange-700 shadow-sm transition-transform group-hover:scale-105">FROM</span>
-            <span className="text-slate-400 font-normal">→ Origin / Source</span>
+            <span className="text-slate-400 font-normal">{"->"} Origin / Source</span>
         </div>
         <div className="flex items-center gap-2 group cursor-help">
             <span className="inline-flex items-center justify-center rounded-[4px] h-5 w-11 text-[9px] font-black bg-sky-50 border border-sky-200 text-sky-700 shadow-sm transition-transform group-hover:scale-105">TO</span>
-            <span className="text-slate-400 font-normal">→ Target / Destination</span>
+            <span className="text-slate-400 font-normal">{"->"} Target / Destination</span>
         </div>
         <div className="ml-auto flex items-center gap-2 text-slate-300">
             <Info className="h-3.5 w-3.5" />
