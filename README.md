@@ -1,99 +1,75 @@
-# Money Flow 3
+# 💰 Money Flow 3
 
-Money Flow 3 is a comprehensive personal finance application focused on transaction management, debt tracking, and spending analytics.
-
-## Update 2026-03-18
-- People Details UI Redesign: Consolidated header into a single compact bar, restored Cycle/Sheet dropdowns to Control Bar.
-- Fixed Bug 400: Resolved PocketBase fetching issues in People Details.
-- Reward Progress: Dynamic circular progress in header (Repay % or Cashback status).
-- Handover Cleanup: Consolidated old docs into `.agent/handovers/mmyyyy/`.
-
-### Latest Handover (Mar 18, 2026)
-- [People Details UI & Fixes](./.agent/handovers/032026/people-17032026-fix-details-400.md)
-
-### Branch naming rule (mandatory)
-- New working branches must include `ddmmyyyy`.
-- Pattern: `agent/<scope>-<ddmmyyyy>-<short-task>`.
-
-## Tech Stack
-- **Framework:** Next.js 15 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS, Shadcn UI
-- **Database:** Supabase (PostgreSQL)
-- **State/Data:** React Server Components, Server Actions
-- **Package Manager:** pnpm (Recommended)
+Money Flow 3 is a high-density, professional personal finance application focused on advanced debt tracking, transaction management, and automated cashback analytics.
 
 ---
 
-## 🚀 Current Milestone: Phase 17 (March 2026)
-**Focus**: PocketBase Data Migration & ID Stabilization
+## 🤖 AI Agent Entry Point (MANDATORY)
 
-### Key Deliverables:
-- ✅ **PocketBase Integration**: Implemented server-side services for PocketBase (Server-side & Client-side clients).
-- ✅ **ID Unification**: Solved fragmentation between Slug (8 chars), UUID (Supabase), and Native ID (PocketBase).
-- ✅ **Transaction Listing Fix**: Resolved 400 Bad Request errors in transaction fetching caused by invalid 'expand' fields.
-- ✅ **Data Quality**: Re-migrated Categories, Shops, and People data for visual consistency.
+> [!IMPORTANT]
+> To maintain project integrity and follow strict UI/UX standards, every new agent session **MUST** start by reading these entry points sequentially.
 
----
-
-## 📚 Documentation System
-
-### 🔄 Latest Phase Handover (Mar 11, 2026)
-- [People + Sheet Config + Cycle UX Handover](./docs/handovers/PHASE_PEOPLE_SHEET_HANDOVER_2026-03-11.md)
-- Contains: progress report, unresolved issues, migration gaps (Supabase vs PocketBase), next-agent priority plan.
-- Branch handover (current work): [fix-people-account-ui-cleanup](./.agent/context/fix-people-account-ui-cleanup.md)
-
-### 🔄 Latest Hot Handover (Mar 15, 2026)
-- [Batch + Debt Sync + Next Agent Roadmap](./docs/handovers/HANDOVER_2026-03-15_BATCH_DEBT_SYNC_AND_NEXT_AGENT.md)
-
-### 🤖 For AI Agents (MANDATORY)
-1. **[MASTER_CONTEXT_LOAD.md](./.agent/prompts/MASTER_CONTEXT_LOAD.md)**: Run this first to initialize your session with full repo context.
-2. **[TASK_TEMPLATE.md](./.agent/prompts/TASK_TEMPLATE.md)**: Use this template for defining and executing specific tasks.
-3. **[ONBOARDING.md](./.agent/prompts/ONBOARDING.md)**: Core onboarding guide and reading list.
-4. **[Latest Handover](./.agent/handovers/032026/people-17032026-fix-details-400.md)**: CRITICAL handover notes for current state.
-
-
-### 📖 For Developers & Users
-- **[AGENT_CONTEXT.md](./.agent/AGENT_CONTEXT.md)**: Single source of truth for current project state and technical architecture.
-- **[Cashback Guide](./.agent/workflows/cashback-config-guide.md)**: JSON samples for complex card rules (Diamond/Lady).
-- **[Vietnamese User Manual](./.agent/MANUAL_GUIDE_ADVANCED_VI.md)**: Hướng dẫn hạch toán và quy tắc cashback nâng cao.
+1. **[MASTER_CONTEXT_LOAD.md](./.agent/prompts/MASTER_CONTEXT_LOAD.md)** - Initialize your session with full technical & architectural context.
+2. **[ONBOARDING.md](./.agent/prompts/ONBOARDING.md)** - Understand the documentation ecosystem and core reading list.
+3. **[AGENT_CONTEXT.md](./.agent/AGENT_CONTEXT.md)** - Real-time snapshot of features, state, and technical design.
+4. **[LATEST_HANDOVER.md](./.agent/HANDOVER_REWARDS_FIX.md)** - CRITICAL notes from the last session (Rewards Fix & People UI Refactor).
 
 ---
 
-## 🏗️ Project Structure
+## 📜 Core Rules & Standards
+
+These rules are NOT optional and define the "Soul" of the project.
+
+- **[Coding Rules](./.agent/rules/rules.md)**: Standards for Server Actions, Error Handling, and Service Layer.
+- **[UI/UX Strict Rules](./.agent/rules/ui_rules.md)**: Mandatory visual standards (Square avatars, No Monospace, High contrast labels).
+- **[Sheet Sync Rules](./.agent/rules/sheet_sync_rules.md)**: Integrity rules for Google Sheet synchronization.
+- **[Cleanup Rules](./.agent/rules/cleanup_rules.md)**: Standards for organizing handovers and files.
+
+---
+
+## 💳 Business Logic & Workflows
+
+Understand the core complexity of the application's financial engine.
+
+- **[Cashback Workflow](./.agent/CASHBACK_WORKFLOW.md)**: Deep dive into the Cashback/Reward calculation engine.
+- **[Cashback Config Guide](./.agent/workflows/cashback-config-guide.md)**: JSON configuration samples for complex cards (Diamond/Lady).
+- **[Money Glossary](./.agent/prompts/MONEY_GLOSSARY.md)**: Definition of terms (Lend, Repay, Rollover, etc).
+
+---
+
+## 🏗️ Technical Architecture
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript (No `any` types allowed)
+- **Database**: Supabase (Transitions to PocketBase as specified in AGENT_CONTEXT)
+- **Styling**: Tailwind CSS + Shadcn UI (Radix Primitives)
+- **State**: Server Actions & React Server Components
+
+---
+
+## 📂 Project Structure
+
 - `src/app`: Page routes and layouts.
 - `src/components`: UI components (moneyflow, people, etc).
-- `src/services/pocketbase`: New PocketBase service layer.
-- `src/services`: Core business logic (Transitioning from Supabase to PocketBase).
-- `src/actions`: Server actions for data mutation.
-- `src/types`: TypeScript definitions.
+- `src/services`: Core business logic layer.
+- `src/actions`: Server actions for mutations.
+- `src/types`: Centralized TypeScript definitions.
+- `.agent`: Master documentation & project rules (Internal Knowledge Base).
 
 ---
 
-## 🚨 Development Standards (CRITICAL)
+## 🚨 Quality Gates
 
-### 1. UI Strict Rules
-- **FORCE SQUARE**: Icons and avatars MUST use `rounded-none`. NO cropping or borders.
-- **NO MONOSPACE**: Do not use monospace fonts (`font-mono`) for UI text.
-- **DROPDOWNS**: Always test scrollable visibility for popovers and selects.
+Before committing, ensure zero errors in build and linting:
 
-### 2. Quality Gates
-Before committing code, you **MUST** ensure:
 ```bash
-# 1. Update lockfile (Critical for Vercel)
 pnpm install
-
-# 2. Check for linting errors
 pnpm lint
-
-# 3. Verify build succeeds
 pnpm build
 ```
 
-**Do not commit if build or lint fails.**
-
 ---
 
-**Version**: 3.3.0 (Phase 17)  
-**Last Updated**: March 7, 2026  
-**License**: Internal project - Money Flow 3
+**Version**: 3.5.0 (Phase 75)  
+**Last Updated**: 2026-03-18  
+**Maintainer**: Money Flow 3 Team
