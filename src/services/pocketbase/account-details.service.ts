@@ -1671,6 +1671,68 @@ export async function loadPocketBaseTransactions(options: {
     return [];
   }
 
+  const filterConditions = [];
+
+  if (options.accountId) {
+    filterConditions.push(`account_id='${options.accountId}'`);
+  }
+
+  if (options.personId) {
+    filterConditions.push(`person_id='${options.personId}'`);
+  }
+
+  if (options.personIds) {
+    filterConditions.push(`person_id.in(${options.personIds.map((id) => `'${id}'`).join(",")})`);
+  }
+
+  if (options.categoryId) {
+    filterConditions.push(`category_id='${options.categoryId}'`);
+  }
+
+  if (options.shopId) {
+    filterConditions.push(`shop_id='${options.shopId}'`);
+  }
+
+  if (options.installmentPlanId) {
+    filterConditions.push(`installment_plan_id='${options.installmentPlanId}'`);
+  }
+
+  if (!options.includeVoided) {
+    filterConditions.push(`voided=false`);
+  }
+
+  const filter = filterConditions.join(" && ");
+
+  const records = await listAllRecords("transactions", {
+    perPage: options.limit || 100,
+    sort: "-date",
+    expand:
+      "account_id,to_account_id,category_id,shop_id,person_id,parent_transaction_id",
+    filter,
+  });
+
+  return records.map((item) => mapTransaction(item, options.context || "general"));
+}
+
+export async function getAccountCycles(accountId: string) {
+  try {
+    const { items } = await pocketbaseList<any>('cashback_cycles', {
+      filter: `account_id='${accountId}'`,
+      sort: '-created',
+      fields: 'id,cycle_tag,label,start_date,end_date,spent_amount,max_budget,shared_amount,virtual_profit,real_awarded,is_current'
+    });
+
+    return items.map((cycle: any) => ({
+      label: cycle.label || cycle.cycle_tag,
+      value: cycle.cycle_tag,
+      count: cycle.transaction_count || 0,
+      highlight: cycle.is_current || false
+    }));
+  } catch (error) {
+    console.error('[DB:PB] getAccountCycles failed:', error);
+    return [];
+  }
+
   // Phase 1b: personId/personIds is supported via simple filter
   if (options.personId || options.personIds) {
     const personIds =

@@ -4,6 +4,7 @@ import {
   getPocketBaseCategories,
   getPocketBasePeople,
   getPocketBaseShops,
+  getPocketBaseAccountSpendingStatsSnapshot,
 } from '@/services/pocketbase/account-details.service'
 import { getDebtByTags } from '@/services/debt.service'
 import { getUnifiedTransactions, getTransactionsByPeople } from '@/services/transaction.service'
@@ -65,6 +66,30 @@ export default async function MemberDetailsPage({ params }: { params: Promise<{ 
 
     const balance = person.balance ?? 0
     const balanceLabel = balance > 0 ? 'They owe you' : balance < 0 ? 'You owe them' : 'Settled'
+    
+    // Find the account associated with this person (if any) and fetch account stats
+    let accountStatsOverride = null;
+    const personAccount = accounts.find((acc: any) => acc.holder_person_id === personId || acc.owner_id === personId);
+    if (personAccount) {
+        const now = new Date(); // Use current date to get current cycle
+        try {
+            const accountStats = await getPocketBaseAccountSpendingStatsSnapshot(personAccount.id, now);
+            if (accountStats) {
+                // Calculate current cycle tag based on today's date
+                const currentCycleTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                
+                accountStatsOverride = {
+                    currentCycleTag,
+                    earnedSoFar: accountStats.earnedSoFar || 0,
+                    sharedAmount: accountStats.sharedAmount || 0,
+                    netProfit: accountStats.netProfit || 0,
+                };
+            }
+        } catch (error) {
+            console.error('[MemberDetailsPage] Error fetching account stats:', error);
+            // Don't fail the page if account stats fetch fails
+        }
+    }
 
     return (
         <TagFilterProvider>
@@ -79,6 +104,8 @@ export default async function MemberDetailsPage({ params }: { params: Promise<{ 
                 categories={categories}
                 people={people}
                 shops={shops}
+                // Pass the account stats override
+                accountStatsOverride={accountStatsOverride}
             />
         </TagFilterProvider>
     )

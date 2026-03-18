@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, X } from 'lucide-react'
@@ -33,6 +33,10 @@ interface UnifiedSmartDatePickerProps {
   disabled?: boolean
   selectedYearValue?: string | null
   onYearSelect?: (year: string | null) => void
+  // Add account ID prop to fetch cycles for specific account
+  accountId?: string
+  // Add function to fetch cycles based on account ID
+  onAccountChange?: (accountId: string) => Promise<Array<{ label: string; value: string; count?: number; highlight?: boolean }>>
 }
 
 function parseStrictDate(input: string): Date | null {
@@ -114,6 +118,9 @@ export function UnifiedSmartDatePicker({
   disabled = false,
   selectedYearValue,
   onYearSelect,
+  // New props
+  accountId,
+  onAccountChange,
 }: UnifiedSmartDatePickerProps) {
   const [open, setOpen] = useState(false)
   const [yearOpen, setYearOpen] = useState(false)
@@ -266,6 +273,13 @@ export function UnifiedSmartDatePicker({
     onRangeChange(localRange)
     setOpen(false)
   }
+
+  // Fetch cycles when account changes
+  useEffect(() => {
+    if (accountId && onAccountChange) {
+      onAccountChange(accountId);
+    }
+  }, [accountId, onAccountChange]);
 
   return (
     <Popover

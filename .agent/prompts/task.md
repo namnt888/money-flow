@@ -1,29 +1,39 @@
-### ROLE: SENIOR FULLSTACK ENGINEER (NEXT.JS 16 / TURBOPACK)
+# CRITICAL TASK: FIX REWARDS SYNC & CYCLE FILTERING (PHASE 15/16)
 
-### TASK: CRITICAL DATA SYNC & UI REFACTOR
-The current implementation is hallucinating data. You must strictly follow these logic rules to fix the "People Detail" page based on the "Account" source of truth.
+## 🎯 OBJECTIVE
+Đồng bộ hóa dữ liệu Rewards và Summary giữa "Account Details" (Source of Truth) và "People Detail View". Xử lý lỗi fetch Cycle khi chọn Account.
 
-1. FIX MESSAGING ERRORS: 
-- Resolve 'tx_ack_timeout' and 'tx_attempts_exceeded'.
-- Ensure the data bridge between the Chrome extension (ID: iohjgamcilhbgmhbnllfolmkmmekfmci) and the app is stable. If messaging fails, fallback to direct API/State fetching.
+## 🟥 SOURCE OF TRUTH (IMG1 - Account Details)
+Khi Cycle "25.02 - 24.03" được chọn:
+- My Profit: 219.741
+- Earned: 366.235
+- Shared: 146.494
+- Actual: 0
+- Status: 100% Qualified / Earned
 
-2. SUMMARY CARD CLEANUP:
-- DELETE "Net Lend" card. It is redundant as it mirrors "Remains".
-- FIX "Cashback": Currently defaulting to 0 (Incorrect). It must fetch the total cashback for the selected Account Cycle (e.g., 25.02 - 24.03).
-- RE-CALCULATE "Remains": Remains = Original Spend - Correct Cashback.
+## 🐞 BUGS TO FIX (IMG2 & PEOPLE DETAIL)
 
-3. REWARD SECTION REFACTOR (GLOBAL VS LOCAL):
-- STOP using local person transaction values (+-66,762) for the Reward Widget.
-- SOURCE OF TRUTH: If an Account filter is active, the Reward section MUST display Global Account Data:
-    - Status: 100% Earned / Qualified
-    - My Profit: 219.741 (Ensure label is ABOVE the value)
-    - Earned: 366.235
-    - Shared: 146.494
-    - Actual: 0
+### 1. Xử lý Messaging & Pipeline (Gốc rễ của Cashback = 0)
+- Lỗi: 'Failed to initialize messaging: tx_attempts_exceeded' / 'tx_ack_timeout'.
+- Hiện tượng: Data không fetch được dẫn đến hiển thị mặc định = 0.
+- Yêu cầu: Kiểm tra bridge giữa Chrome Extension và Next.js 16 (Turbopack). Nếu Messaging timeout, phải FALLBACK gọi trực tiếp API/Service (PocketBase).
 
-4. CYCLE DROPDOWN LOGIC:
-- Fix the blank Cycle dropdown. When an Account is selected, fetch its specific cycles.
-- Default to the "Current Cycle" based on today's date (18.03.2026).
+### 2. Logic Cycle & Date Picker (UnifiedSmartDatePicker.tsx)
+- Khi chọn Account (mMsb Online #Mom):
+    - Research tại sao Cycle dropdown bị Blank.
+    - Ép tự động chuyển sang tab "Cycle" (nếu account có cycle).
+    - Tự động pick "Current Cycle" dựa trên Today (18.03.2026) -> Phải chọn được cycle '25.02 - 24.03'.
+    - Khi lọc theo Account, `UnifiedSmartDatePicker` phải trigger fetch cycles của đúng `account_id` đó.
 
-### REQUIREMENT: 
-Check your math. If "Earned" is 366k and "Shared" is 146k, "My Profit" must be the result of their difference. Do not display -1,331k or "Need for Reward" when the account is already Qualified.
+### 3. Summary Card & Rewards Refactor (MemberDetailView.tsx)
+- REMOVE: Card "Net Lend" (Thừa, trùng với Remains).
+- FIX: "Cashback" đang hiển thị 0 là sai. Phải lấy từ `earnedSoFar` của Account snapshot.
+- RECALC: `Remains = Original Spend - Correct Cashback`.
+- REWARDS SECTION: 
+    - Tuyệt đối KHÔNG lấy data theo từng dòng transaction lẻ của People (+-66,762).
+    - PHẢI FORCE lấy data Global của Account: My Profit (219.741), Earned (366.235), Shared (146.494).
+    - UI: Label "My Profit" phải nằm TRÊN giá trị (Top aligned).
+
+### 4. Logic 10x Shared & Double Counting (account-details.service.ts)
+- Kiểm tra `cashback_share_percent`: Đảm bảo không bị chia 100 hai lần (xem bug #1 trong handover).
+- Kiểm tra `getPocketBaseAccountSpendingStatsSnapshot`: Tại sao `Original Spend` bị nhân đôi (~3.6M) khi filter theo account? Kiểm tra xem có bị fetch trùng transaction do overlap filter không.

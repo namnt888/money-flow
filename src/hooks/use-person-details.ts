@@ -32,6 +32,13 @@ interface UsePersonDetailsProps {
   debtTags: any[];
   cycleSheets: PersonCycleSheet[];
   urlTag?: string | null;
+  // Add account-specific stats to override transaction-based calculations
+  accountStatsOverride?: {
+    currentCycleTag?: string;
+    earnedSoFar?: number;
+    sharedAmount?: number;
+    netProfit?: number;
+  };
 }
 
 export function usePersonDetails({
@@ -40,6 +47,7 @@ export function usePersonDetails({
   debtTags,
   cycleSheets,
   urlTag,
+  accountStatsOverride,
 }: UsePersonDetailsProps) {
   const getTxnCycleTag = (txn: TransactionWithDetails): string => {
     const metadata = (txn.metadata as any) || {};
@@ -321,8 +329,25 @@ export function usePersonDetails({
   const currentCycle = useMemo(() => {
     const now = new Date();
     const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    
+    // If we have account stats override and it has a current cycle tag, use that
+    if (accountStatsOverride?.currentCycleTag) {
+      const overriddenCycle = debtCycles.find((c) => c.tag === accountStatsOverride.currentCycleTag);
+      
+      if (overriddenCycle && accountStatsOverride.earnedSoFar !== undefined) {
+        // Create a new cycle object with overridden stats
+        return {
+          ...overriddenCycle,
+          stats: {
+            ...overriddenCycle.stats,
+            cashback: accountStatsOverride.earnedSoFar, // Use earnedSoFar as cashback
+          }
+        };
+      }
+    }
+    
     return debtCycles.find((c) => c.tag === currentTag) || debtCycles[0];
-  }, [debtCycles]);
+  }, [debtCycles, accountStatsOverride]);
 
   return {
     metrics,

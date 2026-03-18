@@ -24,6 +24,13 @@ interface PaidCounterProps {
     onViewPaid: () => void
 }
 
+interface AccountCycle {
+    label: string;
+    value: string;
+    count?: number;
+    highlight?: boolean;
+}
+
 interface TransactionControlBarProps {
     person: Person
     activeCycle: DebtCycle
@@ -61,6 +68,8 @@ interface TransactionControlBarProps {
     onRefresh?: () => void
     setIsGlobalLoading?: (loading: boolean) => void
     setLoadingMessage?: (msg: string | null) => void
+    accountCycles?: AccountCycle[];
+    onFetchAccountCycles?: (accountId: string) => Promise<AccountCycle[]>;
 }
 
 import { useRouter } from 'next/navigation'
@@ -325,9 +334,9 @@ export function TransactionControlBar({
                         onDateChange={onDateChange}
                         onRangeChange={onRangeChange}
                         onModeChange={onModeChange}
-                        cycles={cycleOptions}
-                        selectedCycleValue={activeCycle.tag}
-                        onCycleSelect={(tag, year) => onCycleSelect ? onCycleSelect(tag, year) : onCycleChange(tag)}
+                        cycles={accountCycles}
+                        accountId={selectedAccountId}
+                        onAccountChange={onFetchAccountCycles}
                         selectedYearValue={selectedYear}
                         onYearSelect={onYearChange}
                     />

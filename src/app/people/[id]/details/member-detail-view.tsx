@@ -49,6 +49,13 @@ interface MemberDetailViewProps {
     categories: any[]
     people: Person[]
     shops: any[]
+    // Add account stats override prop
+    accountStatsOverride?: {
+      currentCycleTag?: string;
+      earnedSoFar?: number;
+      sharedAmount?: number;
+      netProfit?: number;
+    };
 }
 
 const numberFormatter = new Intl.NumberFormat('en-US', {
@@ -84,6 +91,7 @@ export function MemberDetailView({
     categories,
     people,
     shops,
+    accountStatsOverride,
 }: MemberDetailViewProps) {
     const router = useRouter()
     const [activeTab, setActiveTab] = useState<'timeline' | 'history' | 'split-bill'>('timeline')
@@ -93,11 +101,13 @@ export function MemberDetailView({
     const [filterType, setFilterType] = useState<'all' | 'lend' | 'repay' | 'cashback'>('all')
     const [showPaidModal, setShowPaidModal] = useState(false)
 
-    const { metrics, debtCycles, availableYears } = usePersonDetails({
+    const { metrics, debtCycles, availableYears, currentCycle } = usePersonDetails({
         person,
         transactions,
         debtTags,
         cycleSheets,
+        // Pass the account stats override
+        accountStatsOverride,
     })
 
     // Generate timeline pills based on selected year
@@ -449,17 +459,7 @@ export function MemberDetailView({
                                 <Gift className="h-3 w-3 text-amber-400" />
                             </div>
                             <span className="text-lg font-black text-amber-700 tabular-nums leading-none">
-                                -{numberFormatter.format(activeCycle?.stats.cashback ?? 0)}
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col min-w-[140px] p-3 rounded-xl bg-blue-50 border border-blue-100 shadow-sm group hover:border-blue-200 transition-all">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest group-hover:text-blue-700">Net Lend</span>
-                                <TrendingUp className="h-3 w-3 text-blue-400" />
-                            </div>
-                            <span className="text-lg font-black text-blue-700 tabular-nums leading-none">
-                                {numberFormatter.format(activeCycle?.stats.lend ?? 0)}
+                                {numberFormatter.format(activeCycle?.stats.cashback ?? 0)}
                             </span>
                         </div>
 
@@ -469,7 +469,7 @@ export function MemberDetailView({
                                 <CheckCircle className="h-3 w-3 text-emerald-400" />
                             </div>
                             <span className="text-lg font-black text-emerald-700 tabular-nums leading-none">
-                                -{numberFormatter.format(activeCycle?.stats.repay ?? 0)}
+                                {numberFormatter.format(activeCycle?.stats.repay ?? 0)}
                             </span>
                         </div>
 
