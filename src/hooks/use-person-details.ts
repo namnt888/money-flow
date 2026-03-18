@@ -7,6 +7,7 @@ import {
   PersonCycleSheet,
 } from "@/types/moneyflow.types";
 import { isYYYYMM, normalizeMonthTag } from "@/lib/month-tag";
+import { normalizeRate } from "@/lib/cashback";
 
 export interface DebtCycle {
   tag: string;
@@ -108,12 +109,12 @@ export function usePersonDetails({
           }
         } else {
           const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
-          const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
+          const sharePercent = txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0;
           const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
           if (shareAmount > 0) {
             cb = shareAmount;
           } else if (sharePercent > 0 || shareFixed > 0) {
-            const normalizedPercent = sharePercent > 1 ? sharePercent / 100 : sharePercent;
+            const normalizedPercent = normalizeRate(sharePercent);
             cb = absAmount * normalizedPercent + shareFixed;
           }
         }
@@ -121,6 +122,7 @@ export function usePersonDetails({
         if (isSpend) {
           const net = absAmount - cb;
           acc.lend += net;
+          acc.originalLend += absAmount;
           acc.cashback += cb;
         } else if (isCashback) {
           acc.cashback += absAmount;
@@ -133,6 +135,7 @@ export function usePersonDetails({
         } else if (isRollover) {
           // Outbound/Neutral Rollover
           acc.lend += absAmount;
+          acc.receiveRollover += absAmount;
         }
 
         if (type_lower === "repayment" || (type_lower === "income" && !!txn.person_id)) {
@@ -141,7 +144,7 @@ export function usePersonDetails({
 
         return acc;
       },
-      { lend: 0, repay: 0, cashback: 0, paidCount: 0, paidRollover: 0 },
+        { lend: 0, repay: 0, cashback: 0, paidCount: 0, paidRollover: 0, originalLend: 0, receiveRollover: 0 },
     );
   }, [activeTransactions]);
 
@@ -216,16 +219,21 @@ export function usePersonDetails({
               if (absAmount > effectiveFinal) {
                 cb = absAmount - effectiveFinal;
               }
-            } else {
-              const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
-              const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
-              const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
-              if (shareAmount > 0) {
-                cb = shareAmount;
-              } else if (sharePercent > 0 || shareFixed > 0) {
-                const normalizedPercent = sharePercent > 1 ? sharePercent / 100 : sharePercent;
-                cb = absAmount * normalizedPercent + shareFixed;
-              }
+            }
+            
+            // For debts, explicit share percentage or amount should take precedence or combined
+            const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
+            const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
+            const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
+            
+            if (shareAmount > 0) {
+              cb = Math.max(cb, shareAmount);
+            } else if (sharePercent > 0 || shareFixed > 0) {
+              // Note: For debt sharing, we treat percent as relative to AMOUUNT usually 
+              // (e.g. 4% of bill which happens to be 40% of cashback)
+              const normalizedPercent = normalizeRate(sharePercent);
+              const computedShared = absAmount * normalizedPercent + shareFixed;
+              cb = Math.max(cb, computedShared);
             }
 
             if (isSpend) {

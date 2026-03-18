@@ -168,6 +168,12 @@ export function TransactionControlBar({
                     value: cycle.tag,
                     count,
                     highlight: cycle.tag === accountCurrentCycleTag,
+                    stats: {
+                        debt: cycle.stats.lend,
+                        back: cycle.stats.repay,
+                        remains: cycle.remains,
+                        isSettled: cycle.isSettled
+                    }
                 }
             })
             .filter((cycle) => cycle.count! > 0 || cycle.highlight)
@@ -178,7 +184,13 @@ export function TransactionControlBar({
                 label: getMonthDisplayName(accountCurrentCycleTag),
                 value: accountCurrentCycleTag,
                 count: 0,
-                highlight: true
+                highlight: true,
+                stats: {
+                    debt: 0,
+                    back: 0,
+                    remains: 0,
+                    isSettled: true
+                }
             })
         }
 
@@ -190,7 +202,7 @@ export function TransactionControlBar({
         prevAccountIdRef.current = selectedAccountId
         if (!accountChanged || !selectedAccountId) return
 
-        const nextCycle = cycleOptions.find((cycle) => cycle.highlight)?.value || 'all'
+        const nextCycle = cycleOptions.find((cycle) => cycle.highlight)?.value || accountCurrentCycleTag || 'all'
         if (onCycleSelect) {
             onCycleSelect(nextCycle, selectedYear)
         } else {
@@ -204,6 +216,37 @@ export function TransactionControlBar({
 
     const handleYearChange = (year: string | null) => {
         onYearChange(year)
+    }
+
+    const hasActiveFilters = useMemo(() => {
+        return filterType !== 'all' || 
+               statusFilter !== 'active' || 
+               !!selectedAccountId || 
+               searchTerm !== '' || 
+               activeCycle.tag !== currentCycleTag ||
+               selectedYear !== currentCycleTag.split('-')[0]
+    }, [filterType, statusFilter, selectedAccountId, searchTerm, activeCycle.tag, currentCycleTag, selectedYear])
+
+    const handleClearAllFilters = () => {
+        toast('Clear all filters?', {
+            description: 'This will reset view to current cycle and clear all search/filters.',
+            action: {
+                label: 'Clear',
+                onClick: () => {
+                    const currentYear = currentCycleTag.split('-')[0]
+                    onFilterTypeChange('all')
+                    onStatusChange('active')
+                    onAccountChange(undefined)
+                    onSearchChange('')
+                    if (onCycleSelect) {
+                        onCycleSelect(currentCycleTag, currentYear)
+                    } else {
+                        onYearChange(currentYear)
+                        onCycleChange(currentCycleTag)
+                    }
+                }
+            }
+        })
     }
 
     const isPending = isPendingProp
@@ -327,7 +370,7 @@ export function TransactionControlBar({
                         onModeChange={onModeChange}
                         cycles={cycleOptions}
                         selectedCycleValue={activeCycle.tag}
-                        onCycleSelect={(tag, year) => onCycleSelect ? onCycleSelect(tag, year) : onCycleChange(tag)}
+                        onCycleSelect={(tag: string) => onCycleSelect ? onCycleSelect(tag, selectedYear) : onCycleChange(tag)}
                         selectedYearValue={selectedYear}
                         onYearSelect={onYearChange}
                     />
@@ -359,6 +402,16 @@ export function TransactionControlBar({
                         </button>
                     )}
                 </div>
+
+                {hasActiveFilters && (
+                    <button
+                        onClick={handleClearAllFilters}
+                        className="flex items-center gap-1.5 h-9 px-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-100 transition-all shrink-0 animate-in fade-in slide-in-from-right-2"
+                    >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Clear All
+                    </button>
+                )}
 
                 <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                     <TooltipProvider delayDuration={100}>

@@ -36,7 +36,7 @@ export async function executeWithFallback<T>(
   context: string
 ): Promise<T> {
   try {
-    console.log(`[source:PB] ${context}`)
+    // console.log(`[source:PB] ${context}`)
     const result = await pbQuery()
     return result
   } catch (error) {
@@ -71,7 +71,7 @@ export async function executeWithAttempts<T>(
   
   for (let i = 0; i < attempts.length; i++) {
     try {
-      console.log(`[source:PB] ${context} - attempt ${i + 1}/${attempts.length}`)
+      // console.log(`[source:PB] ${context} - attempt ${i + 1}/${attempts.length}`)
       const result = await attempts[i]()
       return result
     } catch (error) {
@@ -105,11 +105,6 @@ export async function executeWithAttempts<T>(
 /**
  * Log source tracking (for debugging data flow)
  */
-export function logSource(source: 'PB' | 'SB', action: string, details?: any) {
-  const prefix = `[source:${source}]`
-  if (details) {
-    console.log(`${prefix} ${action}`, details)
-  } else {
-    console.log(`${prefix} ${action}`)
-  }
+export function logSource(_source: 'PB' | 'SB', _action: string, _details?: any) {
+  // Silent in production/clean mode
 }

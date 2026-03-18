@@ -24,7 +24,18 @@ interface UnifiedSmartDatePickerProps {
   disabledRange?: { start: Date; end: Date } | undefined
   availableMonths?: Set<string>
   availableDateRange?: DateRange | undefined
-  cycles?: Array<{ label: string; value: string; count?: number; highlight?: boolean }>
+  cycles?: Array<{ 
+    label: string; 
+    value: string; 
+    count?: number; 
+    highlight?: boolean;
+    stats?: {
+      debt?: number;
+      back?: number;
+      remains?: number;
+      isSettled?: boolean;
+    }
+  }>
   selectedCycleValue?: string
   onCycleSelect?: (cycleValue: string) => void
   isCycleLoading?: boolean
@@ -297,7 +308,7 @@ export function UnifiedSmartDatePicker({
       <PopoverContent
         className={cn(
           'p-0 border-primary/20 shadow-xl w-auto',
-          localMode === 'range' ? 'min-w-[360px]' : 'w-[360px]'
+          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[480px]' : 'w-[360px]'
         )}
         align="start"
         sideOffset={4}
@@ -409,33 +420,66 @@ export function UnifiedSmartDatePicker({
                       key={cycle.value}
                       type="button"
                       className={cn(
-                        'w-full rounded-md border px-2.5 py-2 text-left text-xs transition-colors',
+                        'w-full rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
                         localCycle === cycle.value
-                          ? 'border-primary/30 bg-primary/10 text-primary shadow-sm'
+                          ? 'border-indigo-200 bg-indigo-50 shadow-sm'
                           : cycle.highlight
-                            ? 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100'
-                            : 'border-transparent hover:border-slate-200 hover:bg-slate-100'
+                            ? 'border-amber-100 bg-amber-50/50 hover:bg-amber-100'
+                            : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50'
                       )}
                       onClick={() => setLocalCycle(cycle.value)}
                     >
-                      <div className="flex items-center justify-between gap-2 min-w-0">
-                        <div className="truncate font-medium">{cycle.label}</div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {cycle.value !== 'all' && (
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                              {cycle.value}
+                      <div className="flex items-center justify-between gap-4 min-w-0">
+                        <div className="flex flex-col text-left justify-center">
+                            <span className={cn(
+                                "text-sm font-bold tracking-tight leading-none",
+                                localCycle === cycle.value ? "text-indigo-900" : "text-slate-900"
+                            )}>
+                                {cycle.label}
                             </span>
-                          )}
-                          {cycle.highlight && cycle.value !== 'all' && (
-                            <span className="rounded-full bg-amber-200/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-900">
-                              Current
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">
+                                {cycle.value}
                             </span>
-                          )}
-                          {cycle.value !== 'all' && (
-                            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                              {cycle.count ?? 0}
-                            </span>
-                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                            {cycle.stats ? (
+                                <>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">DEBT</span>
+                                        <span className="text-[11px] font-bold text-slate-900 leading-none">
+                                            {new Intl.NumberFormat('en-US').format(cycle.stats.debt || 0)}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">BACK</span>
+                                        <span className="text-[11px] font-bold text-emerald-600 leading-none">
+                                            {new Intl.NumberFormat('en-US').format(cycle.stats.back || 0)}
+                                        </span>
+                                    </div>
+                                    <div className={cn(
+                                        "px-2.5 py-1.5 rounded-lg shadow-sm flex flex-col items-center min-w-[85px] border",
+                                        cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100
+                                            ? "bg-emerald-50 border-emerald-100" 
+                                            : "bg-rose-50 border-rose-100"
+                                    )}>
+                                        <span className={cn(
+                                            "text-[8px] font-black leading-none uppercase tracking-tighter mb-1",
+                                            (cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "text-emerald-500" : "text-rose-400"
+                                        )}>
+                                            {(cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "STATUS" : "REMAINS"}
+                                        </span>
+                                        <span className={cn(
+                                            "text-[11px] font-black leading-none",
+                                            (cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "text-emerald-700" : "text-rose-600"
+                                        )}>
+                                            {(cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "SETTLED" : new Intl.NumberFormat('en-US').format(cycle.stats.remains || 0)}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <span className="text-[10px] font-semibold text-slate-400 italic">No Stats</span>
+                            )}
                         </div>
                       </div>
                     </button>
