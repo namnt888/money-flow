@@ -159,7 +159,7 @@ export function TransactionControlBar({
     const cycleOptions = useMemo(() => {
         if (!selectedAccountId) return [] as Array<{ label: string; value: string; count?: number; highlight?: boolean }>
 
-        return allCycles
+        const options = allCycles
             .filter((cycle) => isYYYYMM(cycle.tag))
             .map((cycle) => {
                 const count = cycle.transactions.filter((txn) => transactionMatchesAccount(txn, selectedAccountId)).length
@@ -171,7 +171,18 @@ export function TransactionControlBar({
                 }
             })
             .filter((cycle) => cycle.count! > 0 || cycle.highlight)
-            .sort((a, b) => b.value.localeCompare(a.value))
+
+        // Ensure current account cycle is always an option even if no transactions yet
+        if (accountCurrentCycleTag && !options.find(o => o.value === accountCurrentCycleTag)) {
+            options.push({
+                label: getMonthDisplayName(accountCurrentCycleTag),
+                value: accountCurrentCycleTag,
+                count: 0,
+                highlight: true
+            })
+        }
+
+        return options.sort((a, b) => b.value.localeCompare(a.value))
     }, [allCycles, selectedAccountId, accountCurrentCycleTag])
 
     useEffect(() => {
@@ -258,7 +269,7 @@ export function TransactionControlBar({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="flex items-center h-9 w-[220px] rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    <div className="flex items-center h-9 w-[280px] rounded-lg border border-slate-200 bg-white shadow-sm">
                         <ManageSheetButton 
                             personId={person.id}
                             cycleTag={activeCycle.tag}
@@ -314,6 +325,11 @@ export function TransactionControlBar({
                         onDateChange={onDateChange}
                         onRangeChange={onRangeChange}
                         onModeChange={onModeChange}
+                        cycles={cycleOptions}
+                        selectedCycleValue={activeCycle.tag}
+                        onCycleSelect={(tag, year) => onCycleSelect ? onCycleSelect(tag, year) : onCycleChange(tag)}
+                        selectedYearValue={selectedYear}
+                        onYearSelect={onYearChange}
                     />
                 </div>
 
