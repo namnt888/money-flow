@@ -1137,6 +1137,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
   cycleTag?: string,
 ): Promise<AccountSpendingStats | null> {
   const accountRecord = await resolvePocketBaseAccountRecord(sourceAccountId);
+  console.log("[Stats:PB] resolve account:", { sourceAccountId, found: !!accountRecord, pbId: accountRecord?.id });
   if (!accountRecord) return null;
   const pocketBaseAccountId = accountRecord.id;
   const account = mapAccount(accountRecord);
@@ -1181,12 +1182,12 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       filter: `account_id='${pocketBaseAccountId}'`,
       sort: "-date",
       fields:
-        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description",
+        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
     },
     {
       filter: `account_id='${pocketBaseAccountId}'`,
       fields:
-        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description",
+        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
     },
   ];
 
@@ -1236,8 +1237,13 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     const metadata =
       tx.metadata && typeof tx.metadata === "object" ? tx.metadata : {};
     const txCycleTag =
-      tx.persisted_cycle_tag || tx.tag || metadata?.persisted_cycle_tag || null;
-    if (cycleTag && txCycleTag) return String(txCycleTag) === resolvedCycleTag;
+      tx.persisted_cycle_tag ||
+      tx.statement_cycle_tag ||
+      tx.tag ||
+      metadata?.persisted_cycle_tag ||
+      metadata?.statement_cycle_tag ||
+      null;
+    if (resolvedCycleTag && txCycleTag) return String(txCycleTag) === resolvedCycleTag;
 
     const txDateRaw = tx.occurred_at || tx.date;
     const txDate = txDateRaw ? new Date(txDateRaw) : null;
@@ -1307,19 +1313,23 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
   } else {
     for (const tx of spendTransactions) {
       const amount = Math.abs(Number(tx.amount || 0));
-      if (amount <= 0) continue;
+      if (!Number.isFinite(amount) || amount <= 0) continue;
 
       const category = tx.category_id
         ? categoryMap.get(tx.category_id)
         : undefined;
       const policy = resolveCashbackPolicy({
-        account,
-        categoryId: category?.sourceId || null,
-        categoryName: category?.name,
-        amount,
+        account: {
+          ...account,
+          // Match the interface expected by resolveCashbackPolicy
+          cb_type: account.cb_type || "none",
+        },
+        categoryId: tx.category_id || null,
+        categorySlug: category?.sourceId || null,
+        amount: amount,
         cycleTotals: { spent: spendForPolicy },
+        categoryName: category?.name,
       });
-
       const categoryFallbackPolicy = inferTieredPolicyByCategoryName(
         account,
         category?.name,
@@ -1351,6 +1361,8 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       }
 
       let txnEstimate = amount * effectiveRate;
+      if (!Number.isFinite(txnEstimate)) txnEstimate = 0;
+      
       if (effectiveMaxReward && effectiveMaxReward > 0) {
         txnEstimate = Math.min(txnEstimate, Number(effectiveMaxReward));
       }
@@ -1367,7 +1379,10 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
             : sharedPercent > 0
               ? txnEstimate * sharedPercent
               : 0;
-      sharedAmount += txnShared;
+      
+      if (Number.isFinite(txnShared)) {
+        sharedAmount += txnShared;
+      }
 
       const metadata = policy.metadata || {};
 
@@ -1430,14 +1445,14 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     rawMaxCashback === null ||
     Number(rawMaxCashback) <= 0;
   const maxCashback = isUnlimitedBudget ? null : Number(rawMaxCashback);
-  const earnedSoFar = estimatedCashback;
-  const netProfit = earnedSoFar - sharedAmount;
+  const earnedSoFar = Number.isFinite(estimatedCashback) ? estimatedCashback : 0;
+  const netProfit = earnedSoFar - (Number.isFinite(sharedAmount) ? sharedAmount : 0);
   const remainingBudget =
     maxCashback === null
       ? null
       : Math.max(0, maxCashback - earnedSoFar);
   const isMinSpendMet =
-    minSpend === null ? true : currentSpend >= Number(minSpend);
+    minSpend === null ? true : currentSpend >= Number(minSpend || 0);
   const activeRules = Array.from(activeRuleMap.values()).sort(
     (left, right) => right.rate - left.rate,
   );

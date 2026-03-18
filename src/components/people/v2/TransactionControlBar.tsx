@@ -1,4 +1,4 @@
-import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight } from 'lucide-react'
+import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight, TrendingUp } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
@@ -159,7 +159,7 @@ export function TransactionControlBar({
     const cycleOptions = useMemo(() => {
         if (!selectedAccountId) return [] as Array<{ label: string; value: string; count?: number; highlight?: boolean }>
 
-        return allCycles
+        const options = allCycles
             .filter((cycle) => isYYYYMM(cycle.tag))
             .map((cycle) => {
                 const count = cycle.transactions.filter((txn) => transactionMatchesAccount(txn, selectedAccountId)).length
@@ -171,7 +171,18 @@ export function TransactionControlBar({
                 }
             })
             .filter((cycle) => cycle.count! > 0 || cycle.highlight)
-            .sort((a, b) => b.value.localeCompare(a.value))
+
+        // Ensure current account cycle is always an option even if no transactions yet
+        if (accountCurrentCycleTag && !options.find(o => o.value === accountCurrentCycleTag)) {
+            options.push({
+                label: getMonthDisplayName(accountCurrentCycleTag),
+                value: accountCurrentCycleTag,
+                count: 0,
+                highlight: true
+            })
+        }
+
+        return options.sort((a, b) => b.value.localeCompare(a.value))
     }, [allCycles, selectedAccountId, accountCurrentCycleTag])
 
     useEffect(() => {
@@ -223,76 +234,62 @@ export function TransactionControlBar({
             {/* Single Row: Status + Paid + Cycle Selector + Filters + Sheet */}
             <div className="flex flex-nowrap items-center gap-2 bg-white border border-slate-200 rounded-xl p-3 shadow-sm overflow-x-auto">
 
-                {/* 1. Primary Actions: Add + Sync Controller */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                    {/* Add Menu */}
+                {/* 1. Primary Actions: Add Transaction Group */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <Popover>
                         <PopoverTrigger asChild>
                             <button
-                                onMouseEnter={(e) => {
-                                    const btn = e.currentTarget
-                                    btn.click()
-                                }}
-                                className="flex items-center gap-2 h-9 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors flex-shrink-0 shadow-sm"
+                                className="flex items-center gap-2 h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-black transition-all flex-shrink-0 shadow-sm"
                             >
                                 <Plus className="h-4 w-4" />
-                                Add
+                                Add Record
                             </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-48 p-1" align="start">
                             <div className="space-y-0.5">
                                 <button
                                     onClick={() => onAddTransaction('debt')}
-                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors"
                                 >
-                                    <UserMinus className="h-4 w-4" />
-                                    Lend
+                                    <div className="h-6 w-6 rounded bg-rose-50 flex items-center justify-center">
+                                        <TrendingUp className="h-3.5 w-3.5" />
+                                    </div>
+                                    Lend / Debt
                                 </button>
                                 <button
                                     onClick={() => onAddTransaction('repayment')}
-                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
                                 >
-                                    <Plus className="h-4 w-4" />
-                                    Repay
+                                    <div className="h-6 w-6 rounded bg-emerald-50 flex items-center justify-center">
+                                        <Plus className="h-3.5 w-3.5" />
+                                    </div>
+                                    Repayment
                                 </button>
                             </div>
                         </PopoverContent>
                     </Popover>
 
-                    {/* Integrated Sync & Cycle Controller */}
-                    <ManageSheetButton
-                        personId={person.id}
-                        cycleTag={activeCycle.tag}
-                        initialSheetUrl={initialSheetUrl}
-                        scriptLink={person.sheet_link}
-                        googleSheetUrl={person.google_sheet_url}
-                        sheetFullImg={person.sheet_full_img}
-                        showBankAccount={person.sheet_show_bank_account ?? false}
-                        sheetLinkedBankId={person.sheet_linked_bank_id || null}
-                        showQrImage={person.sheet_show_qr_image ?? false}
-                        accounts={accounts}
-                        size="sm"
-                        buttonClassName="h-9 px-3 gap-1.5 text-xs text-slate-700 hover:bg-slate-50 border-slate-200 flex-shrink-0"
-                        linkedLabel={activeCycle.tag}
-                        unlinkedLabel="No Sheet"
-                        splitMode={true}
-
-                        // Pass history props
-                        allCycles={allCycles}
-                        availableYears={availableYears}
-                        selectedYear={selectedYear}
-                        onCycleChange={onCycleChange}
-                        onYearChange={onYearChange}
-                        currentCycleTag={currentCycleTag}
-                        isSettled={isSettled}
-                        activeCycleRemains={activeCycle.remains}
-                        isPending={isPending}
-                        setIsGlobalLoading={setIsGlobalLoading}
-                        setLoadingMessage={setLoadingMessage}
-                    />
+                    <div className="flex items-center h-9 w-[280px] rounded-lg border border-slate-200 bg-white shadow-sm">
+                        <ManageSheetButton 
+                            personId={person.id}
+                            cycleTag={activeCycle.tag}
+                            initialSheetUrl={initialSheetUrl}
+                            googleSheetUrl={person.google_sheet_url}
+                            availableYears={availableYears}
+                            allCycles={allCycles}
+                            selectedYear={selectedYear}
+                            onCycleChange={onCycleChange}
+                            onYearChange={onYearChange}
+                            activeCycleRemains={activeCycle.remains}
+                            isSettled={isSettled}
+                            splitMode={true}
+                            linkedLabel="Sheet"
+                            unlinkedLabel="Sheet"
+                        />
+                    </div>
                 </div>
 
-                <div className="h-6 w-px bg-slate-200 hidden md:block" />
+                <div className="h-6 w-px bg-slate-200" />
 
                 {/* 2. Basic Filters Group */}
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -329,16 +326,10 @@ export function TransactionControlBar({
                         onRangeChange={onRangeChange}
                         onModeChange={onModeChange}
                         cycles={cycleOptions}
-                        selectedCycleValue={selectedAccountId ? (isYYYYMM(activeCycle.tag) ? activeCycle.tag : 'all') : 'all'}
+                        selectedCycleValue={activeCycle.tag}
+                        onCycleSelect={(tag, year) => onCycleSelect ? onCycleSelect(tag, year) : onCycleChange(tag)}
                         selectedYearValue={selectedYear}
                         onYearSelect={onYearChange}
-                        onCycleSelect={(tag) => {
-                            if (onCycleSelect) {
-                                onCycleSelect(tag, selectedYear)
-                                return
-                            }
-                            onCycleChange(tag)
-                        }}
                     />
                 </div>
 

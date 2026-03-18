@@ -25,6 +25,8 @@ import { toast } from 'sonner'
 import { useAppFavicon } from '@/hooks/use-app-favicon'
 import { normalizeCashbackConfig } from '@/lib/cashback'
 import { getPersonRouteId } from '@/lib/person-route'
+import { getPocketBaseAccountSpendingStatsSnapshot } from '@/services/pocketbase/account-details.service'
+import { AccountSpendingStats } from '@/types/cashback.types'
 
 interface MemberDetailViewProps {
     person: Person
@@ -64,7 +66,8 @@ export function MemberDetailView({
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
-    const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>()
+    const urlAccountId = searchParams.get('accountId')
+    const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(urlAccountId || undefined)
     const [dateMode, setDateMode] = useState<'month' | 'range' | 'date' | 'all' | 'year' | 'cycle'>('all')
     const [dateValue, setDateValue] = useState<Date>(new Date())
     const [dateRangeValue, setDateRangeValue] = useState<DateRange | undefined>(undefined)
@@ -75,6 +78,7 @@ export function MemberDetailView({
     // Global loading for table actions (e.g. Voiding, Rollover, Sync)
     const [isGlobalLoading, setIsGlobalLoading] = useState(false)
     const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
+    const [accountGlobalCashbackStatus, setAccountGlobalCashbackStatus] = useState<AccountSpendingStats | null>(null)
 
     const [isPending, startTransition] = useTransition()
 
@@ -189,18 +193,26 @@ export function MemberDetailView({
 
     // Update Navigation Handlers
     const handleCycleChange = (tag: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        
         if (tag !== 'all') {
-            setSelectedAccountId(undefined)
-            setDateMode('all')
+            setDateMode('all') 
             setDateRangeValue(undefined)
             setDateRangeFilter(undefined)
         }
 
-        const params = new URLSearchParams(searchParams.toString())
         params.set('tag', tag)
         if (tag.includes('-')) {
             params.set('year', tag.split('-')[0])
         }
+        
+        // Always include accountId if we have one in state
+        if (selectedAccountId) {
+            params.set('accountId', selectedAccountId)
+        } else {
+            params.delete('accountId')
+        }
+
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
@@ -209,11 +221,8 @@ export function MemberDetailView({
     const handleCycleSelect = (tag: string, year: string | null) => {
         const params = new URLSearchParams(searchParams.toString())
         
-        params.delete('accountId')
         params.delete('dateFrom')
         params.delete('dateTo')
-        params.delete('status')
-        params.delete('type')
         
         if (tag === 'all') {
             params.set('tag', 'all')
@@ -224,6 +233,11 @@ export function MemberDetailView({
             if (tag.includes('-')) {
                 params.set('year', tag.split('-')[0])
             }
+        }
+
+        // Always include accountId if we have one in state
+        if (selectedAccountId) {
+            params.set('accountId', selectedAccountId)
         }
 
         startTransition(() => {
@@ -346,46 +360,109 @@ export function MemberDetailView({
         setSelectedAccountId(value)
         if (!value) {
             const params = new URLSearchParams(searchParams.toString())
-            params.set('tag', 'all')
+            params.delete('accountId')
+            if (!urlTag) params.set('tag', 'all')
             params.delete('year')
             params.delete('dateFrom')
             params.delete('dateTo')
             startTransition(() => {
                 router.push(`?${params.toString()}`, { scroll: false })
             })
-            toast.info('Switched debt cycle to All History')
-            return
-        }
-
-        if (urlTag !== 'all') {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set('tag', 'all')
-            if (!params.get('year')) {
-                params.set('year', selectedYear ?? new Date().getFullYear().toString())
-            }
-            startTransition(() => {
-                router.push(`?${params.toString()}`, { scroll: false })
-            })
-            toast.info(`Switched debt cycle to all ${params.get('year')} for account filter`)
+        } else {
+            // ONLY set local state. 
+            // The TransactionControlBar's useEffect will detect this change,
+            // find the correct cycle, and trigger onCycleSelect/Change,
+            // which will handle the single consolidated router.push.
+            setDateMode('cycle')
         }
     }
 
-    // Calculate stats for Header based on Selected Year or All Time
-    const headerStats = useMemo(() => {
-        const targetCycles = selectedYear
-            ? debtCycles.filter(c => c.tag.startsWith(selectedYear))
-            : debtCycles
+    // Mapping Global Stats to Header Expected Interface
+    const mappedGlobalStats = useMemo(() => {
+        if (!accountGlobalCashbackStatus) return null;
+        return {
+            earned: accountGlobalCashbackStatus.earnedSoFar,
+            shared: accountGlobalCashbackStatus.sharedAmount,
+            profit: accountGlobalCashbackStatus.netProfit,
+            cap: accountGlobalCashbackStatus.maxCashback || 0,
+            currentSpend: accountGlobalCashbackStatus.currentSpend,
+            minSpend: accountGlobalCashbackStatus.minSpend || 0,
+            needToSpend: accountGlobalCashbackStatus.minSpend 
+                ? Math.max(0, accountGlobalCashbackStatus.minSpend - accountGlobalCashbackStatus.currentSpend) 
+                : 0,
+            remaining: accountGlobalCashbackStatus.remainingBudget || 0,
+            account_id: selectedAccountId
+        }
+    }, [accountGlobalCashbackStatus, selectedAccountId])
 
-        return targetCycles.reduce((acc, cycle) => ({
-            originalLend: acc.originalLend + (cycle.stats.originalLend || 0),
-            cashback: acc.cashback + (cycle.stats.cashback || 0),
-            netLend: acc.netLend + (cycle.stats.lend || 0),
-            repay: acc.repay + (cycle.stats.repay || 0),
-            remains: acc.remains + (cycle.remains || 0),
-            paidRollover: acc.paidRollover + (cycle.stats.paidRollover || 0),
-            receiveRollover: acc.receiveRollover + (cycle.stats.receiveRollover || 0),
-        }), { originalLend: 0, cashback: 0, netLend: 0, repay: 0, remains: 0, paidRollover: 0, receiveRollover: 0 })
-    }, [debtCycles, selectedYear])
+    useEffect(() => {
+        if (!selectedAccountId) {
+            setAccountGlobalCashbackStatus(null)
+            return
+        }
+
+        // Prioritize state over URL for tag if they differ during transition
+        const effectiveTag = activeCycleTag || urlTag || undefined
+
+        const fetchGlobalStats = async () => {
+            // Clear current global status to show transition/loading
+            setAccountGlobalCashbackStatus(null)
+            
+            console.log('[MemberDetailView] fetching global stats:', { selectedAccountId, effectiveTag })
+            try {
+                const stats = await getPocketBaseAccountSpendingStatsSnapshot(selectedAccountId, new Date(), effectiveTag === 'all' ? undefined : effectiveTag)
+                console.log('[MemberDetailView] global stats result:', stats ? 'received' : 'null', stats?.currentSpend)
+                setAccountGlobalCashbackStatus(stats)
+            } catch (err) {
+                console.error("Failed to fetch global cashback stats:", err)
+            }
+        }
+
+        fetchGlobalStats()
+    }, [selectedAccountId, urlTag, activeCycleTag])
+
+    // Calculate stats for Header based on Selected Cycle, Year or All Time
+    const headerStats = useMemo(() => {
+        const now = new Date()
+        const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        
+        let originalLend = 0
+        let cashback = 0
+        let netLend = 0
+        let repay = 0
+        let remains = 0
+        let paidRollover = 0
+        let receiveRollover = 0
+
+        // 1. Try to find the cycle in local debtCycles
+        const effectiveTag = urlTag && urlTag !== 'all' ? urlTag : (activeCycleTag !== 'all' ? activeCycleTag : currentMonthTag)
+        const cycle = debtCycles.find(c => c.tag === effectiveTag) || debtCycles[0]
+
+        if (cycle) {
+            originalLend = cycle.stats.originalLend || 0
+            cashback = cycle.stats.cashback || 0
+            netLend = cycle.stats.lend || 0
+            repay = cycle.stats.repay || 0
+            remains = cycle.remains || 0
+            paidRollover = cycle.stats.paidRollover || 0
+            receiveRollover = cycle.stats.receiveRollover || 0
+        }
+
+        // 2. OVERRIDE with Global Account Data if an account is selected
+        // Requirement from task.md: "SOURCE OF TRUTH: If an Account filter is active, the Reward section MUST display Global Account Data"
+        // Also "RE-CALCULATE "Remains": Remains = Original Spend - Correct Cashback."
+        if (selectedAccountId && accountGlobalCashbackStatus) {
+            originalLend = accountGlobalCashbackStatus.currentSpend || 0
+            cashback = accountGlobalCashbackStatus.earned || 0
+            // Naming from task.md: Remains = Original Spend - Correct Cashback
+            remains = originalLend - cashback
+            
+            // keep repay and rollovers from local person context if we still want to show them 
+            // in the StatsPopover, but for the main summary cards, we use global spend/cashback.
+        }
+
+        return { originalLend, cashback, netLend, repay, remains, paidRollover, receiveRollover }
+    }, [debtCycles, urlTag, activeCycleTag, selectedAccountId, accountGlobalCashbackStatus])
 
     // Absolute Active Cycle Logic
     const activeCycle = useMemo(() => {
@@ -523,26 +600,61 @@ export function MemberDetailView({
         })
 
         const currentSpend = spendTransactions.reduce((sum, txn) => sum + Math.abs(Number(txn.amount) || 0), 0)
-        const earned = spendTransactions.reduce((sum, txn) => {
+        
+        // Advanced cashback calculation logic consistent with AccountDetailHeaderV2
+        let estEarned = 0
+        let sharedAmount = 0
+        
+        spendTransactions.forEach(txn => {
             const amount = Math.abs(Number(txn.amount) || 0)
-            const finalPrice = txn.final_price !== null && txn.final_price !== undefined
-                ? Math.abs(Number(txn.final_price) || 0)
-                : amount
-            return sum + Math.max(0, amount - finalPrice)
-        }, 0)
+            const metadata = (txn.metadata as any) || {}
+            
+            // 1. Earned Calculation
+            const entries = Array.isArray(txn.cashback_entries) ? txn.cashback_entries : []
+            const entryAmount = entries.reduce((s: number, e: any) => {
+                if (e.mode === "virtual" || e.mode === "real") {
+                    return s + Math.abs(Number(e.amount || 0))
+                }
+                return s
+            }, 0)
 
+            if (entryAmount > 0) {
+                estEarned += entryAmount
+            } else {
+                // Fallback to final_price
+                const finalPrice = txn.final_price !== null && txn.final_price !== undefined
+                    ? Math.abs(Number(txn.final_price) || 0)
+                    : amount
+                estEarned += Math.max(0, amount - finalPrice)
+            }
+
+            // 2. Shared Calculation
+            const sharedFixed = Number(txn.cashback_share_fixed || metadata.cashback_share_fixed || 0)
+            const rawSharePercent = Number(txn.cashback_share_percent || metadata.cashback_share_percent || 0)
+            const sharePercent = rawSharePercent > 1 ? rawSharePercent / 100 : rawSharePercent
+            const computedShared = amount * sharePercent + sharedFixed
+            const rawShareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0)
+            const txShared = rawShareAmount > 0 ? rawShareAmount : computedShared
+            sharedAmount += (isNaN(txShared) ? 0 : txShared)
+        })
+
+        const profit = estEarned - sharedAmount
         const needToSpend = minSpend && minSpend > 0 ? Math.max(0, minSpend - currentSpend) : 0
-        if (currentSpend <= 0 && earned <= 0 && needToSpend <= 0) return null
+        
+        if (currentSpend <= 0 && estEarned <= 0 && needToSpend <= 0) return null
 
         return {
-            earned,
-            cap: config.maxBudget ?? null,
+            earned: estEarned,
+            shared: sharedAmount,
+            profit: profit,
+            cap: config.maxBudget ?? 0,
             currentSpend,
-            minSpend,
+            minSpend: minSpend ?? 0,
             needToSpend,
             remaining: config.maxBudget !== null && config.maxBudget !== undefined
-                ? Math.max(0, config.maxBudget - earned)
-                : null,
+                ? Math.max(0, config.maxBudget - estEarned)
+                : 0,
+            account_id: selectedAccountId
         }
     }, [accounts, selectedAccountId, selectedYear, activeCycleTag, transactions, getEffectiveTxnTag])
 
@@ -651,16 +763,20 @@ export function MemberDetailView({
                 person={person}
                 balanceLabel={balanceLabel}
                 activeCycle={activeCycle}
+                allCycles={debtCycles}
+                accounts={accounts}
                 stats={headerStats}
                 selectedYear={selectedYear}
                 availableYears={availableYears}
                 onYearChange={handleYearChange}
+                onCycleChange={handleCycleChange}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 onEdit={() => setIsPersonSlideOpen(true)}
-                cashbackStatus={selectedAccountCashbackStatus}
+                cashbackStatus={mappedGlobalStats || selectedAccountCashbackStatus || undefined}
                 isSyncing={isGlobalLoading || isPending}
                 syncingText={isGlobalLoading ? (loadingMessage || 'Syncing...') : 'Loading...'}
+                hasFilter={!!selectedAccountId}
             />
 
             {/* Content Area */}

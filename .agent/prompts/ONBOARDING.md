@@ -55,9 +55,10 @@ money-flow-3/
 │   ├── lib/                    # Utilities, Supabase clients
 │   └── types/                  # TypeScript types
 ├── .agent/                     # Documentation & guides
+│   ├── handovers/              # Monthly handovers (e.g. 032026/)
 │   ├── prompts/                # Agent prompts
 │   ├── rules/                  # Coding standards
-│   └── archive/                # Old documentation
+│   └── workflows/              # Business logic walkthroughs
 └── supabase/migrations/        # Database migrations
 ```
 
@@ -131,6 +132,6 @@ When starting a new session or task, use these templates:
 
 ---
 
-**Last Updated**: 2026-02-23  
+**Last Updated**: 2026-03-18  
 **Maintained By**: Money Flow 3 Team
 

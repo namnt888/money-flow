@@ -81,9 +81,9 @@ export const getUnifiedTransactions = loadTransactions;
 
 export async function getTransactionById(id: string, _includeRel?: boolean): Promise<TransactionWithDetails | null> {
   try {
-    const pbId = toPocketBaseId(id, 'pvl_txn_001');
-    const record = await pocketbaseGetById<any>('pvl_txn_001', pbId, 
-      'category_id,account_id,target_account_id,person_id,shop_id,transaction_history,cashback_entries'
+    const pbId = toPocketBaseId(id, 'transactions');
+    const record = await pocketbaseGetById<any>('transactions', pbId, 
+      'category_id,account_id,to_account_id,person_id,shop_id,transaction_history,cashback_entries'
     );
     if (!record) return null;
     return record as any as TransactionWithDetails;
@@ -592,7 +592,7 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
       edited_at: new Date().toISOString(),
     };
     
-    await pocketbaseUpdate('pvl_txn_001', pbId, {
+    await pocketbaseUpdate('transactions', pbId, {
       ...normalized,
       date: normalized.occurred_at,
       occurred_at: normalized.occurred_at,

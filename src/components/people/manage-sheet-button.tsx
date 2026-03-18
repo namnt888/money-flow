@@ -442,53 +442,49 @@ export function ManageSheetButton({
           <TooltipProvider delayDuration={100}>
             <div className="flex items-center h-full w-full">
               {/* 1. External Sheet Link Icon */}
-              {!isAggregate && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200"
-                      disabled={!currentSheetUrl || !isValidLink(currentSheetUrl)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (currentSheetUrl) window.open(currentSheetUrl, '_blank', 'noopener,noreferrer');
-                      }}
-                    >
-                      <FileSpreadsheet className="h-4.5 w-4.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" align="start" className="z-[100]">
-                    <p>Open Sheet in New Tab</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200"
+                    disabled={!currentSheetUrl || !isValidLink(currentSheetUrl)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (currentSheetUrl) window.open(currentSheetUrl, '_blank', 'noopener,noreferrer');
+                    }}
+                  >
+                    <FileSpreadsheet className="h-4.5 w-4.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" className="z-[100]">
+                  <p>Open Sheet in New Tab</p>
+                </TooltipContent>
+              </Tooltip>
 
               {/* 2. Quick Sync Icon Button */}
-              {!isAggregate && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
-                      disabled={isDisabled || !hasValidScriptLink || isSaving}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleManageCycle();
-                      }}
-                      onMouseEnter={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <RefreshCcw className={cn("h-4 w-4", (isManaging || isSaving || isPending) && "animate-spin")} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" align="center" className="z-[100]">
-                    <p>Quick Sync to Sheet</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
+                    disabled={isDisabled || !hasValidScriptLink || isSaving}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManageCycle();
+                    }}
+                    onMouseEnter={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <RefreshCcw className={cn("h-4 w-4", (isManaging || isSaving || isPending) && "animate-spin")} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center" className="z-[100]">
+                  <p>Quick Sync to Sheet</p>
+                </TooltipContent>
+              </Tooltip>
 
               {/* 3. History Trigger (Middle Info Part) */}
               <div className="flex-1 h-full border-r border-slate-200">
@@ -537,29 +533,27 @@ export function ManageSheetButton({
               </div>
 
               {/* 4. Settings Trigger Icon (Now on the Right) */}
-              {!isAggregate && (
-                <Tooltip>
-                  <PopoverTrigger asChild>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none"
-                        disabled={isDisabled}
-                        onClick={(e) => {
-                          handleTriggerClick(e)
-                          setActiveTab('settings')
-                        }}
-                      >
-                        <Settings2 className="h-4.5 w-4.5" />
-                      </Button>
-                    </TooltipTrigger>
-                  </PopoverTrigger>
-                  <TooltipContent side="bottom" align="end" className="z-[100]">
-                    <p>Sheet Configurations</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none"
+                      disabled={isDisabled}
+                      onClick={(e) => {
+                        handleTriggerClick(e)
+                        setActiveTab('settings')
+                      }}
+                    >
+                      <Settings2 className="h-4.5 w-4.5" />
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent side="bottom" align="end" className="z-[100]">
+                  <p>Sheet Configurations</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </TooltipProvider>
         ) : (

@@ -2,7 +2,27 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Edit, LayoutDashboard, History, UserMinus, Filter, Search, ChevronDown, ArrowLeft, ArrowUpRight, ArrowDownLeft, Gift, Wallet, X, RefreshCw, CheckCircle, Plus } from 'lucide-react'
+import { 
+    ChevronLeft, 
+    Edit, 
+    LayoutDashboard, 
+    History, 
+    UserMinus, 
+    Filter, 
+    Search, 
+    ChevronDown, 
+    ArrowLeft, 
+    ArrowUpRight, 
+    ArrowDownLeft, 
+    Gift, 
+    Wallet, 
+    X, 
+    RefreshCw, 
+    CheckCircle, 
+    Plus,
+    Calendar,
+    TrendingUp
+} from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Person, TransactionWithDetails, PersonCycleSheet } from '@/types/moneyflow.types'
@@ -71,7 +91,6 @@ export function MemberDetailView({
     const [isFilterOpen, setIsFilterOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<'all' | 'lend' | 'repay' | 'cashback'>('all')
-    const [showAllMonths, setShowAllMonths] = useState(false)
     const [showPaidModal, setShowPaidModal] = useState(false)
 
     const { metrics, debtCycles, availableYears } = usePersonDetails({
@@ -101,17 +120,14 @@ export function MemberDetailView({
             })
         }
 
-
         // Sort: For current year, ascending (JAN, FEB, MAR...); For past years, descending (DEC, NOV, OCT...)
         if (targetYear === currentYear) {
-            // Current year: Ascending order (JAN, FEB, MAR...)
             pills.sort((a, b) => {
                 const aMonth = parseInt(a.tag.split('-')[1])
                 const bMonth = parseInt(b.tag.split('-')[1])
                 return aMonth - bMonth
             })
         } else {
-            // Past years: Descending order (DEC, NOV, OCT...)
             pills.sort((a, b) => {
                 const aMonth = parseInt(a.tag.split('-')[1])
                 const bMonth = parseInt(b.tag.split('-')[1])
@@ -133,7 +149,7 @@ export function MemberDetailView({
             const [yearStr] = cycle.tag.split('-')
             const year = parseInt(yearStr)
             return year < targetYear && !cycle.isSettled && Math.abs(cycle.remains) > 100
-        }).sort((a, b) => b.tagDateVal - a.tagDateVal)
+        }).sort((a, b) => (b.tagDateVal || 0) - (a.tagDateVal || 0))
     }, [debtCycles, selectedYear])
 
     // Active cycle
@@ -177,7 +193,6 @@ export function MemberDetailView({
                     cashback = amount * t.cashback_share_percent
                 }
 
-                // Include income-based cashback
                 if (t.type === 'income' && (t.note?.toLowerCase().includes('cashback') || (t.metadata as any)?.is_cashback)) {
                     cashback += amount
                 }
@@ -199,220 +214,273 @@ export function MemberDetailView({
         return txns
     }, [activeCycle, filterType, searchTerm])
 
-    const balanceClass = balance > 0 ? 'text-rose-600' : balance < 0 ? 'text-emerald-600' : 'text-slate-600'
-
     return (
         <div className="flex flex-col h-full bg-slate-50/50">
             {/* HEADER */}
             <div className="flex-none bg-white border-b border-slate-200">
-                {/* Line 1: Name + Tabs */}
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-                    <div className="flex items-center gap-3">
-                        <Link href="/people" className="flex items-center justify-center h-9 w-9 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
-                            <ChevronLeft className="h-5 w-5" />
-                        </Link>
-
-                        {person.image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={person.image_url} alt={person.name} className="h-9 w-9 rounded-lg object-cover" />
-                        ) : (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-base font-bold text-blue-600">
-                                {person.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-
-                        <div className="flex items-center gap-2">
-                            {/* Google Sheet Link */}
-                            {person.google_sheet_url && (
-                                <a
-                                    href={person.google_sheet_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 rounded-full hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors border border-transparent hover:border-emerald-100"
-                                    title="Open Google Sheet"
-                                >
-                                    <LayoutDashboard className="w-5 h-5" />
-                                </a>
+                {/* Line 1: Identity, Progress & Quick Actions */}
+                <div className="flex items-center justify-between px-6 py-6">
+                    {/* Left: Identity */}
+                    <div className="flex items-center gap-5 min-w-0">
+                        <div className="shrink-0">
+                            {person.image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img 
+                                    src={person.image_url} 
+                                    alt={person.name} 
+                                    className="h-16 w-16 rounded-none object-cover border border-slate-200 shadow-sm" 
+                                />
+                            ) : (
+                                <div className="flex h-16 w-16 items-center justify-center rounded-none bg-indigo-50 text-2xl font-black text-indigo-600 border border-indigo-100 shadow-sm">
+                                    {person.name.charAt(0).toUpperCase()}
+                                </div>
                             )}
-                            <h1 className="text-lg font-bold text-slate-900">{person.name}</h1>
-                            <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded uppercase", Math.abs(balance) < 100 ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600")}>
-                                {Math.abs(balance) < 100 ? 'SETTLED' : 'ACTIVE'}
-                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-2xl font-black text-slate-900 tracking-tight truncate leading-none">
+                                    {person.name}
+                                </h1>
+                                <span className={cn(
+                                    "text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-widest leading-none shrink-0", 
+                                    Math.abs(balance) < 100 
+                                        ? "bg-emerald-500 text-white" 
+                                        : "bg-slate-900 text-white"
+                                )}>
+                                    {Math.abs(balance) < 100 ? 'SETTLED' : 'ACTIVE'}
+                                </span>
+                            </div>
+
+                            {/* Cycle Dropdown & Selector */}
+                            <div className="flex items-center gap-1">
+                                <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                                    <PopoverTrigger asChild>
+                                        <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors group">
+                                            <Calendar className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600" />
+                                            <span className="text-[11px] font-black text-slate-600 uppercase tracking-tighter">
+                                                {getMonthName(activeCycleTag, true)}
+                                            </span>
+                                            <ChevronDown className="h-3 w-3 text-slate-400 opacity-50" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-64 p-2 shadow-2xl border-indigo-100" align="start">
+                                        <div className="flex items-center justify-between mb-2 px-1 pb-1 border-b border-slate-100">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Cycle</span>
+                                            <div className="flex items-center gap-1">
+                                                {availableYears.map(year => (
+                                                    <button 
+                                                        key={year}
+                                                        onClick={() => setSelectedYear(year)}
+                                                        className={cn(
+                                                            "px-1.5 py-0.5 text-[9px] font-black rounded border transition-all",
+                                                            selectedYear === year 
+                                                                ? "bg-indigo-600 border-indigo-600 text-white" 
+                                                                : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
+                                                        )}
+                                                    >
+                                                        {year}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1">
+                                            {timelinePills.map((pill) => (
+                                                <button
+                                                    key={pill.tag}
+                                                    onClick={() => {
+                                                        setActiveCycleTag(pill.tag)
+                                                        setIsFilterOpen(false)
+                                                    }}
+                                                    className={cn(
+                                                        "flex flex-col items-center justify-center p-2 rounded border transition-all h-14",
+                                                        activeCycleTag === pill.tag
+                                                            ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100"
+                                                            : pill.isSettled
+                                                                ? "bg-emerald-50 border-emerald-100 text-emerald-700 hover:border-emerald-200"
+                                                                : pill.hasData
+                                                                    ? "bg-white border-slate-200 text-slate-900 hover:border-indigo-300"
+                                                                    : "bg-slate-50 border-slate-100 text-slate-300 hover:bg-slate-100"
+                                                    )}
+                                                >
+                                                    <span className="text-[9px] font-black uppercase leading-none mb-1">
+                                                        {getMonthName(pill.tag)}
+                                                    </span>
+                                                    {pill.hasData && (
+                                                        <span className={cn(
+                                                            "text-[9px] font-bold tabular-nums",
+                                                            activeCycleTag === pill.tag ? "text-indigo-100" : (pill.isSettled ? "text-emerald-500" : "text-slate-500")
+                                                        )}>
+                                                            {compactNumberFormatter.format(pill.remains)}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+
+                                {outstandingFromPreviousYears.length > 0 && (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <button className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 animate-pulse transition-all">
+                                                <History className="h-3 w-3" />
+                                                <span className="text-[9px] font-black uppercase tracking-tighter">
+                                                    {outstandingFromPreviousYears.length} Unpaid Past
+                                                </span>
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-56 p-2" align="start">
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Debt History</div>
+                                            <div className="space-y-1">
+                                                {outstandingFromPreviousYears.map(cycle => (
+                                                    <button
+                                                        key={cycle.tag}
+                                                        onClick={() => {
+                                                            setSelectedYear(cycle.tag.split('-')[0])
+                                                            setActiveCycleTag(cycle.tag)
+                                                        }}
+                                                        className="w-full flex items-center justify-between p-2 rounded hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all"
+                                                    >
+                                                        <span className="text-[11px] font-bold text-slate-600">{getMonthName(cycle.tag, true)}</span>
+                                                        <span className="text-[11px] font-black text-rose-600">{numberFormatter.format(Math.abs(cycle.remains))}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Tabs - Compact */}
-                    <div className="flex items-center gap-0.5">
-                        <button
-                            onClick={() => setActiveTab('timeline')}
-                            className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors rounded-md", activeTab === 'timeline' ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")}
-                        >
-                            <LayoutDashboard className="h-3.5 w-3.5" />
-                            TIMELINE
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('history')}
-                            className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors rounded-md", activeTab === 'history' ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")}
-                        >
-                            <History className="h-3.5 w-3.5" />
-                            HISTORY
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('split-bill')}
-                            className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors rounded-md", activeTab === 'split-bill' ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")}
-                        >
-                            <UserMinus className="h-3.5 w-3.5" />
-                            SPLIT BILL
-                        </button>
-                        <EditPersonButton
-                            person={person}
-                            subscriptions={[]} // You might need to pass subscriptions prop if available or fetch them
-                            accounts={accounts}
-                        />
+                    {/* Center: Reward/Payment Progress */}
+                    <div className="hidden lg:flex flex-1 max-w-sm flex-col gap-2 px-8">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <Gift className="h-3.5 w-3.5 text-indigo-500" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment Health</span>
+                            </div>
+                            <span className="text-[10px] font-black text-indigo-600">
+                                {activeCycle ? Math.round((activeCycle.stats.repay / Math.max(1, activeCycle.stats.lend)) * 100) : 0}%
+                            </span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 p-[1px]">
+                            <div 
+                                className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(79,70,229,0.3)]"
+                                style={{ width: `${activeCycle ? Math.min(100, (activeCycle.stats.repay / Math.max(1, activeCycle.stats.lend)) * 100) : 0}%` }}
+                            />
+                        </div>
+                        <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-tighter">
+                            <span>Repaid: {numberFormatter.format(activeCycle?.stats.repay ?? 0)}</span>
+                            <span>Target: {numberFormatter.format(activeCycle?.stats.lend ?? 0)}</span>
+                        </div>
+                    </div>
+
+                    {/* Right: Consolidated Action Stack */}
+                    <div className="flex flex-col items-end gap-3">
+                        {/* Tabs Integration */}
+                        <div className="flex items-center bg-slate-100 p-1 rounded-lg">
+                            <button
+                                onClick={() => setActiveTab('timeline')}
+                                className={cn("px-4 py-1.5 text-[10px] font-black transition-all rounded-md uppercase tracking-widest", activeTab === 'timeline' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+                            >
+                                Timeline
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                className={cn("px-4 py-1.5 text-[10px] font-black transition-all rounded-md uppercase tracking-widest", activeTab === 'history' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+                            >
+                                History
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('split-bill')}
+                                className={cn("px-4 py-1.5 text-[10px] font-black transition-all rounded-md uppercase tracking-widest", activeTab === 'split-bill' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+                            >
+                                Split
+                            </button>
+                        </div>
+
+                        {/* Button Stack */}
+                        <div className="flex items-center gap-2">
+                             <ManageSheetButton
+                                personId={person.id}
+                                cycleTag={activeCycleTag}
+                                scriptLink={person.sheet_link}
+                                googleSheetUrl={person.google_sheet_url}
+                                sheetFullImg={person.sheet_full_img}
+                                showBankAccount={person.sheet_show_bank_account ?? false}
+                                showQrImage={person.sheet_show_qr_image ?? false}
+                                size="sm"
+                                buttonClassName="h-8 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                linkedLabel="Google Sheet"
+                                unlinkedLabel="Link Sheet"
+                            />
+                            <EditPersonButton
+                                person={person}
+                                subscriptions={[]} 
+                                accounts={accounts}
+                                className="h-8 px-3.5 text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
+                            />
+                            <button 
+                                onClick={() => setActiveTab('split-bill')}
+                                className="flex items-center gap-1.5 h-8 px-3 text-[10px] font-black uppercase tracking-widest border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 transition-colors"
+                            >
+                                <UserMinus className="h-3.5 w-3.5" />
+                                Split Bill
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Line 2: Filter + Timeline Pills (Grouped & Bordered) */}
-                <div className="px-4 py-2">
-                    <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
-                        {/* Year Filter */}
-                        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                            <PopoverTrigger asChild>
-                                <button className="flex-shrink-0 h-9 rounded-full border bg-white px-3 flex items-center gap-1.5 text-xs font-medium shadow-sm border-slate-200 text-slate-600 hover:bg-slate-50">
-                                    <Filter className="h-3 w-3" />
-                                    <span className="font-bold">{selectedYear || 'All'}</span>
-                                    <ChevronDown className="h-3 w-3 opacity-50" />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-48 p-2" align="start">
-                                <div className="space-y-1">
-                                    <button className={cn("w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors", !selectedYear ? "bg-slate-100 font-bold" : "hover:bg-slate-50")} onClick={() => { setSelectedYear(null); setIsFilterOpen(false); }}>
-                                        All Years
-                                    </button>
-                                    {availableYears.map(year => (
-                                        <button key={year} className={cn("w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors", selectedYear === year ? "bg-indigo-50 text-indigo-700 font-bold" : "hover:bg-slate-50")} onClick={() => { setSelectedYear(year); setIsFilterOpen(false); }}>
-                                            {year}
-                                        </button>
-                                    ))}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
+                {/* Line 2: High Contrast Summary Badges */}
+                <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+                    <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
+                        <div className="flex flex-col min-w-[140px] p-3 rounded-xl bg-white border border-slate-200 shadow-sm group hover:border-slate-300 transition-all">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-500">Original Amount</span>
+                            <span className="text-lg font-black text-slate-900 tabular-nums leading-none">
+                                {numberFormatter.format(activeCycle?.stats.originalLend ?? 0)}
+                            </span>
+                        </div>
 
-
-
-                        {/* Timeline Pills - Vertical Expansion */}
-                        <div className="flex-1 flex flex-col gap-2">
-                            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                                {/* First 6 months */}
-                                {timelinePills.slice(0, 6).map((pill) => {
-                                    const isActive = activeCycleTag === pill.tag
-                                    const isSettled = pill.isSettled
-
-                                    return (
-                                        <button
-                                            key={pill.tag}
-                                            onClick={() => setActiveCycleTag(pill.tag)}
-                                            className={cn(
-                                                "flex-shrink-0 flex items-center gap-2 h-10 px-3 rounded-lg border transition-all whitespace-nowrap text-xs min-w-[140px]",
-                                                isActive ? "bg-indigo-900 border-indigo-900 text-white shadow-lg" : isSettled ? "bg-white border-slate-200 text-slate-400" : "bg-white border-slate-200 text-slate-800 hover:border-slate-300"
-                                            )}
-                                        >
-                                            <span className={cn("font-bold uppercase", isActive ? "text-indigo-200" : "text-slate-500")}>
-                                                {getMonthName(pill.tag)}:
-                                            </span>
-                                            {!pill.hasData ? (
-                                                <span className={cn("text-[10px] font-medium italic", isActive ? "text-indigo-300" : "text-slate-400")}>No Data</span>
-                                            ) : isSettled ? (
-                                                <span className={cn("font-bold uppercase", isActive ? "text-emerald-300" : "text-emerald-600")}>SETTLED</span>
-                                            ) : (
-                                                <span className={cn("font-bold", isActive ? "text-white" : "text-slate-900")}>
-                                                    {numberFormatter.format(Math.max(0, pill.remains))}
-                                                </span>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-
-                                {/* Outstanding Debts - Inline before More */}
-                                {outstandingFromPreviousYears.length > 0 && outstandingFromPreviousYears.map((cycle) => (
-                                    <button
-                                        key={cycle.tag}
-                                        onClick={() => {
-                                            setSelectedYear(cycle.tag.split('-')[0])
-                                            setActiveCycleTag(cycle.tag)
-                                        }}
-                                        className="flex-shrink-0 flex items-center gap-1.5 h-10 px-2.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300 transition-colors text-xs min-w-[120px]"
-                                    >
-                                        <span className="font-bold">{getMonthName(cycle.tag, true)}</span>
-                                        <span className="bg-white/60 px-1 rounded text-[9px] font-bold">UNPAID</span>
-                                        <span className="font-bold tabular-nums">
-                                            {numberFormatter.format(Math.abs(cycle.remains))}
-                                        </span>
-                                    </button>
-                                ))}
-
-                                {/* Back to Current Year - Before More */}
-                                {selectedYear && selectedYear !== new Date().getFullYear().toString() && (
-                                    <button
-                                        onClick={() => setSelectedYear(new Date().getFullYear().toString())}
-                                        className="flex-shrink-0 h-10 px-3 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-medium min-w-[140px] flex items-center justify-center gap-1.5"
-                                    >
-                                        <ArrowLeft className="h-3 w-3" />
-                                        <span>Back to {new Date().getFullYear()}</span>
-                                    </button>
-                                )}
-
-                                <button
-                                    onClick={() => setShowAllMonths(!showAllMonths)}
-                                    className="flex-shrink-0 h-10 px-3 rounded-lg border border-slate-200 bg-white text-slate-500 text-xs font-medium hover:bg-slate-50 min-w-[80px] flex items-center justify-center gap-1"
-                                >
-                                    {showAllMonths ? (
-                                        <>
-                                            <ChevronDown className="h-3 w-3 rotate-180" />
-                                            <span>LESS</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ChevronDown className="h-3 w-3" />
-                                            <span>MORE</span>
-                                        </>
-                                    )}
-                                </button>
+                        <div className="flex flex-col min-w-[140px] p-3 rounded-xl bg-amber-50 border border-amber-100 shadow-sm group hover:border-amber-200 transition-all">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest group-hover:text-amber-700">Cashback</span>
+                                <Gift className="h-3 w-3 text-amber-400" />
                             </div>
+                            <span className="text-lg font-black text-amber-700 tabular-nums leading-none">
+                                -{numberFormatter.format(activeCycle?.stats.cashback ?? 0)}
+                            </span>
+                        </div>
 
-                            {/* Remaining 6 months - Vertical Expansion */}
-                            {showAllMonths && (
-                                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                                    {timelinePills.slice(6).map((pill) => {
-                                        const isActive = activeCycleTag === pill.tag
-                                        const isSettled = pill.isSettled
+                        <div className="flex flex-col min-w-[140px] p-3 rounded-xl bg-blue-50 border border-blue-100 shadow-sm group hover:border-blue-200 transition-all">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest group-hover:text-blue-700">Net Lend</span>
+                                <TrendingUp className="h-3 w-3 text-blue-400" />
+                            </div>
+                            <span className="text-lg font-black text-blue-700 tabular-nums leading-none">
+                                {numberFormatter.format(activeCycle?.stats.lend ?? 0)}
+                            </span>
+                        </div>
 
-                                        return (
-                                            <button
-                                                key={pill.tag}
-                                                onClick={() => setActiveCycleTag(pill.tag)}
-                                                className={cn(
-                                                    "flex-shrink-0 flex items-center gap-2 h-10 px-3 rounded-lg border transition-all whitespace-nowrap text-xs min-w-[140px]",
-                                                    isActive ? "bg-indigo-900 border-indigo-900 text-white shadow-lg" : isSettled ? "bg-white border-slate-200 text-slate-400" : "bg-white border-slate-200 text-slate-800 hover:border-slate-300"
-                                                )}
-                                            >
-                                                <span className={cn("font-bold uppercase", isActive ? "text-indigo-200" : "text-slate-500")}>
-                                                    {getMonthName(pill.tag)}:
-                                                </span>
-                                                {!pill.hasData ? (
-                                                    <span className={cn("text-[10px] font-medium italic", isActive ? "text-indigo-300" : "text-slate-400")}>No Data</span>
-                                                ) : isSettled ? (
-                                                    <span className={cn("font-bold uppercase", isActive ? "text-emerald-300" : "text-emerald-600")}>SETTLED</span>
-                                                ) : (
-                                                    <span className={cn("font-bold", isActive ? "text-white" : "text-slate-900")}>
-                                                        {numberFormatter.format(Math.max(0, pill.remains))}
-                                                    </span>
-                                                )}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            )}
+                        <div className="flex flex-col min-w-[140px] p-3 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm group hover:border-emerald-200 transition-all">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest group-hover:text-emerald-700">Repayment</span>
+                                <CheckCircle className="h-3 w-3 text-emerald-400" />
+                            </div>
+                            <span className="text-lg font-black text-emerald-700 tabular-nums leading-none">
+                                -{numberFormatter.format(activeCycle?.stats.repay ?? 0)}
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col min-w-[180px] p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-lg group ml-auto">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-indigo-400 transition-colors">REMAINING AMOUNT</span>
+                                <Wallet className="h-3.5 w-3.5 text-indigo-400" />
+                            </div>
+                            <span className="text-xl font-black text-white tabular-nums leading-none">
+                                {numberFormatter.format(activeCycle?.remains ?? 0)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -421,98 +489,83 @@ export function MemberDetailView({
             {/* SECTION 2: Cycle Stats + Transaction Table */}
             {activeTab === 'timeline' && activeCycle && (
                 <div className="flex-1 overflow-y-auto px-4 py-3">
-                    {/* Cycle Header - Single Row */}
                     <div className="bg-white rounded-lg border border-slate-200 p-3 mb-3">
                         <div className="flex items-center justify-between">
-                            {/* Left: Month Name + Paid Badge + Filter Buttons */}
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-base font-bold text-slate-900">{getMonthName(activeCycle.tag)}</h2>
-
-                                    {/* +X Paid Badge - Clickable */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 mr-2">
+                                    <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">{getMonthName(activeCycle.tag)}</h2>
                                     {metrics.paidCount > 0 && (
                                         <button
                                             onClick={() => setShowPaidModal(true)}
-                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200 transition-colors cursor-pointer"
+                                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200 transition-colors cursor-pointer uppercase"
                                         >
                                             +{metrics.paidCount} Paid
                                         </button>
                                     )}
                                 </div>
 
-                                {/* Original Lend Badge */}
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs">
-                                    <span className="text-slate-500 font-medium uppercase">Original:</span>
-                                    <span className="font-bold text-slate-700">{numberFormatter.format(activeCycle.stats.originalLend)}</span>
-                                </div>
-
-                                {/* Cashback Badge */}
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded text-xs">
-                                    <span className="text-amber-600 font-medium uppercase">Cashback:</span>
-                                    <span className="font-bold text-amber-700">{numberFormatter.format(activeCycle.stats.cashback)}</span>
-                                </div>
-
-                                {/* Net Lend (Filter Trigger) */}
-                                <button
-                                    onClick={() => setFilterType('lend')}
-                                    className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 border rounded transition-all text-xs",
-                                        filterType === 'lend' ? "bg-blue-100 border-blue-400" : "bg-blue-50 border-blue-200 hover:bg-blue-100"
-                                    )}
-                                >
-                                    <span className="text-blue-600 font-medium uppercase flex items-center gap-1">
-                                        Net Lend:
-                                    </span>
-                                    <span className="font-bold text-blue-700">{numberFormatter.format(activeCycle.stats.lend)}</span>
-                                    <span className="text-[10px] text-blue-500 font-normal ml-1">
-                                        ({compactNumberFormatter.format(activeCycle.stats.originalLend)} - {compactNumberFormatter.format(activeCycle.stats.cashback)})
-                                    </span>
-                                </button>
-
-                                {/* Repay (Filter Trigger) */}
-                                <button
-                                    onClick={() => setFilterType('repay')}
-                                    className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 border rounded transition-all text-xs",
-                                        filterType === 'repay' ? "bg-emerald-100 border-emerald-400" : "bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
-                                    )}
-                                >
-                                    <span className="text-emerald-600 font-medium uppercase flex items-center gap-1">
-                                        Repay:
-                                    </span>
-                                    <span className="font-bold text-emerald-700">{numberFormatter.format(activeCycle.stats.repay)}</span>
-                                </button>
-
-                                {/* Remains (Filter Trigger) */}
                                 <button
                                     onClick={() => setFilterType('all')}
                                     className={cn(
-                                        "flex items-center gap-1.5 px-3 py-1.5 border-2 rounded-md transition-all relative group text-xs",
+                                        "flex items-center gap-2 px-3 py-1.5 border-2 rounded-lg transition-all relative group text-xs font-black uppercase tracking-widest shadow-sm",
                                         filterType === 'all'
-                                            ? "bg-rose-50 border-rose-400 shadow-sm"
-                                            : "bg-white border-slate-200 hover:border-rose-300"
+                                            ? "bg-rose-600 border-rose-600 text-white"
+                                            : "bg-white border-slate-200 hover:border-rose-300 text-slate-600"
                                     )}
                                 >
-                                    <span className="text-slate-500 font-bold uppercase">REMAINS:</span>
-                                    <span className="font-bold text-rose-600">{numberFormatter.format(activeCycle.remains)}</span>
+                                    <span>Remains:</span>
+                                    <span>{numberFormatter.format(activeCycle.remains)}</span>
+                                </button>
 
-                                    {/* Tooltip on Hover */}
-                                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                                        Remains = Net Lend - Repay
-                                    </div>
+                                <button
+                                    onClick={() => setFilterType('lend')}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 border-2 rounded-lg transition-all text-xs font-black uppercase tracking-widest shadow-sm",
+                                        filterType === 'lend' 
+                                            ? "bg-blue-600 border-blue-600 text-white" 
+                                            : "bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700"
+                                    )}
+                                >
+                                    <span>Lend:</span>
+                                    <span>{numberFormatter.format(activeCycle.stats.lend)}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setFilterType('repay')}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 border-2 rounded-lg transition-all text-xs font-black uppercase tracking-widest shadow-sm",
+                                        filterType === 'repay' 
+                                            ? "bg-emerald-600 border-emerald-600 text-white" 
+                                            : "bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700"
+                                    )}
+                                >
+                                    <span>Repay:</span>
+                                    <span>{numberFormatter.format(activeCycle.stats.repay)}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setFilterType('cashback')}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 border-2 rounded-lg transition-all text-xs font-black uppercase tracking-widest shadow-sm",
+                                        filterType === 'cashback' 
+                                            ? "bg-amber-500 border-amber-500 text-white" 
+                                            : "bg-amber-50 border-amber-200 hover:bg-amber-100 text-amber-700"
+                                    )}
+                                >
+                                    <Gift className="h-3 w-3" />
+                                    <span>Cashback:</span>
+                                    <span>{numberFormatter.format(activeCycle.stats.cashback)}</span>
                                 </button>
                             </div>
 
-                            {/* Right: Action Buttons + Search */}
                             <div className="flex items-center gap-2">
-                                {/* Rollover Button */}
                                 {activeCycle.remains > 100 && (
                                     <RolloverDebtDialog
                                         personId={person.id}
                                         currentCycle={activeCycle.tag}
                                         remains={activeCycle.remains}
                                         trigger={
-                                            <button className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium border-2 border-amber-300 text-amber-700 bg-amber-50 rounded-md hover:bg-amber-100 hover:border-amber-400 transition-colors">
+                                            <button className="flex items-center gap-1.5 h-9 px-3 text-[10px] font-black uppercase tracking-widest border-2 border-amber-300 text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 hover:border-amber-400 transition-colors shadow-sm">
                                                 <RefreshCw className="h-3.5 w-3.5" />
                                                 Rollover
                                             </button>
@@ -520,7 +573,6 @@ export function MemberDetailView({
                                     />
                                 )}
 
-                                {/* Debt Button */}
                                 <AddTransactionDialog
                                     accounts={accounts}
                                     categories={categories}
@@ -529,17 +581,16 @@ export function MemberDetailView({
                                     buttonText="Debt"
                                     defaultType="debt"
                                     defaultPersonId={person.id}
-                                    buttonClassName="h-8 px-3 text-xs border-2 border-slate-300 hover:border-slate-400"
+                                    buttonClassName="h-9 px-4 text-[10px] font-black uppercase tracking-widest border-2 border-blue-300 text-blue-700 bg-white rounded-lg hover:bg-blue-50 hover:border-blue-500 hover:text-blue-800 transition-colors shadow-sm"
                                     asChild
                                     triggerContent={
-                                        <button className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium border-2 border-blue-300 text-blue-700 bg-white rounded-md hover:bg-blue-50 hover:border-blue-500 hover:text-blue-800 transition-colors">
-                                            <UserMinus className="h-3.5 w-3.5" />
+                                        <button className="flex items-center gap-1.5 h-9 px-4 text-[10px] font-black uppercase tracking-widest border-2 border-blue-400 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                                            <Plus className="h-3.5 w-3.5 shrink-0" />
                                             Debt
                                         </button>
                                     }
                                 />
 
-                                {/* Repay Button */}
                                 <AddTransactionDialog
                                     accounts={accounts}
                                     categories={categories}
@@ -548,39 +599,24 @@ export function MemberDetailView({
                                     buttonText="Repay"
                                     defaultType="repayment"
                                     defaultPersonId={person.id}
-                                    buttonClassName="h-8 px-3 text-xs border-2 border-slate-300 hover:border-slate-400"
+                                    buttonClassName="h-9 px-4 text-[10px] font-black uppercase tracking-widest border-2 border-emerald-300 text-emerald-700 bg-white rounded-lg hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 transition-colors shadow-sm"
                                     asChild
                                     triggerContent={
-                                        <button className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium border-2 border-emerald-300 text-emerald-700 bg-white rounded-md hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-800 transition-colors">
-                                            <Plus className="h-3.5 w-3.5" />
+                                        <button className="flex items-center gap-1.5 h-9 px-4 text-[10px] font-black uppercase tracking-widest border-2 border-emerald-400 text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-md">
+                                            <CheckCircle className="h-3.5 w-3.5 shrink-0" />
                                             Repay
                                         </button>
                                     }
                                 />
 
-                                {/* Sheet Button - Manage Sheet Modal */}
-                                <ManageSheetButton
-                                    personId={person.id}
-                                    cycleTag={activeCycle.tag}
-                                    scriptLink={person.sheet_link}
-                                    googleSheetUrl={person.google_sheet_url}
-                                    sheetFullImg={person.sheet_full_img}
-                                    showBankAccount={person.sheet_show_bank_account ?? false}
-                                    showQrImage={person.sheet_show_qr_image ?? false}
-                                    size="sm"
-                                    buttonClassName="h-8 text-xs font-medium"
-                                    linkedLabel="Sheet"
-                                    unlinkedLabel="Sheet"
-                                    splitMode={true}
-                                />
-
-                                <div className="relative">
+                                <div className="relative ml-2">
                                     <Input
                                         placeholder="Search..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-8 w-48 text-xs pr-8"
+                                        className="h-9 w-48 text-[11px] font-black uppercase tracking-widest pr-8 pl-9 border-slate-200 focus:ring-slate-900 rounded-lg"
                                     />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                                     {searchTerm && (
                                         <button
                                             onClick={() => setSearchTerm('')}
@@ -594,7 +630,6 @@ export function MemberDetailView({
                         </div>
                     </div>
 
-                    {/* Transaction Table */}
                     <SimpleTransactionTable
                         transactions={cycleTransactions}
                         accounts={accounts}
@@ -636,7 +671,6 @@ export function MemberDetailView({
                 </div>
             )}
 
-            {/* Paid Transactions Modal */}
             <PaidTransactionsModal
                 open={showPaidModal}
                 onOpenChange={setShowPaidModal}

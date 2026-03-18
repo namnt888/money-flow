@@ -28,17 +28,11 @@ Forms: Use react-hook-form with zod schema validation.
 
 Loading: Use Suspense boundaries and loading.tsx for async operations.
 
-3. Supabase Best Practices
-
-Clients:
-
-Use createClient from src/lib/supabase/server.ts for Server Components/Actions.
-
-Use createClient from src/lib/supabase/client.ts for Client Components.
-
-RLS: Always assume RLS is enabled. Do not bypass RLS unless explicitly instructed (using service role).
-
-Queries: Select specific columns, avoid select('*') when possible.
+3. Database Best Practices (PocketBase Primary)
+   - **Client**: Use `pb` service from `src/lib/pocketbase/` (Server/Client versions).
+   - **Data Flow**: Business logic should prefer PocketBase collections (`transactions`, `accounts`, `people`, etc.).
+   - **Sync**: Ensure data is synced between UI and PB via Server Actions or direct revalidation.
+   - **Supabase**: Only use for legacy storage or explicitly marked features.
 
 4. Money Flow 3 Business Logic (CRITICAL)
 
@@ -80,12 +74,18 @@ Installments: Installments are linked to transaction_lines. Do not double-count 
    - Any Types: PROHIBITED. Fix them, do not cast as `any` unless absolutely necessary for external libraries.
    
 7. Database Schema & Migrations
-   - Schema File: `database/schema.sql`.
-   - Migrations: `database/migrations/`.
-   - DO NOT create migrations in other folders.
+   - **PocketBase Schema**: `scripts/pocketbase/schema.json`.
+   - **PocketBase Migrations**: Managed via PocketBase Admin UI or internal migration scripts in `scripts/`.
+   - **Legacy Supabase**: Schema in `database/schema.sql`, migrations in `database/migrations/`.
 
 8. File Cleanup (CRITICAL)
    - **NO temporary files** in project root (build_*.txt, lint_*.txt, changes.txt, etc.)
    - Use `.logs/` folder for temporary files (gitignored)
    - Clean up `.logs/` before completing tasks
    - See `.agent/rules/cleanup_rules.md` for detailed rules
+
+10. Handover Documentation
+   - **Naming Convention**: Handover filename MUST match the branch name (e.g., `feature-xyz.md`).
+   - **Directory Structure**: Store handovers in `.agent/handovers/mmyyyy/` (e.g., `.agent/handovers/032026/`).
+   - **Format**: Follow the `AGENT_HANDOVER_PROMPTS.md` template or use a clear markdown structure summarizing changes, tests, and next steps.
+   - **Cleanup**: Clean up old handovers and archive folders regularly as per USER request.
