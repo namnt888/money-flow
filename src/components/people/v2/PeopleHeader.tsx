@@ -14,7 +14,12 @@ import {
     ArrowLeft,
     BarChart3,
     ExternalLink,
-    Zap
+    Zap,
+    TrendingDown,
+    MoreHorizontal,
+    CircleDollarSign,
+    ArrowUpRight,
+    Users
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { isYYYYMM } from '@/lib/month-tag'
@@ -24,6 +29,12 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ManageSheetButton } from '@/components/people/manage-sheet-button'
 import { EditPersonButton } from '@/components/people/edit-person-button'
 import { StatsPopover } from './StatsPopover'
@@ -40,7 +51,7 @@ function getMonthName(tag: string, includeYear: boolean = false) {
         const date = new Date(2000, month - 1, 1)
         return date.toLocaleString('en-US', { month: 'short' }).toUpperCase()
     }
-    return tag // For YYYY-MM badge as requested
+    return tag
 }
 
 interface PeopleHeaderProps {
@@ -86,78 +97,95 @@ interface PeopleHeaderProps {
         remaining: number
         profit?: number
         account_id?: string
+        accountName?: string
+        accountImage?: string
     }
+    allCashbackStatuses?: Array<{
+        earned: number
+        shared?: number
+        cap: number
+        currentSpend: number
+        minSpend: number
+        needToSpend: number
+        remaining: number
+        profit?: number
+        account_id?: string
+        accountName?: string
+        accountImage?: string
+    }>
     isSyncing?: boolean
     syncingText?: string
     hasFilter?: boolean
 }
 
-function CircularProgress({ percent, size = 32 }: { percent: number, size?: number }) {
-    const stroke = size / 10
+function CircularProgress({ percent, size = 44, label, colorClass = "text-blue-500" }: { percent: number, size?: number, label?: string, colorClass?: string }) {
+    const stroke = 3
     const radius = (size - stroke) / 2
     const circumference = radius * 2 * Math.PI
     const offset = circumference - (percent / 100) * circumference
 
     return (
-        <div className="relative flex items-center justify-center shrink-0">
-            <svg height={size} width={size} className="rotate-[-90deg]">
-                <circle
-                    stroke="currentColor"
-                    fill="transparent"
-                    strokeWidth={stroke}
-                    r={radius}
-                    cx={size / 2}
-                    cy={size / 2}
-                    className="text-slate-100"
-                />
-                <circle
-                    stroke="currentColor"
-                    fill="transparent"
-                    strokeWidth={stroke}
-                    strokeDasharray={`${circumference} ${circumference}`}
-                    style={{ strokeDashoffset: offset }}
-                    strokeLinecap="round"
-                    r={radius}
-                    cx={size / 2}
-                    cy={size / 2}
-                    className="text-emerald-500 transition-all duration-1000"
-                />
-            </svg>
-            <span className={cn(
-                "absolute font-black leading-none",
-                size > 40 ? "text-[10px]" : "text-[8px]"
-            )}>
-                {percent}%
-            </span>
+        <div className="flex flex-col items-center gap-1 shrink-0">
+            <div className="relative flex items-center justify-center shrink-0">
+                <svg height={size} width={size} className="rotate-[-90deg]">
+                    <circle
+                        stroke="currentColor"
+                        fill="transparent"
+                        strokeWidth={stroke}
+                        r={radius}
+                        cx={size / 2}
+                        cy={size / 2}
+                        className="text-slate-100"
+                    />
+                    <circle
+                        stroke="currentColor"
+                        fill="transparent"
+                        strokeWidth={stroke}
+                        strokeDasharray={`${circumference} ${circumference}`}
+                        style={{ strokeDashoffset: offset }}
+                        strokeLinecap="round"
+                        r={radius}
+                        cx={size / 2}
+                        cy={size / 2}
+                        className={cn(colorClass, "transition-all duration-1000")}
+                    />
+                </svg>
+                <span className="absolute text-[10px] font-bold leading-none text-slate-900">
+                    {percent}%
+                </span>
+            </div>
+            {label && <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{label}</span>}
         </div>
     )
 }
 
-function SummaryItem({ label, value, colorClass = "text-slate-900" }: { label: string, value: number, colorClass?: string }) {
+function MetricItem({ 
+    label, 
+    value, 
+    colorClass = "text-slate-900", 
+    icon: Icon,
+    prefix = "",
+    className
+}: { 
+    label: string, 
+    value: number | string, 
+    colorClass?: string, 
+    icon?: any,
+    prefix?: string,
+    className?: string
+}) {
     return (
-        <div className={cn(
-            "flex flex-col justify-center px-5 py-2.5 rounded-2xl border border-slate-100 bg-white shadow-sm min-w-[150px] h-full transition-all hover:border-slate-300 hover:shadow-md cursor-default text-left",
-            label.includes('REMAINS') && "bg-slate-50 border-slate-200"
-        )}>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</span>
+        <div className={cn("flex flex-col gap-0.5 justify-center", className)}>
+            <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-none">{label}</span>
+                {Icon && <Icon className="h-2.5 w-2.5 text-slate-300" />}
+            </div>
             <span className={cn(
-                "font-black tabular-nums leading-none tracking-tight", 
-                label.includes('REMAINS') ? "text-3xl" : "text-2xl",
+                "text-lg font-bold tabular-nums leading-none tracking-tight whitespace-nowrap",
                 colorClass
             )}>
-                {numberFormatter.format(Math.abs(value))}
+                {typeof value === 'number' ? `${prefix}${numberFormatter.format(Math.abs(value))}` : value}
             </span>
-        </div>
-    )
-}
-
-function HeaderSection({ label, children, className }: { label: string, children: React.ReactNode, className?: string }) {
-    return (
-        <div className={cn("relative border border-slate-100 rounded-2xl px-5 py-3 h-full flex flex-col justify-center bg-white/50", className)}>
-            <div className="absolute -top-2.5 left-4 bg-white px-2 z-10">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">{label}</span>
-            </div>
-            {children}
         </div>
     )
 }
@@ -177,6 +205,7 @@ export function PeopleHeader({
     onEdit,
     onCycleChange,
     cashbackStatus,
+    allCashbackStatuses = [],
     isSyncing = false,
     syncingText,
     hasFilter = false,
@@ -184,81 +213,61 @@ export function PeopleHeader({
     const isSettled = Math.abs(stats.remains) < 100
     const currentCycleRepayPercent = stats.netLend > 0 ? Math.min(100, Math.round((Math.abs(stats.repay) / Math.abs(stats.netLend)) * 100)) : 0
     
-    // Historical remains for sparkline
-    const historicalRemains = (allCycles || [])
-        .slice().reverse() // chronological order
-        .map(c => c.remains)
-
-    // Group cycles by year for the grid selector
-    const cyclesByYear = (allCycles || [])
-        .filter(c => isYYYYMM(c.tag))
-        .reduce((acc: Record<string, string[]>, cycle) => {
-            const year = cycle.tag.split('-')[0]
-            if (!acc[year]) acc[year] = []
-            acc[year].push(cycle.tag)
-            return acc
-        }, {})
-
-    const years = Object.keys(cyclesByYear).sort((a, b) => b.localeCompare(a))
-    const displayYear = selectedYear || (years.length > 0 ? years[0] : new Date().getFullYear().toString())
-    const monthsForYear = cyclesByYear[displayYear] || []
+    const cashbackGoalPercent = (cashbackStatus && hasFilter) ? (
+        cashbackStatus.needToSpend > 0 
+            ? Math.min(100, Math.round(((cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1)) * 100))
+            : Math.min(100, Math.round(((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : 0)) * 100))
+    ) : (allCashbackStatuses.length > 0 ? Math.round(allCashbackStatuses.reduce((acc, curr) => acc + (curr.earned || 0), 0) / allCashbackStatuses.reduce((acc, curr) => acc + (curr.cap || 1), 0) * 100) : 0)
 
     return (
         <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
-            {/* COMPACT SINGLE HEADER BAR */}
-            <div className="flex items-stretch px-4 py-4 gap-4 overflow-x-auto scrollbar-hide min-h-[140px]">
+            {/* COMPACT MAIN HEADER */}
+            <div className="flex items-center px-4 py-3 gap-3 overflow-x-auto scrollbar-hide">
                 
-                {/* SECTION 1: Identity */}
-                <HeaderSection label="Identity" className="shrink-0 min-w-[220px]">
-                    <div className="flex items-center gap-4">
+                {/* 1. IDENTITY CARD */}
+                <div className="flex items-center gap-3 shrink-0 bg-white border border-slate-100 p-2 rounded-2xl shadow-sm min-w-[220px] h-[92px]">
+                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-emerald-50 shrink-0 border border-emerald-100 flex items-center justify-center">
                         {person.image_url ? (
-                            <img 
-                                src={person.image_url} 
-                                alt={person.name} 
-                                className="h-14 w-14 rounded-none border-none object-cover shrink-0 shadow-md ring-1 ring-slate-100" 
-                            />
+                            <img src={person.image_url} alt={person.name} className="h-full w-full object-cover" />
                         ) : (
-                            <div className="flex h-14 w-14 items-center justify-center rounded-none bg-indigo-50 text-indigo-600 text-2xl font-black shrink-0 shadow-sm border-none">
-                                {person.name.charAt(0).toUpperCase()}
-                            </div>
+                            <span className="text-xl font-bold text-emerald-600">{person.name.charAt(0).toUpperCase()}</span>
                         )}
-
-                        <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 leading-none">
-                                <h1 className="text-base font-black text-slate-900 tracking-tight leading-none truncate max-w-[140px]">
-                                    {person.name}
-                                </h1>
-                            </div>
+                    </div>
+                    <div className="flex flex-col justify-center gap-1.5 min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base font-bold text-slate-900 truncate tracking-tight">{person.name}</h1>
                             <span className={cn(
-                                "w-fit text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest leading-none whitespace-nowrap", 
-                                isSettled ? "bg-emerald-500 text-white" : "bg-slate-900 text-white"
+                                "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest",
+                                isSettled ? "bg-emerald-500 text-white shadow-sm" : "bg-slate-900 text-white"
                             )}>
                                 {isSettled ? 'SETTLED' : 'ACTIVE'}
                             </span>
-
-                            <div className="flex items-center mt-1.5">
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-orange-100 bg-amber-50 text-orange-700 shadow-sm">
-                                    <Calendar className="h-2.5 w-2.5" />
-                                    <span className="text-[10px] font-black uppercase tracking-tighter leading-none">
-                                        {activeCycle?.tag && isYYYYMM(activeCycle.tag)
-                                            ? activeCycle.tag
-                                            : (activeCycle?.tag === 'all' ? 'All Time' : 'All Time')}
-                                    </span>
-                                </div>
-                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-orange-100 bg-orange-50/50 w-fit">
+                            <Calendar className="h-2.5 w-2.5 text-orange-600" />
+                            <span className="text-[10px] font-bold text-orange-700 tracking-tight leading-none uppercase">
+                                {activeCycle?.tag || 'All Time'}
+                            </span>
                         </div>
                     </div>
-                </HeaderSection>
+                </div>
 
-                {/* SECTION 2: Debt Summary */}
-                <HeaderSection label="Summary" className="flex-1 min-w-[600px] overflow-hidden">
-                    <div className={cn(
-                        "flex items-center justify-between h-full gap-4 transition-all duration-300",
-                        hasFilter && "blur-[6px] opacity-70 pointer-events-none grayscale-[0.3]"
-                    )}>
-                        <div className="flex items-center gap-3 h-full py-1">
-                            <SummaryItem label="Original Spend" value={stats.originalLend} colorClass="text-slate-900" />
-                            <SummaryItem label="Cashback" value={stats.cashback} colorClass="text-emerald-600" />
+                {/* 2. MAIN DASHBOARD CARD */}
+                <div className="flex flex-1 items-stretch bg-white border border-slate-100 rounded-2xl shadow-sm h-[92px] overflow-hidden relative">
+                    {/* Inner Loader Overlay */}
+                    {isSyncing && (
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center transition-all duration-300">
+                            <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+                        </div>
+                    )}
+
+                    {/* SUMMARY SECTION */}
+                    <div className="flex items-center gap-6 px-5 py-2 shrink-0">
+                        <CircularProgress percent={currentCycleRepayPercent} label="PAID" colorClass="text-emerald-500" />
+                        
+                        <div className="flex items-center gap-8">
+                            <MetricItem label="ORIGINAL" value={stats.originalLend} colorClass="text-slate-900" />
+                            <MetricItem label="CASHBACK" value={stats.cashback} colorClass="text-emerald-600" />
                             
                             <StatsPopover
                                 originalLend={stats.originalLend}
@@ -269,141 +278,199 @@ export function PeopleHeader({
                                 paidRollover={stats.paidRollover}
                                 receiveRollover={stats.receiveRollover}
                             >
-                                <button className="h-full">
-                                    <SummaryItem label="REMAINS" value={stats.remains} colorClass="text-rose-600" />
+                                <button className="text-left hover:opacity-80 transition-opacity">
+                                    <MetricItem label="REMAINS" value={stats.remains} colorClass="text-rose-600" />
                                 </button>
                             </StatsPopover>
                         </div>
-
-                        <div className="flex items-center gap-4 px-6 border-l border-slate-100 h-full">
-                            <div className="flex flex-col items-center gap-1.5">
-                                <CircularProgress 
-                                    percent={currentCycleRepayPercent} 
-                                    size={52}
-                                />
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Debt Paid</span>
-                            </div>
-                        </div>
                     </div>
-                    {hasFilter && (
-                        <div className="absolute inset-0 flex items-center justify-center z-20">
-                            <div className="flex flex-col items-center gap-1 bg-white/80 px-4 py-2 rounded-xl shadow-sm border border-slate-100/50 backdrop-blur-md">
-                                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Context Filtered</span>
-                            </div>
-                        </div>
-                    )}
-                </HeaderSection>
 
-                {/* SECTION 3: Reward Progress / Profit */}
-                <HeaderSection label="Rewards" className="shrink-0 min-w-[280px]">
-                    <div className="flex items-center h-full gap-4">
-                        <div className="relative">
-                            <CircularProgress 
-                                percent={cashbackStatus ? (
-                                    cashbackStatus.needToSpend > 0 
-                                        ? Math.min(100, Math.round(((cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1)) * 100))
-                                        : Math.min(100, Math.round(((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : 0)) * 100))
-                                ) : 0} 
-                                size={64}
-                                color={cashbackStatus && cashbackStatus.needToSpend > 0 ? "text-blue-500" : "text-emerald-500"}
-                            />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className={cn(
-                                    "text-[10px] font-black leading-none",
-                                    cashbackStatus && cashbackStatus.needToSpend > 0 ? "text-blue-600" : "text-emerald-600"
-                                )}>
-                                    {cashbackStatus ? (
-                                        cashbackStatus.needToSpend > 0 
-                                            ? `${Math.round(Math.min(100, (cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1) * 100))}%`
-                                            : `${Math.round(Math.min(100, (cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : 0) * 100))}%`
-                                    ) : '0%'}
-                                </span>
-                            </div>
-                        </div>
+                    {/* VERTICAL DIVIDER */}
+                    <div className="w-px bg-slate-100 my-4" />
 
-                        <div className="flex flex-col justify-center h-full gap-1.5 pt-1">
-                            {cashbackStatus ? (
-                                <>
-                                    <div className="flex flex-col gap-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">My Profit</span>
-                                                <span className="text-[18px] font-black text-emerald-600 tabular-nums leading-none">
-                                                    +{numberFormatter.format(Math.round(cashbackStatus.profit || 0))}
+                    {/* REWARDS SECTION */}
+                    <div className="flex flex-1 items-center gap-6 px-6 py-2 bg-slate-50/40">
+                        <CircularProgress percent={cashbackGoalPercent} label="GOAL" colorClass="text-blue-500" />
+
+                        {(cashbackStatus && hasFilter) ? (
+                            <div className="flex-1 flex items-center gap-12">
+                                <div className="flex items-center gap-10">
+                                    <MetricItem 
+                                        label="PROFIT" 
+                                        value={cashbackStatus.profit || 0} 
+                                        colorClass="text-emerald-600" 
+                                        icon={TrendingUp}
+                                        prefix="+"
+                                    />
+                                    <MetricItem label="EARNED" value={cashbackStatus.earned} colorClass="text-slate-900" icon={Gift} />
+                                    <MetricItem label="SHARED" value={cashbackStatus.shared || 0} colorClass="text-slate-600" icon={Users} />
+                                </div>
+
+                                {/* Status / Missing section */}
+                                <div className="flex items-center h-full">
+                                    {cashbackStatus.needToSpend > 0 ? (
+                                        <MetricItem 
+                                            label="MISSING" 
+                                            value={cashbackStatus.needToSpend} 
+                                            colorClass="text-orange-600" 
+                                            icon={TrendingDown}
+                                            prefix="-"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-end gap-0.5">
+                                            <span className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">STATUS</span>
+                                            <div className="flex items-center gap-1 text-emerald-600">
+                                                <Zap className="h-3 w-3 fill-emerald-600" />
+                                                <span className="text-sm font-bold tracking-tight uppercase">QUALIFIED</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : allCashbackStatuses.length > 0 ? (
+                            <div className="flex-1 flex items-center gap-4 overflow-hidden">
+                                <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
+                                    {allCashbackStatuses
+                                        .filter(s => s.needToSpend > 0 || (s.profit || 0) > 0)
+                                        .slice(0, 4)
+                                        .map((status, idx) => (
+                                        <div key={status.account_id} className={cn(
+                                            "h-11 px-4 rounded-lg border flex items-center gap-3 shrink-0 animate-in fade-in slide-in-from-left-2 duration-300",
+                                            status.needToSpend > 0 
+                                                ? "bg-orange-50/50 border-orange-100 shadow-[0_1px_2px_rgba(249,115,22,0.05)]" 
+                                                : "bg-emerald-50/50 border-emerald-100 shadow-[0_1px_2px_rgba(16,185,129,0.05)]",
+                                            idx > 2 && "hidden lg:flex",
+                                            idx > 3 && "hidden xl:flex"
+                                        )}>
+                                            <div className="h-7 w-7 rounded-md bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+                                                {status.accountImage ? (
+                                                    <img src={status.accountImage} alt={status.accountName} className="h-full w-full object-cover rounded-none" />
+                                                ) : (
+                                                    <Wallet className="h-3.5 w-3.5 text-slate-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter truncate leading-none mb-1 pr-2">
+                                                    {status.accountName}
                                                 </span>
-                                            </div>
-                                            {cashbackStatus.account_id && (
-                                                <button 
-                                                    onClick={() => window.open(`/accounts/${cashbackStatus.account_id}?tag=${activeCycle?.tag}`, '_blank')}
-                                                    className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
-                                                >
-                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1 mt-1">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none">Earned</span>
-                                                <span className="text-[11px] font-bold text-slate-700 tabular-nums leading-none">{numberFormatter.format(Math.round(cashbackStatus.earned || 0))}</span>
-                                            </div>
-                                            <div className="h-6 w-px bg-slate-100" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none">Shared</span>
-                                                <span className="text-[11px] font-bold text-slate-500 tabular-nums leading-none">{numberFormatter.format(Math.round(cashbackStatus.shared || 0))}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        {cashbackStatus.needToSpend > 0 ? (
-                                            <div className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-2 shadow-sm mt-0.5">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[11px] text-rose-600 font-black tabular-nums leading-none">
-                                                        -{numberFormatter.format(Math.round(cashbackStatus.needToSpend / 1000))}k
-                                                    </span>
-                                                    <span className="text-[7px] text-rose-400 font-black uppercase tracking-tighter mt-0.5">Need for Reward</span>
+                                                <div className="flex items-center gap-1.5 leading-none">
+                                                    {status.needToSpend > 0 ? (
+                                                        <>
+                                                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-tighter leading-none mb-0.5">MISSING</span>
+                                                            <span className="text-[12px] font-black text-orange-900 tracking-tight leading-none tabular-nums">
+                                                                {Math.round(status.needToSpend).toLocaleString()}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter leading-none mb-0.5">OK</span>
+                                                            <span className="text-[12px] font-black text-emerald-900 tracking-tight leading-none tabular-nums">
+                                                                +{Math.round(status.profit || 0).toLocaleString()}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div className="px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-2 shadow-sm mt-0.5">
-                                                <Zap className="h-3 w-3 text-emerald-500 fill-emerald-500" />
-                                                <span className="text-[10px] text-emerald-700 font-black uppercase tracking-[0.1em]">Qualified</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[11px] font-bold text-slate-400 italic leading-tight">
-                                        Select card to<br/>view rewards
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </HeaderSection>
+                                        </div>
+                                    ))}
 
-                {/* SECTION 4: Actions */}
-                <HeaderSection label="Actions" className="shrink-0">
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => onTabChange('split-bill')}
-                            className="flex flex-col items-center justify-center gap-1.5 h-16 w-16 rounded-2xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-200 group transition-all shadow-sm"
-                        >
-                            <Split className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[9px] font-black text-slate-700 uppercase tracking-wider">Split</span>
-                        </button>
-                        <EditPersonButton 
-                            person={person}
-                            subscriptions={[]}
-                            accounts={accounts}
-                            className="h-16 w-16 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all shadow-sm flex flex-col items-center justify-center gap-1.5"
-                        />
+                                    {allCashbackStatuses.length > 4 && (
+                                        <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="h-9 w-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600 shrink-0 shadow-sm hover:border-blue-400 hover:text-blue-600 transition-colors cursor-help group">
+                                                        +{allCashbackStatuses.length - 4}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" align="center" className="p-2 w-64 bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl rounded-xl z-[200]">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <div className="px-2 py-1 border-b border-slate-100 mb-1">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Other Reward Cards</span>
+                                                        </div>
+                                                        {allCashbackStatuses.slice(4).map(s => (
+                                                            <div key={s.account_id} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                                                                <div className="h-6 w-6 rounded border border-slate-100 overflow-hidden shrink-0">
+                                                                    <img src={s.accountImage} className="h-full w-full object-cover rounded-none" />
+                                                                </div>
+                                                                <div className="flex-1 flex flex-col min-w-0">
+                                                                    <span className="text-[10px] font-bold text-slate-700 truncate">{s.accountName}</span>
+                                                                    <span className={cn(
+                                                                        "text-[9px] font-black truncate uppercase",
+                                                                        s.needToSpend > 0 ? "text-orange-600" : "text-emerald-600"
+                                                                    )}>
+                                                                        {s.needToSpend > 0 ? `Missing ${Math.round(s.needToSpend).toLocaleString()}` : `Profit +${Math.round(s.profit || 0).toLocaleString()}`}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
+                                </div>
+
+                                <div className="ml-auto pr-6 flex flex-col items-end shrink-0 group cursor-help transition-all duration-300">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 opacity-80 group-hover:opacity-100">
+                                        COMBINED PROFIT <TrendingUp className="h-2.5 w-2.5" />
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                        <span className="text-[20px] font-black text-emerald-600 tracking-tighter leading-none [text-shadow:0_1px_1px_rgba(255,255,255,0.8)]">
+                                            +{allCashbackStatuses.reduce((acc, curr) => acc + (curr.profit || 0), 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center h-full">
+                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
+                                    <Wallet className="h-3 w-3" /> No Rewards Data
+                                </span>
+                            </div>
+                        )}
+                        
+                        {/* Detail Link for Rewards */}
+                        {cashbackStatus?.account_id && (
+                            <button 
+                                onClick={() => window.open(`/accounts/${cashbackStatus.account_id}?tag=${activeCycle?.tag}`, '_blank')}
+                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all ml-2"
+                            >
+                                <ExternalLink className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
-                </HeaderSection>
+                </div>
+
+                {/* 3. ACTIONS CARD */}
+                <div className="flex items-center gap-2 bg-white border border-slate-100 p-2 rounded-2xl shadow-sm h-[92px] shrink-0">
+                    <button 
+                        onClick={() => onTabChange('split-bill')}
+                        className="flex flex-col items-center justify-center gap-1 h-full w-[64px] rounded-xl border border-slate-100 hover:bg-slate-50 transition-all hover:border-indigo-100 group"
+                    >
+                        <Split className="h-4 w-4 text-slate-400 group-hover:text-indigo-500" />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SPLIT</span>
+                    </button>
+                    
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button className="flex flex-col items-center justify-center gap-1 h-full w-[64px] rounded-xl border border-slate-100 hover:bg-slate-50 transition-all group">
+                                <MoreHorizontal className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">MORE</span>
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-48 p-2">
+                            <div className="flex flex-col gap-1">
+                                <button className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors">
+                                    <Edit className="h-4 w-4" /> Edit Person
+                                </button>
+                                <button className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors">
+                                    <CircleDollarSign className="h-4 w-4" /> Manage Sheet
+                                </button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </div>
             
             {/* TABS BAR (Consistent height) */}

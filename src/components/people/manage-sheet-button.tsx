@@ -24,6 +24,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 interface DebtCycle {
   tag: string
   remains: number
+  stats?: {
+    lend: number
+    repay: number
+  }
+  isSettled?: boolean
 }
 
 function extractCycleTagFromUrl(input?: string | null): string | null {
@@ -571,7 +576,7 @@ export function ManageSheetButton({
           </PopoverTrigger>
         )}
 
-        <PopoverContent className="w-[380px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl" align={splitMode ? 'start' : 'end'} side="bottom" sideOffset={8}>
+        <PopoverContent className="w-[440px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl" align={splitMode ? 'start' : 'end'} side="bottom" sideOffset={8}>
           <div className="p-2.5 bg-slate-50 border-b border-slate-100">
             <Tabs
               value={activeTab}
@@ -683,7 +688,7 @@ export function ManageSheetButton({
                       <div key={year} className="mt-2 mb-1">
                         <div className="px-3 py-1 text-[10px] font-bold text-slate-500 bg-slate-100/50 rounded-sm mb-1">{year}</div>
                         {cycles.map(cycle => {
-                            const cycleSettled = Math.abs(cycle.remains) < 100
+                            const cycleSettled = cycle.isSettled || (Math.abs(cycle.remains) < 100)
                             return (
                               <button
                                 key={cycle.tag}
@@ -692,21 +697,51 @@ export function ManageSheetButton({
                                   setShowPopover(false)
                                 }}
                                 className={cn(
-                                  "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-xs mb-0.5",
-                                  cycleTag === cycle.tag ? "bg-slate-100" : "hover:bg-slate-50"
+                                  "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 text-xs mb-1",
+                                  cycleTag === cycle.tag ? "bg-indigo-50 border border-indigo-100 shadow-sm" : "hover:bg-slate-50 border border-transparent"
                                 )}
                               >
-                                <span className={cn("font-bold", cycleTag === cycle.tag ? "text-slate-900" : "text-slate-600")}>
-                                  {getMonthDisplayName(cycle.tag)}
-                                </span>
-                                <div className="flex items-center gap-2 min-w-[96px] justify-end">
-                                  {!cycleSettled ? (
-                                    <span className="font-bold text-rose-600">
-                                      {numberFormatter.format(cycle.remains)}
+                                <div className="flex flex-col text-left justify-center">
+                                    <span className={cn("font-bold text-sm tracking-tight leading-none", cycleTag === cycle.tag ? "text-indigo-900" : "text-slate-900")}>
+                                        {getMonthDisplayName(cycle.tag)}
                                     </span>
-                                  ) : (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wide">Settled</span>
-                                  )}
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">
+                                        {cycle.tag}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-3 h-full ml-auto">
+                                    {cycle.stats && (
+                                        <>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">DEBT</span>
+                                                <span className="text-[11px] font-bold text-slate-800 leading-none">
+                                                    {numberFormatter.format(cycle.stats.lend)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">BACK</span>
+                                                <span className="text-[11px] font-bold text-emerald-600 leading-none">
+                                                    {numberFormatter.format(cycle.stats.repay)}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className={cn(
+                                        "px-2.5 py-1.5 rounded-lg flex flex-col items-center min-w-[85px] border shadow-sm",
+                                        cycleSettled ? "bg-emerald-50 border-emerald-100" : "bg-rose-50 border-rose-100"
+                                    )}>
+                                        <span className={cn(
+                                            "text-[8px] font-black uppercase tracking-tighter leading-none mb-1",
+                                            cycleSettled ? "text-emerald-500" : "text-rose-400"
+                                        )}>
+                                            {cycleSettled ? "STATUS" : "REMAINS"}
+                                        </span>
+                                        <span className={cn("text-[11px] font-black leading-none", cycleSettled ? "text-emerald-700" : "text-rose-600")}>
+                                            {cycleSettled ? "SETTLED" : numberFormatter.format(cycle.remains)}
+                                        </span>
+                                    </div>
                                 </div>
                               </button>
                             )

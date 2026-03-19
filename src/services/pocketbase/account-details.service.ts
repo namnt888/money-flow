@@ -13,6 +13,7 @@ import {
   getCashbackCycleRange,
   formatIsoCycleTag,
   parseCashbackConfig,
+  normalizeRate,
 } from "@/lib/cashback";
 import {
   getCreditCardAvailableBalance,
@@ -1180,7 +1181,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
   const queryAttempts = [
     {
       filter: `account_id='${pocketBaseAccountId}'`,
-      sort: "-date",
+      sort: "-date,id",
       fields:
         "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
     },
@@ -1199,7 +1200,15 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
         filter: params.filter,
         sort: params.sort,
       });
-      rawTransactions = await listAllRecords("transactions", params);
+      const fetchedResults = await listAllRecords("transactions", params);
+      
+      // Deduplicate by ID to prevent double-counting
+      const uniqueMap = new Map();
+      for (const tx of fetchedResults) {
+        if (tx.id) uniqueMap.set(tx.id, tx);
+      }
+      rawTransactions = Array.from(uniqueMap.values());
+
       console.log(
         "[DB:PB] account spending stats: transaction query succeeded",
         {
@@ -1325,7 +1334,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
           cb_type: account.cb_type || "none",
         },
         categoryId: tx.category_id || null,
-        categorySlug: category?.sourceId || null,
+        categorySlug: category?.sourceId || undefined,
         amount: amount,
         cycleTotals: { spent: spendForPolicy },
         categoryName: category?.name,
@@ -1370,7 +1379,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
 
       const sharedFixed = Number(tx.cashback_share_fixed || 0);
       const sharedAmountField = Number(tx.cashback_amount || 0);
-      const sharedPercent = Number(tx.cashback_share_percent || 0);
+      const sharedPercent = normalizeRate(tx.cashback_share_percent);
       const txnShared =
         sharedFixed > 0
           ? sharedFixed
@@ -1445,7 +1454,13 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     rawMaxCashback === null ||
     Number(rawMaxCashback) <= 0;
   const maxCashback = isUnlimitedBudget ? null : Number(rawMaxCashback);
-  const earnedSoFar = Number.isFinite(estimatedCashback) ? estimatedCashback : 0;
+  const rawEarnedSoFar = Number.isFinite(estimatedCashback) ? estimatedCashback : 0;
+  
+  // Apply maxReward capping as a final gate
+  const earnedSoFar = maxCashback !== null 
+    ? Math.min(rawEarnedSoFar, maxCashback) 
+    : rawEarnedSoFar;
+
   const netProfit = earnedSoFar - (Number.isFinite(sharedAmount) ? sharedAmount : 0);
   const remainingBudget =
     maxCashback === null

@@ -452,12 +452,6 @@ export async function loadTransactions(options: {
   context?: "person" | "account" | "general";
   includeVoided?: boolean;
 }): Promise<TransactionWithDetails[]> {
-  console.log('[DB:PB] transactions.load', {
-    transactionId: options.transactionId,
-    accountId: options.accountId,
-    personId: options.personId,
-    limit: options.limit
-  });
   try {
     const pbParams: any = {
       sort: "-date",
@@ -513,7 +507,6 @@ export async function loadTransactions(options: {
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<string | null> {
-  console.log('[DB:PB] transactions.create', { type: input.type, amount: input.amount });
   try {
     const normalized = await normalizeInput(input);
     const id = toPocketBaseId(crypto.randomUUID(), 'transactions');
