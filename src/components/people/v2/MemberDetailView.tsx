@@ -675,34 +675,62 @@ export function MemberDetailView({
         }
     }, [accounts, selectedAccountId, selectedYear, activeCycleTag, transactions, getEffectiveTxnTag])
 
+    // Syncing global stats for all involvement accounts
+    const sourceTransactionsForRewards = useMemo(() => {
+        if (activeCycleTag === 'all') {
+            if (selectedYear === null) return transactions
+            return transactions.filter((txn) => {
+                const effectiveTag = getEffectiveTxnTag(txn)
+                if (effectiveTag?.startsWith(`${selectedYear}-`)) return true
+                return txn.occurred_at?.startsWith(selectedYear) ?? false
+            })
+        }
+        return transactions.filter((txn) => getEffectiveTxnTag(txn) === activeCycleTag)
+    }, [transactions, activeCycleTag, selectedYear, getEffectiveTxnTag])
+
+    const relevantAccountIds = useMemo(() => {
+        const ids = new Set<string>()
+        sourceTransactionsForRewards.forEach(t => {
+            if (t.account_id) ids.add(t.account_id)
+            if (t.source_account_id) ids.add(t.source_account_id)
+            if (t.target_account_id) ids.add(t.target_account_id)
+            const toAcc = (t as any).to_account_id
+            if (toAcc) ids.add(toAcc)
+        })
+        return Array.from(ids)
+    }, [sourceTransactionsForRewards])
+
+    useEffect(() => {
+        if (selectedAccountId || relevantAccountIds.length === 0) {
+            setAllAccountsCashbackStats({})
+            return
+        }
+
+        let isMounted = true
+        const fetchAllStats = async () => {
+            const results: Record<string, AccountSpendingStats> = {}
+            await Promise.all(relevantAccountIds.map(async (accId) => {
+                try {
+                    const stats = await getPocketBaseAccountSpendingStatsSnapshot(accId, new Date(), activeCycleTag === 'all' ? undefined : activeCycleTag)
+                    if (stats && isMounted) results[accId] = stats
+                } catch (err) {
+                    console.error(`Failed to fetch stats for ${accId}:`, err)
+                }
+            }))
+            if (isMounted) setAllAccountsCashbackStats(results)
+        }
+
+        fetchAllStats()
+        return () => { isMounted = false }
+    }, [selectedAccountId, activeCycleTag, relevantAccountIds])
+
     const allCashbackStatuses = useMemo(() => {
         if (selectedAccountId) return []
 
-        const accountIds = new Set<string>()
-        const sourceTransactions = (() => {
-            if (activeCycleTag === 'all') {
-                if (selectedYear === null) return transactions
-                return transactions.filter((txn) => {
-                    const effectiveTag = getEffectiveTxnTag(txn)
-                    if (effectiveTag?.startsWith(`${selectedYear}-`)) return true
-                    return txn.occurred_at?.startsWith(selectedYear) ?? false
-                })
-            }
-            return transactions.filter((txn) => getEffectiveTxnTag(txn) === activeCycleTag)
-        })()
-
-        sourceTransactions.forEach(t => {
-            if (t.account_id) accountIds.add(t.account_id)
-            if (t.source_account_id) accountIds.add(t.source_account_id)
-            if (t.target_account_id) accountIds.add(t.target_account_id)
-            const toAcc = (t as any).to_account_id
-            if (toAcc) accountIds.add(toAcc)
-        })
-
         const statuses: any[] = []
-        accountIds.forEach(accId => {
+        relevantAccountIds.forEach(accId => {
             const acc = accounts.find(a => a.id === accId)
-            if (!acc || !acc.cashback_config) return
+            if (!acc) return
 
             const globalStats = allAccountsCashbackStats[accId]
             if (globalStats) {
@@ -722,23 +750,31 @@ export function MemberDetailView({
                 })
             } else {
                 // Fallback to local calculation while loading or if fetch fails
-                const config = normalizeCashbackConfig(acc.cashback_config, acc)
+                const config = acc.cashback_config ? normalizeCashbackConfig(acc.cashback_config, acc) : { minSpendTarget: 0, maxBudget: 0 }
                 const minSpend = config.minSpendTarget ?? 0
-                const accTxns = sourceTransactions.filter(t => (t.account_id === accId || t.source_account_id === accId || t.target_account_id === accId || (t as any).to_account_id === accId))
+                const accTxns = sourceTransactionsForRewards.filter(t => (t.account_id === accId || t.source_account_id === accId || t.target_account_id === accId || (t as any).to_account_id === accId))
                 const spendTxns = accTxns.filter(t => t.status !== 'void' && (t.type === 'expense' || t.type === 'debt'))
-                const currentSpend = spendTxns.reduce((s, t) => s + Math.abs(Number(t.amount) || 0), 0)
+                
+                let earned = 0
+                const currentSpend = spendTxns.reduce((s, t) => {
+                    const amount = Math.abs(Number(t.amount) || 0)
+                    const final = t.final_price !== null ? Math.abs(Number(t.final_price)) : amount
+                    if (final < amount) earned += (amount - final)
+                    return s + amount
+                }, 0)
+                
                 const needToSpend = minSpend > 0 ? Math.max(0, minSpend - currentSpend) : 0
 
-                if (currentSpend > 0) {
+                if (currentSpend > 0 || earned > 0) {
                     statuses.push({
-                        earned: 0, 
+                        earned, 
                         shared: 0,
-                        profit: 0,
+                        profit: earned, 
                         cap: config.maxBudget || 0,
                         currentSpend,
                         minSpend,
                         needToSpend,
-                        remaining: config.maxBudget || 0,
+                        remaining: config.maxBudget ? Math.max(0, config.maxBudget - earned) : 0,
                         account_id: accId,
                         accountName: acc.name,
                         accountImage: acc.image_url
@@ -747,61 +783,8 @@ export function MemberDetailView({
             }
         })
 
-        return statuses.sort((a, b) => b.needToSpend - a.needToSpend)
-    }, [accounts, transactions, activeCycleTag, selectedYear, selectedAccountId, getEffectiveTxnTag, allAccountsCashbackStats])
-
-    useEffect(() => {
-        if (selectedAccountId) {
-            setAllAccountsCashbackStats({})
-            return
-        }
-
-        const accountIds = new Set<string>()
-        const sourceTransactions = (() => {
-            if (activeCycleTag === 'all') {
-                if (selectedYear === null) return transactions
-                return transactions.filter((txn) => {
-                    const effectiveTag = getEffectiveTxnTag(txn)
-                    if (effectiveTag?.startsWith(`${selectedYear}-`)) return true
-                    return txn.occurred_at?.startsWith(selectedYear) ?? false
-                })
-            }
-            return transactions.filter((txn) => getEffectiveTxnTag(txn) === activeCycleTag)
-        })()
-
-        sourceTransactions.forEach(t => {
-            if (t.account_id) accountIds.add(t.account_id)
-            if (t.source_account_id) accountIds.add(t.source_account_id)
-            if (t.target_account_id) accountIds.add(t.target_account_id)
-            const toAcc = (t as any).to_account_id
-            if (toAcc) accountIds.add(toAcc)
-        })
-
-        const relevantAccountIds = Array.from(accountIds).filter(id => {
-            const acc = accounts.find(a => a.id === id)
-            return acc && !!acc.cashback_config
-        })
-
-        if (relevantAccountIds.length === 0) {
-            setAllAccountsCashbackStats({})
-            return
-        }
-
-        const fetchAllStats = async () => {
-            const results: Record<string, AccountSpendingStats> = {}
-            await Promise.all(relevantAccountIds.map(async (accId) => {
-                try {
-                    const stats = await getPocketBaseAccountSpendingStatsSnapshot(accId, new Date(), activeCycleTag === 'all' ? undefined : activeCycleTag)
-                    if (stats) results[accId] = stats
-                } catch (err) {
-                    console.error(`Failed to fetch stats for ${accId}:`, err)
-                }
-            }))
-            setAllAccountsCashbackStats(results)
-        }
-
-        fetchAllStats()
-    }, [selectedAccountId, activeCycleTag, transactions, accounts, selectedYear, getEffectiveTxnTag])
+        return statuses.sort((a, b) => (b.needToSpend - a.needToSpend) || (b.profit - a.profit))
+    }, [accounts, selectedAccountId, relevantAccountIds, allAccountsCashbackStats, sourceTransactionsForRewards])
 
 
     // Slide Handlers

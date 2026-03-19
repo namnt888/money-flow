@@ -29,6 +29,12 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ManageSheetButton } from '@/components/people/manage-sheet-button'
 import { EditPersonButton } from '@/components/people/edit-person-button'
 import { StatsPopover } from './StatsPopover'
@@ -323,36 +329,43 @@ export function PeopleHeader({
                             </div>
                         ) : allCashbackStatuses.length > 0 ? (
                             <div className="flex-1 flex items-center gap-4 overflow-hidden">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    {allCashbackStatuses.filter(s => s.needToSpend > 0 || (s.profit || 0) > 0).slice(0, 2).map((status, idx) => (
-                                        <div key={status.account_id || idx} className={cn(
-                                            "flex items-center gap-3 px-3 py-1.5 rounded-xl border shadow-sm min-w-[150px] max-w-[180px] shrink-0",
-                                            status.needToSpend > 0 ? "bg-orange-50/50 border-orange-100" : "bg-emerald-50/50 border-emerald-100"
+                                <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
+                                    {allCashbackStatuses
+                                        .filter(s => s.needToSpend > 0 || (s.profit || 0) > 0)
+                                        .slice(0, 4)
+                                        .map((status, idx) => (
+                                        <div key={status.account_id} className={cn(
+                                            "h-11 px-4 rounded-lg border flex items-center gap-3 shrink-0 animate-in fade-in slide-in-from-left-2 duration-300",
+                                            status.needToSpend > 0 
+                                                ? "bg-orange-50/50 border-orange-100 shadow-[0_1px_2px_rgba(249,115,22,0.05)]" 
+                                                : "bg-emerald-50/50 border-emerald-100 shadow-[0_1px_2px_rgba(16,185,129,0.05)]",
+                                            idx > 2 && "hidden lg:flex",
+                                            idx > 3 && "hidden xl:flex"
                                         )}>
-                                            <div className="h-7 w-7 rounded-lg bg-white border border-slate-100 flex items-center justify-center shrink-0">
+                                            <div className="h-7 w-7 rounded-md bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
                                                 {status.accountImage ? (
-                                                    <img src={status.accountImage} alt="" className="w-5 h-5 object-contain rounded-none" />
+                                                    <img src={status.accountImage} alt={status.accountName} className="h-full w-full object-cover rounded-none" />
                                                 ) : (
-                                                    <Wallet className="w-4 h-4 text-slate-400" />
+                                                    <Wallet className="h-3.5 w-3.5 text-slate-400" />
                                                 )}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase truncate">
-                                                    {status.accountName || "Card"}
+                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter truncate leading-none mb-1 pr-2">
+                                                    {status.accountName}
                                                 </span>
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex items-center gap-1.5 leading-none">
                                                     {status.needToSpend > 0 ? (
                                                         <>
-                                                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-tighter">MISSING</span>
-                                                            <span className="text-[11px] font-bold text-orange-900 truncate">
-                                                                {numberFormatter.format(status.needToSpend)}
+                                                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-tighter leading-none mb-0.5">MISSING</span>
+                                                            <span className="text-[12px] font-black text-orange-900 tracking-tight leading-none tabular-nums">
+                                                                {Math.round(status.needToSpend).toLocaleString()}
                                                             </span>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter leading-none mb-0.5">OK</span>
-                                                            <span className="text-[11px] font-bold text-emerald-900 truncate">
-                                                                +{numberFormatter.format(status.profit || 0)}
+                                                            <span className="text-[12px] font-black text-emerald-900 tracking-tight leading-none tabular-nums">
+                                                                +{Math.round(status.profit || 0).toLocaleString()}
                                                             </span>
                                                         </>
                                                     )}
@@ -360,21 +373,54 @@ export function PeopleHeader({
                                             </div>
                                         </div>
                                     ))}
-                                    {allCashbackStatuses.filter(s => s.needToSpend > 0 || (s.profit || 0) > 0).length > 2 && (
-                                        <div className="flex items-center justify-center px-3 py-1.5 rounded-xl border border-slate-200 bg-white shadow-sm shrink-0">
-                                            <span className="text-[11px] font-bold text-slate-500">+{allCashbackStatuses.filter(s => s.needToSpend > 0 || (s.profit || 0) > 0).length - 2}</span>
-                                        </div>
+
+                                    {allCashbackStatuses.length > 4 && (
+                                        <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="h-9 w-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600 shrink-0 shadow-sm hover:border-blue-400 hover:text-blue-600 transition-colors cursor-help group">
+                                                        +{allCashbackStatuses.length - 4}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" align="center" className="p-2 w-64 bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl rounded-xl z-[200]">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <div className="px-2 py-1 border-b border-slate-100 mb-1">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Other Reward Cards</span>
+                                                        </div>
+                                                        {allCashbackStatuses.slice(4).map(s => (
+                                                            <div key={s.account_id} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                                                                <div className="h-6 w-6 rounded border border-slate-100 overflow-hidden shrink-0">
+                                                                    <img src={s.accountImage} className="h-full w-full object-cover rounded-none" />
+                                                                </div>
+                                                                <div className="flex-1 flex flex-col min-w-0">
+                                                                    <span className="text-[10px] font-bold text-slate-700 truncate">{s.accountName}</span>
+                                                                    <span className={cn(
+                                                                        "text-[9px] font-black truncate uppercase",
+                                                                        s.needToSpend > 0 ? "text-orange-600" : "text-emerald-600"
+                                                                    )}>
+                                                                        {s.needToSpend > 0 ? `Missing ${Math.round(s.needToSpend).toLocaleString()}` : `Profit +${Math.round(s.profit || 0).toLocaleString()}`}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     )}
                                 </div>
-                                
-                                <MetricItem 
-                                    label="COMBINED PROFIT" 
-                                    value={allCashbackStatuses.reduce((s, c) => s + (c.profit || 0), 0)} 
-                                    colorClass="text-emerald-600" 
-                                    icon={TrendingUp}
-                                    prefix="+"
-                                    className="ml-auto"
-                                />
+
+                                <div className="ml-auto pr-6 flex flex-col items-end shrink-0 group cursor-help transition-all duration-300">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 opacity-80 group-hover:opacity-100">
+                                        COMBINED PROFIT <TrendingUp className="h-2.5 w-2.5" />
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                        <span className="text-[20px] font-black text-emerald-600 tracking-tighter leading-none [text-shadow:0_1px_1px_rgba(255,255,255,0.8)]">
+                                            +{allCashbackStatuses.reduce((acc, curr) => acc + (curr.profit || 0), 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex-1 flex items-center justify-center h-full">
