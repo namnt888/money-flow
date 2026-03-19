@@ -81,13 +81,7 @@ export async function pocketbaseRequest<T>(
   const token = await getAuthToken()
   const query = buildQuery(options?.params)
   const url = `${POCKETBASE_URL}${path}${query}`
-  const method = options?.method || 'GET'
-  if (method !== 'GET') {
-    console.log(`[DB:PB] ${method} ${url}`)
-    if (options?.body) {
-      console.log(`[DB:PB] body:`, JSON.stringify(options.body).substring(0, 500))
-    }
-  }
+  console.log(`[DB:PB] fetch: ${url}`)
 
   const response = await fetch(url, {
     method: options?.method || 'GET',

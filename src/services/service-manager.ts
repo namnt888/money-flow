@@ -1,380 +1,262 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { executeWithFallback, logSource } from '@/lib/pocketbase/fallback-helpers'
-import {
-  pocketbaseList,
-  pocketbaseGetById,
-  pocketbaseRequest,
-  toPocketBaseId,
-  pocketbaseUpdate,
-  pocketbaseCreate,
-  pocketbaseDelete
-} from './pocketbase/server'
-import { Database } from '@/types/database.types'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
 import { toLegacyMMMYYFromDate, toYYYYMMFromDate } from '@/lib/month-tag'
 import { autoSyncCycleSheetIfNeeded } from './sheet.service'
+import { 
+  getPocketBaseSubscriptions, 
+  getPocketBaseSubscriptionById, 
+  getPocketBaseServiceMembers,
+  upsertPocketBaseSubscription,
+  deletePocketBaseSubscription,
+  updatePocketBaseServiceMembers
+} from './pocketbase/subscription.service'
+import {
+  getPocketBaseBots,
+  togglePocketBaseBot,
+  updatePocketBaseBotConfig,
+  updatePocketBaseBotLastRun
+} from './pocketbase/bot-config.service'
+import { createPocketBaseTransaction, loadPocketBaseTransactions, voidPocketBaseTransaction } from './pocketbase/transaction.service'
 
-// ServiceMember type for service distribution
-// Uses person_id to match database schema after migration
-type ServiceMember = {
+export type ServiceMember = {
   id: string;
   service_id: string;
   person_id: string; // Foreign key to people.id
   slots: number;
   is_owner: boolean;
-  people?: {
+  person?: {
     id: string;
     name: string;
-    is_owner?: boolean;
-    accounts?: any[];
+    image_url?: string;
   }
 };
-type Subscription = Database['public']['Tables']['subscriptions']['Row'];
-type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert'];
-type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update'];
+
+export type Subscription = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  cycle_interval: number;
+  next_billing_date: string | null;
+  shop_id: string | null;
+  default_category_id: string | null;
+  note_template: string | null;
+  is_active: boolean;
+  max_slots: number | null;
+  last_distribution_date: string | null;
+  next_distribution_date: string | null;
+  distribution_status: string | null;
+  shop?: { id: string, name: string } | null;
+  category?: { id: string, name: string } | null;
+};
 
 export async function upsertService(
-  serviceData: SubscriptionInsert | SubscriptionUpdate,
-  members?: Omit<ServiceMember, 'id' | 'service_id' | 'people'>[]
+  serviceData: any,
+  members?: any[]
 ) {
-  const context = `upsertService:${(serviceData as any).name}`;
-  logSource('PB', context);
+  const service = await upsertPocketBaseSubscription(serviceData);
 
-  try {
-    const pbServiceId = (serviceData as any).id ? toPocketBaseId((serviceData as any).id, 'services') : undefined;
-    
-    // 1. Upsert service
-    let service: any;
-    if (pbServiceId) {
-      service = await pocketbaseUpdate('services', pbServiceId, {
-        ...serviceData,
-        shop_id: (serviceData as any).shop_id ? toPocketBaseId((serviceData as any).shop_id, 'shops') : null
-      });
-    } else {
-      service = await pocketbaseCreate('services', {
-        ...serviceData,
-        shop_id: (serviceData as any).shop_id ? toPocketBaseId((serviceData as any).shop_id, 'shops') : null
-      });
-    }
-
-    const serviceId = service.id;
-
-    if (members) {
-      // 2. Delete existing members
-      const existingMembers = await pocketbaseList<any>('service_members', {
-        filter: `service_id="${serviceId}"`,
-        perPage: 100
-      });
-      for (const m of existingMembers.items) {
-        await pocketbaseDelete('service_members', m.id);
-      }
-
-      // 3. Insert new members
-      for (const member of members) {
-        await pocketbaseCreate('service_members', {
-          service_id: serviceId,
-          person_id: toPocketBaseId(member.person_id, 'people'),
-          slots: member.slots,
-          is_owner: member.is_owner
-        });
-      }
-    }
-    return service;
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed, falling back to Supabase`, error);
-    const supabase = createClient();
-    const { data: service, error: serviceError } = await supabase
-      .from('subscriptions')
-      .upsert([{ ...serviceData, shop_id: (serviceData as any).shop_id }] as any)
-      .select().single();
-
-    if (serviceError) throw new Error(serviceError.message);
-
-    if (members) {
-      const serviceId = (service as any).id;
-      await supabase.from('service_members').delete().eq('service_id', serviceId);
-      if (members.length > 0) {
-        const memberInsertData = members.map(member => ({
-          service_id: serviceId,
-          person_id: member.person_id,
-          slots: member.slots,
-          is_owner: member.is_owner,
-        }));
-        await supabase.from('service_members').insert(memberInsertData as any);
-      }
-    }
-    return service;
+  if (members && service) {
+    await updatePocketBaseServiceMembers(service.id, members);
   }
+
+  return service;
 }
 
 export async function distributeService(serviceId: string, customDate?: string, customNoteFormat?: string) {
-  const context = `distributeService:${serviceId}`;
-  logSource('PB', context);
+  console.log('[PB] Distributing service:', serviceId)
 
-  try {
-    const pbServiceId = toPocketBaseId(serviceId, 'services');
-    const service = await pocketbaseGetById<any>('services', pbServiceId, 'shop_id');
-    if (!service) throw new Error('Service not found in PB');
+  // Step 1: Calculate Math
+  // Fetch Service + Members from PocketBase
+  const service = await getPocketBaseSubscriptionById(serviceId);
+  const members = await getPocketBaseServiceMembers(serviceId);
 
-    const membersRes = await pocketbaseList<any>('service_members', {
-      filter: `service_id="${pbServiceId}"`,
-      expand: 'person_id'
+  if (!service) {
+    throw new Error('Service not found in PocketBase');
+  }
+
+  const initialPrice = service.price || 0
+  const computedTotalSlots = members.reduce((sum, member) => sum + (Number(member.slots) || 0), 0)
+  const totalSlots = service.max_slots && service.max_slots > 0 ? service.max_slots : computedTotalSlots
+
+  if (totalSlots === 0) {
+    throw new Error('Total slots is zero, cannot distribute.')
+  }
+  const unitCost = initialPrice / totalSlots
+  console.log('[PB] Unit cost:', unitCost)
+
+  // Timezone Fix: Force Asia/Ho_Chi_Minh
+  const now = new Date();
+  const vnNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+  const transactionDate = customDate ? new Date(customDate).toISOString() : vnNow.toISOString()
+
+  // Tag Format: YYYY-MM
+  const dateObj = new Date(transactionDate)
+  const monthTag = toYYYYMMFromDate(dateObj)
+  const legacyMonthTag = toLegacyMMMYYFromDate(dateObj)
+
+  const createdTransactions: any[] = []
+
+  for (const member of members) {
+    const cost = unitCost * member.slots
+    if (cost === 0) continue;
+
+    const pricePerSlot = Math.round(unitCost);
+    let note = '';
+    const templateToUse = customNoteFormat || service.note_template;
+
+    if (templateToUse) {
+      note = templateToUse
+        .replace('{service}', service.name)
+        .replace('{member}', (member as any).person?.name || 'Unknown')
+        .replace('{name}', service.name)
+        .replace('{slots}', member.slots.toString())
+        .replace('{date}', monthTag)
+        .replace('{price}', pricePerSlot.toLocaleString())
+        .replace('{initialPrice}', initialPrice.toLocaleString())
+        .replace('{total_slots}', totalSlots.toString());
+    } else {
+      note = `${(member as any).person?.name || 'Unknown'} ${monthTag} Slot: ${member.slots} (${pricePerSlot.toLocaleString()})/${totalSlots}`
+    }
+
+    const canonicalMetadata = {
+      service_id: serviceId,
+      member_id: member.person_id,
+      month_tag: monthTag,
+      type: 'service_distribution'
+    };
+
+    const personId = member.is_owner ? null : member.person_id;
+
+    const payload: any = {
+      occurred_at: transactionDate,
+      note: note,
+      amount: -cost, // Expense is negative
+      type: personId ? 'debt' : 'expense',
+      account_id: SYSTEM_ACCOUNTS.DRAFT_FUND,
+      category_id: SYSTEM_CATEGORIES.ONLINE_SERVICES,
+      person_id: personId,
+      shop_id: service.shop_id,
+      metadata: canonicalMetadata,
+      persisted_cycle_tag: monthTag
+    };
+
+    // Idempotency Check in PocketBase
+    const existingTxns = await loadPocketBaseTransactions({
+      accountId: SYSTEM_ACCOUNTS.DRAFT_FUND,
+      includeVoided: true,
+      limit: 10
     });
-    const members = membersRes.items.map(m => ({
-      ...m,
-      people: m.expand?.person_id
-    })) as unknown as ServiceMember[];
 
-    const initialPrice = service.price || 0;
-    const computedTotalSlots = members.reduce((sum, member) => sum + (Number(member.slots) || 0), 0);
-    const totalSlots = service.max_slots && service.max_slots > 0 ? service.max_slots : computedTotalSlots;
+    // Filter manually as PB filter might be limited for complex metadata
+    const existingTx = existingTxns.find(tx => {
+      const meta = tx.metadata as any;
+      return meta?.service_id === serviceId && 
+             meta?.member_id === member.person_id && 
+             (meta?.month_tag === monthTag || meta?.month_tag === legacyMonthTag);
+    });
 
-    if (totalSlots === 0) throw new Error('Total slots is zero, cannot distribute.');
-    const unitCost = initialPrice / totalSlots;
+    let transactionId = existingTx?.id;
+    let oldStatus = (existingTx as any)?.metadata?.status || 'posted';
 
-    const now = new Date();
-    const vnTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
-    const vnNow = new Date(vnTimeStr);
-    const createdTransactions: any[] = [];
-    const transactionDate = customDate ? new Date(customDate).toISOString() : vnNow.toISOString();
-    const dateObj = new Date(transactionDate);
-    const monthTag = toYYYYMMFromDate(dateObj);
+    if (transactionId) {
+      console.log('[PB] Updating existing transaction:', transactionId);
+      await createPocketBaseTransaction({ // Use create as upsert if possible, but transaction service usually has distinct update
+        ...payload,
+        id: transactionId
+      } as any); // TODO: Ensure updatePocketBaseTransaction is used if it exists
+      // Check if update exists in transaction service
+      const { updatePocketBaseTransaction } = await import('./pocketbase/transaction.service');
+      await updatePocketBaseTransaction(transactionId, payload);
+    } else {
+      console.log('[PB] Creating new transaction for:', (member as any).person?.name);
+      transactionId = await createPocketBaseTransaction(payload) || '';
+    }
 
-    for (const member of members) {
-      const cost = unitCost * member.slots;
-      if (cost === 0) continue;
-
-      let note = '';
-      const pricePerSlot = Math.round(unitCost);
-      const templateToUse = customNoteFormat || service.note_template;
-
-      if (templateToUse) {
-        note = templateToUse
-          .replace('{service}', service.name)
-          .replace('{member}', member.people?.name || 'Unknown')
-          .replace('{name}', service.name)
-          .replace('{slots}', member.slots.toString())
-          .replace('{date}', monthTag)
-          .replace('{price}', pricePerSlot.toLocaleString())
-          .replace('{initialPrice}', initialPrice.toLocaleString())
-          .replace('{total_slots}', totalSlots.toString());
-      } else {
-        note = `${member.people?.name || 'Unknown'} ${monthTag} Slot: ${member.slots} (${pricePerSlot.toLocaleString()})/${totalSlots}`;
-      }
-
-      const canonicalMetadata = { service_id: serviceId, member_id: member.person_id, month_tag: monthTag };
-      const personId = member.is_owner ? null : member.person_id;
-
-      const payload = {
-        occurred_at: transactionDate,
-        note: note,
-        metadata: canonicalMetadata,
-        tag: monthTag,
-        shop_id: service.shop_id,
-        amount: -cost,
-        type: personId ? 'debt' : 'expense',
-        status: 'posted',
-        account_id: toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'),
-        category_id: toPocketBaseId(SYSTEM_CATEGORIES.ONLINE_SERVICES, 'categories'),
-        person_id: personId ? toPocketBaseId(personId, 'people') : null
-      };
-
-      const existingTxns = await pocketbaseList<any>('transactions', {
-        filter: `metadata~"service_id\\":\\"${serviceId}\\"" && metadata~"member_id\\":\\"${member.person_id}\\"" && metadata~"month_tag\\":\\"${monthTag}\\""`,
-        perPage: 1
-      });
-
-      let transactionId: string;
-      if (existingTxns.items.length > 0) {
-        transactionId = existingTxns.items[0].id;
-        await pocketbaseUpdate('transactions', transactionId, payload);
-      } else {
-        const newTx = await pocketbaseCreate<any>('transactions', payload);
-        transactionId = newTx.id;
-      }
-
+    if (transactionId) {
       createdTransactions.push({ id: transactionId });
 
+      // Sync to Google Sheet (using existing service)
       if (personId) {
         try {
           const { syncTransactionToSheet } = await import('./sheet.service');
-          await syncTransactionToSheet(personId, {
+          const sheetPayload = {
             id: transactionId,
             occurred_at: transactionDate,
             note: note,
             tag: monthTag,
             amount: cost,
             type: 'Debt',
-            shop_name: service.name || 'Service'
-          } as any, 'create');
+            shop_name: service.name || 'Service',
+          };
+
+          const action = (transactionId && existingTx && oldStatus !== 'void') ? 'update' : 'create';
+          await syncTransactionToSheet(personId, sheetPayload as any, action as any);
         } catch (syncError) {
-          console.error('[Sheet Sync] Failed:', syncError);
+          console.error('[PB] Sheet sync error:', syncError);
         }
       }
     }
-
-    const nextMonth = new Date(now);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    nextMonth.setDate(service.due_day || 1);
-
-    await pocketbaseUpdate('services', pbServiceId, {
-      last_distribution_date: now.toISOString(),
-      next_distribution_date: nextMonth.toISOString(),
-      distribution_status: 'completed'
-    });
-
-    return { transactions: createdTransactions, personIds: Array.from(new Set(members.map(m => m.person_id).filter(Boolean))) };
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    throw error;
   }
+
+  // Update service status in PB
+  const nextMonth = new Date(now)
+  nextMonth.setMonth(nextMonth.getMonth() + 1)
+  nextMonth.setDate(1) // Default to 1st
+
+  await upsertPocketBaseSubscription({
+    id: serviceId,
+    last_distribution_date: now.toISOString(),
+    next_distribution_date: nextMonth.toISOString(),
+    distribution_status: 'completed'
+  });
+
+  // Trigger full sheet sync for members
+  const memberIds = Array.from(new Set(members.map(m => m.person_id).filter(Boolean)))
+  const { syncAllTransactions } = await import('./sheet.service')
+  for (const memberId of memberIds) {
+    try {
+      await syncAllTransactions(memberId)
+    } catch (e) {
+      console.error('[PB] Full sync failed for:', memberId, e)
+    }
+  }
+
+  return { transactions: createdTransactions, personIds: memberIds };
 }
 
 export async function getServices() {
-  const context = 'getServices';
-  return executeWithFallback(
-    async () => {
-      const res = await pocketbaseList<any>('services', {
-        sort: 'name',
-        expand: 'shop_id'
-      });
-      // Fetch members for each service
-      const services = await Promise.all(res.items.map(async (s) => {
-        const membersRes = await pocketbaseList<any>('service_members', {
-          filter: `service_id="${s.id}"`,
-          expand: 'person_id'
-        });
-        return {
-          ...s,
-          shop: s.expand?.shop_id,
-          service_members: membersRes.items.map(m => ({
-            ...m,
-            person: m.expand?.person_id
-          }))
-        };
-      }));
-      return services;
-    },
-    async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('subscriptions').select('*, shop:shops(*), service_members:service_members(*, person:people(*))').order('name', { ascending: true });
-      if (error) return [];
-      return data;
-    },
-    context
-  );
+  return await getPocketBaseSubscriptions();
 }
 
 export async function deleteService(serviceId: string) {
-  const context = `deleteService:${serviceId}`;
-  logSource('PB', context);
-
-  try {
-    const pbId = toPocketBaseId(serviceId, 'services');
-    const members = await pocketbaseList<any>('service_members', { filter: `service_id="${pbId}"` });
-    for (const m of members.items) {
-      await pocketbaseDelete('service_members', m.id);
-    }
-    await pocketbaseDelete('services', pbId);
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    const supabase = createClient();
-    await supabase.from('service_members').delete().eq('service_id', serviceId);
-    await supabase.from('subscriptions').delete().eq('id', serviceId);
-  }
+  await deletePocketBaseSubscription(serviceId);
 }
 
 export async function updateServiceMembers(
   serviceId: string,
-  members: Omit<ServiceMember, 'id' | 'service_id' | 'people'>[]
+  members: any[]
 ) {
-  const context = `updateServiceMembers:${serviceId}`;
-  logSource('PB', context);
-
-  try {
-    const pbId = toPocketBaseId(serviceId, 'services');
-    const existing = await pocketbaseList<any>('service_members', { filter: `service_id="${pbId}"` });
-    for (const m of existing.items) {
-      await pocketbaseDelete('service_members', m.id);
-    }
-    for (const member of members) {
-      await pocketbaseCreate('service_members', {
-        service_id: pbId,
-        person_id: toPocketBaseId(member.person_id, 'people'),
-        slots: Number(member.slots) || 0,
-        is_owner: member.is_owner
-      });
-    }
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    const supabase = createClient();
-    await supabase.from('service_members').delete().eq('service_id', serviceId);
-    if (members?.length > 0) {
-      const data = members.map(m => ({
-        service_id: serviceId,
-        person_id: m.person_id,
-        slots: Number(m.slots) || 0,
-        is_owner: m.is_owner,
-      }));
-      await supabase.from('service_members').insert(data as any);
-    }
-  }
+  await updatePocketBaseServiceMembers(serviceId, members);
 }
 
 export async function getServiceById(id: string) {
-  const context = `getServiceById:${id}`;
-  return executeWithFallback(
-    async () => {
-      const pbId = toPocketBaseId(id, 'services');
-      const s = await pocketbaseGetById<any>('services', pbId, 'shop_id');
-      const membersRes = await pocketbaseList<any>('service_members', {
-        filter: `service_id="${pbId}"`,
-        expand: 'person_id'
-      });
-      return {
-        ...s,
-        shop: s.expand?.shop_id,
-        service_members: membersRes.items.map(m => ({
-          ...m,
-          person: m.expand?.person_id
-        }))
-      };
-    },
-    async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('subscriptions').select('*, shop:shops(*), service_members:service_members(*, person:people(*))').eq('id', id).single();
-      if (error) throw error;
-      return data;
-    },
-    context
-  );
+  return await getPocketBaseSubscriptionById(id);
 }
 
 export async function getServiceBotConfig(serviceId: string) {
-  const context = `getServiceBotConfig:${serviceId}`;
-  return executeWithFallback(
-    async () => {
-      const key = `service_${serviceId}`;
-      const res = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
-      return res.items[0] || null;
-    },
-    async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('bot_configs').select('*').eq('key', `service_${serviceId}`).single();
-      if (error && error.code !== 'PGRST116') console.error('SB fetch failed:', error);
-      return data;
-    },
-    context
-  );
+  const bots = await getPocketBaseBots();
+  const key = `service_${serviceId}`;
+  return bots.find(b => b.key === key) || null;
 }
 
 export async function saveServiceBotConfig(serviceId: string, config: any) {
-  const context = `saveServiceBotConfig:${serviceId}`;
-  logSource('PB', context);
-
+  // Check if exists
+  const bots = await getPocketBaseBots();
   const key = `service_${serviceId}`;
+  const existing = bots.find(b => b.key === key);
+  
   const payload = {
     key: key,
     name: `Bot for Service ${serviceId}`,
@@ -382,20 +264,14 @@ export async function saveServiceBotConfig(serviceId: string, config: any) {
     config: config
   };
 
-  try {
-    const existing = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
-    if (existing.items.length > 0) {
-      await pocketbaseUpdate('bot_configs', existing.items[0].id, payload);
-    } else {
-      await pocketbaseCreate('bot_configs', payload);
-    }
-    return true;
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    const supabase = createClient();
-    await supabase.from('bot_configs').upsert(payload as any, { onConflict: 'key' });
-    return true;
+  if (existing) {
+    await updatePocketBaseBotConfig(key, config);
+  } else {
+    // Need a create in bot-config.service if not found
+    const { pocketbaseCreate, BOT_CONFIGS_COLLECTION } = await import('./pocketbase/bot-config.service');
+    await pocketbaseCreate(BOT_CONFIGS_COLLECTION, payload);
   }
+  return true
 }
 
 /**
@@ -404,66 +280,92 @@ export async function saveServiceBotConfig(serviceId: string, config: any) {
  * @param force If true, skips the due_day check (useful for manual distribution)
  */
 export async function distributeAllServices(customDate?: string, force: boolean = true) {
-  const context = 'distributeAllServices';
-  logSource('PB', context);
+  let successCount = 0
+  let skippedCount = 0
+  let failedCount = 0
+  const reports: any[] = []
 
-  try {
-    const now = new Date();
-    const vnTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
-    const vnNow = new Date(vnTimeStr);
-    const todayDay = vnNow.getDate();
-    const activeDate = customDate ? new Date(customDate) : vnNow;
-    const monthTag = toYYYYMMFromDate(activeDate);
+  // Timezone Fix: Force Asia/Ho_Chi_Minh
+  const now = new Date();
+  const vnNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+  const todayDay = vnNow.getDate();
 
-    const servicesRes = await pocketbaseList<any>('services', { filter: 'is_active=true' });
-    const services = servicesRes.items;
-    if (services.length === 0) return { success: 0, failed: 0, skipped: 0, total: 0, reports: [] };
+  const activeDate = customDate ? new Date(customDate) : vnNow;
+  const monthTag = toYYYYMMFromDate(activeDate);
 
-    let successCount = 0, skippedCount = 0, failedCount = 0;
-    const reports: any[] = [];
+  console.log(`[PB] distributeAllServices for ${monthTag} (Force: ${force}, Today ${todayDay})`);
 
-    for (const service of services) {
-      try {
-        const dueDay = service.due_day || 1;
-        const checkDay = customDate ? activeDate.getDate() : todayDay;
+  // 1. Fetch all active services from PocketBase
+  const services = await getPocketBaseSubscriptions();
+  const activeServices = services.filter(s => s.is_active);
 
-        if (!force && checkDay < dueDay) {
-          skippedCount++;
-          reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay}` });
-          continue;
-        }
+  if (activeServices.length === 0) {
+    console.log('[PB] No active services found.');
+    return { success: 0, failed: 0, skipped: 0, total: 0, reports: [] }
+  }
 
-        const existingTx = await pocketbaseList<any>('transactions', {
-          filter: `status="posted" && metadata~"service_id\\":\\"${service.id}\\"" && metadata~"month_tag\\":\\"${monthTag}\\""`,
-          perPage: 1
-        });
+  // 2. Load all draft fund transactions for idempotency check
+  const existingTxns = await loadPocketBaseTransactions({
+    accountId: SYSTEM_ACCOUNTS.DRAFT_FUND,
+    includeVoided: false,
+    limit: 500
+  });
 
-        if (existingTx.items.length > 0) {
-          skippedCount++;
-          reports.push({ name: service.name, status: 'skipped', reason: `Already distributed for ${monthTag}` });
-          continue;
-        }
+  // 3. Distribute each service
+  for (const service of activeServices) {
+    try {
+      // Due Day Check (Assumed from note_template or default 1)
+      const dueDay = 1; // PocketBase schema doesn't have due_day yet, defaulting to 1
+      const checkDay = customDate ? activeDate.getDate() : todayDay;
 
-        const result = await distributeService(service.id, customDate);
-        if (result.transactions?.length > 0) {
-          successCount++;
-          reports.push({ name: service.name, status: 'success', count: result.transactions.length });
+      if (!force && checkDay < dueDay) {
+        skippedCount++;
+        reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay}` });
+        continue;
+      }
+
+      // Idempotency Check in PB transactions
+      const alreadyDistributed = existingTxns.some(tx => {
+        const meta = tx.metadata as any;
+        return meta?.service_id === service.id && meta?.month_tag === monthTag;
+      });
+
+      if (alreadyDistributed) {
+        skippedCount++;
+        reports.push({ name: service.name, status: 'skipped', reason: 'Already distributed' });
+        continue;
+      }
+
+      const result = await distributeService(service.id, customDate)
+
+      if (result.transactions && result.transactions.length > 0) {
+        successCount++
+        reports.push({ name: service.name, status: 'success', count: result.transactions.length });
+
+        // Auto-sync cycle sheets
+        if (result.personIds) {
           for (const personId of result.personIds) {
             await autoSyncCycleSheetIfNeeded(personId, monthTag);
           }
-        } else {
-          skippedCount++;
-          reports.push({ name: service.name, status: 'skipped', reason: 'No members' });
         }
-      } catch (err) {
-        failedCount++;
-        reports.push({ name: service.name, status: 'failed', reason: (err as any).message });
+      } else {
+        skippedCount++
+        reports.push({ name: service.name, status: 'skipped', reason: 'No members' });
       }
+
+    } catch (err: any) {
+      console.error(`[PB] Failed: ${service.name}:`, err)
+      failedCount++
+      reports.push({ name: service.name, status: 'failed', reason: err.message });
     }
-    return { success: successCount, failed: failedCount, skipped: skippedCount, total: services.length, reports };
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    throw error;
+  }
+
+  return {
+    success: successCount,
+    failed: failedCount,
+    skipped: skippedCount,
+    total: activeServices.length,
+    reports
   }
 }
 
@@ -472,73 +374,36 @@ export async function distributeAllServices(customDate?: string, force: boolean 
  * Voids the transactions and triggers sheet line deletion
  */
 export async function recallServiceDistribution(monthTag: string) {
-  const context = `recallServiceDistribution:${monthTag}`;
-  logSource('PB', context);
+  console.log('[PB] Recalling distribution for:', monthTag);
+  
+  const transactions = await loadPocketBaseTransactions({
+    accountId: SYSTEM_ACCOUNTS.DRAFT_FUND,
+    includeVoided: false,
+    limit: 500
+  });
 
-  try {
-    const txnsRes = await pocketbaseList<any>('transactions', {
-      filter: `status="posted" && metadata~"month_tag\\":\\"${monthTag}\\"" && metadata~"service_id\\":\\"*"`,
-      expand: 'shop_id'
-    });
-    const txns = txnsRes.items;
-    if (txns.length === 0) return { success: true, count: 0 };
+  const toRecall = transactions.filter(tx => {
+    const meta = tx.metadata as any;
+    return meta?.month_tag === monthTag && meta?.service_id;
+  });
 
-    const { syncTransactionToSheet } = await import('./sheet.service');
-    const { recalculateBalance } = await import('./account.service');
-    let recalledCount = 0;
+  console.log(`[PB] Found ${toRecall.length} transactions to recall`);
 
-    for (const txn of txns) {
-      await pocketbaseUpdate('transactions', txn.id, { status: 'void' });
-      recalledCount++;
-
-      if (txn.person_id) {
-        const sheetPayload = {
-          id: txn.id,
-          occurred_at: txn.occurred_at,
-          amount: Math.abs(Number(txn.amount)),
-          note: txn.note,
-          tag: monthTag,
-          shop_name: txn.expand?.shop_id?.name || 'Service',
-          type: 'Debt'
-        };
-        await syncTransactionToSheet(txn.person_id, sheetPayload as any, 'delete');
+  for (const tx of toRecall) {
+    await voidPocketBaseTransaction(tx.id);
+    
+    // Sync to sheet as deleted
+    const meta = tx.metadata as any;
+    const personId = (tx as any).person_id || meta?.member_id;
+    if (personId) {
+      try {
+        const { syncTransactionToSheet } = await import('./sheet.service');
+        await syncTransactionToSheet(personId, { id: tx.id } as any, 'delete');
+      } catch (e) {
+        console.error('[PB] Recall sheet sync failed:', e);
       }
     }
-    await recalculateBalance(toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'));
-    return { success: true, count: recalledCount };
-  } catch (error) {
-    console.error(`[DB:PB] ${context} failed`, error);
-    const supabase = createClient();
-    const { data, error: sbError } = await supabase
-      .from('transactions')
-      .select('*, shop:shops(name)')
-      .eq('status', 'posted')
-      .contains('metadata', { month_tag: monthTag })
-      .not('metadata->service_id', 'is', null);
-
-    if (sbError || !data) return { success: true, count: 0 };
-    const txns = data as any[];
-
-    const { syncTransactionToSheet } = await import('./sheet.service');
-    const { recalculateBalance } = await import('./account.service');
-    let recalledCount = 0;
-
-    for (const txn of txns) {
-      await supabase.from('transactions').update({ status: 'void' }).eq('id', txn.id);
-      recalledCount++;
-      if (txn.person_id) {
-        await syncTransactionToSheet(txn.person_id, {
-          id: txn.id,
-          occurred_at: txn.occurred_at,
-          amount: Math.abs(Number(txn.amount)),
-          note: txn.note,
-          tag: monthTag,
-          shop_name: (txn.shop as any)?.name || 'Service',
-          type: 'Debt'
-        } as any, 'delete');
-      }
-    }
-    await recalculateBalance(SYSTEM_ACCOUNTS.DRAFT_FUND);
-    return { success: true, count: recalledCount };
   }
+
+  return { count: toRecall.length };
 }

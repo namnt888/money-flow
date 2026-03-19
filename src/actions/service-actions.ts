@@ -3,8 +3,8 @@
 import { upsertService, distributeService, deleteService, updateServiceMembers, getServiceBotConfig, saveServiceBotConfig, distributeAllServices } from '@/services/service-manager'
 import { processBatchInstallments } from '@/services/installment.service'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
+import { createPocketBaseTransaction, loadPocketBaseTransactions, updatePocketBaseTransaction } from '@/services/pocketbase/transaction.service'
 
 // TODO: Define a proper type for members
 export async function updateServiceMembersAction(
@@ -64,57 +64,46 @@ export async function saveServiceBotConfigAction(serviceId: string, config: any)
 }
 
 export async function confirmServicePaymentAction(serviceId: string, accountId: string, amount: number, date: string, monthTag: string) {
-  const supabase = createClient()
-
   const metadata = {
     service_id: serviceId,
     month_tag: monthTag,
     type: 'service_payment'
   }
 
-  // Check for existing payment
-  const { data: existingTx } = await supabase
-    .from('transactions')
-    .select('id')
-    .contains('metadata', metadata)
-    .maybeSingle()
+  // Check for existing payment in PocketBase
+  const existingTxns = await loadPocketBaseTransactions({
+    accountId: accountId,
+    includeVoided: false,
+    limit: 10
+  });
 
-  let transactionId = (existingTx as any)?.id
+  const existingTx = existingTxns.find(tx => {
+    const meta = tx.metadata as any;
+    return meta?.service_id === serviceId && meta?.month_tag === monthTag && meta?.type === 'service_payment';
+  });
 
-  // Single Table Architecture: Transfer from Bank (accountId) to Draft Fund
-  const payload = {
+  // Transfer from Bank (accountId) to Draft Fund
+  const payload: any = {
     occurred_at: new Date(date).toISOString(),
     note: `Payment for Service ${monthTag}`,
-    tag: monthTag,
+    tag: monthTag, // Mapping to persisted_cycle_tag in payload builder
     type: 'transfer',
-    status: 'posted',
     account_id: accountId,               // Source: Real Bank
     target_account_id: SYSTEM_ACCOUNTS.DRAFT_FUND, // Target: Draft Fund
     amount: -Math.abs(amount),           // Outflow from source
     category_id: SYSTEM_CATEGORIES.ONLINE_SERVICES,
-    metadata: metadata, // metadata is merged on update, or set on insert
+    metadata: metadata,
     person_id: null,
-    shop_id: null
+    shop_id: null,
+    persisted_cycle_tag: monthTag
   }
 
-  if (existingTx) {
-    // Update existing transaction
-    const { error } = await (supabase
-      .from('transactions') as any)
-      .update(payload)
-      .eq('id', transactionId)
+  let transactionId = existingTx?.id;
 
-    if (error) throw new Error(error.message)
+  if (transactionId) {
+    await updatePocketBaseTransaction(transactionId, payload);
   } else {
-    // Create new transaction
-    const { data: transaction, error: txError } = await (supabase
-      .from('transactions') as any)
-      .insert([payload])
-      .select()
-      .single()
-
-    if (txError) throw new Error(txError.message)
-    transactionId = (transaction as any).id
+    transactionId = await createPocketBaseTransaction(payload) || '';
   }
 
   // Recalculate balances for both accounts
@@ -130,29 +119,23 @@ export async function confirmServicePaymentAction(serviceId: string, accountId: 
 }
 
 export async function getServicePaymentStatusAction(serviceId: string, monthTag: string) {
-  const supabase = createClient()
+  const transactions = await loadPocketBaseTransactions({
+    accountId: SYSTEM_ACCOUNTS.DRAFT_FUND,
+    includeVoided: false,
+    limit: 100
+  });
 
-  const metadata = {
-    service_id: serviceId,
-    month_tag: monthTag,
-    type: 'service_payment'
-  }
+  const transaction = transactions.find(tx => {
+    const meta = tx.metadata as any;
+    return meta?.service_id === serviceId && meta?.month_tag === monthTag && meta?.type === 'service_payment';
+  });
 
-  const { data: transaction, error } = await supabase
-    .from('transactions')
-    .select('id, amount, account_id, target_account_id, type')
-    .contains('metadata', metadata)
-    .maybeSingle()
-
-  if (error || !transaction) {
+  if (!transaction) {
     return { confirmed: false, amount: 0 }
   }
 
-  // In single table, amount is negative for transfer source.
-  // We want to return positive amount paid.
-  const amount = Math.abs((transaction as any).amount)
-
-  return { confirmed: true, amount: amount, transactionId: (transaction as any).id }
+  const amount = Math.abs(transaction.amount)
+  return { confirmed: true, amount: amount, transactionId: transaction.id }
 }
 
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { Account, AccountRelationships, AccountStats, TransactionWithDetails, AccountRow } from '@/types/moneyflow.types'
+import { createClient } from '@/lib/supabase/server'
 import { executeWithFallback } from '@/lib/pocketbase/fallback-helpers'
 import {
   updatePocketBaseAccountConfig,
@@ -449,46 +450,80 @@ export async function getAccountStats(accountId: string) {
 
 // getAccountTransactionDetails removed
 
-// New implementation of recalculateBalance using PocketBase
+// Unified implementation of recalculateBalance using both Supabase and PocketBase
 export async function recalculateBalance(accountId: string): Promise<boolean> {
-  const pbAccountId = toPocketBaseId(accountId, 'accounts')
-  console.log('[DB:PB] accounts.recalcBalance', { accountId: pbAccountId })
+  const supabase = await createClient()
+  return recalculateBalanceWithClient(supabase, accountId)
+}
 
-  // 1. Get account type
-  const account = await pocketbaseGetById<any>('accounts', pbAccountId)
+export async function recalculateBalanceWithClient(supabase: any, accountId: string): Promise<boolean> {
+  console.log('[DB:Unified] accounts.recalculateBalance', { accountId })
 
-  if (!account) {
-    console.warn('[PB:Recalc] Account not found:', pbAccountId)
-    return false
+  // 1. Fetch from Supabase (Primary/Legacy)
+  const { data: account, error: accountError } = await supabase
+    .from('accounts')
+    .select('type, current_balance')
+    .eq('id', accountId)
+    .single()
+
+  if (accountError || !account) {
+    console.warn('[SB:Recalc] Account not found or error:', accountError)
+    // Try to fallback to PB if not in SB? No, usually balance is SB-centric for legacy
   }
 
-  // 2. Fetch all transactions for this account (posted, no parent)
-  // PerPage=5000 as safety for now. 
-  // We use filter for account_id and target_account_id (mapped by migrate to both names)
-  const txns = await pocketbaseList('transactions', {
-    filter: `status = "posted" && parent_transaction_id = "" && (account_id = "${pbAccountId}" || to_account_id = "${pbAccountId}")`,
+  // 1a. Fetch transactions from Supabase
+  const sbTxns = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('account_id', accountId)
+    .is('parent_transaction_id', null)
+    .eq('status', 'posted')
+
+  // 2. Fetch from PocketBase (Secondary/New)
+  const pbId = toPocketBaseId(accountId, 'accounts')
+  const pbTxns = await pocketbaseList('transactions', {
+    filter: `status = "posted" && parent_transaction_id = "" && (account_id = "${pbId}" || to_account_id = "${pbId}")`,
     perPage: 5000
   })
 
+  // 3. Merge and Compute
+  const allTxns = [
+    ...((sbTxns.data as any[]) || []).map(t => mapUnifiedTransaction(t)),
+    ...(pbTxns.items || []).map(t => mapUnifiedTransaction(t))
+  ]
+
+  const accountType = (account?.type || 'bank') as any
   const { totalIn, totalOut, currentBalance } = computeAccountTotals({
-      accountId: pbAccountId,
-      accountType: (account as any).type as any,
-      transactions: (txns.items || []) as any[],
+    accountId: accountId,
+    accountType: accountType,
+    transactions: allTxns as any[]
   })
 
-  // 3. Update PB
-  try {
-    await pocketbaseUpdate('accounts', pbAccountId, {
-        current_balance: currentBalance,
-        total_in: totalIn,
-        total_out: totalOut
-    })
-  } catch (err) {
-    console.error('[DB:PB] accounts.recalcBalance failed:', err)
-    return false
+  // 4. Update Supabase
+  const { error: updateError } = await supabase
+    .from('accounts')
+    .update({
+      current_balance: currentBalance,
+      total_in: totalIn,
+      total_out: totalOut
+    } as any)
+    .eq('id', accountId)
+
+  if (updateError) {
+    console.error('[SB:Recalc] Update failed:', updateError)
   }
 
-  return true
+  // 5. Update PocketBase (Secondary) - Use the PB ID
+  await updatePocketBaseAccountInfo(accountId, {
+    current_balance: currentBalance,
+    total_in: totalIn,
+    total_out: totalOut
+  } as any).catch(e => console.error('[PB] Secondary balance update failed:', e))
+
+  revalidatePath('/accounts')
+  revalidatePath(`/accounts/${accountId}`)
+
+  return !updateError
 }
 
 // recalculateBalanceWithClient removed
