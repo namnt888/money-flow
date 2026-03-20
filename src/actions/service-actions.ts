@@ -1,10 +1,20 @@
 'use server'
 
-import { upsertService, distributeService, deleteService, updateServiceMembers, getServiceBotConfig, saveServiceBotConfig, distributeAllServices } from '@/services/service-manager'
+import { 
+  upsertService, 
+  distributeService, 
+  deleteService, 
+  updateServiceMembers, 
+  getServiceBotConfig, 
+  saveServiceBotConfig, 
+  distributeAllServices,
+  recallServiceDistribution,
+  getServices
+} from '@/services/service-manager'
 import { processBatchInstallments } from '@/services/installment.service'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
+import { pocketbaseList, pocketbaseUpdate, pocketbaseCreate, toPocketBaseId } from '@/services/pocketbase/server'
 
 // TODO: Define a proper type for members
 export async function updateServiceMembersAction(
@@ -32,7 +42,7 @@ export async function distributeServiceAction(serviceId: string, customDate?: st
 
     // Recalculate balance for DRAFT_FUND as it's the account used
     const { recalculateBalance } = await import('@/services/account.service')
-    await recalculateBalance(SYSTEM_ACCOUNTS.DRAFT_FUND)
+    await recalculateBalance(toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'))
 
     revalidatePath('/services')
     revalidatePath('/')
@@ -64,64 +74,56 @@ export async function saveServiceBotConfigAction(serviceId: string, config: any)
 }
 
 export async function confirmServicePaymentAction(serviceId: string, accountId: string, amount: number, date: string, monthTag: string) {
-  const supabase = createClient()
-
   const metadata = {
     service_id: serviceId,
     month_tag: monthTag,
     type: 'service_payment'
   }
 
-  // Check for existing payment
-  const { data: existingTx } = await supabase
-    .from('transactions')
-    .select('id')
-    .contains('metadata', metadata)
-    .maybeSingle()
+  // Check for existing payment in PB
+  const filter = `metadata~"service_id\\":\\"${serviceId}\\"" && metadata~"month_tag\\":\\"${monthTag}\\"" && metadata~"type\\":\\"service_payment\\""`
+  const existingRes = await pocketbaseList<any>('transactions', {
+    filter,
+    perPage: 1
+  })
 
-  let transactionId = (existingTx as any)?.id
+  const existingTx = existingRes.items[0]
+  let transactionId = existingTx?.id
 
   // Single Table Architecture: Transfer from Bank (accountId) to Draft Fund
+  const pbSourceAccountId = toPocketBaseId(accountId, 'accounts')
+  const pbTargetAccountId = toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts')
+  const pbCategoryId = toPocketBaseId(SYSTEM_CATEGORIES.ONLINE_SERVICES, 'categories')
+
   const payload = {
     occurred_at: new Date(date).toISOString(),
     note: `Payment for Service ${monthTag}`,
     tag: monthTag,
     type: 'transfer',
     status: 'posted',
-    account_id: accountId,               // Source: Real Bank
-    target_account_id: SYSTEM_ACCOUNTS.DRAFT_FUND, // Target: Draft Fund
+    account_id: pbSourceAccountId,               // Source: Real Bank
+    to_account_id: pbTargetAccountId, // Target: Draft Fund
     amount: -Math.abs(amount),           // Outflow from source
-    category_id: SYSTEM_CATEGORIES.ONLINE_SERVICES,
-    metadata: metadata, // metadata is merged on update, or set on insert
+    category_id: pbCategoryId,
+    metadata: metadata,
     person_id: null,
     shop_id: null
   }
 
   if (existingTx) {
     // Update existing transaction
-    const { error } = await (supabase
-      .from('transactions') as any)
-      .update(payload)
-      .eq('id', transactionId)
-
-    if (error) throw new Error(error.message)
+    await pocketbaseUpdate('transactions', transactionId, payload)
   } else {
     // Create new transaction
-    const { data: transaction, error: txError } = await (supabase
-      .from('transactions') as any)
-      .insert([payload])
-      .select()
-      .single()
-
-    if (txError) throw new Error(txError.message)
-    transactionId = (transaction as any).id
+    const transaction = await pocketbaseCreate<any>('transactions', payload)
+    transactionId = transaction.id
   }
 
   // Recalculate balances for both accounts
   const { recalculateBalance } = await import('@/services/account.service')
   await Promise.all([
-    recalculateBalance(accountId),
-    recalculateBalance(SYSTEM_ACCOUNTS.DRAFT_FUND)
+    recalculateBalance(pbSourceAccountId),
+    recalculateBalance(pbTargetAccountId)
   ])
 
   revalidatePath(`/services/${serviceId}`)
@@ -130,31 +132,24 @@ export async function confirmServicePaymentAction(serviceId: string, accountId: 
 }
 
 export async function getServicePaymentStatusAction(serviceId: string, monthTag: string) {
-  const supabase = createClient()
+  const filter = `metadata~"service_id\\":\\"${serviceId}\\"" && metadata~"month_tag\\":\\"${monthTag}\\"" && metadata~"type\\":\\"service_payment\\""`
+  const res = await pocketbaseList<any>('transactions', {
+    filter,
+    perPage: 1
+  })
 
-  const metadata = {
-    service_id: serviceId,
-    month_tag: monthTag,
-    type: 'service_payment'
-  }
+  const transaction = res.items[0]
 
-  const { data: transaction, error } = await supabase
-    .from('transactions')
-    .select('id, amount, account_id, target_account_id, type')
-    .contains('metadata', metadata)
-    .maybeSingle()
-
-  if (error || !transaction) {
+  if (!transaction) {
     return { confirmed: false, amount: 0 }
   }
 
   // In single table, amount is negative for transfer source.
   // We want to return positive amount paid.
-  const amount = Math.abs((transaction as any).amount)
+  const amount = Math.abs(Number(transaction.amount))
 
-  return { confirmed: true, amount: amount, transactionId: (transaction as any).id }
+  return { confirmed: true, amount: amount, transactionId: transaction.id }
 }
-
 
 export async function runAllServiceDistributionsAction(date?: string) {
   try {
@@ -162,7 +157,7 @@ export async function runAllServiceDistributionsAction(date?: string) {
 
     // Recalculate DRAFT_FUND balance after mass distribution
     const { recalculateBalance } = await import('@/services/account.service')
-    await recalculateBalance(SYSTEM_ACCOUNTS.DRAFT_FUND)
+    await recalculateBalance(toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'))
 
     // Also run Installment Batch Processing
     try {
@@ -183,12 +178,11 @@ export async function runAllServiceDistributionsAction(date?: string) {
 
 export async function recallServiceDistributionAction(monthTag: string) {
   try {
-    const { recallServiceDistribution } = await import('@/services/service-manager')
     const result = await recallServiceDistribution(monthTag)
 
     // Recalculate balance for DRAFT_FUND
     const { recalculateBalance } = await import('@/services/account.service')
-    await recalculateBalance(SYSTEM_ACCOUNTS.DRAFT_FUND)
+    await recalculateBalance(toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'))
 
     revalidatePath('/services')
     revalidatePath('/transactions')
@@ -202,6 +196,5 @@ export async function recallServiceDistributionAction(monthTag: string) {
 }
 
 export async function getServicesAction() {
-  const { getServices } = await import('@/services/service-manager')
   return await getServices()
 }
