@@ -1,6 +1,12 @@
 'use client'
 
 import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet'
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -22,7 +28,7 @@ import {
     upsertServiceAction
 } from '@/actions/service-actions'
 import { toast } from 'sonner'
-import { Trash2, CreditCard, Loader2, Bot, CheckCircle2, Users, UserPlus, Settings, Check, Send } from 'lucide-react'
+import { Trash2, CreditCard, Loader2, Bot, CheckCircle2, Users, UserPlus, Settings, Check, Send, Plus, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { getShopsAction } from '@/actions/shop-actions'
@@ -53,6 +59,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
     const [name, setName] = useState(service.name)
     const [price, setPrice] = useState(service.price || 0)
     const [shopId, setShopId] = useState(service.shop_id || 'none')
+    const [imageUrl, setImageUrl] = useState(service.image_url || '')
     const [shops, setShops] = useState<any[]>([])
     const [isSavingDetails, setIsSavingDetails] = useState(false)
     const [maxSlots, setMaxSlots] = useState<number>(service.max_slots || 0)
@@ -77,6 +84,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
             setName(service.name)
             setPrice(service.price || 0)
             setShopId(service.shop_id || 'none')
+            setImageUrl(service.image_url || '')
             setMaxSlots(service.max_slots || 0)
             loadBotConfig()
             checkPaymentStatus()
@@ -123,16 +131,30 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
         }
     }
 
+    function formatVNDLabel(value: number) {
+        if (!value) return ''
+        if (value >= 1000000) {
+            const triệu = value / 1000000
+            return `${triệu.toFixed(triệu % 1 === 0 ? 0 : 1)} triệu`
+        }
+        if (value >= 1000) {
+            const ngàn = value / 1000
+            return `${ngàn.toFixed(ngàn % 1 === 0 ? 0 : 1)} ngàn`
+        }
+        return `${value} đ`
+    }
+
     async function handleSaveSettings() {
         setIsSavingDetails(true)
         try {
             const serviceUpdate = {
                 id: service.id,
                 name,
-                price,
+                price: Number(price),
                 shop_id: shopId === 'none' ? null : shopId,
+                image_url: imageUrl || null,
                 note_template: botNoteTemplate,
-                max_slots: maxSlots
+                max_slots: Number(maxSlots)
             }
             await upsertServiceAction(serviceUpdate)
             await saveServiceBotConfigAction(service.id, {
@@ -142,6 +164,8 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                 noteTemplate: botNoteTemplate
             })
             toast.success('Settings saved successfully')
+            onOpenChange(false)
+            router.refresh()
         } catch (error) {
             toast.error('Failed to save settings')
         } finally {
@@ -155,6 +179,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
             const result = await distributeServiceAction(service.id, undefined, botNoteTemplate)
             if (result.success) {
                 toast.success('Service distributed successfully')
+                router.refresh()
             } else {
                 toast.error(result.error)
             }
@@ -173,6 +198,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
             if (result.success) {
                 toast.success('Service deleted successfully')
                 onOpenChange(false)
+                router.refresh()
             } else {
                 toast.error(result.error)
             }
@@ -195,7 +221,8 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
             }
         }
         setWatchedMembers(updatedMembers)
-        await updateServiceMembersAction(service.id, updatedMembers)
+        const result = await updateServiceMembersAction(service.id, updatedMembers)
+        router.refresh()
     }
 
     async function handleAddMember(profileId: string) {
@@ -213,6 +240,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
         setWatchedMembers(updatedMembers)
         await updateServiceMembersAction(service.id, updatedMembers)
         toast.success('Member added')
+        router.refresh()
         setSearchQuery('')
         setIsAddMemberDialogOpen(false)
     }
@@ -222,6 +250,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
         const updatedMembers = watchedMembers.filter(m => m.id !== memberId)
         setWatchedMembers(updatedMembers)
         await updateServiceMembersAction(service.id, updatedMembers)
+        router.refresh()
     }
 
     const totalSlots = watchedMembers.reduce((sum, m) => sum + (m.slots || 0), 0)
@@ -230,15 +259,23 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
     const showConfirmed = paymentStatus.confirmed && !isAmountChanged
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 rounded-xl flex flex-col">
-                <DialogHeader className="px-6 py-4 border-b">
-                    <div className="flex items-center justify-between">
-                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                            <Users className="h-5 w-5 text-blue-600" />
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 gap-0 flex flex-col border-l">
+                <SheetHeader className="px-6 py-4 border-b flex-shrink-0">
+                    <div className="flex items-center justify-between mt-4">
+                        <SheetTitle className="text-xl font-bold flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-none bg-blue-50 flex items-center justify-center text-blue-600 overflow-hidden">
+                                {imageUrl ? (
+                                    <img src={imageUrl} alt="" className="h-full w-full object-cover rounded-none" />
+                                ) : service.shop?.image_url ? (
+                                    <img src={service.shop.image_url} alt="" className="h-full w-full object-cover rounded-none" />
+                                ) : (
+                                    <Users className="h-5 w-5" />
+                                )}
+                            </div>
                             {service.name}
-                        </DialogTitle>
-                        <div className="flex items-center gap-2 mr-8">
+                        </SheetTitle>
+                        <div className="flex items-center gap-2">
                             <Button
                                 onClick={() => !showConfirmed && setIsPaymentDialogOpen(true)}
                                 disabled={showConfirmed}
@@ -266,129 +303,172 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                             </Button>
                         </div>
                     </div>
-                </DialogHeader>
+                </SheetHeader>
 
-                {/* 2-Column Layout: Settings (Left) + People (Right) */}
-                <div className="flex-1 flex flex-col min-h-0">
-                    <div className="grid grid-cols-2 gap-4 p-6 overflow-hidden">
-                        {/* Left Column: Settings - Determines Height */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="p-6 space-y-8">
+                        {/* Settings Section */}
                         <div className="space-y-6">
-                            <div className="space-y-4">
-                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Service Information</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Service Name</Label>
-                                        <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg" />
+                            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <Settings className="h-4 w-4" />
+                                Service Configuration
+                            </h3>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-600">Service Name</Label>
+                                    <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg h-10 border-slate-200" placeholder="e.g. Youtube Premium" />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-slate-600">Monthly Price (VNĐ)</Label>
+                                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-none">{formatVNDLabel(price || 0)}</span>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Monthly Price</Label>
-                                        <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="rounded-lg" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Max Slots</Label>
-                                        <Input type="number" value={maxSlots} onChange={(e) => setMaxSlots(Number(e.target.value))} className="rounded-lg" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Note Template</Label>
-                                        <Input value={botNoteTemplate} onChange={(e) => setBotNoteTemplate(e.target.value)} className="font-mono text-sm rounded-lg" />
+                                    <Input
+                                        type="text"
+                                        value={price === 0 ? '' : price.toLocaleString('en-US')}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^0-9]/g, '')
+                                            setPrice(val ? parseInt(val) : 0)
+                                        }}
+                                        className="rounded-lg h-10 border-slate-200"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-600">Max Slots</Label>
+                                    <Input
+                                        type="text"
+                                        value={maxSlots === 0 ? '' : maxSlots}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^0-9]/g, '')
+                                            setMaxSlots(val ? parseInt(val) : 0)
+                                        }}
+                                        className="rounded-lg h-10 border-slate-200"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-600">Note Template</Label>
+                                    <Input value={botNoteTemplate} onChange={(e) => setBotNoteTemplate(e.target.value)} className="font-mono text-sm rounded-lg h-10 border-slate-200" placeholder="{service} {date}..." />
+                                </div>
+                                <div className="space-y-2 col-span-2">
+                                    <Label className="text-slate-600">Service Image URL</Label>
+                                    <div className="relative">
+                                        <Input
+                                            value={imageUrl}
+                                            onChange={(e) => setImageUrl(e.target.value)}
+                                            className="rounded-lg h-10 pl-10 border-slate-200"
+                                            placeholder="Paste image link here..."
+                                        />
+                                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="border-t pt-6 space-y-4">
-                                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Bot Configuration</h3>
-                                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
+                            <div className="p-5 rounded-2xl border border-blue-100 bg-blue-50/30 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
                                             <Bot className="h-5 w-5 text-blue-600" />
-                                            <div>
-                                                <Label className="text-base font-medium">Auto Distribute</Label>
-                                                <p className="text-sm text-slate-500">Automatically distribute this service monthly</p>
-                                            </div>
                                         </div>
-                                        <Switch checked={isBotEnabled} onCheckedChange={setIsBotEnabled} />
+                                        <div>
+                                            <Label className="text-base font-bold text-slate-900">Auto Distribute</Label>
+                                            <p className="text-sm text-slate-500">Enable automatic bot distribution monthly</p>
+                                        </div>
                                     </div>
-                                    {isBotEnabled && (
-                                        <div className="grid grid-cols-2 gap-3 pt-2">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs text-slate-600">Run Day (1-31)</Label>
-                                                <Input
-                                                    type="number"
-                                                    min={1}
-                                                    max={31}
-                                                    value={botRunDay || ''}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value)
-                                                        setBotRunDay(isNaN(val) ? 0 : val)
-                                                    }}
-                                                    className="rounded-lg h-9"
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label className="text-xs text-slate-600">Run Hour (0-23)</Label>
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    max={23}
-                                                    value={botRunHour === 0 ? 0 : (botRunHour || '')}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value)
-                                                        setBotRunHour(isNaN(val) ? 0 : val)
-                                                    }}
-                                                    className="rounded-lg h-9"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+                                    <Switch checked={isBotEnabled} onCheckedChange={setIsBotEnabled} />
                                 </div>
+                                {isBotEnabled && (
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-600 uppercase">Run Day (1-31)</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                max={31}
+                                                value={botRunDay || ''}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value)
+                                                    setBotRunDay(isNaN(val) ? 0 : val)
+                                                }}
+                                                className="rounded-lg h-10 border-slate-200 bg-white"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-600 uppercase">Run Hour (0-23)</Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={23}
+                                                value={botRunHour === 0 ? 0 : (botRunHour || '')}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value)
+                                                    setBotRunHour(isNaN(val) ? 0 : val)
+                                                }}
+                                                className="rounded-lg h-10 border-slate-200 bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Right Column: People List - Matches Height */}
-                        <div className="relative min-h-[300px]">
-                            <div className="absolute inset-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-slate-600">
-                                        {maxSlots > 0 && <span>{totalSlots} / {maxSlots} slots used</span>}
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 rounded-lg border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
-                                        onClick={() => setIsAddMemberDialogOpen(true)}
-                                    >
-                                        <UserPlus className="h-4 w-4" />
-                                        Add Member
-                                    </Button>
+                        {/* Members Section */}
+                        <div className="space-y-6 border-t pt-8">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                        <Users className="h-4 w-4" />
+                                        Member Management
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        {maxSlots > 0 ? `${totalSlots} / ${maxSlots} slots occupied` : `${watchedMembers.length} active members`}
+                                    </p>
                                 </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 rounded-lg border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all font-medium"
+                                    onClick={() => setIsAddMemberDialogOpen(true)}
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    Add Member
+                                </Button>
+                            </div>
 
-                                <div className="grid gap-3">
-                                    {watchedMembers.map((member) => (
+                            <div className="grid gap-3">
+                                {watchedMembers.length === 0 ? (
+                                    <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
+                                        <p className="text-sm text-slate-400">No members added yet</p>
+                                    </div>
+                                ) : (
+                                    watchedMembers.map((member) => (
                                         <div
                                             key={member.id || member.person_id}
-                                            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 cursor-pointer transition-all group"
+                                            className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 hover:shadow-md transition-all group"
                                             onClick={() => router.push(`/people/${member.person?.pocketbase_id || member.person_id}`)}
                                         >
                                             <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                <div className={cn("h-12 w-12 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0",
-                                                    member.person?.is_owner ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600')}>
+                                                <div className={cn("h-12 w-12 rounded-none flex items-center justify-center text-lg font-bold flex-shrink-0 overflow-hidden",
+                                                    member.person?.is_owner ? 'bg-orange-50 text-orange-600' : 'bg-slate-50 text-slate-600')}>
                                                     {member.person?.image_url ? (
-                                                        <img src={member.person.image_url} alt="" className="h-full w-full object-cover rounded-lg" />
+                                                        <img src={member.person.image_url} alt="" className="h-full w-full object-cover rounded-none" />
                                                     ) : (
                                                         member.person?.name?.substring(0, 1).toUpperCase() || '?'
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col min-w-0 flex-1">
-                                                    <span className="text-base font-semibold text-slate-900 truncate">{member.person?.name || 'Unknown'}</span>
-                                                    <span className="text-sm text-slate-500">{Math.round(unitCost * member.slots).toLocaleString()} ₫ per slot</span>
+                                                    <span className="text-base font-bold text-slate-900 truncate">
+                                                        {member.person?.name || 'Unknown'}
+                                                        {member.is_owner && <span className="ml-2 text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-none uppercase">Payer</span>}
+                                                    </span>
+                                                    <span className="text-sm text-slate-500 font-medium">{Math.round(unitCost * member.slots).toLocaleString()} ₫ per slot</span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex items-center gap-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <div className="flex items-center gap-2">
-                                                    <Label className="text-sm text-slate-600">Slots:</Label>
+                                                    <Label className="text-xs font-bold text-slate-400 uppercase">Slots</Label>
                                                     <Input
                                                         type="number"
-                                                        className="w-20 h-9 text-center rounded-lg"
+                                                        className="w-16 h-9 text-center border-slate-200 rounded-lg focus:ring-blue-500"
                                                         value={member.slots}
                                                         onChange={(e) => handleUpdateMember(member.id, { slots: parseInt(e.target.value) || 0 })}
                                                     />
@@ -396,63 +476,57 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-9 w-9 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                                    className="h-9 w-9 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
                                                     onClick={() => handleRemoveMember(member.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer: Save/Delete buttons spanning both columns */}
-                <div className="border-t p-6 flex gap-3">
+                <div className="border-t p-6 flex gap-3 flex-shrink-0 bg-slate-50/50">
                     <Button
                         onClick={handleSaveSettings}
-                        variant="outline"
-                        className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-lg h-11 transition-all"
+                        className="flex-1 rounded-lg h-12 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-all font-bold"
                         disabled={isSavingDetails}
                     >
-                        {isSavingDetails ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                        {isSavingDetails ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : null}
                         Save Settings
                     </Button>
                     <Button
                         onClick={handleDelete}
                         disabled={isDeleting}
                         variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-lg h-11 px-6 transition-all"
+                        className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg h-12 px-6 transition-all font-semibold"
                     >
-                        {isDeleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                        Delete
+                        {isDeleting ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                     </Button>
                 </div>
 
-
-
-
-                {/* Add Member Dialog */}
+                {/* Add Member Dialog (Keep as Dialog) */}
                 <Dialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
-                    <DialogContent className="sm:max-w-md rounded-xl">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <UserPlus className="h-4 w-4 text-blue-600" />
-                                Add Member
+                    <DialogContent className="sm:max-w-md rounded-2xl overflow-hidden p-0 gap-0">
+                        <DialogHeader className="p-6 border-b bg-slate-50/50">
+                            <DialogTitle className="flex items-center gap-2 text-slate-900">
+                                <UserPlus className="h-5 w-5 text-blue-600" />
+                                Add New Member
                             </DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-3">
+                        <div className="p-6 space-y-4">
                             <Input
-                                placeholder="🔍 Search member..."
+                                placeholder="🔍 Search by name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="rounded-lg"
+                                className="rounded-xl h-11 border-slate-200 shadow-sm transition-all focus:ring-blue-500"
                                 autoFocus
                             />
-                            <div className="max-h-[300px] overflow-y-auto space-y-2">
+                            <div className="max-h-[350px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                                 {allPeople
                                     .filter(p =>
                                         !watchedMembers.some(m => m.person_id === p.id) &&
@@ -462,26 +536,29 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                                         <button
                                             key={person.id}
                                             onClick={() => handleAddMember(person.id)}
-                                            className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-all text-left border border-transparent hover:border-slate-200"
+                                            className="w-full flex items-center gap-4 p-3 hover:bg-blue-50/50 rounded-xl transition-all text-left border border-transparent hover:border-blue-100 group"
                                         >
-                                            <div className="h-10 w-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                            <div className="h-11 w-11 rounded-none bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0 group-hover:scale-105 transition-transform">
                                                 {person.image_url ? (
-                                                    <img src={person.image_url} alt="" className="h-full w-full object-cover" />
+                                                    <img src={person.image_url} alt="" className="h-full w-full object-cover rounded-none" />
                                                 ) : (
                                                     person.name.substring(0, 1).toUpperCase()
                                                 )}
                                             </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-medium text-slate-900">{person.name}</span>
-                                                <span className="text-xs text-slate-500 truncate">{person.email || 'No email'}</span>
+                                            <div className="flex flex-col min-w-0 flex-1">
+                                                <span className="text-sm font-bold text-slate-900">{person.name}</span>
+                                                <span className="text-xs text-slate-500 truncate font-medium">{person.email || 'No email defined'}</span>
                                             </div>
+                                            <Plus className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
                                         </button>
                                     ))}
                                 {allPeople.filter(p =>
                                     !watchedMembers.some(m => m.person_id === p.id) &&
                                     (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                                 ).length === 0 && (
-                                        <div className="p-8 text-center text-sm text-slate-400">No members found</div>
+                                        <div className="py-12 text-center">
+                                            <p className="text-sm text-slate-400 font-medium">No results found for "{searchQuery}"</p>
+                                        </div>
                                     )}
                             </div>
                         </div>
@@ -497,7 +574,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                         await checkPaymentStatus()
                     }}
                 />
-            </DialogContent>
-        </Dialog >
+            </SheetContent>
+        </Sheet>
     )
 }

@@ -498,7 +498,9 @@ export async function processBatchInstallments(date?: string) {
     if (existingBatches.items.length > 0) {
       batchId = existingBatches.items[0].id;
     } else {
+      console.log(`[Installments] Creating new batch: ${batchName}`);
       const newBatch = await pocketbaseCreate<any>('batches', {
+        id: toPocketBaseId(`batch-${batchName}`, 'batches'), // Explicit ID
         name: batchName,
         source_account_id: toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'),
         status: 'draft'
@@ -519,6 +521,7 @@ export async function processBatchInstallments(date?: string) {
       const monthNum = Math.min(Math.max(1, diffMonths), inst.term_months);
 
       await pocketbaseCreate('batch_items', {
+        id: toPocketBaseId(`bi-${batchId}-${inst.id}`, 'batch_items'),
         batch_id: batchId,
         receiver_name: 'Installment Payment',
         amount: inst.monthly_amount,

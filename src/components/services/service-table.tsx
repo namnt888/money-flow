@@ -70,8 +70,10 @@ export function ServiceTable({ services, people }: { services: any[], people: an
                                 >
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-none bg-blue-50 flex items-center justify-center text-blue-600">
-                                                {service.shop?.image_url ? (
+                                            <div className="h-10 w-10 rounded-none bg-blue-50 flex items-center justify-center text-blue-600 overflow-hidden">
+                                                {service.image_url ? (
+                                                    <img src={service.image_url} alt="" className="h-10 w-10 rounded-none object-cover" />
+                                                ) : service.shop?.image_url ? (
                                                     <img src={service.shop.image_url} alt="" className="h-10 w-10 rounded-none object-cover" />
                                                 ) : (
                                                     <Cloud className="h-6 w-6" />
@@ -80,29 +82,16 @@ export function ServiceTable({ services, people }: { services: any[], people: an
                                             <span className="font-semibold text-slate-900">{service.name}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-medium text-slate-700">
-                                        {service.price?.toLocaleString()} đ
+                                    <TableCell className="font-bold text-slate-700">
+                                        {(service.price || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400 ml-0.5">đ</span>
                                     </TableCell>
                                     <TableCell className="text-slate-500 text-sm">
                                         Next bill: {service.due_day || 1} Monthly
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex -space-x-2" title={members.map((m: any) => `${m.person?.name || 'Unknown'} (${m.slots} slot${m.slots > 1 ? 's' : ''})`).join(', ')}>
-                                            {members.slice(0, 3).map((m: any) => (
-                                                <div key={m.id} className="h-8 w-8 rounded-none border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold overflow-hidden">
-                                                    {m.person?.image_url ? (
-                                                        <img src={m.person.image_url} alt={m.person.name} className="h-full w-full object-cover" />
-                                                    ) : (
-                                                        m.person?.name?.substring(0, 1).toUpperCase() || '?'
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {members.length > 3 && (
-                                                <div className="h-8 w-8 rounded-none border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold">
-                                                    +{members.length - 3}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <span className="text-sm font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-none border border-slate-200 uppercase tracking-tight">
+                                            {totalSlots} slot{totalSlots > 1 ? 's' : ''}
+                                        </span>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={service.is_active ? 'default' : 'secondary'} className="rounded-none">

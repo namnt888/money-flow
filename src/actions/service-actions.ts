@@ -36,10 +36,15 @@ export async function upsertServiceAction(serviceData: any) {
   }
 }
 
-export async function distributeServiceAction(serviceId: string, customDate?: string, customNoteFormat?: string) {
+export async function distributeServiceAction(
+  serviceId: string, 
+  customDate?: string, 
+  customNoteFormat?: string, 
+  source: string = 'manual'
+) {
   try {
-    const result = await distributeService(serviceId, customDate, customNoteFormat)
-
+    const result = await distributeService(serviceId, customDate, customNoteFormat, '', { source })
+    
     // Recalculate balance for DRAFT_FUND as it's the account used
     const { recalculateBalance } = await import('@/services/account.service')
     await recalculateBalance(toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'))
@@ -47,7 +52,7 @@ export async function distributeServiceAction(serviceId: string, customDate?: st
     revalidatePath('/services')
     revalidatePath('/')
     revalidatePath('/transactions')
-    return { success: true, transactions: result.transactions }
+    return { success: true, ...result }
   } catch (error: any) {
     return { success: false, error: error.message, transactions: [] }
   }
@@ -81,7 +86,7 @@ export async function confirmServicePaymentAction(serviceId: string, accountId: 
   }
 
   // Check for existing payment in PB
-  const filter = `metadata~"service_id\\":\\"${serviceId}\\"" && metadata~"month_tag\\":\\"${monthTag}\\"" && metadata~"type\\":\\"service_payment\\""`
+  const filter = `metadata.service_id="${serviceId}" && metadata.month_tag="${monthTag}" && metadata.type="service_payment"`
   const existingRes = await pocketbaseList<any>('transactions', {
     filter,
     perPage: 1
@@ -132,7 +137,7 @@ export async function confirmServicePaymentAction(serviceId: string, accountId: 
 }
 
 export async function getServicePaymentStatusAction(serviceId: string, monthTag: string) {
-  const filter = `metadata~"service_id\\":\\"${serviceId}\\"" && metadata~"month_tag\\":\\"${monthTag}\\"" && metadata~"type\\":\\"service_payment\\""`
+  const filter = `metadata.service_id="${serviceId}" && metadata.month_tag="${monthTag}" && metadata.type="service_payment"`
   const res = await pocketbaseList<any>('transactions', {
     filter,
     perPage: 1
@@ -151,9 +156,11 @@ export async function getServicePaymentStatusAction(serviceId: string, monthTag:
   return { confirmed: true, amount: amount, transactionId: transaction.id }
 }
 
-export async function runAllServiceDistributionsAction(date?: string) {
+export async function runAllServiceDistributionsAction(options: { isTest?: boolean, source?: string } = {}) {
+  console.log('[Action] runAllServiceDistributionsAction started', options);
   try {
-    const result = await distributeAllServices(date)
+    const noteSuffix = options.isTest ? ' #Test' : '';
+    const result = await distributeAllServices(undefined, options.isTest, noteSuffix, { source: options.source });
 
     // Recalculate DRAFT_FUND balance after mass distribution
     const { recalculateBalance } = await import('@/services/account.service')
@@ -161,7 +168,7 @@ export async function runAllServiceDistributionsAction(date?: string) {
 
     // Also run Installment Batch Processing
     try {
-      await processBatchInstallments(date)
+      await processBatchInstallments(undefined) // Pass undefined for date to use current date
     } catch (e) {
       console.error('Error processing installments:', e)
     }
