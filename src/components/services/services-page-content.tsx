@@ -47,7 +47,7 @@ export function ServicesPageContent({ services, people }: ServicesPageContentPro
     const handleTestBot = async () => {
         setIsTesting(true)
         try {
-            const result = await runAllServiceDistributionsAction()
+            const result = await runAllServiceDistributionsAction({ isTest: true, source: 'manual' })
             const toastId = toast.info('Test Bot Results', {
                 description: `Success: ${result.success} | Failed: ${result.failed} | Skipped: ${result.skipped}`,
                 duration: Infinity,
