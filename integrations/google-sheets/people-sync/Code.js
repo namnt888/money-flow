@@ -1004,9 +1004,9 @@ function applySheetImage(sheet, imgUrl, imgProvided, summaryOptions) {
         showBankAccount = summaryOptions.showBankAccount;
     }
 
-    // NEW RANGE (User request): M7:N17
-    // Col M=13, Row 7, Width 2, Height 11 (covers rows 7 to 17)
-    var targetRangeA1 = "M7:N17";
+    // NEW RANGE (User request): N7:O21
+    // Col N=14, Row 7, Width 2, Height 15 (covers rows 7 to 21)
+    var targetRangeA1 = "N7:O21";
     var imgRange = sheet.getRange(targetRangeA1);
 
     try {
@@ -1024,11 +1024,16 @@ function applySheetImage(sheet, imgUrl, imgProvided, summaryOptions) {
 
     if (!imgUrl) return;
 
-    // CRITICAL: Ensure L7:N17 is properly merged
+    // CRITICAL: Ensure N7:O21 is properly merged
     try {
         imgRange.merge();
         var escapedUrl = imgUrl.replace(/"/g, '""');
-        imgRange.getCell(1, 1).setFormula('=IMAGE("' + escapedUrl + '";2)');
+        imgRange.getCell(1, 1).setFormula('=IMAGE("' + escapedUrl + '"; 2)');
+        
+        // Center alignment
+        imgRange.setHorizontalAlignment('center');
+        imgRange.setVerticalAlignment('middle');
+        
         Logger.log('Image applied to ' + targetRangeA1);
     } catch (e) {
         Logger.log('Image application error: ' + e);

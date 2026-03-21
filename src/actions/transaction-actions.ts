@@ -119,7 +119,10 @@ export async function restoreTransaction(id: string): Promise<boolean> {
          note: existing.note,
          tag: existing.tag,
          amount: existing.amount,
-         original_amount: existing.amount
+         original_amount: existing.amount,
+         type: existing.type,
+         account_id: existing.account_id ?? null,
+         target_account_id: existing.target_account_id ?? existing.to_account_id ?? null,
        } as any, 'create').catch(err => console.error('Sheet Sync Error (Restore):', err));
     }
 
