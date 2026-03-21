@@ -41,7 +41,7 @@ export async function generateMetadata({
 
   if (!account) return { title: 'Account Not Found' }
 
-  const tabName = tab === 'cashback' ? 'Cashback' : 'Transactions'
+  const tabName = tab === 'cashback' ? 'Cashback' : tab === 'investment' ? 'Investment' : 'Transactions'
   const icons: Metadata['icons'] = account.image_url ? {
     icon: account.image_url,
     shortcut: account.image_url,
@@ -60,7 +60,7 @@ export async function generateMetadata({
 export default async function AccountPage({ params, searchParams }: PageProps) {
   const { id } = await params
   const { tab, tag } = await searchParams
-  const activeTab = tab === 'cashback' ? 'cashback' : 'transactions'
+  const activeTab = tab === 'cashback' ? 'cashback' : tab === 'investment' ? 'investment' : 'transactions'
 
   if (!id || id === 'undefined') {
     notFound()

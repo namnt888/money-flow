@@ -1,7 +1,7 @@
 # Money Flow 3 - Agent Context & Project State
 
-**Last Updated:** March 7, 2026  
-**Current Phase:** Phase 17 - PocketBase Integration & ID Stabilization
+**Last Updated:** March 21, 2026  
+**Current Phase:** Phase 24 - Investment Flow Refinement
 
 ---
 
@@ -55,6 +55,7 @@
 **All financial data flows from the `transactions` table.**
 
 - **Debt:** Derived from transactions with `person_id` (not a separate table)
+- **Investments:** Tagged with `is_invest: true` in metadata. Tracking relies on `quantity` and `market_price` embedded in `metadata` for precise Price metrics (excluding craft fees).
 - **Installments:** `is_installment` flag on transaction_lines; do NOT double-count parent + children
 - **Refund Chain:** ENFORCE Parent → Void → Refund; never edit/void parent if children exist
 - **Duplicates:** Batch imports dedupe on `transaction_date + amount + details`
@@ -319,28 +320,19 @@ type CashbackMonthSummary = {
 
 ---
 
-## 11. Recent Changes (Phase 4.2 Summary)
+## 11. Recent Changes (Phase 24 Summary)
 
 ### Code Changes
-1. **Cashback Page:** Added tiered config parsing, derived net profit, matrix/volunteer tabs
-2. **Dashboard V2:** Added search, advanced rules popover, derived net calculation, improved month tables
-3. **Matrix View:** Derived net per row, zero-data filtering
-4. **Volunteer View:** Account/person breakdown with modal
-5. **Month Detail Modal:** Multi-tab (card/volunteer) transaction display
-6. **tsconfig.json:** Added `baseUrl: "."` for path alias; excluded `.next/dev/types` from validation
-7. **Policy Resolver:** Uses `totalGivenAway` sum for year totals consistency
-8. **Account Table V2 Refinements (Feb 17):**
-    - Implemented sorting by Balance (Available Credit for CCs).
-    - Added "Intelligence Legend" for amount color-coding (Red > 100M, Orange 50-100M, Green < 50M).
-    - Separated "Waiver Tracking" into its own dedicated quick stat unit.
-    - Fixed sticky header scroll blurring and layering issues.
-    - Added "Coverage" hover-card explanation for external credit exposure.
-    - Enhanced search with a clear (X) trigger and added "Reset Sort" button.
+1. **Investment Asset Tracking:** Added robust metadata support for tracking `quantity` and `market_price` for assets like Gold.
+2. **Transaction Slide V2:** Dynamically exposes `Quantity` and `Market Price` fields when user selects an Investment Account or `Funding Gold` category.
+3. **Unit Price Calculator:** Form dynamically computes and displays `Amount / Quantity` as an approximate unit price to help users.
+4. **Quick Action "Invest":** Added `Invest` button to Unified and Account Add menus which auto-fills `Transfer` and `Funding Gold` category.
+5. **Dashboard Warnings:** UI issues "Missing Data" alerts if an investment transaction is lacking quantity data, ensuring users provide correct metrics.
 
 ### PR Status
-- **Branch:** `feature/cashback-page-fix-v2`
-- **Status:** Merged with origin/main; no conflicts
-- **Includes:** UI polish, type tightening, advanced rules display, derived net logic
+- **Branch:** `feature/manage-invest-assets-20260321`
+- **Status:** Pending push
+- **Includes:** UI additions, `amount-section.tsx` modifications, `metadata` schema augmentations.
 
 ---
 

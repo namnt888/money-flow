@@ -140,6 +140,7 @@ export function UnifiedTransactionsPage({
     const [slideMode, setSlideMode] = useState<'add' | 'edit' | 'duplicate'>('add')
     const [selectedTxn, setSelectedTxn] = useState<TransactionWithDetails | null>(null)
     const [slideOverrideType, setSlideOverrideType] = useState<string | undefined>(undefined)
+    const [slideOverrideData, setSlideOverrideData] = useState<any>(null)
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [showUnsavedWarning, setShowUnsavedWarning] = useState(false)
     const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set())
@@ -680,13 +681,25 @@ export function UnifiedTransactionsPage({
     // Slide Handlers
     const handleAdd = () => {
         setSlideOverrideType(undefined)
+        setSlideOverrideData(null)
         setSlideMode('add')
         setSelectedTxn(null)
         setIsSlideOpen(true)
     }
 
     const handleAddWithState = (type: string) => {
+        if (type === 'invest') {
+            const fundingGoldCategory = categories.find(c => c.name === 'Funding Gold' || c.name === 'Gold')
+            setSlideOverrideType('transfer')
+            setSlideOverrideData({ category_id: fundingGoldCategory?.id })
+            setSlideMode('add')
+            setSelectedTxn(null)
+            setIsSlideOpen(true)
+            return
+        }
+
         setSlideOverrideType(type)
+        setSlideOverrideData(null)
         setSlideMode('add')
         setSelectedTxn(null)
         setIsSlideOpen(true)
@@ -755,6 +768,7 @@ export function UnifiedTransactionsPage({
             setHasUnsavedChanges(false)
             setSelectedTxn(null)
             setSlideOverrideType(undefined)
+            setSlideOverrideData(null)
         }
     }
 
@@ -771,6 +785,7 @@ export function UnifiedTransactionsPage({
         setHasUnsavedChanges(false)
         setSelectedTxn(null)
         setSlideOverrideType(undefined)
+        setSlideOverrideData(null)
     }
 
     const confirmCloseSlide = () => {
@@ -779,6 +794,7 @@ export function UnifiedTransactionsPage({
         setHasUnsavedChanges(false)
         setSelectedTxn(null)
         setSlideOverrideType(undefined)
+        setSlideOverrideData(null)
     }
 
     const handleSlideSuccess = (data?: any) => {
@@ -786,6 +802,7 @@ export function UnifiedTransactionsPage({
         setHasUnsavedChanges(false)
         setSelectedTxn(null)
         setSlideOverrideType(undefined)
+        setSlideOverrideData(null)
         if (data?.id) {
             setLoadingIds(prev => new Set(prev).add(data.id))
         }
@@ -854,6 +871,7 @@ export function UnifiedTransactionsPage({
                 cashback_mode: "none_back" as const,
                 source_account_id: isTypeIn ? undefined : undefined,
                 target_account_id: isTypeIn ? undefined : undefined,
+                ...(slideOverrideData || {}),
             };
         }
 

@@ -20,6 +20,8 @@ import { Info } from 'lucide-react'
 import { AccountPendingItemsModal } from './AccountPendingItemsModal'
 import { useBreadcrumbs } from '@/context/breadcrumb-context'
 import { useAppFavicon } from '@/hooks/use-app-favicon'
+import { AccountDetailInvestment } from './AccountDetailInvestment'
+import { cn } from '@/lib/utils'
 
 function resolveTransactionCycleTag(
     transaction: {
@@ -457,6 +459,43 @@ export function AccountDetailViewV2({
                 isLoadingPending={isLoadingPending}
             />
 
+            {/* Tabs Navigation */}
+            <div className="flex items-center gap-1 border-b border-slate-100 bg-white px-6">
+                <button
+                    onClick={() => {
+                        const params = new URLSearchParams(window.location.search)
+                        params.delete('tab')
+                        router.push(`${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`)
+                    }}
+                    className={cn(
+                        "px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 hover:text-slate-900 shadow-sm",
+                        !searchParams.get('tab') || searchParams.get('tab') === 'transactions'
+                            ? "border-indigo-500 text-indigo-600 bg-indigo-50/10"
+                            : "border-transparent text-slate-400 hover:bg-slate-50"
+                    )}
+                >
+                    Transactions
+                </button>
+                {account.type === 'investment' && (
+                    <button
+                        onClick={() => {
+                            const params = new URLSearchParams(window.location.search)
+                            params.set('tab', 'investment')
+                            router.push(`${window.location.pathname}?${params.toString()}`)
+                        }}
+                        className={cn(
+                            "px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 hover:text-slate-900 shadow-sm",
+                            searchParams.get('tab') === 'investment'
+                                ? "border-indigo-500 text-indigo-600 bg-indigo-50/10"
+                                : "border-transparent text-slate-400 hover:bg-slate-50"
+                        )}
+                    >
+                        Investment
+                    </button>
+                )}
+                {/* Add more tabs if needed like 'analysis' */}
+            </div>
+
             {/* Content Area - Loading indicator moved here for "middle of table" feel */}
             <div className="flex-1 overflow-y-auto space-y-4 relative">
                 {isPending && (
@@ -473,17 +512,28 @@ export function AccountDetailViewV2({
                         </div>
                     </div>
                 )}
-                <AccountDetailTransactions
-                    account={account}
-                    transactions={initialTransactions}
-                    accounts={allAccounts}
-                    categories={categories}
-                    people={people}
-                    shops={shops}
-                    selectedCycle={selectedCycle}
-                    onCycleChange={handleCycleChange}
-                    onSuccess={syncPendingStats}
-                />
+                {searchParams.get('tab') === 'investment' ? (
+                    <AccountDetailInvestment
+                        account={account}
+                        transactions={initialTransactions}
+                        accounts={allAccounts}
+                        categories={categories}
+                        people={people}
+                        shops={shops}
+                    />
+                ) : (
+                    <AccountDetailTransactions
+                        account={account}
+                        transactions={initialTransactions}
+                        accounts={allAccounts}
+                        categories={categories}
+                        people={people}
+                        shops={shops}
+                        selectedCycle={selectedCycle}
+                        onCycleChange={handleCycleChange}
+                        onSuccess={syncPendingStats}
+                    />
+                )}
             </div>
             <FlowLegend />
 

@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { Plus, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users, DollarSign, CreditCard } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users, DollarSign, CreditCard, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AddOption {
@@ -55,6 +55,13 @@ const ADD_OPTIONS: AddOption[] = [
     bgColor: 'hover:bg-indigo-50',
   },
   {
+    type: 'invest',
+    label: 'Invest',
+    icon: <TrendingUp className="w-4 h-4" />,
+    color: 'text-sky-700',
+    bgColor: 'hover:bg-sky-50',
+  },
+  {
     type: 'credit_pay',
     label: 'Credit Pay',
     icon: <CreditCard className="w-4 h-4" />,
@@ -74,8 +81,8 @@ export function AddTransactionDropdown({ onSelect, accountType }: AddTransaction
 
   // Filter options based on account type
   const availableOptions = ADD_OPTIONS.filter(opt => {
-    // All accounts can create expense and income
-    if (opt.type === 'expense' || opt.type === 'income') return true
+    // All accounts can create expense, income, and invest
+    if (opt.type === 'expense' || opt.type === 'income' || opt.type === 'invest') return true
     
     // Transfer only for bank, savings, ewallet, cash
     if (opt.type === 'transfer') {

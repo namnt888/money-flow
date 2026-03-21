@@ -7,7 +7,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { Plus, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users, DollarSign, Zap, CreditCard } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users, DollarSign, Zap, CreditCard, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Account } from '@/types/moneyflow.types'
 
@@ -84,6 +84,14 @@ export function AccountDetailAddDropdown({ onSelect, account }: AccountDetailAdd
             icon: <DollarSign className="w-4 h-4" />,
             color: 'text-amber-700',
             bgColor: 'hover:bg-amber-50',
+        },
+        {
+            type: 'invest',
+            label: 'Invest',
+            icon: <TrendingUp className="w-4 h-4" />,
+            color: 'text-sky-700',
+            bgColor: 'hover:bg-sky-50',
+            hideForCreditCard: true,
         },
     ]
 

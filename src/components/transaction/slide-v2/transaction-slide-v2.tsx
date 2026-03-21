@@ -293,6 +293,12 @@ export function TransactionSlideV2({
         ui_is_cashback_expanded: initialData.ui_is_cashback_expanded ?? false,
         is_installment: initialData.is_installment ?? false,
         metadata: initialData.metadata ?? null,
+        ui_quantity: initialData.metadata?.quantity
+          ? Number(initialData.metadata.quantity)
+          : null,
+        ui_market_price: initialData.metadata?.market_price
+          ? Number(initialData.metadata.market_price)
+          : null,
         service_fee:
           initialData.service_fee ??
           (initialData.metadata?.service_fee
@@ -322,6 +328,8 @@ export function TransactionSlideV2({
       cashback_share_fixed: null,
       is_installment: false,
       metadata: null,
+      ui_quantity: null,
+      ui_market_price: null,
       service_fee: null,
     };
 
@@ -581,6 +589,8 @@ export function TransactionSlideV2({
         currentValues.cashback_share_fixed !==
           defaultFormValues.cashback_share_fixed ||
         currentValues.service_fee !== defaultFormValues.service_fee ||
+        currentValues.ui_quantity !== defaultFormValues.ui_quantity ||
+        currentValues.ui_market_price !== defaultFormValues.ui_market_price ||
         currentValues.is_installment !== defaultFormValues.is_installment ||
         currentValues.occurred_at?.getTime() !==
           defaultFormValues.occurred_at?.getTime();
@@ -799,6 +809,12 @@ export function TransactionSlideV2({
                 service_fee: txn.metadata?.service_fee
                   ? Number(txn.metadata.service_fee)
                   : null,
+                ui_quantity: txn.metadata?.quantity 
+                  ? Number(txn.metadata.quantity) 
+                  : null,
+                ui_market_price: txn.metadata?.market_price 
+                  ? Number(txn.metadata.market_price) 
+                  : null,
               };
               singleForm.reset(formVal);
             } else {
@@ -880,6 +896,8 @@ export function TransactionSlideV2({
       metadata: {
         ...data.metadata,
         service_fee: effectiveServiceFee || undefined,
+        quantity: data.ui_quantity || undefined,
+        market_price: data.ui_market_price || undefined,
       },
     };
 
