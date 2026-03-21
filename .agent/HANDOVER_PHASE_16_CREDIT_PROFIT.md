@@ -1,50 +1,38 @@
-# Phase 16: Credit Card Advance & Cashback Profit Tracking
+# Handover: People Sync Completion & Phase 16 Kick-off
 
-## 🎯 Objective
-Manage credit card "withdrawals" (rút tiền thẻ) where the user pays a fee to an intermediary (People) but earns a higher cashback rate from the bank, resulting in a net profit.
+## 🎯 Completed: People Sync & Data Integrity
+We have successfully finalized the Google Sheets synchronization for the People module and restored historical data integrity.
 
-## 🛠️ Requirements & Logic
-1.  **Withdrawal Transaction (Type: Debt)**: 
-    *   **Amount**: Total amount charged to the credit card (e.g., 100,000,000).
-    *   **Fee**: Fee paid to the intermediary (e.g., 2% = 2,000,000).
-    *   **Net Received**: Amount actually received from the intermediary (e.g., 98,000,000).
-    *   **Bank Cashback**: Cashback earned from the bank (e.g., 3% = 3,000,000).
-    *   **Net Profit**: `Cashback - Fee` (e.g., 3,000,000 - 2,000,000 = 1,000,000).
+### 1. Architecture & API
+- **PocketBase Support**: The `/api/sheets/manage` route now fully supports PocketBase IDs. It stores `person_cycle_sheets` directly in PB when applicable.
+- **Robust Sync**: Added better error handling and `requestId` tracking to avoid silent failures on Next.js 16/Turbopack.
+- **Automation**: Updated `pnpm run sheet:people` (push-sheet.mjs) with a **5-second countdown**. It giờ đây sẽ tự động push cho TẤT CẢ các profile nếu không có lựa chọn nào được nhập.
 
-2.  **Tracking Method**:
-    *   **People Approach**: Treat the intermediary as a "Person" (e.g., "Rút Thẻ A").
-    *   **Debt Cycle**: Track the repayment to the bank vs. the incoming cash.
+### 2. Data Restoration (PocketBase)
+- **Service Shop Fix**:
+    - Đã gắn `shop_id` của Youtube/iCloud vào bản ghi Service tương ứng.
+    - Backfill thành công **10+ giao dịch** đang bị trống `shop_id`.
+- **Repayment Fix**:
+    - Tự động gán `to_account_id` cho hơn 50 giao dịch repayment dựa trên "Default Bank Account" của từng người.
+    - Kết quả: Cột K (ShopSource) trên Sheet giờ đã hiện tên Ngân hàng thay vì "Draft Fund".
 
-## 🏗️ Implementation Steps
-### 1. Database & Types (`moneyflow.types.ts`)
-*   Add `withdrawal_fee` or `advance_fee` to `metadata` or as a first-class field.
-*   Update `Transaction` type to include calculated `net_profit`.
-
-### 2. Services (`cashback.service.ts` & `transaction.service.ts`)
-*   Refine `calculateCashback` to account for fees when calculating "True Profit".
-*   Add logic to automatically create the "received" transaction (Transfer/Income) when a Withdrawal/Debt is recorded.
-
-### 3. UI Layer (Slide V2)
-*   Add a "Withdrawal Mode" toggle for Debt transactions.
-*   Input fields for: `Fee Percentage` (%), `Fixed Fee`, and `Bank Cashback Rate`.
-*   Real-time display of "Estimated Profit".
-
-### 4. Dashboard & Reports
-*   New "Cashback Profit" widget showing total earned vs. total fees paid.
-*   People view: Filter to show only "Withdrawal Intermediaries" to track pending cash arrivals.
-
-## 📊 Example Workflow
-1.  **User pulls 100M** from VIB card via Intermediary X.
-2.  User creates **Debt Transaction**:
-    *   Account: VIB Credit.
-    *   Person: Intermediary X.
-    *   Amount: 100,000,000.
-    *   Fee: 2% (2,000,000).
-3.  System calculates:
-    *   **Bank Cashback (3%)**: 3,000,000.
-    *   **True Profit**: +1,000,000.
-4.  User is reminded to settle the 100M when the statement is due.
+### 3. Google Sheets (Code.js)
+- **Image Scaling**: Chuyển về Mode 1 (Giữ tỷ lệ).
+- **Bug Fix**: Định nghĩa biến `escapedUrl` bị thiếu, giúp script không bị lỗi và chèn ảnh QR thành công vào `N7:O21`.
 
 ---
-**Status**: Ready for Implementation (Phase 16)
-**Last Updated**: 2026-03-21
+
+## 🚀 Phase 16: Credit Card Advance & Profit Tracking
+**Trọng tâm**: Quản lý luồng rút tiền mặt từ thẻ tín dụng (để lấy cashback) và theo dõi lợi nhuận sau khi trừ phí dịch vụ.
+
+### Key Requirements:
+1. **Withdrawal Logic**: Ghi nhận việc rút tiền như một giao dịch "Transfer" (về ví/bank của mình) hoặc "Debt" (nếu nhờ người khác cầm hộ).
+2. **Fee Management**: Theo dõi phí trả cho dịch vụ rút (ví dụ: phí 2%).
+3. **Cashback Tracking**: Liên kết số tiền rút với luật cashback của thẻ (ví dụ: được hoàn 3%).
+4. **Profit Calculation**: 
+   - `Profit = Cashback - Withdrawal Fee`.
+   - Cần UI để theo dõi tổng tiền lời đang treo và đánh dấu "đã thu tiền" (Claimed).
+
+---
+**Status**: Sẵn sàng triển khai.
+**Last Action**: Đã commit toàn bộ thay đổi và cập nhật script tự động hóa.
