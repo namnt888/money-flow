@@ -409,8 +409,11 @@ export function MemberDetailView({
                                 scriptLink={person.sheet_link}
                                 googleSheetUrl={person.google_sheet_url}
                                 sheetFullImg={person.sheet_full_img}
+                                sheetBankInfo={person.sheet_bank_info}
+                                sheetLinkedBankId={person.sheet_linked_bank_id}
                                 showBankAccount={person.sheet_show_bank_account ?? false}
                                 showQrImage={person.sheet_show_qr_image ?? false}
+                                accounts={accounts}
                                 size="sm"
                                 buttonClassName="h-8 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                                 linkedLabel="Google Sheet"

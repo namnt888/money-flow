@@ -140,30 +140,68 @@ const chooseProfile = async (profiles) => {
     }
     return null
   }
-  console.log('Available script IDs:')
+  console.log('\nAvailable script IDs:')
   profiles.forEach((profile, index) => {
     console.log(`${index + 1}) ${profile.key}`)
   })
-  console.log('Press Enter to push ALL, or choose a number/paste a Script ID:')
-  const answer = await ask('Choice: ')
+  
+  const timeoutSeconds = 5
+  let remaining = timeoutSeconds
+  
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+    
+    const timer = setInterval(() => {
+      remaining--
+      if (remaining <= 0) {
+        clearInterval(timer)
+        rl.close()
+        process.stdout.write('\n\n⏰ Timeout! Auto-selecting ALL...\n')
+        resolve('ALL')
+      } else {
+        updatePrompt()
+      }
+    }, 1000)
 
-  // Empty answer = push all
-  if (!answer || answer.trim() === '') {
-    return 'ALL'
-  }
+    const updatePrompt = () => {
+      readline.cursorTo(process.stdout, 0)
+      readline.clearLine(process.stdout, 0)
+      process.stdout.write(`Choice (1-${profiles.length}, Script ID or Enter for ALL) [Auto-ALL in ${remaining}s]: `)
+    }
 
-  const index = toIndex(answer)
-  const byIndex = selectByIndex(profiles, index)
-  if (byIndex) {
-    return byIndex
-  }
-  if (answer && isLikelyScriptId(answer)) return answer
-  if (answer) {
-    const resolved = resolveProfile(profiles, answer)
-    const selection = selectionFromProfile(profiles, resolved)
-    if (selection) return selection
-  }
-  return null
+    updatePrompt()
+
+    rl.on('line', (line) => {
+      const answer = line.trim()
+      clearInterval(timer)
+      rl.close()
+
+      if (answer === '') {
+        resolve('ALL')
+        return
+      }
+
+      const index = toIndex(answer)
+      const byIndex = selectByIndex(profiles, index)
+      if (byIndex) {
+        resolve(byIndex)
+        return
+      }
+      if (isLikelyScriptId(answer)) {
+        resolve(answer)
+        return
+      }
+      
+      const resolved = resolveProfile(profiles, answer)
+      const selection = selectionFromProfile(profiles, resolved)
+      if (selection) {
+        resolve(selection)
+        return
+      }
+      
+      resolve(null)
+    })
+  })
 }
 
 const main = async () => {

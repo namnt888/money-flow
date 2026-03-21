@@ -15,6 +15,7 @@ type SheetSyncTransaction = {
   shop_id?: string | null
   account_id?: string | null
   target_account_id?: string | null
+  to_account_id?: string | null
   destination_account_id?: string | null
   amount?: number | null
   original_amount?: number | null
@@ -402,8 +403,8 @@ export async function syncTransactionToSheet(
     if (!resolvedShopName) {
       const fallbackAccountId =
         txn.type === 'repayment'
-          ? (txn.target_account_id ?? txn.destination_account_id ?? txn.account_id ?? null)
-          : (txn.account_id ?? null)
+          ? (txn.target_account_id || txn.to_account_id || txn.destination_account_id || txn.account_id || null)
+          : (txn.account_id || null)
       if (fallbackAccountId) {
         try {
           const accountRecord = await pocketbaseGetById<{ name?: string | null }>('accounts', fallbackAccountId)
@@ -482,7 +483,7 @@ export async function syncAllTransactions(personId: string) {
     const pbPersonId = toPocketBaseId(personId, 'people')
     const data = await pocketbaseList('transactions', {
       filter: `person_id = "${pbPersonId}" && status != "void"`,
-      expand: 'shop_id,account_id,target_account_id,category_id',
+      expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
       sort: 'occurred_at'
     })
 
@@ -581,8 +582,8 @@ export async function syncAllTransactions(personId: string) {
         shops: expanded.shop_id ? { name: expanded.shop_id.name } : null,
         account_id: (txn as any).account_id,
         accounts: expanded.account_id ? { name: expanded.account_id.name } : null,
-        target_account_id: (txn as any).target_account_id,
-        target_accounts: expanded.target_account_id ? { name: expanded.target_account_id.name } : null,
+        target_account_id: (txn as any).target_account_id || (txn as any).to_account_id,
+        target_accounts: (expanded.target_account_id || expanded.to_account_id) ? { name: (expanded.target_account_id?.name || expanded.to_account_id?.name) } : null,
         categories: expanded.category_id ? { name: expanded.category_id.name } : null,
       }
     })
@@ -738,8 +739,7 @@ export async function syncCycleTransactions(
     const tagFilter = tags.map(t => `tag = "${t}"`).join(' || ')
     const data = await pocketbaseList('transactions', {
       filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
-      expand: 'shop_id,account_id,target_account_id,category_id',
-      fields: 'id,occurred_at,date,note,description,status,tag,debt_cycle_tag,type,amount,original_amount,final_price,cashback_share_percent,cashback_share_percent_input,cashback_share_fixed,cashback_share_amount,metadata,person_id,shop_id,account_id,target_account_id,category_id,expand.shop_id.id,expand.shop_id.name,expand.account_id.id,expand.account_id.name,expand.target_account_id.id,expand.target_account_id.name,expand.category_id.id,expand.category_id.name',
+      expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
       sort: 'occurred_at'
     })
 
@@ -764,9 +764,9 @@ export async function syncCycleTransactions(
           if (txn.note?.toLowerCase().startsWith('rollover') || categoryName === 'Rollover') {
             shopName = 'Rollover'
           } else {
-            const sourceName = expanded.account_id?.name ?? ''
-            const targetName = expanded.target_account_id?.name ?? ''
-            shopName = txn.type === 'repayment' ? (targetName || sourceName) : sourceName
+            const sourceName = expanded.account_id?.name || ''
+            const targetName = expanded.target_account_id?.name || expanded.to_account_id?.name || ''
+            shopName = txn.type === 'repayment' ? (targetName || sourceName) : (sourceName || '')
           }
         }
 

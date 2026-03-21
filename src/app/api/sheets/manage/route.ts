@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
 import { createCycleSheet, syncCycleTransactions, createTestSheet } from '@/services/sheet.service'
 import type { ManageCycleSheetRequest, ManageCycleSheetResponse } from '@/types/sheet.types'
+import { toPocketBaseId, pocketbaseList, pocketbaseCreate, pocketbaseUpdate } from '@/services/pocketbase/server'
 
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
@@ -10,9 +11,14 @@ function isUuidLike(value: string): boolean {
 
 function makeRequestId(): string {
   try {
-    return crypto.randomUUID()
-  } catch {
-    return `sheet-${Date.now()}`
+    // Check if crypto exists and has randomUUID
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID()
+    }
+    return `sh-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+  } catch (err) {
+    console.error('[RequestId] generation error:', err)
+    return `sh-${Date.now()}`
   }
 }
 
@@ -85,14 +91,15 @@ export async function POST(request: Request) {
 
     console.info('[ManageSheet API] request', { requestId, personId, cycleTag: normalizedCycle })
 
+    // Check if person exists in PocketBase if not UUID
+    const pbId = toPocketBaseId(personId, 'people')
+    console.info('[ManageSheet API] target', { requestId, personId, pbId, cycleTag: normalizedCycle })
+
     const supabase = createClient()
     type CycleSheetRow = { id: string; sheet_id?: string | null; sheet_url?: string | null }
     let existing: CycleSheetRow | null = null
     let tableAvailable = isUuidLike(personId)
-
-    if (!tableAvailable) {
-      console.info('[ManageSheet API] skip person_cycle_sheets lookup: personId is not UUID, using direct create/sync path', { requestId, personId })
-    }
+    let pbAvailable = !tableAvailable && /^[a-z0-9]{15}$/.test(pbId)
 
     if (tableAvailable) {
       const existingResult = await (supabase as any)
@@ -103,8 +110,7 @@ export async function POST(request: Request) {
         .maybeSingle()
 
       if (existingResult.error) {
-        tableAvailable = false
-        console.warn('[ManageSheet API] person_cycle_sheets lookup failed:', {
+        console.warn('[ManageSheet API] person_cycle_sheets (Supabase) lookup failed:', {
           requestId,
           personId,
           cycleTag: normalizedCycle,
@@ -112,6 +118,16 @@ export async function POST(request: Request) {
         })
       } else {
         existing = existingResult.data as CycleSheetRow | null
+      }
+    } else if (pbAvailable) {
+      try {
+        const existingList = await pocketbaseList('person_cycle_sheets', {
+          filter: `person_id = "${pbId}" && cycle_tag = "${normalizedCycle}"`
+        })
+        existing = (existingList?.items?.[0] as any) || null
+        console.info('[ManageSheet API] person_cycle_sheets (PocketBase) lookup:', { requestId, found: !!existing })
+      } catch (err) {
+        console.warn('[ManageSheet API] person_cycle_sheets (PocketBase) lookup failed:', { requestId, err })
       }
     }
 
@@ -142,7 +158,7 @@ export async function POST(request: Request) {
       sheetId = createResult.sheetId ?? sheetId ?? null
 
       if (tableAvailable) {
-        const payload = {
+        const sbPayload = {
           person_id: personId,
           cycle_tag: normalizedCycle,
           sheet_id: sheetId,
@@ -151,23 +167,48 @@ export async function POST(request: Request) {
         if (existingRowId) {
           await (supabase as any)
             .from('person_cycle_sheets')
-            .update(payload)
+            .update(sbPayload)
             .eq('id', existingRowId)
         } else {
           await (supabase as any)
             .from('person_cycle_sheets')
-            .insert(payload)
+            .insert(sbPayload)
+        }
+      } else if (pbAvailable) {
+        const pbPayload = {
+          person_id: pbId,
+          cycle_tag: normalizedCycle,
+          sheet_id: sheetId,
+          sheet_url: sheetUrl,
+        }
+        try {
+          if (existingRowId) {
+            await pocketbaseUpdate('person_cycle_sheets', existingRowId, pbPayload)
+          } else {
+            await pocketbaseCreate('person_cycle_sheets', pbPayload)
+          }
+        } catch (pbErr) {
+          console.error('[ManageSheet API] failed to store sheet info in PB', { requestId, pbErr })
         }
       }
 
       if (sheetUrl) {
-        try {
-          await (supabase as any)
-            .from('profiles')
-            .update({ google_sheet_url: sheetUrl })
-            .eq('id', personId)
-        } catch (profileError) {
-          console.warn('[ManageSheet API] unable to update profile sheet url', { requestId, personId, profileError })
+        // Try both just in case, or prioritize based on available id type
+        if (tableAvailable) {
+          try {
+            await (supabase as any)
+              .from('profiles')
+              .update({ google_sheet_url: sheetUrl })
+              .eq('id', personId)
+          } catch (profileError) {
+            console.warn('[ManageSheet API] unable to update profile sheet url in Supabase', { requestId, personId, profileError })
+          }
+        } else if (pbAvailable) {
+          try {
+            await pocketbaseUpdate('people', pbId, { google_sheet_url: sheetUrl })
+          } catch (profileError) {
+            console.warn('[ManageSheet API] unable to update profile sheet url in PocketBase', { requestId, personId, profileError })
+          }
         }
       }
     } else if (tableAvailable && existingRowId) {
@@ -175,6 +216,12 @@ export async function POST(request: Request) {
         .from('person_cycle_sheets')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', existingRowId)
+    } else if (pbAvailable && existingRowId) {
+      try {
+        await pocketbaseUpdate('person_cycle_sheets', existingRowId, { updated_at: new Date().toISOString() })
+      } catch (pbErr) {
+        console.warn('[ManageSheet API] unable to update timestamp in PB', { requestId, pbErr })
+      }
     }
 
     const syncResult = await syncCycleTransactions(personId, normalizedCycle, sheetId)

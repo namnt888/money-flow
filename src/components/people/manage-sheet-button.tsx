@@ -474,7 +474,7 @@ export function ManageSheetButton({
                     variant="ghost"
                     size="sm"
                     className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
-                    disabled={isDisabled || !hasValidScriptLink || isSaving}
+                    disabled={isDisabled || isSaving}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleManageCycle();
@@ -611,7 +611,7 @@ export function ManageSheetButton({
                       variant="ghost"
                       className="h-7 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                       onClick={handleManageCycle}
-                      disabled={isManaging || !hasValidScriptLink || isSaving}
+                      disabled={isManaging || isSaving}
                     >
                       <RefreshCcw className={cn("h-3 w-3 mr-1.5", isManaging && "animate-spin")} />
                       {isManaging ? 'Syncing...' : 'Sync Current Cycle'}
@@ -800,7 +800,7 @@ export function ManageSheetButton({
 
                       <Combobox
                         items={(accounts || [])
-                          .filter(a => a.type === 'bank')
+                          .filter(a => a.type === 'bank' || a.type === 'credit_card')
                           .map(acc => ({
                             value: acc.id,
                             label: acc.name,
@@ -916,8 +916,8 @@ export function ManageSheetButton({
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant={!hasUnsavedChanges ? "default" : "secondary"}
-                        className={cn("flex-1 h-8", hasUnsavedChanges && "opacity-50")}
+                        variant="default"
+                        className="flex-1 h-8"
                         onClick={handleManageCycle}
                         disabled={isManaging || !hasValidScriptLink || isSaving}
                       >

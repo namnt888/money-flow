@@ -1028,7 +1028,7 @@ function applySheetImage(sheet, imgUrl, imgProvided, summaryOptions) {
     try {
         imgRange.merge();
         var escapedUrl = imgUrl.replace(/"/g, '""');
-        imgRange.getCell(1, 1).setFormula('=IMAGE("' + escapedUrl + '"; 2)');
+        imgRange.getCell(1, 1).setFormula('=IMAGE("' + escapedUrl + '"; 1)');
         
         // Center alignment
         imgRange.setHorizontalAlignment('center');

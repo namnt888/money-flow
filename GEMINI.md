@@ -30,9 +30,9 @@
 4. **`.agent/CASHBACK_WORKFLOW.md`** - Advanced cashback rules & logic (CRITICAL for credit cards)
 
 ### Current Phase
-- **Phase 14**: COMPLETED - People UI Refactor & Navigation Optimization
-- **Phase 15**: IN PROGRESS - Categories UI Optimization & Cashback Logic Refinement
-- See `.agent/HANDOVER_CATEGORIES_UI.md`, `.agent/CASHBACK_REFACTOR_PLAN.md`, and `.agent/CASHBACK_WORKFLOW.md` for latest changes.
+- **Phase 15**: COMPLETED - Categories UI Optimization & Cashback Logic Refinement
+- **Phase 16**: IN PROGRESS - Credit Card Advance & Profit Tracking
+- See `.agent/HANDOVER_PHASE_16_CREDIT_PROFIT.md` for latest changes.
 
 ---
 
