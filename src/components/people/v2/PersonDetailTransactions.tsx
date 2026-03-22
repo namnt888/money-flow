@@ -144,7 +144,7 @@ export function PersonDetailTransactions({
             .sort((a, b) => b.localeCompare(a))
             .map((tag) => ({
                 value: tag,
-                label: formatCycleTag(tag) || tag,
+                label: formatCycleTag(tag, statementDay || 25) || tag,
                 count: cycleCountByTag[tag],
                 highlight: tag === currentCycleTag,
             }));

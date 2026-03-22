@@ -4239,9 +4239,10 @@ export const UnifiedTransactionTable = React.forwardRef<
                             const displayTag =
                               normalizeMonthTag(txn.tag) ?? txn.tag ?? "";
 
-                            // Tooltip: Date Range (if recognized) or full tag
+                            const acc = accounts.find(a => a.id === (txn.account_id || txn.source_account_id || txn.target_account_id));
+                            const stmtDay = Number(acc?.statement_day ?? (acc as any)?.credit_card_info?.statement_day ?? 25) || 25;
                             const dateRangeTooltip = displayTag
-                              ? formatCycleTag(displayTag)
+                              ? formatCycleTag(displayTag, stmtDay)
                               : "";
 
                             return (

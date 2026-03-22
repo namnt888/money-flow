@@ -359,6 +359,7 @@ export function AccountDetailViewV2({
     const handleGlobalRefresh = useCallback(() => {
         startTransition(() => {
             router.refresh()
+            setCycleApplyTick(prev => prev + 1)
             syncPendingStats()
         })
     }, [router, syncPendingStats])
@@ -531,7 +532,7 @@ export function AccountDetailViewV2({
                         shops={shops}
                         selectedCycle={selectedCycle}
                         onCycleChange={handleCycleChange}
-                        onSuccess={syncPendingStats}
+                        onSuccess={handleGlobalRefresh}
                     />
                 )}
             </div>

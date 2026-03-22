@@ -241,3 +241,58 @@ export async function getLastTransactionAccountId(): Promise<string | null> {
     return null
   }
 }
+
+/**
+ * Manual trigger for full cycle and transaction tag refresh.
+ */
+export async function syncAccountCashbackAction(accountId: string) {
+  try {
+    const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service');
+    const result = await refreshAccountCashback(accountId);
+    
+    revalidatePath(`/accounts/${accountId}`);
+    return result;
+  } catch (error) {
+    console.error('[Action] syncAccountCashbackAction failed:', error);
+    return { success: false, error: (error as any).message };
+  }
+}
+
+/**
+ * Regenerates cycles for ALL credit accounts globally.
+ */
+export async function syncAllAccountsCashbackAction() {
+  console.log('[Action] syncAllAccountsCashbackAction START');
+  try {
+    const response = await pocketbaseList<any>('accounts', {
+      filter: 'type = "credit_card" && is_active = true',
+      perPage: 100
+    });
+    
+    const accounts = response.items;
+    const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service');
+    
+    let totalProcessed = 0;
+    let totalCycles = 0;
+    
+    for (const acc of accounts) {
+      console.log(`[Action] Syncing account: ${acc.name} (${acc.id})`);
+      const res = await refreshAccountCashback(acc.id);
+      if (res.success) {
+        totalProcessed++;
+        totalCycles += (res.processedCycles || 0);
+      }
+    }
+    
+    revalidatePath('/accounts');
+    return { 
+      success: true, 
+      processedAccounts: totalProcessed,
+      totalCycles,
+      message: `Successfully synced ${totalProcessed} credit accounts.` 
+    };
+  } catch (error) {
+    console.error('[Action] syncAllAccountsCashbackAction failed:', error);
+    return { success: false, error: (error as any).message };
+  }
+}

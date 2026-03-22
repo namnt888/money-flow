@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useTransition } from 'react'
+import { useState, useMemo, useEffect, useTransition, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Person, TransactionWithDetails, PersonCycleSheet, Account, Category, Shop } from '@/types/moneyflow.types'
 import { usePersonDetails } from '@/hooks/use-person-details'
@@ -193,7 +193,7 @@ export function MemberDetailView({
     }, [person.id, person.name, person.image_url, addRecentItem])
 
     // Update Navigation Handlers
-    const handleCycleChange = (tag: string) => {
+    const handleCycleChange = useCallback((tag: string) => {
         const params = new URLSearchParams(searchParams.toString())
         
         if (tag !== 'all') {
@@ -217,9 +217,9 @@ export function MemberDetailView({
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
-    }
+    }, [searchParams, selectedAccountId, router])
 
-    const handleCycleSelect = (tag: string, year: string | null) => {
+    const handleCycleSelect = useCallback((tag: string, year: string | null) => {
         const params = new URLSearchParams(searchParams.toString())
         
         params.delete('dateFrom')
@@ -244,9 +244,9 @@ export function MemberDetailView({
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
-    }
+    }, [searchParams, selectedAccountId, router])
 
-    const handleYearChange = (year: string | null) => {
+    const handleYearChange = useCallback((year: string | null) => {
         const params = new URLSearchParams(searchParams.toString())
         if (year === null) {
             params.set('tag', 'all')
@@ -261,13 +261,13 @@ export function MemberDetailView({
         startTransition(() => {
             router.push(`?${params.toString()}`, { scroll: false })
         })
-    }
-    const handleRefresh = () => {
+    }, [searchParams, router])
+    const handleRefresh = useCallback(() => {
         startTransition(() => {
             router.refresh()
             toast.success('Table data refreshed')
         })
-    }
+    }, [router])
 
     useEffect(() => {
         if (dateFrom && dateTo) {

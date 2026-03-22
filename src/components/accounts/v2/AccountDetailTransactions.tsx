@@ -377,8 +377,18 @@ export function AccountDetailTransactions({
                 highlight: opt.tag === currentCycleTag,
             }))
 
-            // If API has data, use it. Otherwise fall back to txnDerivedCycles.
-            const cycleOptions = apiCycleOptions.length > 0 ? apiCycleOptions : txnDerivedCycles
+            // Merge API cycles and derived cycles to ensure all history is visible
+            // This prevents old cycles (from transactions) disappearing when the API returns proactive cycles
+            const combined = [...apiCycleOptions]
+            txnDerivedCycles.forEach(derived => {
+                if (!combined.some(c => c.value === derived.value)) {
+                    combined.push(derived)
+                }
+            })
+            
+            // Sort by value (tag) descending
+            const cycleOptions = combined.sort((a, b) => (b.value || "").localeCompare(a.value || ""))
+            
             setCycles(cycleOptions)
             setIsCyclesLoading(false)
 

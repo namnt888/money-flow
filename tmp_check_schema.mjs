@@ -1,20 +1,12 @@
-import { pocketbaseList } from './src/services/pocketbase/server.js';
+import { pocketbaseList } from "./src/services/pocketbase/server";
 
-async function checkSchema() {
-  const collections = ['people', 'shops', 'categories'];
-  for (const col of collections) {
-    try {
-      console.log(`Checking collection: ${col}`);
-      const res = await pocketbaseList(col, { perPage: 1 });
-      if (res.items.length > 0) {
-        console.log(`Fields in ${col}:`, Object.keys(res.items[0]));
-      } else {
-        console.log(`No records found in ${col}`);
-      }
-    } catch (err) {
-      console.error(`Error checking ${col}:`, err.message);
-    }
+async function checkCollections() {
+  try {
+    const res = await pocketbaseList("transactions", { perPage: 1 });
+    console.log("Record:", JSON.stringify(res.items[0], null, 2));
+  } catch (err) {
+    console.error("Error:", err);
   }
 }
 
-checkSchema();
+checkCollections();

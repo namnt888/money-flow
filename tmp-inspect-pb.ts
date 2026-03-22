@@ -1,12 +1,15 @@
-import { pocketbaseList } from './src/services/pocketbase/server';
+import { pocketbaseList } from "./src/services/pocketbase/server";
 
-async function inspectServices() {
+async function inspectSchema() {
   try {
-    const res = await pocketbaseList('services', { perPage: 1 });
-    console.log('Services Item:', JSON.stringify(res.items[0], null, 2));
+    const res = await pocketbaseList("transactions", {
+      perPage: 1,
+    });
+    console.log("Transaction keys:", Object.keys(res.items[0] || {}));
+    console.log("Full record:", JSON.stringify(res.items[0], null, 2));
   } catch (err) {
-    console.error('Inspection failed:', err);
+    console.error("Error:", err);
   }
 }
 
-inspectServices();
+inspectSchema();

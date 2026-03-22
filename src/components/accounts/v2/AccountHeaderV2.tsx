@@ -15,6 +15,7 @@ import {
     HoverCardContent,
 } from "@/components/ui/hover-card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 export interface AdvancedFilters {
     family: boolean;
@@ -133,6 +134,29 @@ export function AccountHeaderV2({
                             </button>
                         )}
                     </div>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:text-indigo-700 font-black text-[9px] uppercase tracking-wider"
+                        onClick={async () => {
+                            const { syncAllAccountsCashbackAction } = await import("@/actions/account-actions");
+                            const toastId = toast.loading("Regenerating all credit cycles...");
+                            try {
+                                const result = await syncAllAccountsCashbackAction();
+                                if (result.success) {
+                                    toast.success(`${result.message}`, { id: toastId });
+                                } else {
+                                    toast.error(result.error || "Sync failed", { id: toastId });
+                                }
+                            } catch (err) {
+                                toast.error("An unexpected error occurred", { id: toastId });
+                            }
+                        }}
+                    >
+                        <Sparkles className="h-3 w-3" />
+                        SYNC DB
+                    </Button>
 
                     <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 

@@ -1871,9 +1871,23 @@ export function AccountDetailHeaderV2({
                             </TooltipTrigger>
                             <TooltipContent
                               side="top"
-                              className="max-w-xs bg-slate-900 text-white text-[11px] p-2 space-y-1 max-h-40 overflow-y-auto"
+                              className="max-w-[280px] bg-slate-900 text-white text-[11px] p-0 overflow-hidden shadow-2xl border border-slate-700/50"
                             >
-                              <p className="font-semibold">Earned by cycle rules</p>
+                              <div className="bg-slate-800 px-3 py-1.5 border-b border-slate-700 flex justify-between items-center transition-all">
+                                <div className="flex flex-col">
+                                  <span className="text-[8px] font-black text-slate-400/80 uppercase tracking-widest leading-none mb-1">Cycle Context</span>
+                                  <span className="text-[12px] font-black text-white tabular-nums leading-none">
+                                    {formatMoneyVND(Math.ceil(cycleCurrentSpend))}
+                                  </span>
+                                </div>
+                                {dynamicCashbackStats?.currentTierName && (
+                                  <div className="text-[9px] font-black bg-indigo-600 text-white px-2 py-1 rounded shadow-sm uppercase tracking-tighter border border-indigo-500/30">
+                                    {dynamicCashbackStats.currentTierName}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-3 space-y-1.5 max-h-[300px] overflow-y-auto">
+                                <p className="font-semibold text-slate-200 uppercase tracking-widest text-[9px] border-b border-slate-800 pb-1 mb-2">Rule Breakdown</p>
                               {ruleDetails.length > 0 ? (
                                 ruleDetails.map(
                                   (detail: string, idx: number) => (
@@ -1895,9 +1909,10 @@ export function AccountDetailHeaderV2({
                                   Rule sum fallback: {formatMoneyVND(Math.ceil(cycleMetricSnapshot.activeRuleEarned))}
                                 </p>
                               )}
-                              <p className="text-slate-400 pt-1 border-t border-slate-700">
-                                Total: {formatMoneyVND(Math.ceil(cycleEstCashback))}
-                              </p>
+                                <p className="text-slate-400 pt-1 border-t border-slate-700 font-black">
+                                  Total: {formatMoneyVND(Math.ceil(cycleEstCashback))}
+                                </p>
+                              </div>
                             </TooltipContent>
                           </Tooltip>
 
@@ -2083,14 +2098,39 @@ export function AccountDetailHeaderV2({
                                   )}
                                 </span>
                               </div>
+                              <div className="bg-slate-100/60 p-2.5 rounded-xl mb-3 border border-slate-200/50 flex justify-between items-center shadow-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Context: Total Cycle Spent</span>
+                                  <span className="text-[14px] font-black text-slate-900 tabular-nums leading-none mt-1">
+                                    {formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}
+                                  </span>
+                                </div>
+                                {dynamicCashbackStats?.currentTierName && (
+                                  <div className="text-[10px] font-black bg-indigo-600 text-white px-2 py-1 rounded-md shadow-sm uppercase tracking-tighter">
+                                    {dynamicCashbackStats.currentTierName}
+                                  </div>
+                                )}
+                              </div>
                             </div>
 
                             {/* Row 2: Detailed Rule Breakdown (Scrollable) */}
                             {dynamicCashbackStats.activeRules &&
                               dynamicCashbackStats.activeRules.length > 0 && (
                                 <div className="space-y-3">
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">
-                                    Detailed Rule Breakdown
+                                  <div className="flex justify-between items-center border-b border-slate-100 pb-1">
+                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                      Detailed Rule Breakdown
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 items-end">
+                                      {dynamicCashbackStats.currentTierName && (
+                                        <div className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 uppercase tracking-tighter">
+                                          Tier: {dynamicCashbackStats.currentTierName}
+                                        </div>
+                                      )}
+                                      <div className="text-[9px] font-bold text-slate-400">
+                                        Total Spend: {formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}
+                                      </div>
+                                    </div>
                                   </div>
                                   <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
                                     {dynamicCashbackStats.activeRules.map(
@@ -2104,8 +2144,8 @@ export function AccountDetailHeaderV2({
                                             ? 100
                                             : 0;
                                         const displayRate =
-                                          rule.rate > 0 && rule.rate < 1
-                                            ? (rule.rate * 100).toFixed(0)
+                                          rule.rate > 0 && rule.rate < 100
+                                            ? rule.rate % 1 === 0 ? rule.rate.toFixed(0) : rule.rate.toFixed(1)
                                             : Math.round(rule.rate);
 
                                         return (
@@ -2281,13 +2321,83 @@ export function AccountDetailHeaderV2({
       {/* Tools Area */}
       <div className="flex flex-col justify-center gap-2 min-w-0 md:min-w-[120px] border-l border-slate-100 pl-6 ml-2">
         <button
-          onClick={() => {
-            setIsSyncing(true);
-            router.refresh();
-            setTimeout(() => {
+          onClick={async () => {
+            try {
+              setIsSyncing(true);
+              const { syncAccountCashbackAction } = await import("@/actions/account-actions");
+              const result = await syncAccountCashbackAction(account.id);
+              
+              if (result.success) {
+                const stats = (result as any).stats || {};
+                const current = (stats as any).current || {};
+                toast.success(
+                  <div className="flex flex-col gap-1.5 min-w-[240px]">
+                    <div className="flex items-center justify-between">
+                      <div className="font-black text-[12px] uppercase tracking-wider text-slate-900">Sync Completed</div>
+                      <div className="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">
+                        {current.tierName || (stats as any).tierName || "Dưới 15 triệu"}
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-slate-100 my-0.5" />
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50">
+                        <span className="text-[11px] font-black text-emerald-800 uppercase tracking-tighter">My Net Profit:</span>
+                        <span className="font-black text-emerald-600 text-sm tabular-nums">
+                          +{formatMoneyVND(Math.ceil(stats.profit || 0))}
+                        </span>
+                      </div>
+                      
+                      <div className="bg-slate-50/80 p-2 rounded-lg border border-slate-100 space-y-1">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-500 font-bold uppercase tracking-tight">Full Reward:</span>
+                          <span className="font-bold text-slate-700">+{formatMoneyVND(Math.ceil(stats.earned || 0))}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-500 font-bold uppercase tracking-tight">Shared Away:</span>
+                          <span className="font-bold text-rose-500">-{formatMoneyVND(Math.ceil(stats.shared || 0))}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {current && current.earned > 0 && (
+                      <div className="mt-1 pt-1.5 border-t border-slate-100">
+                        <div className="flex justify-between items-center text-[9px] mb-1">
+                          <span className="font-bold text-slate-400 uppercase tracking-tight">Latest Cycle Snapshot</span>
+                          <span className="px-1 bg-indigo-50 text-indigo-600 rounded text-[8px] font-black uppercase">{current.tag}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 px-1">
+                           <div className="flex justify-between items-center text-[11px]">
+                             <span className="text-slate-500 italic">Net Profit:</span>
+                             <span className="font-black text-emerald-600">
+                               +{formatMoneyVND(Math.ceil(current.profit))}
+                             </span>
+                           </div>
+                           {current.tierName && (
+                             <div className="text-[9px] text-indigo-500 font-bold italic opacity-80 self-end">
+                               Using {current.tierName} rules
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    )}
+                  </div>,
+                  {
+                    duration: 5000,
+                    id: 'sync-db-success'
+                  }
+                );
+                router.refresh();
+              } else {
+                toast.error(result.error || "Sync failed");
+              }
+            } catch (err) {
+              console.error("Sync Error:", err);
+              toast.error("An unexpected error occurred during sync");
+            } finally {
               setIsSyncing(false);
-              toast.success("Database synced successfully");
-            }, 800);
+            }
           }}
           disabled={isSyncing}
           className="flex items-center justify-center gap-1.5 w-full py-1 bg-white border border-slate-200 text-slate-500 rounded hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all text-[8px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-wait"

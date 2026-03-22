@@ -228,7 +228,7 @@ export function PeopleHeader({
                 <div className="flex items-center gap-3 shrink-0 bg-white border border-slate-100 p-2 rounded-2xl shadow-sm min-w-[220px] h-[92px]">
                     <div className="h-14 w-14 rounded-xl overflow-hidden bg-emerald-50 shrink-0 border border-emerald-100 flex items-center justify-center">
                         {person.image_url ? (
-                            <img src={person.image_url} alt={person.name} className="h-full w-full object-cover" />
+                            <img src={person.image_url} alt={person.name} className="h-full w-full object-contain rounded-none bg-white" />
                         ) : (
                             <span className="text-xl font-bold text-emerald-600">{person.name.charAt(0).toUpperCase()}</span>
                         )}
@@ -296,7 +296,7 @@ export function PeopleHeader({
                             <div className="flex-1 flex items-center gap-12">
                                 <div className="flex items-center gap-10">
                                     <MetricItem 
-                                        label="PROFIT" 
+                                        label="COMBINED PROFIT" 
                                         value={cashbackStatus.profit || 0} 
                                         colorClass="text-emerald-600" 
                                         icon={TrendingUp}
@@ -342,9 +342,9 @@ export function PeopleHeader({
                                             idx > 2 && "hidden lg:flex",
                                             idx > 3 && "hidden xl:flex"
                                         )}>
-                                            <div className="h-7 w-7 rounded-md bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+                                            <div className="h-9 w-9 rounded-md bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
                                                 {status.accountImage ? (
-                                                    <img src={status.accountImage} alt={status.accountName} className="h-full w-full object-cover rounded-none" />
+                                                    <img src={status.accountImage} alt={status.accountName} className="h-full w-full object-contain rounded-none bg-white p-0.5" />
                                                 ) : (
                                                     <Wallet className="h-3.5 w-3.5 text-slate-400" />
                                                 )}
@@ -389,8 +389,8 @@ export function PeopleHeader({
                                                         </div>
                                                         {allCashbackStatuses.slice(4).map(s => (
                                                             <div key={s.account_id} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-slate-50 transition-colors">
-                                                                <div className="h-6 w-6 rounded border border-slate-100 overflow-hidden shrink-0">
-                                                                    <img src={s.accountImage} className="h-full w-full object-cover rounded-none" />
+                                                                <div className="h-6 w-6 rounded border border-slate-100 overflow-hidden shrink-0 bg-white">
+                                                                    <img src={s.accountImage} className="h-full w-full object-contain rounded-none bg-white" />
                                                                 </div>
                                                                 <div className="flex-1 flex flex-col min-w-0">
                                                                     <span className="text-[10px] font-bold text-slate-700 truncate">{s.accountName}</span>
