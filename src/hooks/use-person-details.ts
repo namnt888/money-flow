@@ -217,8 +217,17 @@ export function usePersonDetails({
 
             const isRollover = note.includes("rollover");
             const isCashback = type_lower === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
-            const isRepayment = ["repayment", "repay"].includes(type_lower) || (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay"))) && !isCashback;
-            const isSpend = (type_lower === "expense" || type_lower === "debt") && !isRollover && !isCashback && !isRepayment;
+            const rawAmount = Number(txn.amount) || 0;
+
+            // "trả" or "repay" - MUST BE POSITIVE to be a repayment
+            const isRepayment = (["repayment", "repay"].includes(type_lower) || 
+                               (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0 && !isCashback;
+            
+            // IS SPEND if:
+            // 1. Explicit expense/debt type
+            // 2. OR is an INCOME with a negative amount
+            const isSpend = ((type_lower === "expense" || type_lower === "debt") || (type_lower === "income" && rawAmount < 0)) && 
+                            !isRollover && !isCashback && !isRepayment;
 
             // Cashback Calculation
             let cb = 0;

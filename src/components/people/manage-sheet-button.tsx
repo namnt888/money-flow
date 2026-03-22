@@ -27,6 +27,8 @@ interface DebtCycle {
   stats?: {
     lend: number
     repay: number
+    originalLend: number
+    cashback: number
   }
   isSettled?: boolean
 }
@@ -712,20 +714,26 @@ export function ManageSheetButton({
 
                                 <div className="flex items-center gap-3 h-full ml-auto">
                                     {cycle.stats && (
-                                        <>
+                                        <div className="flex items-center gap-2">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">DEBT</span>
-                                                <span className="text-[11px] font-bold text-slate-800 leading-none">
-                                                    {numberFormatter.format(cycle.stats.lend)}
+                                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">INITIAL</span>
+                                                <span className="text-[10px] font-bold text-slate-700 leading-none">
+                                                    {numberFormatter.format(cycle.stats.originalLend)}
                                                 </span>
                                             </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">REPAID</span>
-                                                <span className="text-[11px] font-bold text-emerald-600 leading-none">
+                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
+                                                <span className="text-[7px] font-black text-amber-500 uppercase tracking-tighter leading-none mb-1">CASH</span>
+                                                <span className="text-[10px] font-bold text-amber-600 leading-none">
+                                                    -{numberFormatter.format(cycle.stats.cashback)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
+                                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-tighter leading-none mb-1">REPAID</span>
+                                                <span className="text-[10px] font-bold text-emerald-600 leading-none">
                                                     {numberFormatter.format(cycle.stats.repay)}
                                                 </span>
                                             </div>
-                                        </>
+                                        </div>
                                     )}
 
                                     <div className={cn(

@@ -450,43 +450,58 @@ export function UnifiedSmartDatePicker({
                         <div className="flex items-center gap-3 flex-1 justify-end">
                             {cycle.stats && statType ? (
                                 <>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">
-                                            {statType === 'debt' ? 'DEBT' : 'SPENT'}
-                                        </span>
-                                        <span className={cn(
-                                            "text-[11px] font-bold leading-none",
-                                            statType === 'debt' ? "text-slate-900" : "text-slate-600"
-                                        )}>
-                                            {new Intl.NumberFormat('en-US').format(statType === 'debt' ? (cycle.stats.debt || 0) : (cycle.stats.spent || 0))}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">
-                                            {statType === 'debt' ? 'REPAID' : 'EARNED'}
-                                        </span>
-                                        <span className="text-[11px] font-bold text-emerald-600 leading-none">
-                                            {new Intl.NumberFormat('en-US').format(statType === 'debt' ? (cycle.stats.back || 0) : (cycle.stats.earned || 0))}
-                                        </span>
-                                    </div>
-                                    {statType === 'cashback' && (
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">
-                                                SHARED
-                                            </span>
-                                            <span className="text-[11px] font-bold text-amber-600 leading-none">
-                                                {new Intl.NumberFormat('en-US').format(cycle.stats.shared || 0)}
-                                            </span>
+                                    {statType === 'debt' ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">INITIAL</span>
+                                                <span className="text-[10px] font-bold text-slate-800 leading-none">
+                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.initial || 0)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
+                                                <span className="text-[7px] font-black text-amber-500 uppercase tracking-tighter leading-none mb-1">CASH</span>
+                                                <span className="text-[10px] font-bold text-amber-600 leading-none">
+                                                    -{new Intl.NumberFormat('en-US').format(cycle.stats.cashback || 0)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
+                                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-tighter leading-none mb-1">REPAID</span>
+                                                <span className="text-[10px] font-bold text-emerald-600 leading-none">
+                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.repay || 0)}
+                                                </span>
+                                            </div>
                                         </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">SPENT</span>
+                                                <span className="text-[11px] font-bold text-slate-600 leading-none">
+                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.spent || 0)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">EARNED</span>
+                                                <span className="text-[11px] font-bold text-emerald-600 leading-none">
+                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.earned || 0)}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">SHARED</span>
+                                                <span className="text-[11px] font-bold text-amber-600 leading-none">
+                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.shared || 0)}
+                                                </span>
+                                            </div>
+                                        </>
                                     )}
+
                                     <div className={cn(
-                                        "px-2.5 py-1.5 rounded-lg shadow-sm flex flex-col items-center min-w-[85px] border",
+                                        "px-2 py-1.5 rounded-lg shadow-sm flex flex-col items-center min-w-[75px] border",
                                         (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000)
                                             ? "bg-emerald-50 border-emerald-100" 
                                             : "bg-rose-50 border-rose-100"
                                     )}>
                                         <span className={cn(
-                                            "text-[8px] font-black leading-none uppercase tracking-tighter mb-1",
+                                            "text-[7px] font-black leading-none uppercase tracking-tighter mb-1",
                                             (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-500" : "text-rose-400"
                                         )}>
                                             {statType === 'debt' 
@@ -495,7 +510,7 @@ export function UnifiedSmartDatePicker({
                                             }
                                         </span>
                                         <span className={cn(
-                                            "text-[11px] font-black leading-none",
+                                            "text-[10px] font-black leading-none",
                                             (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-700" : "text-rose-600"
                                         )}>
                                             {statType === 'debt'

@@ -171,8 +171,9 @@ export function TransactionControlBar({
                     value: cycle.tag,
                     count,
                     stats: {
-                        debt: cycle.stats.lend,
-                        back: cycle.stats.repay,
+                        initial: cycle.stats.originalLend,
+                        cashback: cycle.stats.cashback,
+                        repay: cycle.stats.repay,
                         remains: cycle.remains,
                         isSettled: cycle.isSettled
                     }
@@ -200,12 +201,7 @@ export function TransactionControlBar({
                 value: accountCurrentCycleTag,
                 count: 0,
                 highlight: false, // Will be set below
-                stats: {
-                    debt: 0,
-                    back: 0,
-                    remains: 0,
-                    isSettled: true
-                }
+                stats: { initial: 0, cashback: 0, repay: 0, remains: 0, isSettled: false }
             })
         }
 
