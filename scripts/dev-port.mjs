@@ -2,6 +2,8 @@ import net from 'node:net'
 import { spawn, exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { rm } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const execAsync = promisify(exec)
 
@@ -108,9 +110,15 @@ async function main() {
   const port = await findPort()
   console.log(`[dev-port] Starting Next.js on port ${port}`)
 
-  const child = spawn('next', ['dev', '-p', String(port)], {
+  const projectRoot = dirname(fileURLToPath(import.meta.url + '/../'))
+
+  // On Windows, use npx.cmd and shell:true which is the most compatible way
+  // to run next dev while handling command resolution and paths.
+  const devCmd = isWindows ? 'npm.cmd' : 'npm'
+  const child = spawn(devCmd, ['run', 'next', '--', 'dev', '-p', String(port)], {
     stdio: 'inherit',
     shell: true,
+    cwd: projectRoot,
     env: { ...process.env, PORT: String(port) }
   })
 

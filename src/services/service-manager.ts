@@ -113,6 +113,7 @@ export async function distributeService(
     // Schema resilience mapping
     service = {
       ...service,
+      shop_id: service.shop_id || service.expand?.shop_id?.id || null, // Priority to direct ID, fallback to expanded ID
       price: service.price ?? service.amount ?? 0,
       due_day: service.due_day ?? service.billing_day ?? 1,
       shop: service.expand?.shop_id

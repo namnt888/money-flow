@@ -822,14 +822,15 @@ export function buildLinkHelp(profileId?: string) {
 
 export function buildQuickHelp() {
   return [
+    "🤖 *Money Flow Assistant*:",
+    "- Ask for status: 'msb con bao nhieu', 'budget msb'",
+    "- Ask for recommendation: 'dung the nao cho bao hiem'",
+    "- Ask for history: 'recent transactions', 'lich su'",
+    "",
     "Commands:",
-    "- /link <profile_id> or 'link <profile_id>' : link bot to your profile",
-    "- /reset : reset the wizard",
-    "- /status : show current draft",
-    "- /cancel : cancel current draft",
-    "- template list : list saved templates",
-    "- template save <name> : save current draft as template",
-    "- template <name> : load a template",
+    "- /link <profile_id> : link bot to your profile",
+    "- /reset : reset the current draft",
+    "- Quick entry: 'cafe 50k' (then follow deep link to save)",
   ].join("\n");
 }
 

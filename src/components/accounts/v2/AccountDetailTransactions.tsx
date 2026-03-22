@@ -824,6 +824,19 @@ export function AccountDetailTransactions({
                         <AddTransactionDropdown
                             accountType={account.type}
                             onSelect={(type) => {
+                                if (type === 'invest') {
+                                    const fundingGoldCategory = categories.find(c => c.name === 'Funding Gold' || c.name === 'Gold')
+                                    setAddOperationMode('add')
+                                    setAddInitialData({
+                                        type: 'transfer',
+                                        source_account_id: account.id,
+                                        target_account_id: undefined,
+                                        category_id: fundingGoldCategory?.id,
+                                        occurred_at: new Date(),
+                                    })
+                                    setIsAddSlideOpen(true)
+                                    return
+                                }
                                 const isTypeIn = ['income', 'repayment'].includes(type || '');
                                 setAddOperationMode('add')
                                 setAddInitialData({

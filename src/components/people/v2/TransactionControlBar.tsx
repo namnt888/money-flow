@@ -316,8 +316,14 @@ export function TransactionControlBar({
                         <ManageSheetButton 
                             personId={person.id}
                             cycleTag={activeCycle.tag}
+                            scriptLink={person.sheet_link}
                             initialSheetUrl={initialSheetUrl}
                             googleSheetUrl={person.google_sheet_url}
+                            sheetFullImg={person.sheet_full_img}
+                            sheetBankInfo={person.sheet_bank_info}
+                            sheetLinkedBankId={person.sheet_linked_bank_id}
+                            showBankAccount={person.sheet_show_bank_account ?? false}
+                            showQrImage={person.sheet_show_qr_image ?? false}
                             availableYears={availableYears}
                             allCycles={allCycles}
                             selectedYear={selectedYear}
@@ -325,6 +331,7 @@ export function TransactionControlBar({
                             onYearChange={onYearChange}
                             activeCycleRemains={activeCycle.remains}
                             isSettled={isSettled}
+                            accounts={accounts}
                             splitMode={true}
                             linkedLabel="Sheet"
                             unlinkedLabel="Sheet"

@@ -40,8 +40,10 @@ export const singleTransactionSchema = z.object({
     is_installment: z.boolean().default(false).optional(),
     installment_plan_id: z.string().optional().nullable(),
 
-    // Temporary UI state (not sent to API)
+    // Temporary UI state (not sent to API directly, packed into metadata)
     ui_is_cashback_expanded: z.boolean().default(false).optional(),
+    ui_quantity: z.coerce.number().min(0).optional().nullable(),
+    ui_market_price: z.coerce.number().min(0).optional().nullable(),
 
     // Metadata for various features (Duplication, etc)
     metadata: z.record(z.any()).optional().nullable(),

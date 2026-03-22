@@ -42,6 +42,8 @@ async function trySyncPeopleSheet(
     cashback_share_percent?: number | null;
     cashback_share_fixed?: number | null;
     type?: string | null;
+    account_id?: string | null;
+    target_account_id?: string | null;
     shop_name?: string | null;
     status?: string | null;
   },
@@ -550,6 +552,8 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
           cashback_share_percent: normalized.cashback_share_percent ?? null,
           cashback_share_fixed: normalized.cashback_share_fixed ?? null,
           type: normalized.type,
+          account_id: normalized.account_id ?? null,
+          target_account_id: normalized.target_account_id ?? normalized.to_account_id ?? null,
           status: "posted",
         },
         "create",
@@ -636,6 +640,8 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
           cashback_share_percent: normalized.cashback_share_percent ?? null,
           cashback_share_fixed: normalized.cashback_share_fixed ?? null,
           type: normalized.type,
+          account_id: normalized.account_id ?? null,
+          target_account_id: normalized.target_account_id ?? normalized.to_account_id ?? null,
           status: "posted",
         },
         "update",

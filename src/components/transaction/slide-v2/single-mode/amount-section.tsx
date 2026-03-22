@@ -60,6 +60,21 @@ export function AmountSection({
     control: form.control,
     name: "ui_is_cashback_expanded",
   });
+  const quantity = useWatch({ control: form.control, name: "ui_quantity" });
+  
+  const categoryId = useWatch({ control: form.control, name: "category_id" });
+  const sourceAccountId = useWatch({ control: form.control, name: "source_account_id" });
+  const targetAccountId = useWatch({ control: form.control, name: "target_account_id" });
+
+  const category = categories.find((c) => c.id === categoryId);
+  const sourceAccount = accounts.find((a) => a.id === sourceAccountId);
+  const targetAccount = accounts.find((a) => a.id === targetAccountId);
+
+  const isInvestment =
+    category?.type === "investment" ||
+    sourceAccount?.type === "investment" ||
+    targetAccount?.type === "investment" ||
+    type === "invest";
 
   const [showFeeInput, setShowFeeInput] = useState<boolean>(() => {
     const existing = form.getValues("service_fee");
@@ -90,6 +105,9 @@ export function AmountSection({
 
   const feeSummaryText = fee > 0 ? formatShortVietnameseCurrency(fee) : "";
   const totalSummaryText = total > 0 ? formatShortVietnameseCurrency(total) : "";
+
+  const unitPrice = quantity && Number(quantity) > 0 ? total / Number(quantity) : 0;
+  const unitPriceText = unitPrice > 0 ? new Intl.NumberFormat("vi-VN").format(unitPrice) : "";
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-3 border-t border-slate-100 pt-4">
@@ -191,6 +209,77 @@ export function AmountSection({
           </div>
         )}
       </div>
+
+      {/* Row 2: Investment Quantity & Market Price */}
+      {isInvestment && (
+        <div className="flex gap-3">
+          {/* Quantity */}
+          <div className="min-w-0 flex-1">
+            <FormField
+              control={form.control}
+              name="ui_quantity"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <FormLabel className="flex items-center gap-1.5 text-[10px] font-bold text-sky-500 capitalize tracking-wide mb-1.5 min-h-[14px]">
+                    Asset Quantity
+                  </FormLabel>
+                  <FormControl>
+                    <SmartAmountInput
+                      value={field.value || undefined}
+                      onChange={field.onChange}
+                      hideLabel
+                      className="h-10 border-slate-200 bg-white px-3 text-sm font-black focus-visible:border-sky-500"
+                      placeholder="0.00"
+                      hideCurrencyText
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="mt-1 flex items-center justify-between">
+              <p className="text-[11px] font-medium text-slate-400 truncate">
+                Required for P/L. e.g. 0.5 (taels/shares)
+              </p>
+              {unitPrice > 0 && (
+                <p className="text-[11px] font-black text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full animate-in fade-in zoom-in duration-200">
+                  ≈ {unitPriceText} <span className="text-sky-400 font-bold">/ unit</span>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Market Price (Optional) */}
+          <div className="w-[140px] shrink-0">
+            <FormField
+              control={form.control}
+              name="ui_market_price"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <FormLabel className="flex items-center gap-1.5 text-[10px] font-bold text-teal-500 capitalize tracking-wide mb-1.5 min-h-[14px]">
+                    Market Price
+                  </FormLabel>
+                  <FormControl>
+                    <SmartAmountInput
+                      value={field.value || undefined}
+                      onChange={field.onChange}
+                      hideLabel
+                      className="h-10 border-slate-200 bg-white px-3 text-sm font-black focus-visible:border-teal-500"
+                      placeholder="Optional"
+                      hideCurrencyText
+                      compact
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <p className="mt-1 text-[11px] font-medium text-slate-400 truncate">
+              True price (no fees)
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Row 3: Total */}
       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">

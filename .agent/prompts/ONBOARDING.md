@@ -9,7 +9,7 @@
 **Name**: Money Flow 3  
 **Type**: Personal Finance Management Application  
 **Tech Stack**: Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI, PocketBase (Primary), Supabase (Legacy)  
-**Status**: Phase 17 - PocketBase Integration & Data Stabilization
+**Status**: Phase 24 - Investment Asset Refinement
 
 ### What is Money Flow 3?
 A comprehensive personal finance app for tracking:
@@ -19,6 +19,7 @@ A comprehensive personal finance app for tracking:
 - **Services** (Recurring subscriptions like Netflix, Spotify)
 - **Cashback** (Credit card rewards tracking)
 - **Installments** (Payment plans)
+- **Investments** (Tracking quantity/market price of assets)
 - **Batch Processing** (Import transactions from Excel/CSV)
 
 ---
@@ -126,12 +127,12 @@ When starting a new session or task, use these templates:
 
 ---
 
-### 4. **Accounts & Cashback Refinement (Phase 16)**
-- **Focus**: Cycle logic stabilization, unified configuration UI, and enhanced batch processing.
-- **Reference**: `.agent/prompts/HANDOVER_ACCOUNTS_CASHBACK.md`
+### 4. **Investment Assets Refinement (Phase 24)**
+- **Focus**: Tracking real asset variables (`quantity`, `market_price`) independent of abstract Amount values.
+- **Reference**: `.agent/AGENT_CONTEXT.md`
 
 ---
 
-**Last Updated**: 2026-03-18  
+**Last Updated**: 2026-03-21  
 **Maintained By**: Money Flow 3 Team
 

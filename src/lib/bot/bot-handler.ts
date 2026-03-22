@@ -25,6 +25,7 @@ import {
   type BotPlatform,
 } from "@/lib/bot/bot-storage";
 import { createBotTransactions } from "@/services/bot-transaction.service";
+import { handleBotQuery } from "@/services/bot-query.service";
 
 const yesTokens = new Set(["yes", "y", "ok", "okay", "confirm", "yep"]);
 const noTokens = new Set(["no", "n", "nope", "cancel"]);
@@ -182,6 +183,12 @@ export async function handleBotMessage(params: {
     };
   }
 
+  // Handle Queries (Phase 24 Refactor)
+  const queryReplies = await handleBotQuery(trimmed, link.profile_id);
+  if (queryReplies) {
+    return { replies: queryReplies };
+  }
+
   // Support Dynamic Shortcut Commands (e.g., /lam 50k)
   if (command?.command.startsWith("/")) {
     const templateName = command.command.substring(1); // remove /
@@ -330,17 +337,27 @@ export async function handleBotMessage(params: {
       }
 
       try {
-        const createdBy = await resolveCreatedBy(supabase, link.profile_id);
-        await createBotTransactions({
-          ...draft,
-          created_by: createdBy,
-        });
-        await updateBotUserState({
-          platform: params.platform,
-          platformUserId: params.platformUserId,
-          state: null,
-        });
-        return { replies: ["Done! Transaction saved."] };
+        // BLOCKED: Phase 24 refactor - no longer allow bot-only submission
+        // const createdBy = await resolveCreatedBy(supabase, link.profile_id);
+        // await createBotTransactions({
+        //   ...draft,
+        //   created_by: createdBy,
+        // });
+        // await updateBotUserState({
+        //   platform: params.platform,
+        //   platformUserId: params.platformUserId,
+        //   state: null,
+        // });
+        // return { replies: ["Done! Transaction saved."] };
+        
+        const deepLink = `${process.env.APP_URL || 'https://money-flow-3.vercel.app'}/transactions/new?draft=${encodeURIComponent(JSON.stringify(state.draft))}`;
+        return {
+          replies: [
+            "🚫 Transaction submission via bot is now disabled.",
+            "Please use the deep link below to submit and edit in the App:",
+            `🔗 [Submit in Money Flow App](${deepLink})`
+          ],
+        };
       } catch (error: any) {
         console.error("[bot] Failed to create transaction:", error);
         return {
