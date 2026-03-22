@@ -688,7 +688,7 @@ export function ManageSheetButton({
                       <div key={year} className="mt-2 mb-1">
                         <div className="px-3 py-1 text-[10px] font-bold text-slate-500 bg-slate-100/50 rounded-sm mb-1">{year}</div>
                         {cycles.map(cycle => {
-                            const cycleSettled = cycle.isSettled || (Math.abs(cycle.remains) < 100)
+                            const cycleSettled = cycle.isSettled || (Math.abs(cycle.remains) < 1000)
                             return (
                               <button
                                 key={cycle.tag}
@@ -720,7 +720,7 @@ export function ManageSheetButton({
                                                 </span>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">BACK</span>
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">REPAID</span>
                                                 <span className="text-[11px] font-bold text-emerald-600 leading-none">
                                                     {numberFormatter.format(cycle.stats.repay)}
                                                 </span>

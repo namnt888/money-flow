@@ -98,9 +98,9 @@ export function usePersonDetails({
         const isCashback = type_lower === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
         const rawAmount = Number(txn.amount) || 0;
         
-        // "trả" or "repay" - MUST BE POSITIVE INCOME to be a repayment
-        const isRepayment = ["repayment", "repay"].includes(type_lower) || 
-                           (type_lower === "income" && rawAmount > 0 && (note.includes("tr\u1ea3") || note.includes("repay"))) && !isCashback;
+        // "trả" or "repay" - MUST BE POSITIVE to be a repayment
+        const isRepayment = (["repayment", "repay"].includes(type_lower) || 
+                           (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0 && !isCashback;
         
         // IS SPEND if:
         // 1. Explicit expense/debt type
