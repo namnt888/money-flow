@@ -463,7 +463,7 @@ export function UnifiedSmartDatePicker({
                                     </div>
                                     <div className="flex flex-col items-end">
                                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">
-                                            {statType === 'debt' ? 'BACK' : 'EARNED'}
+                                            {statType === 'debt' ? 'REPAID' : 'EARNED'}
                                         </span>
                                         <span className="text-[11px] font-bold text-emerald-600 leading-none">
                                             {new Intl.NumberFormat('en-US').format(statType === 'debt' ? (cycle.stats.back || 0) : (cycle.stats.earned || 0))}
@@ -481,25 +481,25 @@ export function UnifiedSmartDatePicker({
                                     )}
                                     <div className={cn(
                                         "px-2.5 py-1.5 rounded-lg shadow-sm flex flex-col items-center min-w-[85px] border",
-                                        (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 100)
+                                        (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000)
                                             ? "bg-emerald-50 border-emerald-100" 
                                             : "bg-rose-50 border-rose-100"
                                     )}>
                                         <span className={cn(
                                             "text-[8px] font-black leading-none uppercase tracking-tighter mb-1",
-                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 100) ? "text-emerald-500" : "text-rose-400"
+                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-500" : "text-rose-400"
                                         )}>
                                             {statType === 'debt' 
-                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "STATUS" : "REMAINS")
+                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 1000) ? "STATUS" : "REMAINS")
                                                 : "PROFIT"
                                             }
                                         </span>
                                         <span className={cn(
                                             "text-[11px] font-black leading-none",
-                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 100) ? "text-emerald-700" : "text-rose-600"
+                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-700" : "text-rose-600"
                                         )}>
                                             {statType === 'debt'
-                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 100) ? "SETTLED" : new Intl.NumberFormat('en-US').format(cycle.stats.remains || 0))
+                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 1000) ? "SETTLED" : new Intl.NumberFormat('en-US').format(cycle.stats.remains || 0))
                                                 : new Intl.NumberFormat('en-US').format(cycle.stats.profit || 0)
                                             }
                                         </span>
