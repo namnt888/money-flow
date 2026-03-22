@@ -3,7 +3,7 @@ import { Database } from '@/types/database.types'
 import { addMonths } from 'date-fns'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
 import { isLegacyMMMYY, isYYYYMM, normalizeMonthTag, toLegacyMMMYYFromDate, toYYYYMMFromDate } from '@/lib/month-tag'
-import { pocketbaseList, toPocketBaseId } from '@/services/pocketbase/server'
+import { pocketbaseDelete, pocketbaseGetById, pocketbaseList, pocketbaseUpdate, toPocketBaseId } from '@/services/pocketbase/server'
 
 export type Batch = Database['public']['Tables']['batches']['Row']
 export type BatchItem = Database['public']['Tables']['batch_items']['Row']
@@ -180,6 +180,11 @@ export async function updateBatchItem(id: string, item: Database['public']['Tabl
 }
 
 export async function deleteBatchItem(id: string) {
+    const isPB = id && id.length === 15 && !id.includes('-');
+    if (isPB) {
+        await pocketbaseDelete('batch_items', id)
+        return
+    }
     const supabase: any = createClient()
     const { error } = await supabase
         .from('batch_items')
@@ -191,13 +196,25 @@ export async function deleteBatchItem(id: string) {
 
 export async function deleteBatchItemsBulk(ids: string[]) {
     if (!ids || ids.length === 0) return
-    const supabase: any = createClient()
-    const { error } = await supabase
-        .from('batch_items')
-        .delete()
-        .in('id', ids)
+    
+    const pbIds = ids.filter(id => id && id.length === 15 && !id.includes('-'))
+    const sbIds = ids.filter(id => !pbIds.includes(id))
 
-    if (error) throw error
+    if (pbIds.length > 0) {
+        for (const id of pbIds) {
+            await pocketbaseDelete('batch_items', id)
+        }
+    }
+
+    if (sbIds.length > 0) {
+        const supabase: any = createClient()
+        const { error } = await supabase
+            .from('batch_items')
+            .delete()
+            .in('id', sbIds)
+
+        if (error) throw error
+    }
 }
 
 export async function cloneBatchItem(id: string) {
@@ -238,6 +255,55 @@ export async function cloneBatchItem(id: string) {
 }
 
 export async function confirmBatchItem(itemId: string, targetAccountId?: string) {
+    const isPB = itemId && itemId.length === 15 && !itemId.includes('-');
+    if (isPB) {
+        const item = await pocketbaseGetById<any>('batch_items', itemId, 'batch_id')
+        if (!item) throw new Error('Item not found in PocketBase')
+        if (item.status === 'confirmed') return
+
+        const finalTargetId = toPocketBaseId(targetAccountId || item.target_account_id, 'accounts')
+        if (!finalTargetId) throw new Error('No target account specified')
+
+        const batch = item.expand?.batch_id || await pocketbaseGetById<any>('batches', item.batch_id)
+        const batchName = batch?.name || 'Batch'
+        const tag = batch?.month_year || null
+
+        let categoryId = toPocketBaseId(SYSTEM_CATEGORIES.MONEY_TRANSFER, 'categories')
+        const noteLower = (item.note || '').toLowerCase()
+        if (noteLower.includes('online service')) {
+            categoryId = toPocketBaseId(SYSTEM_CATEGORIES.ONLINE_SERVICES, 'categories')
+        }
+
+        const { createTransaction } = await import('./transaction.service')
+        const txnId = await createTransaction({
+            occurred_at: new Date().toISOString(),
+            note: `${batchName} - ${item.note || item.receiver_name || 'Confirmed Payment'}`,
+            type: 'transfer',
+            source_account_id: toPocketBaseId(SYSTEM_ACCOUNTS.BATCH_CLEARING, 'accounts'),
+            target_account_id: finalTargetId,
+            amount: Math.abs(item.amount),
+            tag: tag,
+            category_id: categoryId,
+            metadata: { 
+                type: 'batch_funding', 
+                batch_step: 'step3', 
+                batch_id: item.batch_id, 
+                batch_item_id: item.id 
+            } as any
+        })
+
+        if (!txnId) throw new Error('Failed to create transaction in PocketBase')
+
+        await pocketbaseUpdate('batch_items', itemId, {
+            status: 'confirmed',
+            transaction_id: txnId,
+            target_account_id: finalTargetId,
+            updated_at: new Date().toISOString()
+        })
+
+        return
+    }
+
     const supabase: any = createClient()
 
     // 1. Fetch Item
@@ -373,6 +439,32 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
  * This resets the item to 'funded' (Pending) so it can be processed again.
  */
 export async function revertBatchItem(transactionId: string) {
+    const isPB = transactionId && transactionId.length === 15 && !transactionId.includes('-');
+    if (isPB) {
+        const itemsByTxn = await pocketbaseList<any>('batch_items', {
+            filter: `transaction_id = "${transactionId}"`
+        })
+        let item = itemsByTxn.items[0]
+
+        if (!item) {
+            try {
+                item = await pocketbaseGetById<any>('batch_items', transactionId)
+            } catch {
+                // ignore
+            }
+        }
+
+        if (item) {
+            await pocketbaseUpdate('batch_items', item.id, {
+                status: 'pending',
+                transaction_id: null,
+                is_confirmed: false,
+                updated_at: new Date().toISOString()
+            })
+        }
+        return
+    }
+
     const supabase: any = createClient()
 
     // 1. Find the batch item linked to this transaction
@@ -1147,6 +1239,45 @@ export async function sendBatchToSheet(batchId: string) {
 }
 
 export async function confirmBatchSource(batchId: string, realAccountId: string) {
+    const isPB = batchId && batchId.length === 15 && !batchId.includes('-');
+    if (isPB) {
+        // Find batch
+        const batch = await pocketbaseGetById<any>('batches', batchId)
+        if (!batch) throw new Error('Batch not found')
+
+        if (batch.source_account_id !== toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts')) {
+            throw new Error('Batch source is not Draft Fund')
+        }
+
+        // 2. Calculate Total Amount (from funding transaction)
+        if (!batch.funding_transaction_id) throw new Error('Batch not funded yet')
+
+        const fundingTxn = await pocketbaseGetById<any>('transactions', batch.funding_transaction_id)
+        const amount = Math.abs(fundingTxn?.amount || 0)
+        if (amount <= 0) throw new Error('No funded amount found')
+
+        const { createTransaction } = await import('./transaction.service')
+        const txnId = await createTransaction({
+            occurred_at: new Date().toISOString(),
+            note: `Confirm Source for Batch: ${batch.name}`,
+            status: 'posted',
+            tag: 'BATCH_CONFIRM',
+            account_id: toPocketBaseId(realAccountId, 'accounts'),
+            target_account_id: toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'),
+            amount: amount,
+            type: 'transfer'
+        })
+
+        if (!txnId) throw new Error('Failed to create confirmation transaction')
+
+        // 4. Update Batch Source
+        await pocketbaseUpdate('batches', batchId, {
+            source_account_id: toPocketBaseId(realAccountId, 'accounts')
+        })
+
+        return true
+    }
+
     const supabase: any = createClient()
 
     // 1. Get Batch
