@@ -477,6 +477,7 @@ export function ItemsTable({
                 open={showTransferDialog}
                 onOpenChange={setShowTransferDialog}
                 item={selectedItemForTransfer}
+                accounts={accounts}
                 onConfirm={handleConfirmTransfer}
             />
         </>

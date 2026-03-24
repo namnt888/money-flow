@@ -14,7 +14,8 @@ import { UnifiedSmartDatePicker } from '@/components/transactions-v2/header/Unif
 import { TransactionSlideV2 } from '@/components/transaction/slide-v2/transaction-slide-v2'
 import { SingleTransactionFormValues } from '@/components/transaction/slide-v2/types'
 import { DateRange } from 'react-day-picker'
-import { normalizeMonthTag } from '@/lib/month-tag'
+import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
+import { resolveTransactionCycleTag } from '@/lib/cycle-utils'
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isSameDay, format } from 'date-fns'
 import { Search, FilterX, Filter, Clipboard, ChevronDown, X, Trash2, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -36,38 +37,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 
-function resolveTransactionCycleTag(
-    transaction: TransactionWithDetails,
-    account: Account
-): string {
-    const persisted = normalizeMonthTag(transaction.persisted_cycle_tag || '')
-    if (persisted) return persisted
-
-    const derived = normalizeMonthTag(transaction.derived_cycle_tag || '')
-    if (derived) return derived
-
-    const statementDay = Number(account.statement_day || 0)
-    if (account.type === 'credit_card' && statementDay > 0) {
-        const rawDate = transaction.occurred_at || transaction.date || transaction.created_at
-        if (rawDate) {
-            const parsed = new Date(rawDate)
-            if (!Number.isNaN(parsed.getTime())) {
-                let year = parsed.getFullYear()
-                let month = parsed.getMonth() + 1
-                if (parsed.getDate() > statementDay) {
-                    month += 1
-                    if (month > 12) {
-                        month = 1
-                        year += 1
-                    }
-                }
-                return `${year}-${String(month).padStart(2, '0')}`
-            }
-        }
-    }
-
-    return normalizeMonthTag(transaction.tag || '') || ''
-}
+// Shared utility imported from @/lib/cycle-utils
 
 type FilterType = 'all' | 'income' | 'expense' | 'lend' | 'repay' | 'transfer' | 'cashback'
 type StatusFilter = 'active' | 'void' | 'pending'
@@ -76,6 +46,12 @@ type CycleOption = {
     value: string
     count?: number
     highlight?: boolean
+    stats?: {
+        spent?: number
+        earned?: number
+        shared?: number
+        profit?: number
+    }
 }
 
 interface ClearDropdownProps {
@@ -375,6 +351,12 @@ export function AccountDetailTransactions({
                 value: opt.tag,
                 count: cycleCountByTag.get(opt.tag) || 0,
                 highlight: opt.tag === currentCycleTag,
+                stats: opt.stats ? {
+                    spent: opt.stats.spent_amount,
+                    earned: opt.stats.real_awarded,
+                    shared: opt.stats.shared_amount,
+                    profit: opt.stats.net_profit
+                } : undefined
             }))
 
             // Merge API cycles and derived cycles to ensure all history is visible
@@ -726,21 +708,7 @@ export function AccountDetailTransactions({
                             onChange={setFilterType}
                         />
 
-                        {/* Target Filter - People */}
-                        <QuickFilterDropdown
-                            items={availableTargets.people.map(p => ({
-                                id: p.id,
-                                name: p.name,
-                                image: p.image,
-                                type: 'person' as const
-                            }))}
-                            value={selectedTargetId}
-                            onValueChange={setSelectedTargetId}
-                            placeholder="People"
-                            emptyText="No people found"
-                        />
-
-                        {/* Target Filter - Accounts */}
+                        {/* Quick Filters - Reordered for consistency (Account -> People) */}
                         <QuickFilterDropdown
                             items={availableTargets.accounts.map(a => ({
                                 id: a.id,
@@ -754,8 +722,21 @@ export function AccountDetailTransactions({
                             emptyText="No accounts found"
                         />
 
+                        <QuickFilterDropdown
+                            items={availableTargets.people.map(p => ({
+                                id: p.id,
+                                name: p.name,
+                                image: p.image,
+                                type: 'person' as const
+                            }))}
+                            value={selectedTargetId}
+                            onValueChange={setSelectedTargetId}
+                            placeholder="People"
+                            emptyText="No people found"
+                        />
+
                         {/* Date Picker - includes cycle tab for credit cards */}
-                            <UnifiedSmartDatePicker
+                        <UnifiedSmartDatePicker
                             date={date}
                             dateRange={dateRange}
                             mode={dateMode}
@@ -771,6 +752,7 @@ export function AccountDetailTransactions({
                                 setDateMode(mode)
                                 setIsFilterActive(mode !== 'all')
                             }}
+                            statType={account.type === 'credit_card' ? 'cashback' : undefined}
                             availableMonths={availableMonths}
                             cycles={cycles}
                             selectedCycleValue={selectedCycle}

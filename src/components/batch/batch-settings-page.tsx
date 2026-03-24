@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical, Database, RefreshCw, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { updateBatchSettingsAction, getBatchSettingsAction } from '@/actions/batch-settings.actions'
@@ -13,7 +13,17 @@ import { getAccountsAction } from '@/actions/account-actions'
 import { BatchMasterManager } from './BatchMasterManager'
 import { toast } from 'sonner'
 
-export function BatchSettingsPage({ hideHeader = false, onSuccess }: { hideHeader?: boolean, onSuccess?: () => void } = {}) {
+export function BatchSettingsPage({ 
+    hideHeader = false, 
+    onSuccess,
+    initialAccounts = [],
+    initialSettings = null
+}: { 
+    hideHeader?: boolean, 
+    onSuccess?: () => void,
+    initialAccounts?: any[],
+    initialSettings?: { MBB: any, VIB: any } | null
+} = {}) {
     const [mbbSheetUrl, setMbbSheetUrl] = useState('')
     const [vibSheetUrl, setVibSheetUrl] = useState('')
     const [mbbImageUrl, setMbbImageUrl] = useState('')
@@ -29,17 +39,59 @@ export function BatchSettingsPage({ hideHeader = false, onSuccess }: { hideHeade
     const [mbbCutoffDay, setMbbCutoffDay] = useState<number>(15)
     const [vibCutoffDay, setVibCutoffDay] = useState<number>(15)
     const [loading, setLoading] = useState(false)
-    const [initialLoading, setInitialLoading] = useState(true)
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [initialLoading, setInitialLoading] = useState(!initialSettings)
+    const [accounts, setAccounts] = useState<any[]>(initialAccounts)
 
     // Track original values to detect changes
     const [originalMBB, setOriginalMBB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
     const [originalVIB, setOriginalVIB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
 
-    // Load settings on mount
+    // Load settings on mount only if not provided via props
     useEffect(() => {
-        loadSettings()
-    }, [])
+        if (!initialSettings) {
+            loadSettings()
+        } else {
+            // Apply initial settings
+            if (initialSettings.MBB) {
+                const mbbData = initialSettings.MBB
+                setMbbSheetUrl(mbbData.sheet_url || '')
+                setMbbImageUrl(mbbData.image_url || '')
+                setMbbWebhookUrl(mbbData.webhook_url || '')
+                setMbbCutoffDay(mbbData.cutoff_day || 15)
+                setMbbDisplaySheetUrl(mbbData.display_sheet_url || '')
+                setMbbDisplaySheetName(mbbData.display_sheet_name || '')
+                setMbbTabName(mbbData.sheet_name || '')
+                setOriginalMBB({
+                    sheet: mbbData.sheet_url || '',
+                    image: mbbData.image_url || '',
+                    webhook: mbbData.webhook_url || '',
+                    cutoff: mbbData.cutoff_day || 15,
+                    displaySheetUrl: mbbData.display_sheet_url || '',
+                    displaySheetName: mbbData.display_sheet_name || '',
+                    tabName: mbbData.sheet_name || ''
+                })
+            }
+            if (initialSettings.VIB) {
+                const vibData = initialSettings.VIB
+                setVibSheetUrl(vibData.sheet_url || '')
+                setVibImageUrl(vibData.image_url || '')
+                setVibWebhookUrl(vibData.webhook_url || '')
+                setVibCutoffDay(vibData.cutoff_day || 15)
+                setVibDisplaySheetUrl(vibData.display_sheet_url || '')
+                setVibDisplaySheetName(vibData.display_sheet_name || '')
+                setVibTabName(vibData.sheet_name || '')
+                setOriginalVIB({
+                    sheet: vibData.sheet_url || '',
+                    image: vibData.image_url || '',
+                    webhook: vibData.webhook_url || '',
+                    cutoff: vibData.cutoff_day || 15,
+                    displaySheetUrl: vibData.display_sheet_url || '',
+                    displaySheetName: vibData.display_sheet_name || '',
+                    tabName: vibData.sheet_name || ''
+                })
+            }
+        }
+    }, [initialSettings])
 
     async function loadSettings() {
         try {

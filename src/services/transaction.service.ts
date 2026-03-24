@@ -455,45 +455,59 @@ export async function loadTransactions(options: {
   includeVoided?: boolean;
 }): Promise<TransactionWithDetails[]> {
   try {
-    const pbParams: any = {
-      sort: "-date",
-      perPage: options.limit || 100,
-    };
-
     const filterParts: string[] = [];
     if (!options.includeVoided) filterParts.push('status != "void"');
 
     if (options.transactionId) {
-      filterParts.push(`id = "${toPocketBaseId(options.transactionId, "transactions")}"`);
+      filterParts.push(`id = '${toPocketBaseId(options.transactionId, "transactions")}'`);
     } else {
       if (options.personIds && options.personIds.length > 0) {
-        const pIds = options.personIds.map(id => `person_id="${toPocketBaseId(id, "people")}"`).join(" || ");
+        const pIds = options.personIds.map(id => `person_id='${toPocketBaseId(id, "people")}'`).join(" || ");
         filterParts.push(`(${pIds})`);
       } else if (options.personId) {
-        filterParts.push(`person_id = "${toPocketBaseId(options.personId, "people")}"`);
+        filterParts.push(`person_id = '${toPocketBaseId(options.personId, "people")}'`);
       } else if (options.accountId) {
         const accId = toPocketBaseId(options.accountId, "accounts");
-        filterParts.push(`(account_id = "${accId}" || to_account_id = "${accId}")`);
+        filterParts.push(`(account_id = '${accId}' || to_account_id = '${accId}')`);
       }
     }
 
-    if (options.shopId) filterParts.push(`shop_id = "${toPocketBaseId(options.shopId, "shops")}"`);
-    if (options.categoryId) filterParts.push(`category_id = "${toPocketBaseId(options.categoryId, "categories")}"`);
-    if (options.installmentPlanId) filterParts.push(`installment_plan_id = "${toPocketBaseId(options.installmentPlanId, "installments")}"`);
+    if (options.shopId) filterParts.push(`shop_id = '${toPocketBaseId(options.shopId, "shops")}'`);
+    if (options.categoryId) filterParts.push(`category_id = '${toPocketBaseId(options.categoryId, "categories")}'`);
+    if (options.installmentPlanId) filterParts.push(`installment_plan_id = '${toPocketBaseId(options.installmentPlanId, "installments")}'`);
 
-    if (filterParts.length > 0) {
-      pbParams.filter = filterParts.join(" && ");
+    const filter = filterParts.length > 0 ? filterParts.join(" && ") : undefined;
+    const limit = options.limit || 100;
+
+    let records: FlatTransactionRow[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    // PocketBase usually has a max perPage of 200-500. Using 200 to be safe and avoid 400 errors.
+    while (page <= totalPages && records.length < limit) {
+      const remaining = limit - records.length;
+      const perPage = Math.min(200, remaining);
+      
+      const response = await pocketbaseList<any>("transactions", {
+        sort: "-date",
+        filter,
+        page,
+        perPage,
+      });
+
+      records.push(...(response.items as unknown as FlatTransactionRow[]));
+      totalPages = Number(response.totalPages || 1);
+      if (page >= totalPages) break;
+      page += 1;
     }
 
-    const response = await pocketbaseList<any>("transactions", pbParams);
-    if (!response.items.length) return [];
+    if (!records.length) return [];
 
-    const rows = response.items as unknown as FlatTransactionRow[];
-    const lookups = await fetchLookups(rows);
-    const historyCountMap = await fetchHistoryCountMap(rows.map((row) => row.id));
+    const lookups = await fetchLookups(records);
+    const historyCountMap = await fetchHistoryCountMap(records.map((row) => row.id));
     
     return Promise.all(
-      rows.map((row) =>
+      records.map((row) =>
         mapTransactionRow(row, {
           lookups,
           contextAccountId: options.accountId,

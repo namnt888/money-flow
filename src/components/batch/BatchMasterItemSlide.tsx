@@ -121,9 +121,12 @@ export function BatchMasterItemSlide({
                 if (phases.length > 0) {
                     const matchedPhase = phases.find(p =>
                         p.period_type === 'before' ? dueDay <= p.cutoff_day : dueDay > p.cutoff_day
-                    ) || phases[0]
-                    form.setValue('cutoff_period', matchedPhase.period_type)
-                    form.setValue('phase_id', matchedPhase.id)
+                    ) || (dueDay <= 15 ? phases.find(p => p.period_type === 'before') : phases.find(p => p.period_type === 'after')) || phases[0]
+                    
+                    if (matchedPhase) {
+                        form.setValue('cutoff_period', matchedPhase.period_type)
+                        form.setValue('phase_id', matchedPhase.id)
+                    }
                 } else {
                     form.setValue('cutoff_period', dueDay <= 15 ? 'before' : 'after')
                 }

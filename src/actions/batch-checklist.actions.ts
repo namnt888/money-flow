@@ -7,40 +7,60 @@ import { pocketbaseList } from '@/services/pocketbase/server'
  */
 export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: number = new Date().getFullYear()) {
     try {
+        console.log(`[BatchAction] Fetching checklist data for ${bankType} / ${year}`);
+        
         // 1. Fetch Master Items
         const masterResult = await pocketbaseList<any>('batch_master_items', {
             filter: `bank_type = "${bankType}" && is_active = true`,
             sort: 'sort_order',
-            perPage: 1000,
-            expand: 'target_account_id',
+            perPage: 500,
+            expand: 'target_account_id,target_account_id.owner_id,target_account_id.holder_person_id',
         })
-        const masterItems = masterResult.items.map((item: any) => ({
-            ...item,
-            accounts: item?.expand?.target_account_id || null,
-        }))
+        const masterItems = masterResult.items.map((item: any) => {
+            const acc = item?.expand?.target_account_id || null;
+            // Resolve holder person from either holder_person_id or owner_id expansion
+            // Order of priority: holder_person_id (explicitly linked person) then owner_id (account owner)
+            const holder = acc?.expand?.holder_person_id || acc?.expand?.owner_id || null;
+            
+            return {
+                ...item,
+                accounts: acc,
+                holder_person: holder,
+            };
+        })
 
         // 2. Fetch Batches for the given year
         const yearPattern = `${year}-`
         const batchesResult = await pocketbaseList<any>('batches', {
             filter: `bank_type = "${bankType}" && month_year ~ "${yearPattern}"`,
-            perPage: 500,
+            perPage: 200, // Safe limit
             sort: 'month_year',
         })
         const batches = batchesResult.items || []
 
-        // 2b. Fetch all batch_items for loaded batches
+        // 3. Fetch Batch Items (Paginated)
         const batchIds = batches.map((b: any) => b.id).filter(Boolean)
         let batchItems: any[] = []
         if (batchIds.length > 0) {
-            const batchFilter = batchIds.map((id: string) => `batch_id = "${id}"`).join(' || ')
-            const batchItemsResult = await pocketbaseList<any>('batch_items', {
-                filter: batchFilter,
-                perPage: 5000,
-            })
-            batchItems = batchItemsResult.items || []
+            // Split batchIds into chunks to avoid long filters
+            const chunkSize = 20;
+            for (let i = 0; i < batchIds.length; i += chunkSize) {
+                const chunk = batchIds.slice(i, i + chunkSize);
+                const batchFilter = chunk.map((id: string) => `batch_id = '${id}'`).join(' || ')
+                
+                try {
+                    const chunkResult = await pocketbaseList<any>('batch_items', {
+                        filter: batchFilter,
+                        perPage: 500, // Max safe perPage
+                    })
+                    batchItems = [...batchItems, ...(chunkResult.items || [])]
+                } catch (e) {
+                    console.error(`[BatchAction] Chunk fetch failed for index ${i}`, e);
+                }
+            }
         }
 
-        // 3. Fetch active phases for this bank type (isolated, non-fatal)
+        // 4. Fetch Phases
         let phases: any[] = []
         try {
             const phasesResult = await pocketbaseList<any>('batch_phases', {
@@ -50,58 +70,63 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
             })
             phases = phasesResult.items || []
         } catch (phaseErr: any) {
-            console.warn('batch_phases fetch failed (non-fatal):', phaseErr?.message)
+            console.warn('batch_phases fetch failed:', phaseErr?.message)
         }
 
-        // Fetch Funding Txns
-        const fundingTxnIds = batches.map((b: any) => b.funding_transaction_id).filter(Boolean) || []
-        let fundingTxns: any[] = []
-        if (fundingTxnIds.length > 0) {
-            const txnFilter = fundingTxnIds.map((id: string) => `id = "${id}"`).join(' || ')
-            const txnsResult = await pocketbaseList<any>('transactions', {
-                filter: txnFilter,
-                perPage: 500,
+        // 5. Optimized Funding Lookup (Single request for whole year)
+        const yearStart = `${year}-01-01 00:00:00`
+        const yearEnd = `${year}-12-31 23:59:59`
+        const fallbackFundingByBatchMap = new Map<string, any>()
+        try {
+            const fallbackFundingResult = await pocketbaseList<any>('transactions', {
+                filter: `(metadata ~ 'batch_funding' || metadata ~ 'batch_step') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+                perPage: 200,
+                sort: '-created',
                 expand: 'account_id,target_account_id',
             })
-            fundingTxns = (txnsResult.items || []).map((txn: any) => ({
-                ...txn,
-                account: txn?.expand?.account_id || null,
-                target_account: txn?.expand?.target_account_id || null,
-            }))
-        }
-
-        // Fallback: for migrated PB data, funding_transaction_id may be missing on batch
-        // while transaction exists with metadata.batch_id + step1 markers.
-        const fallbackFundingByBatch = new Map<string, any>()
-        const batchesMissingFunding = batches.filter((b: any) => !b.funding_transaction_id)
-        for (const b of batchesMissingFunding) {
-            try {
-                const escapedBatchId = String(b.id || '').replace(/"/g, '\\"')
-                const fallbackFilter = `metadata ~ "\\\"batch_id\\\":\\\"${escapedBatchId}\\\"" && (metadata ~ "\\\"batch_step\\\":\\\"step1\\\"" || metadata ~ "\\\"type\\\":\\\"batch_funding\\\"")`
-                const fallbackTxns = await pocketbaseList<any>('transactions', {
-                    filter: fallbackFilter,
-                    perPage: 1,
-                    sort: '-created',
-                    expand: 'account_id,target_account_id',
-                })
-                const txn = fallbackTxns.items?.[0]
-                if (txn) {
-                    fallbackFundingByBatch.set(b.id, {
+            
+            fallbackFundingResult.items.forEach(txn => {
+                const meta = typeof txn.metadata === 'string' ? JSON.parse(txn.metadata) : txn.metadata
+                const bId = meta?.batch_id
+                if (bId && !fallbackFundingByBatchMap.has(bId)) {
+                    fallbackFundingByBatchMap.set(bId, {
                         ...txn,
                         account: txn?.expand?.account_id || null,
                         target_account: txn?.expand?.target_account_id || null,
                     })
                 }
-            } catch {
-                // non-fatal fallback lookup
-            }
+            })
+        } catch (e) {
+            console.warn('[BatchAction] Optimized funding lookup failed', e)
         }
 
         const enrichedBatches = batches.map((b: any) => ({
             ...b,
             batch_items: batchItems.filter((item: any) => item.batch_id === b.id),
-            funding_transaction: fundingTxns.find((t: any) => t.id === b.funding_transaction_id) || fallbackFundingByBatch.get(b.id) || null
+            funding_transaction: b.funding_transaction_id ? null : fallbackFundingByBatchMap.get(b.id) // Map will be merged later if ID exists
         }))
+
+        // Resolve explicit funding transactions if they exist but weren't in fallback results
+        const explicitFundingIds = batches.map(b => b.funding_transaction_id).filter(id => id && !Array.from(fallbackFundingByBatchMap.values()).some(v => v.id === id))
+        if (explicitFundingIds.length > 0) {
+            try {
+                const explicitTxns = await pocketbaseList<any>('transactions', {
+                    filter: explicitFundingIds.map(id => `id='${id}'`).join(' || '),
+                    expand: 'account_id,target_account_id'
+                })
+                explicitTxns.items.forEach(txn => {
+                    // Match to batches
+                    const batch = enrichedBatches.find(b => b.funding_transaction_id === txn.id)
+                    if (batch) {
+                        batch.funding_transaction = {
+                            ...txn,
+                            account: txn?.expand?.account_id || null,
+                            target_account: txn?.expand?.target_account_id || null,
+                        }
+                    }
+                })
+            } catch {}
+        }
 
         return {
             success: true,

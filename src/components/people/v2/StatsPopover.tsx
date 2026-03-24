@@ -1,9 +1,17 @@
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { FileText, ArrowRight } from 'lucide-react'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import { FileText, ArrowRight, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
+import { syncPeopleDebtAction } from '@/actions/people-actions'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
 interface StatsPopoverProps {
+    personId?: string
+    tag?: string
     originalLend: number
     cashback: number
     netLend: number
@@ -34,6 +42,8 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 })
 
 export function StatsPopover({
+    personId,
+    tag,
     originalLend,
     cashback,
     netLend,
@@ -46,6 +56,8 @@ export function StatsPopover({
     tabs,
 }: StatsPopoverProps) {
     const [activeTab, setActiveTab] = useState<string>(tabs?.[0]?.key ?? 'default')
+    const [isSyncing, setIsSyncing] = useState(false)
+
     const tabStats = tabs?.find((tab) => tab.key === activeTab)?.stats
     const view = tabStats ?? {
         originalLend,
@@ -56,6 +68,23 @@ export function StatsPopover({
         paidRollover,
         receiveRollover,
         outstandingDebt,
+    }
+
+    const handleSync = async () => {
+        if (!personId || !tag || isSyncing) return
+        setIsSyncing(true)
+        try {
+            const res = await syncPeopleDebtAction(personId, tag)
+            if (res.success) {
+                toast.success('Debt cycle synced successfully')
+            } else {
+                toast.error(res.error || 'Failed to sync debt cycle')
+            }
+        } catch (err) {
+            toast.error('Unexpected error during sync')
+        } finally {
+            setIsSyncing(false)
+        }
     }
 
     return (
@@ -97,134 +126,119 @@ export function StatsPopover({
                     <span>Values</span>
                 </div>
 
-                <div className="space-y-3 relative">
-                    {/* Flow Line */}
-                    <div className="absolute left-[15px] top-3 bottom-3 w-0.5 bg-slate-100 -z-10" />
-
-                    {/* Step 1: Original */}
-                    <div className="flex items-center justify-between bg-white border border-slate-100 p-2 rounded-lg shadow-sm z-10">
-                        <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-slate-400" />
-                            <span className="text-xs font-medium text-slate-600">Original Amount</span>
+                <div className="space-y-4 relative">
+                    {/* 1. INITIAL (Gross) */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">1. Initial (Gross)</span>
+                            <span className="text-[9px] text-slate-400">Total spent for member</span>
                         </div>
-                        <span className="text-sm font-bold text-slate-900">
+                        <span className="text-sm font-black text-slate-900 tabular-nums">
                             {numberFormatter.format(view.originalLend)}
                         </span>
                     </div>
 
-                    {/* Arrow Down */}
-                    <div className="flex justify-center -my-1">
-                        <ArrowRight className="h-3 w-3 text-slate-300 rotate-90" />
+                    <div className="flex justify-center -my-2.5 relative z-10 w-full">
+                        <div className="p-1 bg-white border border-slate-200 rounded-full shadow-sm text-slate-300">
+                            <ArrowRight className="h-2.5 w-2.5 rotate-90" />
+                        </div>
                     </div>
 
-                    {/* Step 2: Cashback Deduction */}
-                    <div className="flex items-center justify-between bg-amber-50 border border-amber-100 p-2 rounded-lg z-10">
-                        <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-amber-500" />
-                            <span className="text-xs font-medium text-amber-700">Cashback Total</span>
+                    {/* 2. BACK (Shared) */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/30 group hover:bg-emerald-50 transition-colors">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.1em]">2. Back (Shared)</span>
+                            <span className="text-[9px] text-emerald-400">Cashback share/adjustments</span>
                         </div>
-                        <span className="text-sm font-bold text-amber-700">
+                        <span className="text-sm font-black text-emerald-600 tabular-nums">
                             -{numberFormatter.format(view.cashback)}
                         </span>
                     </div>
 
-                    {/* Arrow Down */}
-                    <div className="flex justify-center -my-1">
-                        <ArrowRight className="h-3 w-3 text-slate-300 rotate-90" />
+                    <div className="flex justify-center -my-2.5 relative z-10 w-full">
+                        <div className="p-1 bg-white border border-slate-200 rounded-full shadow-sm text-slate-300">
+                            <ArrowRight className="h-2.5 w-2.5 rotate-90" />
+                        </div>
                     </div>
 
-                    {/* Step 3: Net Lend */}
-                    <div className="flex items-center justify-between bg-blue-50 border border-blue-100 p-2 rounded-lg z-10">
-                        <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-blue-500" />
-                            <span className="text-xs font-medium text-blue-700">Net Amount</span>
+                    {/* 3. LEND (Net) */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-indigo-100 bg-indigo-50/30 group hover:bg-indigo-50 transition-colors">
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.1em]">3. Lend (Net)</span>
+                                <div className="h-1 w-1 rounded-full bg-indigo-400" />
+                            </div>
+                            <span className="text-[9px] text-indigo-400 font-medium">Principal (INITIAL - BACK)</span>
                         </div>
-                        <span className="text-sm font-bold text-blue-700">
+                        <span className="text-sm font-black text-indigo-700 tabular-nums">
                             {numberFormatter.format(view.netLend)}
                         </span>
                     </div>
 
-                    {/* Step 4: Repay Deduction */}
-                    <div className="flex flex-col gap-2 bg-emerald-50 border border-emerald-100 p-2 rounded-lg z-10">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                <span className="text-xs font-medium text-emerald-700">Repayment</span>
-                            </div>
-                            <span className="text-sm font-bold text-emerald-700">
-                                -{numberFormatter.format(view.repay)}
-                            </span>
+                    <div className="flex justify-center -my-2.5 relative z-10 w-full">
+                        <div className="p-1 bg-white border border-slate-200 rounded-full shadow-sm text-slate-300">
+                            <ArrowRight className="h-2.5 w-2.5 rotate-90" />
                         </div>
-                        {(view.paidRollover || 0) > 0 && (
-                            <div className="flex items-center justify-between pl-4 text-[10px] text-emerald-600/80 italic">
-                                <span>incl. Paid Rollover</span>
-                                <span>-{numberFormatter.format(view.paidRollover || 0)}</span>
-                            </div>
-                        )}
                     </div>
 
-                    {/* Step 5: Receive Rollover (If any) */}
-                    {(view.receiveRollover || 0) > 0 && (
-                        <>
-                            <div className="flex justify-center -my-1">
-                                <ArrowRight className="h-3 w-3 text-slate-300 rotate-90" />
-                            </div>
-                            <div className="flex flex-col gap-2 bg-slate-50 border border-slate-200 p-2 rounded-lg z-10">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-slate-400" />
-                                        <span className="text-xs font-medium text-slate-600">Opening Balance</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-slate-900">
-                                        {numberFormatter.format(view.receiveRollover || 0)}
-                                    </span>
-                                </div>
-                                <div className="pl-4 text-[10px] text-slate-400 italic">
-                                    From previous cycle
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Step 6: Historical Debt (If any) */}
-                    {(view.outstandingDebt || 0) !== 0 && (
-                        <>
-                            <div className="flex justify-center -my-1">
-                                <ArrowRight className="h-3 w-3 text-slate-300 rotate-90" />
-                            </div>
-                            <div className="flex flex-col gap-2 bg-amber-50/30 border border-amber-100 p-2 rounded-lg z-10 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-amber-400" />
-                                        <span className="text-xs font-medium text-amber-700">Previous Debt</span>
-                                    </div>
-                                    <span className={cn(
-                                        "text-sm font-bold",
-                                        view.outstandingDebt! > 0 ? "text-amber-600" : "text-emerald-600"
-                                    )}>
-                                        {numberFormatter.format(view.outstandingDebt || 0)}
-                                    </span>
-                                </div>
-                                <div className="pl-4 text-[10px] text-amber-500/80 italic">
-                                    Balance from previous months
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Divider */}
-                    <div className="h-px bg-slate-200 my-2" />
-
-                    {/* Final: Remains */}
-                    <div className="flex items-center justify-between bg-rose-50 border border-rose-200 p-3 rounded-lg z-10 shadow-sm">
-                        <div className="flex items-center gap-2">
-                            <div className="h-2.5 w-2.5 rounded-full bg-rose-600" />
-                            <span className="text-sm font-bold text-rose-800">REMAINING AMOUNT</span>
+                    {/* 4. REPAY */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">4. Repay (Paid)</span>
+                            <span className="text-[9px] text-slate-400">Transactions / Rollovers</span>
                         </div>
-                        <span className="text-lg font-bold text-rose-600">
-                            {numberFormatter.format(view.remains)}
+                        <span className="text-sm font-black text-slate-600 tabular-nums">
+                            -{numberFormatter.format(view.repay)}
                         </span>
                     </div>
+
+                    {/* Divider for Grand Final */}
+                    <div className="h-px bg-slate-100 mx-2 my-1" />
+
+                    {/* 5. REMAINS */}
+                    <div className={cn(
+                        "flex items-center justify-between p-3 rounded-xl border group transition-all duration-300",
+                        view.remains <= 1000 
+                            ? "bg-emerald-500 border-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.2)]" 
+                            : "bg-rose-500 border-rose-400 shadow-[0_4px_12px_rgba(244,63,94,0.2)]"
+                    )}>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-white/90 uppercase tracking-[0.15em]">5. Remains (Out)</span>
+                            <span className="text-[9px] text-white/70">Calculated Debt: LEND - REPAY</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-lg font-black text-white tabular-nums drop-shadow-sm">
+                                {numberFormatter.format(view.remains)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">Data Integrity</span>
+                        <span className="text-[8px] text-slate-400">Lock calculations to database</span>
+                    </div>
+
+                    <button
+                        onClick={handleSync}
+                        disabled={!personId || !tag || isSyncing}
+                        type="button"
+                        className={cn(
+                            "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                            isSyncing 
+                                ? "bg-slate-100 text-slate-400 cursor-wait"
+                                : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 hover:shadow-indigo-300 active:scale-95"
+                        )}
+                    >
+                        {isSyncing ? (
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : (
+                            <RefreshCw className="h-3 w-3" />
+                        )}
+                        {isSyncing ? 'Syncing...' : 'Fix Data'}
+                    </button>
                 </div>
             </PopoverContent>
         </Popover>

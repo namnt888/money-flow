@@ -1,45 +1,70 @@
 ## Error Type
-Console Error
+Console TypeError
 
 ## Error Message
-Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+Cannot read properties of undefined (reading 'localeCompare')
 
 
-    at button (<anonymous>:null:null)
-    at _c (src/components/ui/button.tsx:46:7)
-    at ManageSheetButton (src/components/people/manage-sheet-button.tsx:452:19)
-    at ManageSheetButton (src/components/people/manage-sheet-button.tsx:451:17)
-    at TransactionControlBar (src/components/people/v2/TransactionControlBar.tsx:376:25)
-    at MemberDetailView (src/components/people/v2/MemberDetailView.tsx:914:21)
-    at PeopleDetailContent (src\app\people\[id]\page.tsx:169:7)
-    at PeopleDetailPage (src\app\people\[id]\page.tsx:93:7)
+    at <anonymous> (src\services\people.service.ts:235:31)
+    at Array.sort (<anonymous>:1:19)
+    at <anonymous> (src\services\people.service.ts:235:10)
+    at Array.map (<anonymous>:1:18)
+    at getPeople (src\services\people.service.ts:214:25)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
 
 ## Code Frame
-  44 |     const Comp = asChild ? Slot : "button"
-  45 |     return (
-> 46 |       <Comp
-     |       ^
-  47 |         className={cn(buttonVariants({ variant, size, className }))}
-  48 |         ref={ref}
-  49 |         {...props}
+  233 |           remains: Math.round(cs.balance),
+  234 |         }))
+> 235 |         .sort((a, b) => b.tag.localeCompare(a.tag));
+      |                               ^
+  236 |
+  237 |       const currentCycleStats = cycleStatsMap?.get(currentMonthTag);
+  238 |
 
 Next.js version: 16.0.10 (Turbopack)
 ## Error Type
 Console Error
 
 ## Error Message
-Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__2437c96b._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
 
 
-    at RootLayout (src\app\layout.tsx:59:17)
+    at getPeople (src\services\people.service.ts:259:13)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
 
 ## Code Frame
-  57 |             <AppLayout>
-  58 |               <div id="mf-app-root" suppressHydrationWarning className="h-full w-full">
-> 59 |                 <AppErrorBoundary>{children}</AppErrorBoundary>
-     |                 ^
-  60 |               </div>
-  61 |             </AppLayout>
-  62 |           </BreadcrumbProvider>
+  257 |     });
+  258 |   } catch (error) {
+> 259 |     console.error("[DB:PB] getPeople failed:", error);
+      |             ^
+  260 |     return [];
+  261 |   }
+  262 | }
+
+Next.js version: 16.0.10 (Turbopack)
+## Error Type
+Console Error
+
+## Error Message
+C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__03ed81c3._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+
+
+    at getPeople (src\services\people.service.ts:259:13)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
+
+## Code Frame
+  257 |     });
+  258 |   } catch (error) {
+> 259 |     console.error("[DB:PB] getPeople failed:", error);
+      |             ^
+  260 |     return [];
+  261 |   }
+  262 | }
 
 Next.js version: 16.0.10 (Turbopack)

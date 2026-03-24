@@ -1,6 +1,6 @@
 'use server'
 
-import { pocketbaseList, pocketbaseGetById, toPocketBaseId } from './pocketbase/server'
+import { pocketbaseList, pocketbaseGetById, toPocketBaseId, pocketbaseUpdate, pocketbaseCreate } from './pocketbase/server'
 import { DebtAccount } from '@/types/moneyflow.types'
 import { toYYYYMMFromDate, normalizeMonthTag } from '@/lib/month-tag'
 import { CreateTransactionInput, createTransaction } from './transaction.service'
@@ -24,15 +24,22 @@ type DebtTransactionRow = {
 export type DebtByTagAggregatedResult = {
   tag: string;
   netBalance: number;
-  originalPrincipal: number;
-  totalOriginalDebt: number; // New field for raw aggregated debt (before cashback)
-  totalBack: number;
-  totalCashback: number;
+  initial: number;     // Gross (INITIAL)
+  back: number;        // Cashback (BACK)
+  lend: number;        // Net (LEND)
+  repay: number;       // Paid (REPAY)
+  remains: number;     // Outstanding (REMAINS)
   status: string;
   last_activity: string;
-  manual_allocations?: Record<string, number>;
   remainingPrincipal: number;
   links: { repaymentId: string, amount: number }[];
+  
+  // Legacy mapping
+  originalPrincipal?: number;
+  totalOriginalDebt?: number;
+  totalBack?: number;
+  totalCashback?: number;
+  manual_allocations?: Record<string, number>;
 }
 
 type SettleDebtResult = {
@@ -198,18 +205,25 @@ export async function getPersonDetails(id: string): Promise<{
   }
 }
 
-export async function getDebtByTags(personId: string): Promise<DebtByTagAggregatedResult[]> {
+export async function getDebtByTags(personId: string, options?: { ignoreSynced?: boolean }): Promise<DebtByTagAggregatedResult[]> {
   if (!personId) return []
   const pbPersonId = await resolvePersonPocketBaseId(personId)
 
   try {
-    const response = await pocketbaseList<any>('transactions', {
-      filter: `person_id = "${pbPersonId}" && status != "void"`,
-      sort: 'date',
-      perPage: 1000
-    });
+    const [txnsResponse, cyclesResponse] = await Promise.all([
+      pocketbaseList<any>('transactions', {
+        filter: `person_id = "${pbPersonId}" && status != "void"`,
+        sort: 'date',
+        perPage: 500
+      }),
+      pocketbaseList<any>('people_debt_cycles', {
+        filter: `person_id = "${pbPersonId}"`,
+      })
+    ]);
 
-    const data = response.items;
+    const data = txnsResponse.items;
+    const syncedCycles = cyclesResponse.items;
+    const syncedMap = new Map(syncedCycles.map(c => [c.cycle_tag, c]));
 
   // FIFO Simulation to determine "Remaining" amount for each debt
   // 1. Separate Debts and Repayments
@@ -385,92 +399,113 @@ export async function getDebtByTags(personId: string): Promise<DebtByTagAggregat
     }
   >();
 
-    ; (data as unknown as (DebtTransactionRow & { id: string })[]).forEach(row => {
-      const normalizedTag = normalizeMonthTag(row.tag)
-      const tag = normalizedTag?.trim() ? normalizedTag.trim() : (row.tag?.trim() ? row.tag.trim() : 'UNTAGGED')
-      const baseType = resolveBaseType(row.type)
-      const finalPrice = calculateFinalPrice(row)
-      const occurredAt = row.occurred_at ?? ''
+  ;(data as unknown as (DebtTransactionRow & { id: string })[]).forEach(row => {
+    // Prioritize debt_cycle_tag for grouping, fall back to row.tag
+    const preferredTag = (row as any).debt_cycle_tag || row.tag;
+    const normalizedTag = normalizeMonthTag(preferredTag)
+    const tag = normalizedTag?.trim() ? normalizedTag.trim() : (preferredTag?.trim() ? preferredTag.trim() : 'UNTAGGED')
+    const baseType = resolveBaseType(row.type)
+    const occurredAt = row.occurred_at ?? ''
 
-      if (!tagMap.has(tag)) {
-        tagMap.set(tag, { lend: 0, lendOriginal: 0, repay: 0, cashback: 0, last_activity: occurredAt, remainingPrincipal: 0, links: [] })
+    if (!tagMap.has(tag)) {
+      tagMap.set(tag, { lend: 0, lendOriginal: 0, repay: 0, cashback: 0, last_activity: occurredAt, remainingPrincipal: 0, links: [] })
+    }
+
+    const current = tagMap.get(tag)!
+
+    // 1. INITIAL (Gross) = amount
+    const rawAmount = Math.abs(Number(row.amount ?? 0))
+    
+    // 2. BACK (Shared Cashback)
+    const percentVal = Number(row.cashback_share_percent ?? 0)
+    const fixedVal = Number(row.cashback_share_fixed ?? 0)
+    const normalizedPercent = percentVal > 1 ? percentVal / 100 : percentVal
+    const cashbackShared = (rawAmount * normalizedPercent) + fixedVal
+
+    if (baseType === 'expense') {
+      if (!isNaN(rawAmount)) {
+        current.lendOriginal += rawAmount
       }
+      if (!isNaN(cashbackShared)) {
+        current.cashback += cashbackShared
+      }
+      
+      // 3. LEND (Net Principal) = INITIAL - BACK
+      current.lend += (rawAmount - cashbackShared)
 
-      const current = tagMap.get(tag)!
-
-      const rawAmount = Math.abs(Number(row.amount ?? 0))
-      const percentVal = Number(row.cashback_share_percent ?? 0)
-      const fixedVal = Number(row.cashback_share_fixed ?? 0)
-      const normalizedPercent = percentVal > 1 ? percentVal / 100 : percentVal
-      const cashback = (rawAmount * normalizedPercent) + fixedVal
-
-      if (baseType === 'expense') {
-        if (!isNaN(finalPrice)) {
-          current.lend += finalPrice
-        }
-        if (!isNaN(rawAmount)) {
-          current.lendOriginal += rawAmount
-        }
-        // Add remaining principal from our FIFO simulation
-        const fifoEntry = debtsMap.get(row.id)
-        if (fifoEntry) {
-          /*
-          if (row.tag?.includes('2025-10')) {
-            console.log(`[DebtAgg-DEBUG] ID: ${row.id} | Tag: ${row.tag} | MapRem: ${fifoEntry.remaining}`);
+      // Add remaining principal from our FIFO simulation
+      const fifoEntry = debtsMap.get(row.id)
+      if (fifoEntry) {
+        current.remainingPrincipal += fifoEntry.remaining
+        fifoEntry.links.forEach(link => {
+          const exists = current.links.find(l => l.repaymentId === link.repaymentId);
+          if (exists) {
+            exists.amount += link.amount;
+          } else {
+            current.links.push({ ...link });
           }
-          */
-          current.remainingPrincipal += fifoEntry.remaining
-          // Add links (deduplicate by ID if needed, but array is fine for now)
-          fifoEntry.links.forEach(link => {
-            // Check if already added to tag (optional, but cleaner)
-            const exists = current.links.find(l => l.repaymentId === link.repaymentId);
-            if (exists) {
-              exists.amount += link.amount;
-            } else {
-              current.links.push({ ...link });
-            }
-          });
-        }
-      } else if (baseType === 'income') {
-        if (!isNaN(finalPrice)) {
-          current.repay += finalPrice
-        }
+        });
       }
+    } else if (baseType === 'income') {
+      if (!isNaN(rawAmount)) {
+        current.repay += rawAmount
+      }
+    }
 
-      if (!isNaN(cashback)) {
-        current.cashback += cashback
-      }
-
-      if (occurredAt && occurredAt > current.last_activity) {
-        current.last_activity = occurredAt
-      }
-    })
+    if (occurredAt && occurredAt > current.last_activity) {
+      current.last_activity = occurredAt
+    }
+  })
 
     const result = Array.from(tagMap.entries()).map(([tag, { lend, lendOriginal, repay, cashback, last_activity, remainingPrincipal, links }]) => {
-    const netBalance = lend - repay
+    const remains = lend - repay;
+    const netBalance = remains;
 
     // Status Logic:
     let status = 'active'
-    if (remainingPrincipal < 500) {
+    if (Math.abs(remains) < 500) {
       status = 'settled'
-    } else {
-      // Debug: Why is it still active?
-      // if (tag.includes('2025-10') || tag.includes('2025-11') || tag.includes('2025-12')) {
-      //   console.log(`[DebtStatus-Active] Tag: ${tag} | Remaining: ${remainingPrincipal} | Net: ${netBalance}`);
-      // }
+    }
+
+    const synced = syncedMap.get(tag);
+    if (!options?.ignoreSynced && synced && synced.is_synced) {
+      return {
+        tag,
+        netBalance: (synced.lend_net || 0) - (synced.repay_net || 0),
+        initial: synced.initial_amount || 0,
+        back: synced.back_amount || 0,
+        lend: synced.lend_net || 0,
+        repay: synced.repay_net || 0,
+        remains: synced.remains_amount || 0,
+        status: synced.status || status,
+        last_activity: synced.last_synced_at || last_activity,
+        remainingPrincipal: synced.remains_amount || 0,
+        links,
+        // Legacy
+        originalPrincipal: synced.lend_net || 0,
+        totalOriginalDebt: synced.initial_amount || 0,
+        totalBack: synced.repay_net || 0,
+        totalCashback: synced.back_amount || 0,
+        isSynced: true
+      };
     }
 
     return {
       tag,
       netBalance,
-      originalPrincipal: lend,
-      totalOriginalDebt: lendOriginal,
-      totalBack: repay,
-      totalCashback: cashback,
+      initial: lendOriginal,
+      back: cashback,
+      lend: lend,
+      repay: repay,
+      remains: remainingPrincipal,
       status,
       last_activity,
       remainingPrincipal,
-      links
+      links,
+      // Legacy
+      totalBack: repay,
+      totalCashback: cashback,
+      isSynced: false
     }
   });
 
@@ -580,4 +615,99 @@ export async function getOutstandingDebts(personId: string, excludeTransactionId
     console.error('[DB:PB] getOutstandingDebts failed:', err);
     return [];
   }
+}
+
+export async function syncPersonDebtCycle(personId: string, tag: string) {
+  const pbPersonId = await resolvePersonPocketBaseId(personId);
+  const rawStats = await getDebtByTags(personId, { ignoreSynced: true });
+  
+  if (tag === 'all') {
+    return await syncAllPersonDebtCycles(personId);
+  }
+
+  const cycleStat = rawStats.find(s => s.tag === tag);
+
+  if (!cycleStat) {
+    return { success: false, error: `Tag ${tag} not found in transaction history` };
+  }
+
+  // Find existing record
+  const existing = await pocketbaseList<any>('people_debt_cycles', {
+    filter: `person_id = "${pbPersonId}" && cycle_tag = "${tag}"`,
+  });
+
+  const cycleId = toPocketBaseId(`${pbPersonId}-${tag}`);
+
+  const payload = {
+    id: cycleId,
+    person_id: pbPersonId,
+    cycle_tag: tag,
+    initial_amount: cycleStat.initial,
+    back_amount: cycleStat.back,
+    lend_net: cycleStat.lend,
+    repay_net: cycleStat.repay,
+    remains_amount: cycleStat.remains,
+    status: cycleStat.status,
+    is_synced: true,
+    last_synced_at: new Date().toISOString()
+  };
+
+  try {
+    if (existing.items.length > 0) {
+      await pocketbaseUpdate('people_debt_cycles', existing.items[0].id, payload);
+    } else {
+      await pocketbaseCreate('people_debt_cycles', payload);
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('[DebtService] Sync failed:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function syncAllPersonDebtCycles(personId: string) {
+  const pbPersonId = await resolvePersonPocketBaseId(personId);
+  const rawStats = await getDebtByTags(personId, { ignoreSynced: true });
+  
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const cycleStat of rawStats) {
+    const tag = cycleStat.tag;
+    const cycleId = toPocketBaseId(`${pbPersonId}-${tag}`);
+    const payload = {
+      id: cycleId,
+      person_id: pbPersonId,
+      cycle_tag: tag,
+      initial_amount: cycleStat.initial,
+      back_amount: cycleStat.back,
+      lend_net: cycleStat.lend,
+      repay_net: cycleStat.repay,
+      remains_amount: cycleStat.remains,
+      status: cycleStat.status,
+      is_synced: true,
+      last_synced_at: new Date().toISOString()
+    };
+
+    try {
+      const existing = await pocketbaseList<any>('people_debt_cycles', {
+        filter: `person_id = "${pbPersonId}" && cycle_tag = "${tag}"`,
+      });
+
+      if (existing.items.length > 0) {
+        await pocketbaseUpdate('people_debt_cycles', existing.items[0].id, payload);
+      } else {
+        await pocketbaseCreate('people_debt_cycles', payload);
+      }
+      successCount++;
+    } catch (err) {
+      console.error(`[DebtService] Failed to sync cycle ${tag}:`, err);
+      errorCount++;
+    }
+  }
+
+  return { 
+    success: successCount > 0, 
+    message: `Synced ${successCount} cycles${errorCount > 0 ? `, ${errorCount} failed` : ''}` 
+  };
 }

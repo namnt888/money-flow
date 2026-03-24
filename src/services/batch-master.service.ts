@@ -25,7 +25,7 @@ export async function getBatchMasterItems(bankType?: 'MBB' | 'VIB') {
     const supabase: any = createClient()
     let query = supabase
         .from('batch_master_items')
-        .select('*, accounts(*), categories(*)')
+        .select('*, accounts(*, holder_person_id:people(*)), categories(*)')
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true })
 

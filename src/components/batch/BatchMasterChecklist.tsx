@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
+import { migrateBatchItemsToPhasesAction } from '@/actions/batch-master.actions'
 import { toast } from 'sonner'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -142,10 +143,27 @@ export function BatchMasterChecklist({
         try {
             const result = await getChecklistDataAction(bankType, currentYear)
             if (result.success && result.data) {
-                setMasterItems(result.data.masterItems || [])
-                setBatches(result.data.batches || [])
+                const loadedMasters = result.data.masterItems || []
+                
+                // AUTO MIGRATE: If any master item is missing a phase_id, auto-trigger alignment
+                if (loadedMasters.some((m: any) => !m.phase_id)) {
+                    const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
+                    await migrateBatchItemsToPhasesAction({ bankType })
+                    
+                    // Re-fetch clean data after auto-migration
+                    const refresh = await getChecklistDataAction(bankType, currentYear)
+                    if (refresh.success && refresh.data) {
+                        setMasterItems(refresh.data.masterItems || [])
+                        setBatches(refresh.data.batches || [])
+                        setPhases(refresh.data.phases || [])
+                    }
+                } else {
+                    setMasterItems(loadedMasters)
+                    setBatches(result.data.batches || [])
+                    setPhases(result.data.phases || [])
+                }
+
                 const loadedPhases = result.data.phases || []
-                setPhases(loadedPhases)
                 if (!selectedPhaseId) {
                     const firstId = loadedPhases.length > 0 ? loadedPhases[0].id : 'before'
                     setSelectedPhaseId(firstId)
@@ -196,8 +214,22 @@ export function BatchMasterChecklist({
 
             // Fallback: match by cutoff_period → phase.period_type
             if (!phaseId) {
-                const matchedPhase = activePhases.find((p: any) => p.period_type === master.cutoff_period && p.bank_type === bankType)
-                if (matchedPhase) phaseId = matchedPhase.id
+                // Improved mapping: if there are multiple phases for the same type (e.g. two "after" phases), 
+                // prioritize by cutoff_day matching or finding the first phase that covers the due_date.
+                const matchedPhases = activePhases.filter((p: any) => p.period_type === master.cutoff_period && p.bank_type === bankType)
+                
+                if (matchedPhases.length === 1) {
+                    phaseId = matchedPhases[0].id
+                } else if (matchedPhases.length > 1) {
+                    // Use due_date as tie-breaker
+                    const dueDay = master.accounts?.due_date
+                    const bestMatch = dueDay 
+                        ? (matchedPhases.find((p: any) => p.cutoff_day >= dueDay) || matchedPhases[matchedPhases.length - 1])
+                        : matchedPhases[0]
+                    phaseId = bestMatch.id
+                } else if (activePhases.length > 0) {
+                    phaseId = activePhases[0].id
+                }
             }
 
             if (!phaseId || !byPhase[phaseId]) return
@@ -284,6 +316,7 @@ export function BatchMasterChecklist({
     }
 
     async function handleGlobalSync() {
+        if (!selectedMonth) return
         setPerformingAction(true)
         try {
             const currentPhase = effectivePhases.find((p: any) => p.id === selectedPhaseId)
@@ -293,10 +326,32 @@ export function BatchMasterChecklist({
                 bankType,
                 phaseId: selectedPhaseId || undefined
             })
-            if (result.success) toast.success(`${currentPhase?.label || 'Phase'} synced: ${result.initializedCount} items`)
-            handleFastRefresh()
+            if (result.success) {
+                toast.success('Batch initialized from Master Checklist')
+                await refreshChecklist()
+            } else {
+                toast.error(result.error || 'Sync failed. Try "Re-align All" first if field missing.')
+            }
         } catch (e) {
             toast.error('Sync failed')
+        } finally {
+            setPerformingAction(false)
+        }
+    }
+
+    async function handleRealignMasters() {
+        setPerformingAction(true)
+        const toastId = toast.loading('Re-aligning all master items to correct phases...')
+        try {
+            const result = await migrateBatchItemsToPhasesAction({ bankType })
+            if (result.success) {
+                toast.success(`Done! Re-aligned ${result.updatedCount} items. (Skipped ${result.skippedCount})`, { id: toastId })
+                await refreshChecklist()
+            } else {
+                toast.error(result.error || 'Migration failed', { id: toastId })
+            }
+        } catch (error: any) {
+            toast.error(error.message, { id: toastId })
         } finally {
             setPerformingAction(false)
         }
@@ -692,6 +747,35 @@ export function BatchMasterChecklist({
 
                 <div className="flex items-center gap-2">
                     <TooltipProvider>
+                        <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden shrink-0">
+                             <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={handleGlobalSync}
+                                        disabled={performingAction}
+                                        className="h-11 px-4 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                    >
+                                        <Database className="h-4 w-4" />
+                                        <span>Sync Master</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Initialize this month's batch from Master list (Stage 0)</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={handleRealignMasters}
+                                        disabled={performingAction}
+                                        className="h-11 px-4 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-white text-slate-500 hover:bg-slate-50 border-l border-slate-100"
+                                    >
+                                        <RefreshCw className={cn("h-4 w-4", performingAction && "animate-spin")} />
+                                        <span>Re-align Master</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Emergency: Re-align All Master Items to Phases (Fix field mismatch)</TooltipContent>
+                            </Tooltip>
+                        </div>
+
                         <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-500 overflow-hidden shrink-0">
                             <Combobox
                                 value={fundSourceAccountId}
@@ -1110,6 +1194,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     bankNumber: item.bank_number,
                     bankName: item.bank_name,
                     targetAccountId: item.target_account_id,
+                    phaseId: phase.id,
                 })
                 if (!result?.success) {
                     throw new Error(result?.error || `Save failed for ${item.receiver_name || item.id}`)
@@ -1303,9 +1388,9 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                         <Link
                             href={`/transactions?highlight=${currentBatch.funding_transaction.id}`}
                             target="_blank"
-                            className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3 hover:bg-indigo-50 transition-colors"
+                            className="bg-indigo-50/50 border border-indigo-100 rounded-none p-3 flex items-center gap-3 hover:bg-indigo-50 transition-colors"
                         >
-                            <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                            <div className="h-8 w-8 rounded-none bg-indigo-100 flex items-center justify-center shrink-0">
                                 <Wallet className="h-4 w-4 text-indigo-600" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1564,28 +1649,67 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             )}
 
             {item.accounts?.image_url ? (
-                <div className="shrink-0 h-10 w-10 overflow-hidden bg-slate-50 flex items-center justify-center">
+                <div className="shrink-0 h-10 w-10 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
                     <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
                 </div>
             ) : (
-                <div className="shrink-0 h-10 w-10 bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400">
+                <div className="shrink-0 h-10 w-10 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 shadow-sm">
                     {item.bank_name?.substring(0, 2)}
                 </div>
             )}
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-slate-900 truncate tracking-tight uppercase text-xs">
-                        {item.receiver_name}
-                    </span>
-                    {item.bank_code ? (
-                        <Badge className="bg-indigo-600 text-white border-none rounded-none px-1 text-[8px] font-black h-3.5 uppercase tracking-tighter">
+                    <Link 
+                        href={`/accounts/${item.target_account_id}`}
+                        target="_blank"
+                        className="font-black text-slate-900 truncate tracking-tight uppercase text-xs hover:text-indigo-600 transition-colors"
+                    >
+                        {item.accounts?.name || item.bank_name}
+                    </Link>
+                    {item.holder_person ? (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-slate-100 border border-slate-200 shadow-sm transition-colors hover:bg-slate-200">
+                            <Link 
+                                href={`/people/${item.holder_person.id}`}
+                                className="flex items-center gap-1.5 outline-none"
+                            >
+                                {item.holder_person.image_url ? (
+                                    <div className="h-4 w-4 rounded-none overflow-hidden shrink-0 border border-white bg-white">
+                                        <img src={item.holder_person.image_url} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                ) : (
+                                    <span className="p-0.5 bg-slate-300/50 rounded-none">
+                                        <User className="h-2.5 w-2.5 text-slate-600" />
+                                    </span>
+                                )}
+                                <span className="text-[10px] font-black text-slate-600 tracking-tight uppercase leading-none">
+                                    {item.holder_person.name}
+                                </span>
+                            </Link>
+                        </div>
+                    ) : (item.accounts?.holder_type === 'me' || !item.accounts?.holder_person_id) ? (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-indigo-50 border border-indigo-100 shadow-sm">
+                            <span className="p-0.5 bg-indigo-200/50 rounded-none">
+                                <Sparkles className="h-2.5 w-2.5 text-indigo-600" />
+                            </span>
+                            <span className="text-[10px] font-black text-indigo-700 tracking-tight uppercase leading-none">
+                                Me
+                            </span>
+                        </div>
+                    ) : item.bank_code && (
+                        <Badge className="bg-slate-100 text-slate-400 border border-slate-200 rounded-none px-1 text-[8px] font-black h-3.5 uppercase tracking-tighter">
                             {item.bank_code}
                         </Badge>
-                    ) : (
-                        <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100 border-none rounded-sm px-1 text-[9px] font-bold h-3.5">
-                            {item.bank_name}
-                        </Badge>
+                    )}
+                    {item.accounts?.holder_type === 'relative' && !item.holder_person && (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-indigo-50 border border-indigo-100/60 shadow-sm shadow-indigo-100/30">
+                            <span className="p-0.5 bg-indigo-200/50 rounded-none">
+                                <User className="h-2 w-2 text-indigo-600" />
+                            </span>
+                            <span className="text-[10px] font-black text-indigo-700 tracking-tight uppercase leading-none">
+                                Relative
+                            </span>
+                        </div>
                     )}
                     {dueBadge && (
                         <span className={cn(
@@ -1607,24 +1731,34 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                             <AlertCircle className="h-2.5 w-2.5" /> Wrong phase
                         </span>
                     )}
+                    {item.cutoff_period && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="inline-flex items-center justify-center p-1 rounded-md bg-slate-100/50 border border-slate-200/60 shadow-sm shrink-0">
+                                        <Lock className="h-2.5 w-2.5 text-slate-400" />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-[10px]">
+                                    Cutoff: {item.cutoff_period.toUpperCase()}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                    {item.accounts && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                            <ArrowRight className="h-2.5 w-2.5" />
-                            <Link
-                                href={`/accounts/${item.target_account_id}`}
-                                target="_blank"
-                                className="text-indigo-600/70 hover:underline hover:text-indigo-800 transition-colors truncate max-w-[80px]"
-                            >
-                                {item.accounts.name}
-                            </Link>
-                            {item.note && (
-                                <span className="ml-1 text-slate-300 font-medium italic truncate max-w-[60px]">
-                                    • {item.note}
-                                </span>
-                            )}
-                        </div>
+                <div className="flex items-center gap-1.5 mt-1 border-t border-slate-50 pt-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[120px]">
+                        {item.receiver_name}
+                    </span>
+                    {item.accounts?.account_number && (
+                        <span className="text-[9px] font-medium text-slate-300 tabular-nums">
+                            • {item.accounts.account_number}
+                        </span>
+                    )}
+                    {item.note && (
+                        <span className="ml-1 text-indigo-400 font-bold italic truncate max-w-[80px] text-[10px]">
+                            • {item.note}
+                        </span>
                     )}
                 </div>
             </div>

@@ -35,6 +35,7 @@ interface PeopleTableHeaderV2Props {
     isSyncingAll?: boolean;
     canResetSort?: boolean;
     onResetSort?: () => void;
+    migrationDialog?: React.ReactNode;
 }
 
 export function PeopleTableHeaderV2({
@@ -53,6 +54,7 @@ export function PeopleTableHeaderV2({
     isSyncingAll,
     canResetSort,
     onResetSort,
+    migrationDialog,
 }: PeopleTableHeaderV2Props) {
     const years = availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
     const filters: { id: FilterStatus; label: string; icon: React.ReactNode; count?: number; color: string }[] = [
@@ -214,6 +216,9 @@ export function PeopleTableHeaderV2({
                 <RotateCw className={cn("h-4 w-4", isSyncingAll && "animate-spin")} />
                 <span className="hidden lg:inline">Sync All Sheets</span>
             </Button>
+
+            {/* Migration Dialog */}
+            {migrationDialog}
 
             {/* Reset Sort Button */}
             {canResetSort && (

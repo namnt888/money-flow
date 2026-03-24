@@ -27,6 +27,7 @@ import { normalizeCashbackConfig } from '@/lib/cashback'
 import { getPersonRouteId } from '@/lib/person-route'
 import { getPocketBaseAccountSpendingStatsSnapshot } from '@/services/pocketbase/account-details.service'
 import { AccountSpendingStats } from '@/types/cashback.types'
+import { syncPeopleDebtAction } from '@/actions/people-actions'
 
 interface MemberDetailViewProps {
     person: Person
@@ -99,6 +100,26 @@ export function MemberDetailView({
 
     // Browser Tab Spinner Enhancement
     useAppFavicon(isSubmitting || isGlobalLoading || isPending, person.image_url ?? undefined)
+
+    const onSyncPeopleDebt = async (tag: string): Promise<{ success: boolean; error?: string }> => {
+        if (!tag) return { success: false, error: 'Invalid cycle tag' }
+        
+        setIsGlobalLoading(true)
+        setLoadingMessage(tag === 'all' ? 'Syncing ALL cycles...' : `Syncing ${tag}...`)
+        
+        try {
+            const res = await syncPeopleDebtAction(person.id, tag) as any
+            if (!res.success) {
+                throw new Error(res.error || res.message || 'Failed to sync')
+            }
+            return res
+        } catch (err: any) {
+            throw err
+        } finally {
+            setIsGlobalLoading(false)
+            setLoadingMessage('')
+        }
+    }
 
     // Derive active month/year from URL (Single Source of Truth)
     const urlYear = searchParams.get('year')
@@ -901,6 +922,7 @@ export function MemberDetailView({
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 onEdit={() => setIsPersonSlideOpen(true)}
+                onSyncCycle={onSyncPeopleDebt}
                 cashbackStatus={mappedGlobalStats || selectedAccountCashbackStatus || undefined}
                 allCashbackStatuses={allCashbackStatuses}
                 isSyncing={isGlobalLoading || isPending}
@@ -946,6 +968,7 @@ export function MemberDetailView({
                         isPending={isPending}
                         initialSheetUrl={activeCycleSheet?.sheet_url}
                         onRefresh={handleRefresh}
+                        onSyncCycle={onSyncPeopleDebt}
                         setIsGlobalLoading={setIsGlobalLoading}
                         setLoadingMessage={setLoadingMessage}
                     />

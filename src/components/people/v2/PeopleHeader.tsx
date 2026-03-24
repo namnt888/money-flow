@@ -19,8 +19,10 @@ import {
     MoreHorizontal,
     CircleDollarSign,
     ArrowUpRight,
+    RefreshCw,
     Users
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { isYYYYMM } from '@/lib/month-tag'
 import { formatMoneyVND } from '@/lib/utils'
@@ -116,6 +118,7 @@ interface PeopleHeaderProps {
     isSyncing?: boolean
     syncingText?: string
     hasFilter?: boolean
+    onSyncCycle?: (tag: string) => Promise<any>
 }
 
 function CircularProgress({ percent, size = 44, label, colorClass = "text-blue-500" }: { percent: number, size?: number, label?: string, colorClass?: string }) {
@@ -209,6 +212,7 @@ export function PeopleHeader({
     isSyncing = false,
     syncingText,
     hasFilter = false,
+    onSyncCycle
 }: PeopleHeaderProps) {
     const isSettled = Math.abs(stats.remains) < 100
     const currentCycleRepayPercent = stats.netLend > 0 ? Math.min(100, Math.round((Math.abs(stats.repay) / Math.abs(stats.netLend)) * 100)) : 0
@@ -262,14 +266,19 @@ export function PeopleHeader({
                     )}
 
                     {/* SUMMARY SECTION */}
-                    <div className="flex items-center gap-6 px-5 py-2 shrink-0">
-                        <CircularProgress percent={currentCycleRepayPercent} label="PAID" colorClass="text-emerald-500" />
+                    <div className="flex items-center gap-0 px-6 py-2 shrink-0">
+                        <div className="flex items-center gap-6 pr-6">
+                            <CircularProgress percent={currentCycleRepayPercent} label="Repaid" colorClass="text-emerald-500" />
+                        </div>
                         
-                        <div className="flex items-center gap-8">
-                            <MetricItem label="ORIGINAL" value={stats.originalLend} colorClass="text-slate-900" />
-                            <MetricItem label="CASHBACK" value={stats.cashback} colorClass="text-emerald-600" />
+                        <div className="flex items-center border-l border-slate-100">
+                            <MetricItem label="Initial" value={stats.originalLend} colorClass="text-slate-900" className="w-[100px] pl-6 border-r border-slate-50" />
+                            <MetricItem label="Back" value={stats.cashback} colorClass="text-amber-600" className="w-[100px] px-6 border-r border-slate-50" />
+                            <MetricItem label="Repaid" value={stats.repay} colorClass="text-emerald-600" className="w-[100px] px-6 border-r border-slate-50" />
                             
                             <StatsPopover
+                                personId={person.id}
+                                tag={activeCycle?.tag}
                                 originalLend={stats.originalLend}
                                 cashback={stats.cashback}
                                 netLend={stats.netLend}
@@ -278,8 +287,8 @@ export function PeopleHeader({
                                 paidRollover={stats.paidRollover}
                                 receiveRollover={stats.receiveRollover}
                             >
-                                <button className="text-left hover:opacity-80 transition-opacity">
-                                    <MetricItem label="REMAINS" value={stats.remains} colorClass="text-rose-600" />
+                                <button className="text-left hover:opacity-80 transition-opacity w-[100px] pl-6">
+                                    <MetricItem label="Remains" value={stats.remains} colorClass="text-rose-600" />
                                 </button>
                             </StatsPopover>
                         </div>
@@ -290,27 +299,27 @@ export function PeopleHeader({
 
                     {/* REWARDS SECTION */}
                     <div className="flex flex-1 items-center gap-6 px-6 py-2 bg-slate-50/40">
-                        <CircularProgress percent={cashbackGoalPercent} label="GOAL" colorClass="text-blue-500" />
+                        <CircularProgress percent={cashbackGoalPercent} label="Goal" colorClass="text-blue-500" />
 
                         {(cashbackStatus && hasFilter) ? (
-                            <div className="flex-1 flex items-center gap-12">
-                                <div className="flex items-center gap-10">
+                            <div className="flex-1 flex items-center gap-6 min-w-0">
+                                <div className="flex items-center gap-6">
                                     <MetricItem 
-                                        label="COMBINED PROFIT" 
+                                        label="Profit" 
                                         value={cashbackStatus.profit || 0} 
                                         colorClass="text-emerald-600" 
                                         icon={TrendingUp}
                                         prefix="+"
                                     />
-                                    <MetricItem label="EARNED" value={cashbackStatus.earned} colorClass="text-slate-900" icon={Gift} />
-                                    <MetricItem label="SHARED" value={cashbackStatus.shared || 0} colorClass="text-slate-600" icon={Users} />
+                                    <MetricItem label="Earned" value={cashbackStatus.earned} colorClass="text-slate-900" icon={Gift} />
+                                    <MetricItem label="Shared" value={cashbackStatus.shared || 0} colorClass="text-slate-600" icon={Users} />
                                 </div>
 
                                 {/* Status / Missing section */}
                                 <div className="flex items-center h-full">
                                     {cashbackStatus.needToSpend > 0 ? (
                                         <MetricItem 
-                                            label="MISSING" 
+                                            label="Missing" 
                                             value={cashbackStatus.needToSpend} 
                                             colorClass="text-orange-600" 
                                             icon={TrendingDown}
@@ -328,7 +337,7 @@ export function PeopleHeader({
                                 </div>
                             </div>
                         ) : allCashbackStatuses.length > 0 ? (
-                            <div className="flex-1 flex items-center gap-4 overflow-hidden">
+                            <div className="flex-1 flex items-center gap-4 overflow-hidden min-w-0">
                                 <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
                                     {allCashbackStatuses
                                         .filter(s => s.needToSpend > 0 || (s.profit || 0) > 0)
@@ -410,13 +419,13 @@ export function PeopleHeader({
                                     )}
                                 </div>
 
-                                <div className="ml-auto pr-6 flex flex-col items-end shrink-0 group cursor-help transition-all duration-300">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 opacity-80 group-hover:opacity-100">
+                                <div className="ml-auto pr-6 flex flex-col items-end shrink-0 group cursor-help transition-all duration-300 min-w-0">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 whitespace-nowrap">
                                         COMBINED PROFIT <TrendingUp className="h-2.5 w-2.5" />
                                     </span>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                        <span className="text-[20px] font-black text-emerald-600 tracking-tighter leading-none [text-shadow:0_1px_1px_rgba(255,255,255,0.8)]">
+                                        <span className="text-[20px] font-black text-emerald-600 tracking-tighter leading-none [text-shadow:0_1px_1px_rgba(255,255,255,0.8)] tabular-nums">
                                             +{allCashbackStatuses.reduce((acc, curr) => acc + (curr.profit || 0), 0).toLocaleString()}
                                         </span>
                                     </div>
@@ -461,10 +470,40 @@ export function PeopleHeader({
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-48 p-2">
                             <div className="flex flex-col gap-1">
-                                <button className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors">
+                                <button 
+                                    onClick={() => onEdit()}
+                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
+                                >
                                     <Edit className="h-4 w-4" /> Edit Person
                                 </button>
-                                <button className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors">
+                                <button 
+                                    onClick={() => {
+                                        if (onSyncCycle) {
+                                            toast.promise(onSyncCycle('all'), {
+                                                loading: 'Fixing all debt cycles in database...',
+                                                success: 'All debt cycles synced successfully!',
+                                                error: (err: any) => err?.message || 'Failed to sync all cycles'
+                                            });
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-100/80 rounded-lg text-sm font-bold text-indigo-600 transition-colors"
+                                    disabled={isSyncing}
+                                >
+                                    <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} /> Fix All Cycles (Global)
+                                </button>
+                                {activeCycle?.tag && activeCycle.tag !== 'all' && (
+                                    <button 
+                                        onClick={() => onSyncCycle?.(activeCycle.tag)}
+                                        className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
+                                        disabled={isSyncing}
+                                    >
+                                        <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} /> Sync Cycle {activeCycle.tag}
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={() => window.open(person.sheet_link || '', '_blank')}
+                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
+                                >
                                     <CircleDollarSign className="h-4 w-4" /> Manage Sheet
                                 </button>
                             </div>

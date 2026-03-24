@@ -3,7 +3,21 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { DateRange } from 'react-day-picker'
-import { CalendarIcon, Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, X } from 'lucide-react'
+import { 
+    CalendarIcon, 
+    Check, 
+    ChevronDown, 
+    ChevronLeft, 
+    ChevronRight, 
+    Loader2, 
+    Search, 
+    X,
+    History,
+    Settings,
+    RefreshCw,
+    TrendingUp
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -31,12 +45,14 @@ interface UnifiedSmartDatePickerProps {
     count?: number; 
     highlight?: boolean;
     stats?: {
-      debt?: number;
-      back?: number;
-      remains?: number;
+      initial?: number;
+      cashback?: number;
+      repay?: number;
+      shared?: number;
       spent?: number;
       earned?: number;
       profit?: number;
+      remains?: number;
       isSettled?: boolean;
     }
   }>
@@ -48,6 +64,7 @@ interface UnifiedSmartDatePickerProps {
   disabled?: boolean
   selectedYearValue?: string | null
   onYearSelect?: (year: string | null) => void
+  onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
 }
 
 function parseStrictDate(input: string): Date | null {
@@ -130,6 +147,7 @@ export function UnifiedSmartDatePicker({
   disabled = false,
   selectedYearValue,
   onYearSelect,
+  onSyncCycle,
 }: UnifiedSmartDatePickerProps) {
   const [open, setOpen] = useState(false)
   const [yearOpen, setYearOpen] = useState(false)
@@ -140,6 +158,8 @@ export function UnifiedSmartDatePicker({
   const [cycleSearch, setCycleSearch] = useState('')
   const [typedInput, setTypedInput] = useState('')
   const [inputWarning, setInputWarning] = useState<string | null>(null)
+
+  const [debtTab, setDebtTab] = useState<'history' | 'configs'>('history')
 
   const cycleYears = useMemo(() => {
     const years = new Set<string>()
@@ -282,6 +302,264 @@ export function UnifiedSmartDatePicker({
     onRangeChange(localRange)
     setOpen(false)
   }
+  
+  const handleInternalSync = async (tag?: string) => {
+    const targetTag = tag || localCycle;
+    if (!onSyncCycle || !targetTag) {
+        toast.warning('Please select a specific cycle to sync')
+        return
+    }
+    
+    const isGlobal = targetTag === 'all';
+    toast.promise(onSyncCycle(targetTag), {
+        loading: isGlobal ? `Synchronizing ALL historical data...` : `Synchronizing technical data for ${targetTag}...`,
+        success: (res: any) => {
+            if (res && !res.success) throw new Error(res.error || 'Unknown error');
+            return isGlobal ? `All cycles synchronized successfully.` : `Cycle ${targetTag} synchronized successfully.`;
+        },
+        error: (err: any) => `Sync failed: ${err.message || 'Check connection'}`
+    })
+  }
+
+  const CyclePickerContent = () => {
+    return (
+      <div className="flex flex-col h-full bg-white">
+        {/* 1. Header Navigation Tabs */}
+        <div className="px-6 pt-5 pb-6 bg-slate-50/50 border-b border-slate-200/60 rounded-t-2xl">
+          <div className="flex bg-slate-200/50 p-1 rounded-xl w-fit">
+            <button
+              onClick={() => setDebtTab('history')}
+              className={cn(
+                "flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                debtTab === 'history' 
+                  ? "bg-white text-indigo-600 shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+              )}
+            >
+              <History className="h-3.5 w-3.5" /> Debt History
+            </button>
+            <button
+              onClick={() => setDebtTab('configs')}
+              className={cn(
+                "flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                debtTab === 'configs' 
+                  ? "bg-white text-indigo-600 shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+              )}
+            >
+              <Settings className="h-3.5 w-3.5" /> Configurations
+            </button>
+          </div>
+        </div>
+
+        {/* 2. Sub-header with Sync Controller */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100/60 bg-slate-50/30">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Sync Controller</span>
+          </div>
+          <div className="flex items-center gap-4">
+              <button 
+                onClick={() => handleInternalSync('all')}
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Sync All Global
+              </button>
+              <button 
+                onClick={() => handleInternalSync()}
+                className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Sync Current Cycle
+              </button>
+          </div>
+        </div>
+
+        {/* 3. Search & Year Filter */}
+        <div className="px-6 py-4 flex items-center gap-4 bg-white sticky top-0 z-20">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Input 
+              placeholder="Search cycle..." 
+              className="pl-11 h-12 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-indigo-500/10 rounded-xl font-medium transition-all"
+              value={cycleSearch}
+              onChange={(e) => setCycleSearch(e.target.value)}
+            />
+          </div>
+          <Popover open={yearOpen} onOpenChange={setYearOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-12 px-5 bg-slate-50/50 border-slate-100 rounded-xl font-bold text-slate-700 min-w-[110px]">
+                {cycleYearFilter === 'all' ? 'All Years' : cycleYearFilter}
+                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[180px] p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Filter year..." />
+                <CommandList>
+                  <CommandEmpty>No year found.</CommandEmpty>
+                  <CommandItem onSelect={() => { setCycleYearFilter('all'); setYearOpen(false); }}>
+                    <span>All Years</span>
+                    {cycleYearFilter === 'all' && <Check className="w-3.5 h-3.5" />}
+                  </CommandItem>
+                  {cycleYears.map(year => (
+                    <CommandItem 
+                      key={year} 
+                      onSelect={() => { 
+                        setCycleYearFilter(year)
+                        setYearOpen(false)
+                      }}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{year}</span>
+                      {cycleYearFilter === year && <Check className="w-3.5 h-3.5" />}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* 4. Cycle List */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4 max-h-[460px]">
+          {isCycleLoading ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400">
+              <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+              <span className="text-sm font-medium">Loading technical data...</span>
+            </div>
+          ) : filteredCycles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
+              <Search className="h-12 w-12 opacity-10" />
+              <span className="text-sm font-medium">No cycles discovered for this year</span>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              <AnimatePresence mode="popLayout">
+                {filteredCycles.map((cycle, idx) => {
+                  const isSelected = localCycle === cycle.value
+                  const isSettled = cycle.stats?.isSettled || false
+                  const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
+                  const reallySettled = isSettled || Math.abs(remains) < 500
+
+                  return (
+                    <motion.div
+                      key={cycle.value}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2, delay: idx * 0.03 }}
+                      layout
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setLocalCycle(cycle.value)}
+                        className={cn(
+                          "w-full text-left rounded-2xl border transition-all duration-300 relative overflow-hidden group/item",
+                          isSelected 
+                            ? "bg-slate-50/50 border-indigo-200 shadow-[0_8px_32px_rgba(79,70,229,0.06)] ring-1 ring-indigo-100" 
+                            : "bg-white border-slate-100/80 hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
+                        )}
+                      >
+                        <div className="flex h-[62px] items-center">
+                          {/* Cycle Label (Left) */}
+                          <div className="min-w-[120px] px-4 py-3 flex flex-col justify-center border-r border-slate-50 h-[80%] my-auto">
+                            <span className={cn(
+                              "text-lg font-black tracking-tight leading-none mb-0.5",
+                              isSelected ? "text-indigo-600" : "text-slate-900"
+                            )}>
+                              {cycle.value}
+                            </span>
+                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">MONTH CYCLE</span>
+                          </div>
+
+                          {/* Data Grid (Right) */}
+                          <div className="flex-1 grid grid-cols-4 items-center h-full">
+                            {statType === 'debt' ? (
+                              <>
+                                {/* Initial */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-slate-400 mb-1.5">Initial</span>
+                                  <span className="text-base font-bold text-slate-700 tabular-nums">
+                                    {new Intl.NumberFormat('en-US').format(cycle.stats?.initial || 0)}
+                                  </span>
+                                </div>
+                                {/* Cashback */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-orange-400 mb-1.5 uppercase tracking-tighter">Cashback</span>
+                                  <span className="text-base font-bold text-orange-500 tabular-nums">
+                                    {Number(cycle.stats?.cashback || 0) > 0 ? `-${new Intl.NumberFormat('en-US').format(Number(cycle.stats?.cashback))}` : '0'}
+                                  </span>
+                                </div>
+                                {/* Repaid */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-emerald-500 mb-1.5">Repaid</span>
+                                  <span className="text-base font-bold text-emerald-600 tabular-nums">
+                                    {new Intl.NumberFormat('en-US').format(cycle.stats?.repay || 0)}
+                                  </span>
+                                </div>
+                                {/* Remains / Status */}
+                                <div className="h-full flex items-center justify-center px-4">
+                                  {reallySettled ? (
+                                    <div className="h-9 w-full rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex flex-col items-center justify-center shrink-0">
+                                      <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-0.5">STATUS</span>
+                                      <span className="text-[10px] font-black leading-none">SETTLED</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-rose-50/50 border border-rose-100/50 shrink-0">
+                                      <span className="text-[8px] font-bold text-rose-400 mb-0.5">Remains</span>
+                                      <span className="text-sm font-bold text-rose-600 tabular-nums">
+                                        {new Intl.NumberFormat('en-US').format(remains)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* Spent */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Spent</span>
+                                  <span className="text-base font-bold text-slate-700 tabular-nums">
+                                    {new Intl.NumberFormat('en-US').format(cycle.stats?.spent || 0)}
+                                  </span>
+                                </div>
+                                {/* Earned */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1.5">Earned</span>
+                                  <span className="text-base font-bold text-emerald-600 tabular-nums">
+                                    {new Intl.NumberFormat('en-US').format(cycle.stats?.earned || 0)}
+                                  </span>
+                                </div>
+                                {/* Shared */}
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                  <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1.5">Shared</span>
+                                  <span className="text-base font-bold text-amber-600 tabular-nums">
+                                    {new Intl.NumberFormat('en-US').format(cycle.stats?.shared || 0)}
+                                  </span>
+                                </div>
+                                {/* Profit */}
+                                <div className="h-full flex items-center justify-center px-4">
+                                    <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-indigo-50/50 border border-indigo-100/50 shrink-0">
+                                      <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Profit</span>
+                                      <span className="text-sm font-bold text-indigo-600 tabular-nums">
+                                        {new Intl.NumberFormat('en-US').format(remains)}
+                                      </span>
+                                    </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Popover
@@ -312,11 +590,11 @@ export function UnifiedSmartDatePicker({
 
       <PopoverContent
         className={cn(
-          'p-0 border-primary/20 shadow-xl w-auto',
-          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[480px]' : 'w-[360px]'
+          'p-0 border-slate-200/60 shadow-2xl backdrop-blur-xl bg-white/95 rounded-2xl overflow-hidden',
+          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[750px] max-w-[95vw]' : 'w-[450px]'
         )}
         align="start"
-        sideOffset={4}
+        sideOffset={6}
       >
         <div className="p-2 border-b grid grid-cols-6 gap-1 bg-muted/30">
           {(['cycle', 'date', 'range', 'month', 'year', 'all'] as PickerMode[]).map((tab) => (
@@ -332,203 +610,23 @@ export function UnifiedSmartDatePicker({
           ))}
         </div>
 
-        <div className={cn('p-3 space-y-3', localMode === 'range' && 'pr-3')}>
-          <div>
-            <Input
-              value={typedInput}
-              onChange={(e) => {
-                setTypedInput(formatSmartInputMask(e.target.value))
-                if (inputWarning) setInputWarning(null)
-              }}
-              placeholder="Type: dd-mm-yyyy or dd-mm-yyyy to dd-mm-yyyy"
-              className="h-9 text-xs"
-            />
-            {inputWarning && <p className="text-[11px] text-amber-600 mt-1">{inputWarning}</p>}
-          </div>
-
-          {localMode === 'cycle' && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
-                  <Input
-                    value={cycleSearch}
-                    onChange={(e) => setCycleSearch(e.target.value)}
-                    className="h-8 pl-7 pr-7 text-xs"
-                    placeholder="Search cycle"
-                  />
-                  {cycleSearch && (
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
-                      onClick={() => setCycleSearch('')}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                <Popover open={yearOpen} onOpenChange={setYearOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 min-w-[92px] text-xs justify-between">
-                      {cycleYearFilter === 'all' ? 'All years' : cycleYearFilter}
-                      <ChevronDown className="h-3 w-3 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[180px] p-0" align="end">
-                    <Command>
-                      <CommandInput placeholder="Find year" />
-                      <CommandList>
-                        <CommandEmpty>No years</CommandEmpty>
-                        <CommandItem
-                          value="all-years"
-                          onSelect={() => {
-                            setCycleYearFilter('all')
-                            setYearOpen(false)
-                          }}
-                          className="flex items-center justify-between"
-                        >
-                          <span>All years</span>
-                          {cycleYearFilter === 'all' && <Check className="w-3.5 h-3.5" />}
-                        </CommandItem>
-                        {cycleYears.map((year) => (
-                          <CommandItem
-                            key={year}
-                            value={year}
-                            onSelect={() => {
-                              setCycleYearFilter(year)
-                              setYearOpen(false)
-                            }}
-                            className="flex items-center justify-between"
-                          >
-                            <span>{year}</span>
-                            {cycleYearFilter === year && <Check className="w-3.5 h-3.5" />}
-                          </CommandItem>
-                        ))}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="max-h-48 overflow-y-auto border rounded-md p-1">
-                {isCycleLoading ? (
-                  <div className="h-24 flex items-center justify-center text-xs text-slate-500 gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading cycles...
-                  </div>
-                ) : filteredCycles.length === 0 ? (
-                  <div className="h-16 flex items-center justify-center text-xs text-slate-500">No cycles</div>
-                ) : (
-                  filteredCycles.map((cycle) => (
-                    <button
-                      key={cycle.value}
-                      type="button"
-                      className={cn(
-                        'w-full rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
-                        localCycle === cycle.value
-                          ? 'border-indigo-200 bg-indigo-50 shadow-sm'
-                          : cycle.highlight
-                            ? 'border-amber-100 bg-amber-50/50 hover:bg-amber-100'
-                            : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50'
-                      )}
-                      onClick={() => setLocalCycle(cycle.value)}
-                    >
-                      <div className="flex items-center justify-between gap-4 min-w-0">
-                        <div className="flex flex-col text-left justify-center">
-                            <span className={cn(
-                                "text-sm font-bold tracking-tight leading-none",
-                                localCycle === cycle.value ? "text-indigo-900" : "text-slate-900"
-                            )}>
-                                {cycle.label}
-                            </span>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">
-                                {cycle.value}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3 flex-1 justify-end">
-                            {cycle.stats && statType ? (
-                                <>
-                                    {statType === 'debt' ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">INITIAL</span>
-                                                <span className="text-[10px] font-bold text-slate-800 leading-none">
-                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.initial || 0)}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
-                                                <span className="text-[7px] font-black text-amber-500 uppercase tracking-tighter leading-none mb-1">CASH</span>
-                                                <span className="text-[10px] font-bold text-amber-600 leading-none">
-                                                    -{new Intl.NumberFormat('en-US').format(cycle.stats.cashback || 0)}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col items-end border-l border-slate-100 pl-2">
-                                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-tighter leading-none mb-1">REPAID</span>
-                                                <span className="text-[10px] font-bold text-emerald-600 leading-none">
-                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.repay || 0)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">SPENT</span>
-                                                <span className="text-[11px] font-bold text-slate-600 leading-none">
-                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.spent || 0)}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">EARNED</span>
-                                                <span className="text-[11px] font-bold text-emerald-600 leading-none">
-                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.earned || 0)}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">SHARED</span>
-                                                <span className="text-[11px] font-bold text-amber-600 leading-none">
-                                                    {new Intl.NumberFormat('en-US').format(cycle.stats.shared || 0)}
-                                                </span>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    <div className={cn(
-                                        "px-2 py-1.5 rounded-lg shadow-sm flex flex-col items-center min-w-[75px] border",
-                                        (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000)
-                                            ? "bg-emerald-50 border-emerald-100" 
-                                            : "bg-rose-50 border-rose-100"
-                                    )}>
-                                        <span className={cn(
-                                            "text-[7px] font-black leading-none uppercase tracking-tighter mb-1",
-                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-500" : "text-rose-400"
-                                        )}>
-                                            {statType === 'debt' 
-                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 1000) ? "STATUS" : "REMAINS")
-                                                : "PROFIT"
-                                            }
-                                        </span>
-                                        <span className={cn(
-                                            "text-[10px] font-black leading-none",
-                                            (cycle.stats.isSettled || Math.abs(statType === 'debt' ? (cycle.stats.remains || 0) : (cycle.stats.profit || 0)) < 1000) ? "text-emerald-700" : "text-rose-600"
-                                        )}>
-                                            {statType === 'debt'
-                                                ? ((cycle.stats.isSettled || Math.abs(cycle.stats.remains || 0) < 1000) ? "SETTLED" : new Intl.NumberFormat('en-US').format(cycle.stats.remains || 0))
-                                                : new Intl.NumberFormat('en-US').format(cycle.stats.profit || 0)
-                                            }
-                                        </span>
-                                    </div>
-                                </>
-                            ) : null}
-                        </div>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
+        <div className={cn(localMode !== 'cycle' && 'p-3 space-y-3', localMode === 'range' && 'pr-3')}>
+          {localMode !== 'cycle' && (
+            <div>
+              <Input
+                value={typedInput}
+                onChange={(e) => {
+                  setTypedInput(formatSmartInputMask(e.target.value))
+                  if (inputWarning) setInputWarning(null)
+                }}
+                placeholder="Type: dd-mm-yyyy or dd-mm-yyyy to dd-mm-yyyy"
+                className="h-9 text-xs"
+              />
+              {inputWarning && <p className="text-[11px] text-amber-600 mt-1">{inputWarning}</p>}
             </div>
           )}
+
+          {localMode === 'cycle' && <CyclePickerContent />}
 
           {localMode === 'date' && (
             <Calendar

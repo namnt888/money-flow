@@ -101,6 +101,7 @@ export async function pocketbaseRequest<T>(
 
   if (!response.ok) {
     const text = await response.text()
+    console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
     throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
   }
 

@@ -6,19 +6,19 @@ import { UnifiedTransactionTable } from "@/components/moneyflow/unified-transact
 import { TypeFilterDropdown } from "@/components/transactions-v2/header/TypeFilterDropdown";
 import { StatusDropdown } from "@/components/transactions-v2/header/StatusDropdown";
 import { QuickFilterDropdown } from "@/components/transactions-v2/header/QuickFilterDropdown";
-import { MonthYearPickerV2 } from "@/components/transactions-v2/header/MonthYearPickerV2";
+import { UnifiedSmartDatePicker } from "@/components/transactions-v2/header/UnifiedSmartDatePicker";
 import { AddTransactionDropdown } from "@/components/transactions-v2/header/AddTransactionDropdown";
 import { TransactionSlideV2 } from "@/components/transaction/slide-v2/transaction-slide-v2";
 import { SingleTransactionFormValues } from "@/components/transaction/slide-v2/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, FilterX, X } from "lucide-react";
+import { Search, Filter, FilterX, X, Clipboard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { buildEditInitialValues } from "@/lib/transaction-mapper";
-import { formatCycleTag } from "@/lib/cycle-utils";
 import { isYYYYMM, normalizeMonthTag } from "@/lib/month-tag";
+import { resolveTransactionCycleTag, formatCycleTag } from "@/lib/cycle-utils";
 
 interface PersonDetailTransactionsProps {
     person: Person;
@@ -32,38 +32,7 @@ interface PersonDetailTransactionsProps {
 type FilterType = 'all' | 'income' | 'expense' | 'lend' | 'repay' | 'transfer' | 'cashback';
 type StatusFilter = 'active' | 'void' | 'pending';
 
-function resolveCycleTagByStatementDay(date: Date, statementDay?: number | null): string {
-    const day = Number(statementDay || 0);
-    let year = date.getFullYear();
-    let month = date.getMonth() + 1;
-
-    if (day > 0 && date.getDate() > day) {
-        month += 1;
-        if (month > 12) {
-            month = 1;
-            year += 1;
-        }
-    }
-
-    return `${year}-${String(month).padStart(2, '0')}`;
-}
-
-function resolveTransactionCycleTagForAccount(transaction: TransactionWithDetails, statementDay?: number | null): string {
-    const persisted = normalizeMonthTag(transaction.persisted_cycle_tag || transaction.account_billing_cycle || '');
-    if (persisted && isYYYYMM(persisted)) return persisted;
-
-    const derived = normalizeMonthTag(transaction.derived_cycle_tag || '');
-    if (derived && isYYYYMM(derived)) return derived;
-
-    if ((statementDay || 0) > 0) {
-        const parsed = parseISO(transaction.occurred_at || transaction.created_at || '');
-        if (!Number.isNaN(parsed.getTime())) {
-            return resolveCycleTagByStatementDay(parsed, statementDay);
-        }
-    }
-
-    return normalizeMonthTag(transaction.tag || '') || '';
-}
+// Shared utility imported from @/lib/cycle-utils
 
 export function PersonDetailTransactions({
     person,
@@ -130,14 +99,14 @@ export function PersonDetailTransactions({
             0,
         ) || undefined;
         const cycleCountByTag = relevantTxns.reduce<Record<string, number>>((acc, txn) => {
-            const tag = resolveTransactionCycleTagForAccount(txn, statementDay);
+            const tag = resolveTransactionCycleTag(txn, { type: selectedAccount?.type, statement_day: statementDay })
             if (!tag) return acc;
             acc[tag] = (acc[tag] || 0) + 1;
             return acc;
         }, {});
 
         const currentCycleTag = statementDay
-            ? resolveCycleTagByStatementDay(new Date(), statementDay)
+            ? resolveTransactionCycleTag({ occurred_at: new Date().toISOString() }, { type: selectedAccount?.type, statement_day: statementDay })
             : undefined;
 
         return Object.keys(cycleCountByTag)
@@ -224,7 +193,7 @@ export function PersonDetailTransactions({
                 const statementDay = selectedAccount?.statement_day;
                 result = result.filter((txn) => {
                     if (!(txn.source_account_id === selectedAccountId || txn.target_account_id === selectedAccountId || txn.account_id === selectedAccountId)) return false;
-                    return resolveTransactionCycleTagForAccount(txn, statementDay) === selectedCycle;
+                    return resolveTransactionCycleTag(txn, { type: selectedAccount?.type, statement_day: statementDay }) === selectedCycle;
                 });
             }
         }
@@ -317,32 +286,56 @@ export function PersonDetailTransactions({
                             emptyText="No accounts found"
                         />
 
-                        <MonthYearPickerV2
+                        <UnifiedSmartDatePicker
                             date={date}
                             dateRange={dateRange}
                             mode={dateMode}
-                            onDateChange={setDate}
-                            onRangeChange={setDateRange}
-                            onModeChange={setDateMode}
+                            onDateChange={(nextDate) => {
+                                setDate(nextDate);
+                                setIsFilterActive(true);
+                            }}
+                            onRangeChange={(nextRange) => {
+                                setDateRange(nextRange);
+                                setIsFilterActive(true);
+                            }}
+                            onModeChange={(nextMode) => {
+                                setDateMode(nextMode);
+                                setIsFilterActive(nextMode !== 'all');
+                            }}
                             availableMonths={availableMonths}
                             cycles={cycleOptions}
                             selectedCycleValue={selectedCycle}
-                            onCycleSelect={setSelectedCycle}
+                            onCycleSelect={(cycle) => {
+                                setSelectedCycle(cycle);
+                                setIsFilterActive(true);
+                                setDateMode('cycle');
+                            }}
                         />
 
-                        <div className="relative flex-1 max-w-sm">
-                            <Input
-                                placeholder="Search notes, shops..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="h-9 pl-9 pr-8 text-sm border-slate-200"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
-                            )}
+                        <div className="relative flex items-center gap-1.5 flex-1 max-w-sm">
+                            <div className="relative flex-1">
+                                <Clipboard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors"
+                                    onClick={async () => {
+                                        try {
+                                            const text = await navigator.clipboard.readText()
+                                            setSearchTerm(text)
+                                        } catch (err) {
+                                            toast.error("Failed to read clipboard")
+                                        }
+                                    }}
+                                />
+                                <Input
+                                    placeholder="Paste notes, id here then search..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="h-9 pl-9 pr-8 text-sm border-slate-200"
+                                />
+                                {searchTerm && (
+                                    <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 

@@ -13,6 +13,7 @@ interface UpsertBatchItemParams {
     bankNumber: string
     bankName: string
     targetAccountId: string | null
+    phaseId?: string
 }
 
 /**
@@ -35,17 +36,21 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
 
         // Manual filter by period name suffix or column if possible
         const expectedSuffix = params.period === 'before' ? '(Early)' : '(Late)'
-        const matchedBatch = batch.find((b: any) =>
-            (b.period === params.period) ||
-            (b.name?.includes(expectedSuffix))
-        ) || null
-
+        // Manual filter: search by phaseId first, then fallback to matching period
+        const matchedBatch = params.phaseId
+            ? batch.find((b: any) => b.phase_id === params.phaseId)
+            : batch.find((b: any) =>
+                (b.period === params.period) ||
+                (b.name?.includes(expectedSuffix))
+            )
+        
         let batchId = matchedBatch?.id
 
         if (!batchId) {
-            // Create batch
+            // Create batch - Use Phase ID in seed if available to avoid period ID collisions
+            const batchIdPart = params.phaseId || params.period
             const insertData: any = {
-                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${params.period}`, 'batches'),
+                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches'),
                     month_year: params.monthYear,
                     name: monthName,
                     bank_type: params.bankType,
@@ -54,10 +59,13 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                 }
             let newBatch: any
             try {
-                newBatch = await pocketbaseCreate<any>('batches', insertData)
+                newBatch = await pocketbaseCreate<any>('batches', { 
+                    ...insertData, 
+                    phase_id: params.phaseId || null 
+                })
             } catch {
-                // Fallback if period column is not available
-                const { period: _period, ...fallbackInsert } = insertData
+                // Fallback if phase_id or period column is not available
+                const { ...fallbackInsert } = insertData
                 newBatch = await pocketbaseCreate<any>('batches', fallbackInsert)
             }
 
@@ -69,7 +77,7 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
         // Query by batch first, then match master ids in-app (raw + normalized).
         const existingItemsResult = await pocketbaseList<any>('batch_items', {
             filter: `batch_id = "${batchId}"`,
-            perPage: 5000,
+            perPage: 500,
         })
         const normalizedMasterId = toPocketBaseId(params.masterItemId, 'batchmaster')
         const deterministicBatchItemId = toPocketBaseId(`${batchId}:${params.masterItemId}`, 'batchitems')
@@ -181,17 +189,19 @@ export async function bulkInitializeFromMasterAction(params: {
         // 1. Fetch all active master items (prefer phase_id, fallback to cutoff_period)
         let masterItems: any[] = []
         try {
-            const phaseAwareFilter = params.phaseId
+            const filter = params.phaseId
                 ? `bank_type = "${params.bankType}" && is_active = true && phase_id = "${params.phaseId}"`
                 : `bank_type = "${params.bankType}" && is_active = true && cutoff_period = "${params.period}"`
 
             const masterResult = await pocketbaseList<any>('batch_master_items', {
-                filter: phaseAwareFilter,
+                filter,
                 perPage: 1000,
                 sort: 'sort_order',
             })
             masterItems = masterResult.items || []
         } catch (phaseErr) {
+            // Fallback: If phase_id filter fails (e.g. field doesn't exist), use cutoff_period
+            console.warn('bulkInitialize phase_id filter failed, falling back to cutoff_period:', (phaseErr as any)?.message)
             const fallbackFilter = `bank_type = "${params.bankType}" && is_active = true && cutoff_period = "${params.period}"`
             const fallbackResult = await pocketbaseList<any>('batch_master_items', {
                 filter: fallbackFilter,
@@ -199,7 +209,6 @@ export async function bulkInitializeFromMasterAction(params: {
                 sort: 'sort_order',
             })
             masterItems = fallbackResult.items || []
-            console.warn('bulkInitializeFromMasterAction phase filter fallback:', (phaseErr as any)?.message)
         }
 
         if (!masterItems || masterItems.length === 0) {
@@ -219,20 +228,21 @@ export async function bulkInitializeFromMasterAction(params: {
 
         const expectedSuffix = params.period === 'before' ? '(Early)' : '(Late)'
         const batch = allBatches?.find((b: any) =>
-            (b.period === params.period) ||
-            (b.name?.includes(expectedSuffix))
+            (params.phaseId && b.phase_id === params.phaseId) ||
+            (!params.phaseId && (b.period === params.period || b.name?.includes(expectedSuffix)))
         ) || null
 
         let batchId = batch?.id
         if (!batchId) {
+            // Use Phase ID in seed to avoid period ID collisions (Multiple's for After 15/After 20)
+            const batchIdPart = params.phaseId || params.period
             const insertData: any = {
-                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${params.period}`, 'batches'),
+                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches'),
                 month_year: params.monthYear,
                 name: monthName,
                 bank_type: params.bankType,
                 status: 'draft'
             }
-            // Only add period if the column is likely to exist (we'll try and if it fails, we'll try without)
             try {
                 const newBatch = await pocketbaseCreate<any>('batches', {
                     ...insertData,

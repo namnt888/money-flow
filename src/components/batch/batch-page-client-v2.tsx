@@ -8,7 +8,7 @@ import { BatchMasterChecklist } from '@/components/batch/BatchMasterChecklist'
 import { BatchMasterSlide } from '@/components/batch/BatchMasterSlide'
 import { Button } from '@/components/ui/button'
 import { Tabs } from '@/components/ui/tabs'
-import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
+import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, RotateCcw } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -273,6 +273,29 @@ export function BatchPageClientV2({
                                 >
                                     {isSyncingMaster ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 text-slate-400" />}
                                     <span>Sync Master</span>
+                                </Button>
+                                <Button
+                                    onClick={async () => {
+                                        const confirm = window.confirm("Are you sure you want to re-align all master items? This will update their phase links based on current logic.")
+                                        if (!confirm) return
+                                        
+                                        startTransition(async () => {
+                                            const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
+                                            const res = await migrateBatchItemsToPhasesAction()
+                                            if (res.success) {
+                                                toast.success(`Migration complete! Updated ${res.updatedCount} items.`)
+                                                router.refresh()
+                                            } else {
+                                                toast.error(res.error || "Migration failed")
+                                            }
+                                        })
+                                    }}
+                                    disabled={isPending}
+                                    variant="outline"
+                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
+                                >
+                                    {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5 text-slate-400" />}
+                                    <span>Re-align Masters</span>
                                 </Button>
                                 <div className="w-[130px] shrink-0">
                                     <Combobox
