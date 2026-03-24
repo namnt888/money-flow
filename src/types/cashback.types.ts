@@ -104,6 +104,7 @@ export type AccountSpendingStats = {
     label: string
     tag: string
   } | null
+  currentTierName?: string // E.g. "Dưới 15 triệu" or "Từ 15 triệu trở lên"
   estYearlyTotal?: number // Projected yearly cashback based on current cycle
 }
 

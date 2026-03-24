@@ -12,7 +12,7 @@ Money Flow 3 is a high-density, professional personal finance application focuse
 1. **[MASTER_CONTEXT_LOAD.md](./.agent/prompts/MASTER_CONTEXT_LOAD.md)** - Initialize your session with full technical & architectural context.
 2. **[ONBOARDING.md](./.agent/prompts/ONBOARDING.md)** - Understand the documentation ecosystem and core reading list.
 3. **[AGENT_CONTEXT.md](./.agent/AGENT_CONTEXT.md)** - Real-time snapshot of features, state, and technical design.
-4. **[LATEST_HANDOVER.md](./.agent/HANDOVER_REWARDS_FIX.md)** - CRITICAL notes from the last session (Rewards Fix & People UI Refactor).
+4. **[LATEST_HANDOVER.md](./.agent/HANDOVER_PHASE_16_CASHBACK_FIX_2026_03_22.md)** - CRITICAL notes from the last session (Cashback Fixes & Header Optimization).
 
 ---
 
@@ -71,5 +71,5 @@ pnpm build
 ---
 
 **Version**: 3.5.0 (Phase 75)  
-**Last Updated**: 2026-03-18  
+**Last Updated**: 2026-03-22  
 **Maintainer**: Money Flow 3 Team

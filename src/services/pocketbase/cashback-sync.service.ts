@@ -31,7 +31,12 @@ export async function ensurePocketBaseCycle(
     const maxBudget = accountRecord.cb_max_budget ?? null;
     const minSpend = accountRecord.cb_min_spend ?? null;
 
+    // Fix: PocketBase sometimes requires 'id' even if it should be auto-generated, 
+    // especially if custom validations are present. We use a deterministic ID based on account + tag.
+    const deterministicId = toPocketBaseId(pbAccountId + cycleTag, 'cbcyc');
+
     const newCycle = await pocketbaseCreate<PocketBaseRecord>('cashback_cycles', {
+        id: deterministicId,
         account_id: pbAccountId,
         cycle_tag: cycleTag,
         max_budget: maxBudget,
@@ -58,8 +63,8 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
     // 1. Get all eligible transactions for this cycle
     // Note: We use 'status' != 'void' and 'type' in ['expense', 'debt']
     const txnsResp = await pocketbaseList<PocketBaseRecord>('transactions', {
-        filter: `account_id='${cycle.account_id}' && persisted_cycle_tag='${cycle.cycle_tag}' && status!='void' && (type='expense' || type='debt')`,
-        perPage: 500, // Reasonable limit
+        filter: `account_id='${cycle.account_id}' && persisted_cycle_tag='${cycle.cycle_tag}' && status!='void' && (type='expense' || type='debt' || type='invest' || type='transfer')`,
+        perPage: 2000, // Increased limit for heavy cycles
         expand: 'category_id'
     });
 
@@ -74,6 +79,8 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
 
     // Group by Rule/Tier for capping (Mirroring Supabase logic)
     const ruleGroupSums: Record<string, { total: number, max: number | null }> = {};
+
+    let totalShared = 0;
 
     for (const txn of txns) {
         const policy = resolveCashbackPolicy({
@@ -90,29 +97,55 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
             categoryId: txn.category_id,
             amount: Math.abs(txn.amount),
             cycleTotals: { spent: totalSpent },
-            categoryName: txn.expand?.category_id?.name
+            categoryName: txn.expand?.category_id?.name,
+            categorySlug: txn.expand?.category_id?.slug
         });
 
         const rate = policy.rate;
-        const amount = Math.abs(txn.amount) * rate;
+        const rewardAmount = Math.abs(txn.amount) * rate;
+        const newFinalPrice = Math.abs(txn.amount) - rewardAmount;
+
+        // PERSISTENCE: Update transaction with newly resolved cashback values
+        // This is critical for UI consistency across all views.
+        const currentCbAmount = Number(txn.cashback_amount || 0);
+        
+        if (Math.abs(currentCbAmount - rewardAmount) > 0.01 || Math.abs((txn.final_price || 0) - newFinalPrice) > 0.01) {
+             await pocketbaseUpdate('transactions', txn.id, {
+                 cashback_amount: rewardAmount,
+                 final_price: newFinalPrice,
+                 metadata: {
+                     ...(txn.metadata || {}),
+                     cashback_policy: policy.metadata
+                 }
+             });
+        }
 
         // Use transaction mode if available, otherwise virtual
-        // MF: For snapshot recompute, we treat re-resolved ones as virtual projections unless specifically marked real.
         const mode = txn.cashback_mode?.startsWith('real') ? 'real' : 'virtual';
 
         if (mode === 'real') {
-            realAwardedTotal += amount;
+            realAwardedTotal += rewardAmount;
         } else {
             const meta = policy.metadata || {};
             if (meta.ruleId) {
                 if (!ruleGroupSums[meta.ruleId]) {
                     ruleGroupSums[meta.ruleId] = { total: 0, max: meta.ruleMaxReward ?? null };
                 }
-                ruleGroupSums[meta.ruleId].total += amount;
+                ruleGroupSums[meta.ruleId].total += rewardAmount;
             } else {
-                virtualProfitTotal += amount;
+                virtualProfitTotal += rewardAmount;
             }
         }
+
+        // Calculate share part for this transaction (4% of Bill/Spent is standard for this context)
+        const sharePercentRaw = Number(txn.cashback_share_percent || 0);
+        const sharePercent = sharePercentRaw > 1 ? sharePercentRaw / 100 : sharePercentRaw;
+        const shareFixed = Number(txn.cashback_share_fixed || 0);
+        const sharedAmount = (sharePercent * Math.abs(txn.amount)) + shareFixed;
+        
+        // Priority: if a direct share amount is present, use it
+        const txShared = (Number(txn.cashback_share_amount) > 0) ? Number(txn.cashback_share_amount) : sharedAmount;
+        totalShared += (isNaN(txShared) ? 0 : txShared);
     }
 
     // Apply Rule Caps
@@ -146,6 +179,22 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
     const metMinSpend = (account.cb_min_spend ?? 0) === 0 || totalSpent >= Number(account.cb_min_spend);
     const isExhausted = !isUnlimited && maxBudget !== null && (finalReal + finalVirtual) >= maxBudget;
 
+    // Determine tier name for the return object
+    let tierName = "Dưới 15 triệu"; // Default for VPBank or general
+    if (txns.length > 0) {
+        // Resolve once more with current total spent to get final tier name
+        const firstTx = txns[0];
+        const tierPolicy = resolveCashbackPolicy({
+            account: account as any,
+            categoryId: firstTx.category_id,
+            amount: Math.abs(firstTx.amount),
+            cycleTotals: { spent: totalSpent },
+        });
+        tierName = (tierPolicy.metadata.levelName && tierPolicy.metadata.levelName !== "Standard") 
+            ? tierPolicy.metadata.levelName 
+            : "Dưới 15 triệu";
+    }
+
     // 3. Update Cycle Snapshot
     await pocketbaseUpdate('cashback_cycles', cycle.id, {
         spent_amount: totalSpent,
@@ -155,8 +204,19 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
         met_min_spend: metMinSpend,
         is_exhausted: isExhausted,
         max_budget: maxBudget,
-        min_spend_target: account.cb_min_spend
+        min_spend_target: account.cb_min_spend,
+        shared_amount: totalShared,
+        total_profit: (finalReal + finalVirtual) - totalShared,
+        matched_tier: tierName
     });
+
+    return {
+        spent: totalSpent,
+        earned: finalReal + finalVirtual,
+        shared: totalShared,
+        profit: (finalReal + finalVirtual) - totalShared,
+        tierName
+    };
 }
 
 /**

@@ -122,7 +122,7 @@ export function CategoryShopSection({
         return catType === "expense";
       if (["income", "repayment"].includes(txType)) return catType === "income";
       if (txType === "transfer") return catType === "transfer";
-      if (txType === "invest") return catType === "investment";
+      if (txType === "invest") return catType === "investment" || catType === "transfer";
 
       return true;
     });

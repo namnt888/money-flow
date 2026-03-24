@@ -115,8 +115,8 @@ export async function getPocketBaseCashbackProgress(accountSourceIds: string[]):
       accountLogoUrl: account.image_url || null,
       currentSpend,
       totalEarned: earnedSoFar,
-      sharedAmount: Number(cycle?.shared_amount ?? realAwarded),
-      netProfit: virtualProfit,
+      sharedAmount: Number(cycle?.shared_amount ?? 0),
+      netProfit: earnedSoFar - Number(cycle?.shared_amount ?? 0),
       maxCashback: maxBudget,
       progress: maxBudget ? Math.min(100, (earnedSoFar / Number(maxBudget)) * 100) : 0,
       rate: Number(account.cb_base_rate || 0) / 100,
@@ -136,7 +136,7 @@ export async function getPocketBaseCashbackProgress(accountSourceIds: string[]):
       is_min_spend_met: currentSpend >= Number(cycle?.min_spend_target || 0),
       missing_min_spend: cycle?.min_spend_target ? Math.max(0, Number(cycle.min_spend_target) - currentSpend) : null,
       potential_earned: virtualProfit,
-      totalGivenAway: Number(cycle?.shared_amount ?? realAwarded),
+      totalGivenAway: Number(cycle?.shared_amount ?? 0),
     })
   }
 

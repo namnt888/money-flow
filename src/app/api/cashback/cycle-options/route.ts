@@ -19,9 +19,11 @@ export async function GET(request: NextRequest) {
       cycleId: opt.cycleId ?? null,
       stats: opt.stats
         ? {
-            spent_amount: opt.stats.spent_amount,
-            real_awarded: opt.stats.real_awarded,
-            virtual_profit: opt.stats.virtual_profit,
+            spent_amount: (opt.stats as any).spent_amount,
+            real_awarded: (opt.stats as any).real_awarded,
+            virtual_profit: (opt.stats as any).virtual_profit,
+            shared_amount: (opt.stats as any).shared_amount,
+            net_profit: ((opt.stats as any).real_awarded || 0) + ((opt.stats as any).virtual_profit || 0) - ((opt.stats as any).shared_amount || 0),
           }
         : undefined,
     }))

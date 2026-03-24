@@ -1,7 +1,7 @@
 # Money Flow 3 - Agent Context & Project State
 
-**Last Updated:** March 21, 2026  
-**Current Phase:** Phase 24 - Investment Flow Refinement
+**Last Updated:** March 22, 2026  
+**Current Phase:** Phase 16 - Cashback Tracking Accuracy & UI Optimization
 
 ---
 
@@ -322,12 +322,11 @@ type CashbackMonthSummary = {
 
 ## 11. Recent Changes (Phase 24 Summary)
 
-### Code Changes
-1. **Investment Asset Tracking:** Added robust metadata support for tracking `quantity` and `market_price` for assets like Gold.
-2. **Transaction Slide V2:** Dynamically exposes `Quantity` and `Market Price` fields when user selects an Investment Account or `Funding Gold` category.
-3. **Unit Price Calculator:** Form dynamically computes and displays `Amount / Quantity` as an approximate unit price to help users.
-4. **Quick Action "Invest":** Added `Invest` button to Unified and Account Add menus which auto-fills `Transfer` and `Funding Gold` category.
-5. **Dashboard Warnings:** UI issues "Missing Data" alerts if an investment transaction is lacking quantity data, ensuring users provide correct metrics.
+### Code Changes (Phase 16)
+1. **Cashback Calculation Refinement:** Added `invest` and `transfer` transaction types to cashback spent calculation, ensuring asset purchases (like Gold) count toward credit card reward tiers.
+2. **Global Tier Name Override:** Replaced hardcoded "Standard" tier labels with "Dưới 15 triệu" across backend policy resolution and frontend tooltips for user-friendly display.
+3. **Account Dashboard Sync:** Implemented automatic billing cycle synchronization on the People Details page; selecting an account now jumps to its active statement cycle.
+4. **PocketBase Sync Fix:** Resolved a 400 error in the cashback refresh service by fixing invalid filter fields in the transaction query.
 
 ### PR Status
 - **Branch:** `feature/manage-invest-assets-20260321`

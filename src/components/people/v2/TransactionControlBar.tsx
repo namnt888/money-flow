@@ -69,8 +69,8 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
 })
 
-function getMonthDisplayName(tag: string) {
-    if (isYYYYMM(tag)) return formatCycleTag(tag)
+function getMonthDisplayName(tag: string, statementDay?: number | null) {
+    if (isYYYYMM(tag)) return formatCycleTag(tag, Number(statementDay) || 25)
     return tag
 }
 
@@ -142,73 +142,136 @@ export function TransactionControlBar({
     const isAllHistory = selectedYear === null
     const cycleLabel = isAllHistory ? 'All History' : activeCycle.tag
     const prevAccountIdRef = useRef<string | undefined>(selectedAccountId)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const [cashbackCycles, setCashbackCycles] = useState<any[]>([])
+    const [isCyclesLoading, setIsCyclesLoading] = useState(false)
 
-    const selectedAccount = useMemo(
-        () => accounts.find((account) => account.id === selectedAccountId),
-        [accounts, selectedAccountId],
-    )
+    const selectedAccount = useMemo(() => accounts.find(a => a.id === selectedAccountId), [accounts, selectedAccountId])
+    const isCreditCard = selectedAccount?.type === 'credit_card'
 
     const accountCurrentCycleTag = useMemo(() => {
         const statementDay = selectedAccount?.statement_day ?? selectedAccount?.credit_card_info?.statement_day
         if (statementDay) {
-            return resolveCycleTagByStatementDay(new Date(), statementDay)
+            return resolveCycleTagByStatementDay(date || new Date(), statementDay)
         }
         return currentCycleTag
-    }, [selectedAccount, currentCycleTag])
+    }, [selectedAccount, currentCycleTag, date])
 
     const cycleOptions = useMemo(() => {
         if (!selectedAccountId) return [] as Array<{ label: string; value: string; count?: number; highlight?: boolean }>
 
-        const options = allCycles
+        const cyclesWithCount = allCycles
             .filter((cycle) => isYYYYMM(cycle.tag))
             .map((cycle) => {
                 const count = cycle.transactions.filter((txn) => transactionMatchesAccount(txn, selectedAccountId)).length
+                const actualStatementDay = selectedAccount?.statement_day ?? (selectedAccount as any)?.credit_card_info?.statement_day
                 return {
-                    label: getMonthDisplayName(cycle.tag),
+                    label: getMonthDisplayName(cycle.tag, actualStatementDay),
                     value: cycle.tag,
                     count,
-                    highlight: cycle.tag === accountCurrentCycleTag,
                     stats: {
-                        debt: cycle.stats.lend,
-                        back: cycle.stats.repay,
+                        initial: cycle.stats.originalLend,
+                        cashback: cycle.stats.cashback,
+                        repay: cycle.stats.repay,
                         remains: cycle.remains,
                         isSettled: cycle.isSettled
                     }
                 }
             })
-            .filter((cycle) => cycle.count! > 0 || cycle.highlight)
+            .sort((a, b) => b.value.localeCompare(a.value))
+
+        // Find the most appropriate cycle to highlight:
+        // 1. The latest cycle with transactions
+        // 2. OR the account's current cycle
+        const latestWithData = cyclesWithCount.find(c => c.count > 0)
+        const highlightTag = latestWithData?.value || accountCurrentCycleTag
+
+        const options = cyclesWithCount.map(c => ({
+            ...c,
+            highlight: c.value === highlightTag
+        })).filter(c => c.count > 0 || c.highlight)
 
         // Ensure current account cycle is always an option even if no transactions yet
-        if (accountCurrentCycleTag && !options.find(o => o.value === accountCurrentCycleTag)) {
-            options.push({
-                label: getMonthDisplayName(accountCurrentCycleTag),
+        let finalOptions = [...options]
+        if (accountCurrentCycleTag && !finalOptions.find(o => o.value === accountCurrentCycleTag)) {
+            const actualStatementDay = selectedAccount?.statement_day ?? (selectedAccount as any)?.credit_card_info?.statement_day
+            finalOptions.push({
+                label: getMonthDisplayName(accountCurrentCycleTag, actualStatementDay),
                 value: accountCurrentCycleTag,
                 count: 0,
-                highlight: true,
-                stats: {
-                    debt: 0,
-                    back: 0,
-                    remains: 0,
-                    isSettled: true
-                }
+                highlight: false, // Will be set below
+                stats: { initial: 0, cashback: 0, repay: 0, remains: 0, isSettled: false }
             })
         }
 
-        return options.sort((a, b) => b.value.localeCompare(a.value))
-    }, [allCycles, selectedAccountId, accountCurrentCycleTag])
+        // Final sorting and single-tag highlighting
+        return finalOptions
+            .sort((a, b) => b.value.localeCompare(a.value))
+            .map(opt => {
+                const isCurrentHighlight = opt.value === highlightTag
+                
+                // If it's a credit card, use cashback stats
+                if (isCreditCard) {
+                    const cb = cashbackCycles.find(c => (c.tag || (c as any).value) === opt.value)
+                    const stats = cb?.stats as any
+                    return {
+                        ...opt,
+                        highlight: isCurrentHighlight,
+                        stats: {
+                            spent: stats?.spent_amount ?? 0,
+                            earned: (stats?.real_awarded ?? 0) + (stats?.virtual_profit ?? 0),
+                            shared: stats?.shared_amount ?? 0,
+                            profit: stats?.net_profit ?? 0,
+                            isSettled: stats?.isSettled ?? false
+                        }
+                    }
+                }
+                
+                return {
+                    ...opt,
+                    highlight: isCurrentHighlight
+                }
+            })
+    }, [allCycles, selectedAccountId, accountCurrentCycleTag, isCreditCard, cashbackCycles])
 
+    // 1. Fetch cashback cycles when credit card selected
     useEffect(() => {
-        const accountChanged = prevAccountIdRef.current !== selectedAccountId
-        prevAccountIdRef.current = selectedAccountId
-        if (!accountChanged || !selectedAccountId) return
-
-        const nextCycle = cycleOptions.find((cycle) => cycle.highlight)?.value || accountCurrentCycleTag || 'all'
-        if (onCycleSelect) {
-            onCycleSelect(nextCycle, selectedYear)
-        } else {
-            onCycleChange(nextCycle)
+        if (!selectedAccountId || !isCreditCard) {
+            setCashbackCycles([])
+            return
         }
-    }, [selectedAccountId, cycleOptions, onCycleChange, onCycleSelect, selectedYear])
+
+        setIsCyclesLoading(true)
+        fetch(`/api/cashback/cycle-options?accountId=${selectedAccountId}`)
+            .then(res => res.json())
+            .then(data => {
+                const options = Array.isArray(data) ? data : (data?.options || [])
+                setCashbackCycles(options)
+            })
+            .catch(err => console.error('Failed to load card cycles', err))
+            .finally(() => setIsCyclesLoading(false))
+    }, [selectedAccountId, isCreditCard])
+
+    // 2. Handle switching account: auto-select 'all' to avoid conflict
+    // But we still update the ref and can highlight the best cycle for stats
+    useEffect(() => {
+        const currentId = selectedAccountId || ''
+        if (prevAccountIdRef.current === currentId) return
+        
+        // Update ref immediately
+        prevAccountIdRef.current = currentId
+        
+        if (!selectedAccountId) return
+
+        // Per User Request: "code cho cycle debt consistent with cycle accounts không"
+        // Auto pick the account-based current cycle
+        if (onCycleSelect) {
+            onCycleSelect(accountCurrentCycleTag, selectedYear)
+        } else {
+            onCycleChange(accountCurrentCycleTag)
+        }
+    }, [selectedAccountId, onCycleChange, onCycleSelect, selectedYear, accountCurrentCycleTag])
 
     const handleCycleChange = (tag: string) => {
         onCycleChange(tag)
@@ -375,6 +438,8 @@ export function TransactionControlBar({
                         onDateChange={onDateChange}
                         onRangeChange={onRangeChange}
                         onModeChange={onModeChange}
+                        statType={isCreditCard ? "cashback" : "debt"}
+                        isCycleLoading={isCyclesLoading}
                         cycles={cycleOptions}
                         selectedCycleValue={activeCycle.tag}
                         onCycleSelect={(tag: string) => onCycleSelect ? onCycleSelect(tag, selectedYear) : onCycleChange(tag)}

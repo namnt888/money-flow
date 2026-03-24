@@ -1,124 +1,45 @@
-🚨 INTEGRATED TASK — PEOPLE DETAILS BROKEN (6/6 BUGS) 🚨
-READ CAREFULLY. DO NOT SKIP STEPS.
+## Error Type
+Console Error
 
-PAGE AFFECTED:
-- /people
-- /people/[id]  (example: http://localhost:3001/people/wlv4acbrq11l8de)
-- Repro: mở People list → Open person in new tab
+## Error Message
+Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
 
-====================================================
-CURRENT STATUS
-====================================================
 
-Page /people/[id] hiện tại GÃY NẶNG:
-- Build fail / runtime fail
-- Khi render được thì số liệu SAI HOÀN TOÀN
-- Tổng cộng **6 BUG RIÊNG BIỆT**, không được gộp nhầm
+    at button (<anonymous>:null:null)
+    at _c (src/components/ui/button.tsx:46:7)
+    at ManageSheetButton (src/components/people/manage-sheet-button.tsx:452:19)
+    at ManageSheetButton (src/components/people/manage-sheet-button.tsx:451:17)
+    at TransactionControlBar (src/components/people/v2/TransactionControlBar.tsx:376:25)
+    at MemberDetailView (src/components/people/v2/MemberDetailView.tsx:914:21)
+    at PeopleDetailContent (src\app\people\[id]\page.tsx:169:7)
+    at PeopleDetailPage (src\app\people\[id]\page.tsx:93:7)
 
-====================================================
-THE 6 REAL BUGS (DO NOT MIX)
-====================================================
+## Code Frame
+  44 |     const Comp = asChild ? Slot : "button"
+  45 |     return (
+> 46 |       <Comp
+     |       ^
+  47 |         className={cn(buttonVariants({ variant, size, className }))}
+  48 |         ref={ref}
+  49 |         {...props}
 
-❌ BUG #1 — JS PARSE ERROR (HARD BLOCKER)
-- Errors:
-  • Parsing ecmascript source code failed
-  • Expression expected
-  • Expected ',', got 'const'
-  • Unexpected token '}'
-- Files:
-  • src/hooks/use-person-details.ts
-  • src/components/people/v2/MemberDetailView.tsx
-- Root cause:
-  • const / if đặt trực tiếp trong expression
-  • reduce() / JSX bị dùng sai cú pháp
-- Status:
-  ⛔ App không render được
-- Rule:
-  👉 FIX BUG #1 FIRST OR STOP
+Next.js version: 16.0.10 (Turbopack)
+## Error Type
+Console Error
 
-----------------------------------------------------
+## Error Message
+Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
 
-❌ BUG #2 — RUNTIME Reference / TDZ ERROR
-- Errors:
-  • Cannot access 'rawAmount' before initialization
-- File:
-  • src/services/people.service.ts
-- Root cause:
-  • let/const dùng trước khi khai báo
-- Status:
-  ⛔ Crash khi load page
 
-----------------------------------------------------
+    at RootLayout (src\app\layout.tsx:59:17)
 
-❌ BUG #3 — WRONG DATA SCOPE (CURRENT vs AGGREGATE)
-- Symptoms:
-  • People ROW hiển thị:
-    - Original Amount = 289,647,940 (WRONG)
-    - Repayment = 289,150,883
-    - Cashback = 898,733
-- Reality:
-  • Đây là ENTIRE YEAR / MULTI-CYCLE aggregate
-  • ROW phải là CURRENT CYCLE (~1.8M)
-- Root cause:
-  • reuse aggregate selector cho row
-- Status:
-  ❌ Business logic major bug
+## Code Frame
+  57 |             <AppLayout>
+  58 |               <div id="mf-app-root" suppressHydrationWarning className="h-full w-full">
+> 59 |                 <AppErrorBoundary>{children}</AppErrorBoundary>
+     |                 ^
+  60 |               </div>
+  61 |             </AppLayout>
+  62 |           </BreadcrumbProvider>
 
-----------------------------------------------------
-
-❌ BUG #4 — HEADER INCONSISTENCY (/people vs /people/[id])
-- /people uses:
-  • Original Amount
-  • Repayment
-  • Cashback
-  • Remaining Amount
-- /people/[id] header uses:
-  • Orig. Spend
-  • Net Lend
-  • Total Repay
-- Root cause:
-  • header detail chưa refactor theo glossary
-- Status:
-  ❌ Inconsistent logic & UX
-
-----------------------------------------------------
-
-❌ BUG #5 — PREV DEBT COLUMN SHOULD NOT EXIST IN ROW
-- Symptoms:
-  • Prev Debt vẫn xuất hiện ở People table row
-  • Giá trị “—” hoặc sai ngữ nghĩa
-- Root cause:
-  • Glossary mới đã loại Prev Debt khỏi ROW
-  • UI + mapping chưa cleanup
-- Rule:
-  • Prev Debt chỉ được tồn tại ở EXPAND / DETAILS (nếu cần)
-
-----------------------------------------------------
-
-❌ BUG #6 — REMAINING VALUE NOT VERIFIABLE
-- Symptom:
-  • Remains = 1,784,577 (looks OK)
-- BUT:
-  • Base, Repay, Cashback đều sai scope
-  • → Remains chỉ đúng NGẪU NHIÊN
-- Status:
-  ⚠️ Không được xác nhận cho tới khi #1–#5 xong
-
-====================================================
-MANDATORY FIX ORDER (NO EXCEPTIONS)
-====================================================
-
-STEP 1 — SYNTAX STABILITY
-✅ Fix BUG #1 + BUG #2 ONLY
-- Không sửa logic tiền
-- Không sửa UI
-- Mục tiêu:
-  • next build PASS
-  • Page render được
-
-----------------------------------------------------
-
-STEP 2 — SCOPE SEPARATION
-- PEOPLE TABLE ROW:
-  • CURRENT CYCLE ONLY
-  • Original Amount (current)
+Next.js version: 16.0.10 (Turbopack)

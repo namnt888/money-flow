@@ -11,6 +11,7 @@ import {
 import { AccountSpendingStats, RuleProgress } from "@/types/cashback.types";
 import {
   getCashbackCycleRange,
+  getCashbackCycleTag,
   formatIsoCycleTag,
   parseCashbackConfig,
   normalizeRate,
@@ -19,6 +20,7 @@ import {
   getCreditCardAvailableBalance,
   getCreditCardUsage,
 } from "@/lib/account-balance";
+import { formatCycleTag } from "@/lib/cycle-utils";
 import { resolveCashbackPolicy } from "@/services/cashback/policy-resolver";
 import {
   pocketbaseGetById,
@@ -1298,7 +1300,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
   }
 
   const spendTransactions = cycleTransactions.filter((tx) =>
-    ["expense", "debt", "service"].includes(String(tx.type || "")),
+    ["expense", "debt", "service", "invest", "transfer"].includes(String(tx.type || "")),
   );
   const currentSpend = spendTransactions.reduce(
     (sum, tx) => sum + Math.abs(Number(tx.amount || 0)),
@@ -1378,15 +1380,15 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       estimatedCashback += txnEstimate;
 
       const sharedFixed = Number(tx.cashback_share_fixed || 0);
-      const sharedAmountField = Number(tx.cashback_amount || 0);
+      const sharedAmountPriority = Number(tx.cashback_share_amount || 0);
       const sharedPercent = normalizeRate(tx.cashback_share_percent);
       const txnShared =
-        sharedFixed > 0
-          ? sharedFixed
-          : sharedAmountField > 0
-            ? sharedAmountField
+        sharedAmountPriority > 0
+          ? sharedAmountPriority
+          : sharedFixed > 0
+            ? sharedFixed
             : sharedPercent > 0
-              ? txnEstimate * sharedPercent
+              ? amount * sharedPercent
               : 0;
       
       if (Number.isFinite(txnShared)) {
@@ -1410,9 +1412,12 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
         metadata.ruleId ||
           `${category?.sourceId || category?.id || "general"}-${effectiveRate}`,
       );
+      const displayRateRaw = effectiveRate * 100;
+      const displayRateStr = displayRateRaw % 1 === 0 ? displayRateRaw.toFixed(0) : displayRateRaw.toFixed(1);
+      
       const ruleName = category?.name
-        ? `${Math.round(effectiveRate * 100)}% ${category.name}`
-        : `Rule ${Math.round(effectiveRate * 100)}%`;
+        ? `${displayRateStr}% ${category.name}`
+        : `Rule ${displayRateStr}%`;
 
       const prev = activeRuleMap.get(ruleId);
       if (prev) {
@@ -1422,7 +1427,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
         activeRuleMap.set(ruleId, {
           ruleId,
           name: ruleName,
-          rate: Math.round(effectiveRate * 100),
+          rate: displayRateRaw,
           spent: amount,
           earned: txnEstimate,
           max: effectiveMaxReward ?? null,
@@ -1479,8 +1484,13 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       : resolvedCycleTag
     : resolvedCycleTag;
 
+  // Identify current tier name for display
+  const firstRule = activeRules[0];
+  const currentTierName = (firstRule as any)?.levelName || "Standard";
+
   return {
     currentSpend,
+    currentTierName,
     minSpend: minSpend === null ? null : Number(minSpend),
     maxCashback,
     actualClaimed,
@@ -1623,9 +1633,12 @@ export async function loadPocketBaseTransactionsForAccount(
       },
     ];
 
+  console.log(`[DB:PB] loadPocketBaseTransactionsForAccount`, { sourceAccountId, pocketBaseAccountId, limit });
   for (const params of attempts) {
     try {
+      console.log(`[DB:PB] transactions.listForAccount attempt`, { params });
       const records = await listAllRecords("transactions", params);
+      console.log(`[DB:PB] transactions.listForAccount succeeded`, { count: records.length });
       return records.map((item) => mapTransaction(item, sourceAccountId));
     } catch (error) {
       console.warn("[DB:PB] transactions.listForAccount attempt failed", {
@@ -1793,24 +1806,24 @@ export async function getPocketBaseAccountCycleOptions(
       perPage: Math.max(limit * 2, 24),
       filter: `account_id='${pocketBaseAccountId}'`,
       sort: "-cycle_tag",
-      fields: "id,cycle_tag,spent_amount,real_awarded,virtual_profit",
+      fields: "id,cycle_tag,spent_amount,real_awarded,virtual_profit,shared_amount",
     },
   );
 
   const cycleItems = cyclesResponse.items || [];
-  return cycleItems.slice(0, Math.max(limit, 1)).map((cycle) => {
+  console.log(`[DB:PB] getPocketBaseAccountCycleOptions: fetched ${cycleItems.length} records for ${pocketBaseAccountId}`);
+  const cycleOptions = cycleItems.slice(0, Math.max(limit, 1)).map((cycle: any) => {
     const parsed = String(cycle.cycle_tag || "").split("-");
     const year = parseInt(parsed[0] || "0", 10);
     const month = parseInt(parsed[1] || "1", 10);
 
+    const actualStatementDay = Number(account.statement_day || config.statementDay) || 25;
+    const isStatementCycle = account.cb_cycle_type === 'statement_cycle' || config.cycleType === 'statement_cycle';
+
     let label = cycle.cycle_tag;
     if (!Number.isNaN(year) && !Number.isNaN(month)) {
-      if (config.cycleType === "statement_cycle" && config.statementDay) {
-        const end = new Date(year, month - 1, config.statementDay - 1);
-        const start = new Date(year, month - 2, config.statementDay);
-        const formatDate = (value: Date) =>
-          `${String(value.getDate()).padStart(2, "0")}.${String(value.getMonth() + 1).padStart(2, "0")}`;
-        label = `${formatDate(start)} - ${formatDate(end)}`;
+      if (isStatementCycle) {
+        label = formatCycleTag(cycle.cycle_tag, actualStatementDay);
       } else {
         label = new Intl.DateTimeFormat("en-US", {
           month: "short",
@@ -1829,9 +1842,53 @@ export async function getPocketBaseAccountCycleOptions(
         spent_amount: Number(cycle.spent_amount || 0),
         real_awarded: Number(cycle.real_awarded || 0),
         virtual_profit: Number(cycle.virtual_profit || 0),
+        shared_amount: Number(cycle.shared_amount || 0),
       },
     };
   });
+
+  // Proactive Step: Ensure current cycle tag is present in the list
+  // This allows the UI to auto-select the current cycle even if no DB record exists yet (e.g. today just started)
+  const currentTag = getCashbackCycleTag(new Date(), { 
+    statementDay: config.statementDay, 
+    cycleType: config.cycleType 
+  });
+
+  if (currentTag && !cycleOptions.some((opt: any) => opt.tag === currentTag)) {
+    const parsed = currentTag.split("-");
+    const year = parseInt(parsed[0], 10);
+    const month = parseInt(parsed[1], 10);
+    let label = currentTag;
+    
+    if (config.cycleType === "statement_cycle" && config.statementDay) {
+      const end = new Date(year, month - 1, config.statementDay - 1);
+      const start = new Date(year, month - 2, config.statementDay);
+      const formatDate = (value: Date) =>
+        `${String(value.getDate()).padStart(2, "0")}.${String(value.getMonth() + 1).padStart(2, "0")}`;
+      label = `${formatDate(start)} - ${formatDate(end)}`;
+    } else {
+      label = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        year: "numeric",
+      }).format(new Date(year, month - 1, 1));
+    }
+
+    cycleOptions.unshift({
+      tag: currentTag,
+      label,
+      cycleId: null,
+      statementDay: account.statement_day ?? null,
+      cycleType: account.cb_cycle_type || null,
+      stats: {
+        spent_amount: 0,
+        real_awarded: 0,
+        virtual_profit: 0,
+        shared_amount: 0,
+      },
+    });
+  }
+
+  return cycleOptions;
 }
 
 export async function getPocketBaseCycleTransactions(

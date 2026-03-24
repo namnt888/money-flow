@@ -11,7 +11,7 @@ import { addMonths, startOfDay, endOfDay, subDays, subMonths, isBefore, isAfter,
 /**
  * Formats a month tag into a readable date range (e.g. "25.11 - 24.12").
  */
-export function formatCycleTag(tag: string): string {
+export function formatCycleTag(tag: string, statementDay: number = 25): string {
   const normalized = normalizeMonthTag(tag)
   if (!normalized || !isYYYYMM(normalized)) return tag
 
@@ -20,8 +20,12 @@ export function formatCycleTag(tag: string): string {
   const month = Number(monthStr) // 1..12
   if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return tag
 
-  const cycleStartDay = 25
-  const cycleEndDay = 24
+  // Example: statementDay = 20
+  // Cycle starts on (statementDay) of previous month
+  // Cycle ends on (statementDay - 1) of current month
+  // 20.03 - 19.04
+  const cycleStartDay = statementDay
+  const cycleEndDay = statementDay - 1 || 28 // Handle edge case if day is 1
 
   const startMonth = month === 1 ? 12 : month - 1
   const endMonth = month
@@ -35,7 +39,7 @@ export function formatCycleTag(tag: string): string {
 /**
  * Formats a month tag into a date range including year (e.g. "25.11.2025 - 24.12.2025").
  */
-export function formatCycleTagWithYear(tag: string): string {
+export function formatCycleTagWithYear(tag: string, statementDay: number = 25): string {
   const normalized = normalizeMonthTag(tag)
   if (!normalized || !isYYYYMM(normalized)) return tag
 
@@ -44,8 +48,8 @@ export function formatCycleTagWithYear(tag: string): string {
   const month = Number(monthStr) // 1..12
   if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return tag
 
-  const cycleStartDay = 25
-  const cycleEndDay = 24
+  const cycleStartDay = statementDay
+  const cycleEndDay = statementDay - 1 || 28
 
   const startMonth = month === 1 ? 12 : month - 1
   const startYear = month === 1 ? year - 1 : year

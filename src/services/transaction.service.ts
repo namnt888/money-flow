@@ -560,6 +560,13 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
       );
     }
 
+    // Integrate Cashback Sync (Real-time)
+    try {
+      await upsertPocketBaseTransactionCashback(id);
+    } catch (cbErr) {
+      console.warn("[Cashback Sync] Auto-sync failed:", cbErr);
+    }
+
     return id;
   } catch (error) {
     console.error("[DB:PB] createTransaction failed:", error);
@@ -598,6 +605,13 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
       final_price: normalized.amount,
       metadata: mergedMetadata,
     });
+
+    // Integrated Cashback Sync (Real-time)
+    try {
+      await upsertPocketBaseTransactionCashback(pbId);
+    } catch (cbErr) {
+      console.warn("[Cashback Sync] Update-sync failed:", cbErr);
+    }
 
     const affectedAccounts = new Set<string>();
     affectedAccounts.add(existing.account_id);
@@ -691,6 +705,13 @@ export async function voidTransaction(id: string): Promise<boolean> {
         voided_at: new Date().toISOString(),
       },
     });
+
+    // Integrated Cashback Sync (Real-time)
+    try {
+      await upsertPocketBaseTransactionCashback(pbId);
+    } catch (cbErr) {
+      console.warn("[Cashback Sync] Void-sync failed:", cbErr);
+    }
 
     if (isRefundRequestTxn && originalTxnId) {
       try {
@@ -829,6 +850,17 @@ export async function deleteTransactionCascade(id: string): Promise<boolean> {
     const affectedAccounts = new Set<string>();
     affectedAccounts.add(existing.account_id);
     if (existing.target_account_id) affectedAccounts.add(existing.target_account_id);
+
+    // Integrated Cashback Sync (Deletion)
+    try {
+      const cycleTag = existing.persisted_cycle_tag || existing.tag || existing.debt_cycle_tag;
+      if (cycleTag && existing.account_id) {
+        await removePocketBaseTransactionCashback(existing.account_id, cycleTag);
+      }
+    } catch (cbErr) {
+      console.warn("[Cashback Sync] Deletion-sync failed:", cbErr);
+    }
+
     await recalcForAccounts(affectedAccounts);
 
     await trySyncPeopleSheet(

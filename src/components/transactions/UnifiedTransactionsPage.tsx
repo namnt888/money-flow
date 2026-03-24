@@ -213,7 +213,7 @@ export function UnifiedTransactionsPage({
             .sort((a, b) => b.localeCompare(a))
             .map(tag => ({
                 value: tag,
-                label: formatCycleTag(tag) || tag,
+                label: formatCycleTag(tag, statementDay || 25) || tag,
                 count: cycleCountByTag[tag] || 0,
                 highlight: tag === currentCycleTag,
             }))
@@ -251,7 +251,7 @@ export function UnifiedTransactionsPage({
             .then((payload) => {
                 const options = Array.isArray(payload?.options) ? payload.options : []
                 const mapped = options.map((opt: any) => ({
-                    label: opt.label,
+                    label: formatCycleTag(opt.tag, statementDay || 25),
                     value: opt.tag,
                     count: cycleCountByTag[opt.tag] || 0,
                     highlight: statementDay
