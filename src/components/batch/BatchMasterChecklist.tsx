@@ -748,32 +748,7 @@ export function BatchMasterChecklist({
                 <div className="flex items-center gap-2">
                     <TooltipProvider>
                         <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden shrink-0">
-                             <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={handleGlobalSync}
-                                        disabled={performingAction}
-                                        className="h-11 px-4 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-slate-50 text-slate-700 hover:bg-slate-100"
-                                    >
-                                        <Database className="h-4 w-4" />
-                                        <span>Sync Master</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Initialize this month's batch from Master list (Stage 0)</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={handleRealignMasters}
-                                        disabled={performingAction}
-                                        className="h-11 px-4 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-white text-slate-500 hover:bg-slate-50 border-l border-slate-100"
-                                    >
-                                        <RefreshCw className={cn("h-4 w-4", performingAction && "animate-spin")} />
-                                        <span>Re-align Master</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Emergency: Re-align All Master Items to Phases (Fix field mismatch)</TooltipContent>
-                            </Tooltip>
+                             {/* Sync Master removed - handled automatically */}
                         </div>
 
                         <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-500 overflow-hidden shrink-0">

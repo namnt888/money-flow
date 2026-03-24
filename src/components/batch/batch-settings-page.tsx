@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { updateBatchSettingsAction, getBatchSettingsAction } from '@/actions/batch-settings.actions'
 import { getAccountsAction } from '@/actions/account-actions'
 import { BatchMasterManager } from './BatchMasterManager'
+import { BatchPhaseManager } from './BatchPhaseManager'
 import { toast } from 'sonner'
 
 export function BatchSettingsPage({ 
@@ -261,220 +262,123 @@ export function BatchSettingsPage({
                 )}
 
                 <Tabs defaultValue="mbb" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="mbb">MB Bank</TabsTrigger>
-                        <TabsTrigger value="vib">VIB</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-14 mb-8 shadow-inner border border-slate-200">
+                        <TabsTrigger value="mbb" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-indigo-700 data-[state=active]:shadow-md">MB Bank</TabsTrigger>
+                        <TabsTrigger value="vib" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-indigo-700 data-[state=active]:shadow-md">VIB Bank</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="mbb">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>MB Bank Settings</CardTitle>
-                                <CardDescription>
-                                    Configure Google Sheets integration for MBB batches
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="mbb-sheet-url">Google Apps Script URL</Label>
-                                    <Input
-                                        id="mbb-sheet-url"
-                                        placeholder="https://script.google.com/macros/s/.../exec"
-                                        value={mbbSheetUrl}
-                                        onChange={(e) => setMbbSheetUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Paste your MBB Google Apps Script deployment URL here
-                                    </p>
-                                </div>
+                    <TabsContent value="mbb" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <Tabs defaultValue="settings" className="w-full">
+                            <TabsList className="flex bg-transparent p-0 gap-2 mb-6 overflow-x-auto no-scrollbar justify-start">
+                                <TabsTrigger value="settings" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Global Settings</TabsTrigger>
+                                <TabsTrigger value="phases" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Phase List</TabsTrigger>
+                                <TabsTrigger value="masters" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Master Items</TabsTrigger>
+                            </TabsList>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="mbb-webhook">Webhook URL (Optional)</Label>
-                                    <Input
-                                        id="mbb-webhook"
-                                        placeholder="https://your-webhook.com/batch/mbb"
-                                        value={mbbWebhookUrl}
-                                        onChange={(e) => setMbbWebhookUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Optional: Auto-sync webhook after batch operations
-                                    </p>
-                                </div>
+                            <TabsContent value="settings" className="space-y-6">
+                                <Card className="border-slate-200/60 shadow-lg shadow-slate-100">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">MB Bank Settings</CardTitle>
+                                        <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Configure Google Sheets integration for MBB batches</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Apps Script URL</Label>
+                                                <Input value={mbbSheetUrl} onChange={(e) => setMbbSheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Sheet URL (Display)</Label>
+                                                <Input value={mbbDisplaySheetUrl} onChange={(e) => setMbbDisplaySheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Display Name</Label>
+                                                <Input value={mbbDisplaySheetName} onChange={(e) => setMbbDisplaySheetName(e.target.value)} placeholder="Master MBB" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sheet Tab Name</Label>
+                                                <Input value={mbbTabName} onChange={(e) => setMbbTabName(e.target.value)} placeholder="eMB_BulkPayment" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <Button onClick={handleSaveMBB} disabled={loading || !mbbHasChanges} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100">
+                                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                                            Save MBB Settings
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="mbb-image">Bank Icon URL</Label>
-                                    <Input
-                                        id="mbb-image"
-                                        placeholder="https://your-cdn.com/mbb-icon.png"
-                                        value={mbbImageUrl}
-                                        onChange={(e) => setMbbImageUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Paste image URL for MB Bank icon (displayed on landing page)
-                                    </p>
-                                </div>
+                            <TabsContent value="phases">
+                                <BatchPhaseManager bankType="MBB" />
+                            </TabsContent>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mbb-display-sheet-url">Google Sheet URL (Display)</Label>
-                                        <Input
-                                            id="mbb-display-sheet-url"
-                                            placeholder="https://docs.google.com/spreadsheets/d/..."
-                                            value={mbbDisplaySheetUrl}
-                                            onChange={(e) => setMbbDisplaySheetUrl(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mbb-display-sheet-name">Display Name</Label>
-                                        <Input
-                                            id="mbb-display-sheet-name"
-                                            placeholder="e.g. Master MBB Sheet"
-                                            value={mbbDisplaySheetName}
-                                            onChange={(e) => setMbbDisplaySheetName(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mbb-tab-name">Sheet Tab Name</Label>
-                                        <Input
-                                            id="mbb-tab-name"
-                                            placeholder="eMB_BulkPayment"
-                                            value={mbbTabName}
-                                            onChange={(e) => setMbbTabName(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mbb-cutoff">Cutoff Day</Label>
-                                        <Input
-                                            id="mbb-cutoff"
-                                            type="number"
-                                            placeholder="15"
-                                            value={mbbCutoffDay === 0 ? '' : mbbCutoffDay}
-                                            onChange={(e) => setMbbCutoffDay(Number(e.target.value))}
-                                            min={1}
-                                            max={31}
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-xs text-slate-500">
-                                    💡 The day of the month that separates 'Before' and 'After' tabs for this bank.
-                                </p>
-
-                                <Button onClick={handleSaveMBB} disabled={loading || !mbbHasChanges} className="w-full">
-                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {!loading && <Save className="mr-2 h-4 w-4" />}
-                                    Save MBB Settings
-                                </Button>
-                            </CardContent>
-                        </Card>
+                            <TabsContent value="masters">
+                                <BatchMasterManager
+                                    bankType="MBB"
+                                    accounts={accounts}
+                                    bankMappings={[]}
+                                />
+                            </TabsContent>
+                        </Tabs>
                     </TabsContent>
 
-                    <TabsContent value="vib">
-                        {/* Existing VIB Content */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>VIB Settings</CardTitle>
-                                <CardDescription>
-                                    Configure Google Sheets integration for VIB batches
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="vib-sheet-url">Google Apps Script URL</Label>
-                                    <Input
-                                        id="vib-sheet-url"
-                                        placeholder="https://script.google.com/macros/s/.../exec"
-                                        value={vibSheetUrl}
-                                        onChange={(e) => setVibSheetUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Paste your VIB Google Apps Script deployment URL here
-                                    </p>
-                                </div>
+                    <TabsContent value="vib" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <Tabs defaultValue="settings" className="w-full">
+                            <TabsList className="flex bg-transparent p-0 gap-2 mb-6 overflow-x-auto no-scrollbar justify-start">
+                                <TabsTrigger value="settings" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Global Settings</TabsTrigger>
+                                <TabsTrigger value="phases" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Phase List</TabsTrigger>
+                                <TabsTrigger value="masters" className="px-6 h-10 rounded-xl border border-slate-200 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:border-indigo-200 font-bold text-[10px] uppercase tracking-widest">Master Items</TabsTrigger>
+                            </TabsList>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="vib-webhook">Webhook URL (Optional)</Label>
-                                    <Input
-                                        id="vib-webhook"
-                                        placeholder="https://your-webhook.com/batch/vib"
-                                        value={vibWebhookUrl}
-                                        onChange={(e) => setVibWebhookUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Optional: Auto-sync webhook after batch operations
-                                    </p>
-                                </div>
+                            <TabsContent value="settings" className="space-y-6">
+                                <Card className="border-slate-200/60 shadow-lg shadow-slate-100">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">VIB Bank Settings</CardTitle>
+                                        <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Configure Google Sheets integration for VIB batches</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Apps Script URL</Label>
+                                                <Input value={vibSheetUrl} onChange={(e) => setVibSheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Sheet URL (Display)</Label>
+                                                <Input value={vibDisplaySheetUrl} onChange={(e) => setVibDisplaySheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Display Name</Label>
+                                                <Input value={vibDisplaySheetName} onChange={(e) => setVibDisplaySheetName(e.target.value)} placeholder="Master VIB" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sheet Tab Name</Label>
+                                                <Input value={vibTabName} onChange={(e) => setVibTabName(e.target.value)} placeholder="Danh sách chuyển tiền" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <Button onClick={handleSaveVIB} disabled={loading || !vibHasChanges} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100">
+                                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                                            Save VIB Settings
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="vib-image">Bank Icon URL</Label>
-                                    <Input
-                                        id="vib-image"
-                                        placeholder="https://your-cdn.com/vib-icon.png"
-                                        value={vibImageUrl}
-                                        onChange={(e) => setVibImageUrl(e.target.value)}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        💡 Paste image URL for VIB icon (displayed on landing page)
-                                    </p>
-                                </div>
+                            <TabsContent value="phases">
+                                <BatchPhaseManager bankType="VIB" />
+                            </TabsContent>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="vib-display-sheet-url">Google Sheet URL (Display)</Label>
-                                        <Input
-                                            id="vib-display-sheet-url"
-                                            placeholder="https://docs.google.com/spreadsheets/d/..."
-                                            value={vibDisplaySheetUrl}
-                                            onChange={(e) => setVibDisplaySheetUrl(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="vib-display-sheet-name">Display Name</Label>
-                                        <Input
-                                            id="vib-display-sheet-name"
-                                            placeholder="e.g. Master VIB Sheet"
-                                            value={vibDisplaySheetName}
-                                            onChange={(e) => setVibDisplaySheetName(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="vib-tab-name">Sheet Tab Name</Label>
-                                        <Input
-                                            id="vib-tab-name"
-                                            placeholder="Danh sách chuyển tiền"
-                                            value={vibTabName}
-                                            onChange={(e) => setVibTabName(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="vib-cutoff">Cutoff Day</Label>
-                                        <Input
-                                            id="vib-cutoff"
-                                            type="number"
-                                            placeholder="15"
-                                            value={vibCutoffDay === 0 ? '' : vibCutoffDay}
-                                            onChange={(e) => setVibCutoffDay(Number(e.target.value))}
-                                            min={1}
-                                            max={31}
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-xs text-slate-500">
-                                    💡 The day of the month that separates 'Before' and 'After' tabs for this bank.
-                                </p>
-
-                                <Button onClick={handleSaveVIB} disabled={loading || !vibHasChanges} className="w-full">
-                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {!loading && <Save className="mr-2 h-4 w-4" />}
-                                    Save VIB Settings
-                                </Button>
-                            </CardContent>
-                        </Card>
+                            <TabsContent value="masters">
+                                <BatchMasterManager
+                                    bankType="VIB"
+                                    accounts={accounts}
+                                    bankMappings={[]}
+                                />
+                            </TabsContent>
+                        </Tabs>
                     </TabsContent>
                 </Tabs>
             </div>

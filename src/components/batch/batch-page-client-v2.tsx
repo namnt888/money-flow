@@ -7,7 +7,7 @@ import { BatchSettingsSlide } from '@/components/batch/batch-settings-slide'
 import { BatchMasterChecklist } from '@/components/batch/BatchMasterChecklist'
 import { BatchMasterSlide } from '@/components/batch/BatchMasterSlide'
 import { Button } from '@/components/ui/button'
-import { Tabs } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, RotateCcw } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -79,6 +79,7 @@ export function BatchPageClientV2({
     const [selectedYear, setSelectedYear] = useState(() =>
         currentMonth ? currentMonth.split('-')[0] : String(new Date().getFullYear())
     )
+
 
     useEffect(() => {
         setOptimisticMonth(currentMonth)
@@ -264,77 +265,93 @@ export function BatchPageClientV2({
 
                         {/* RIGHT: MONTH TABS & ACTIONS */}
                         <div className="flex items-center gap-4 flex-1 justify-end min-w-0">
-                            <div className="flex items-center gap-2 py-1 pr-4 border-r border-slate-100">
-                                <Button
-                                    onClick={handleSyncCurrentPhase}
-                                    disabled={isSyncingMaster || isPending}
-                                    variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
-                                >
-                                    {isSyncingMaster ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 text-slate-400" />}
-                                    <span>Sync Master</span>
-                                </Button>
-                                <Button
-                                    onClick={async () => {
-                                        const confirm = window.confirm("Are you sure you want to re-align all master items? This will update their phase links based on current logic.")
-                                        if (!confirm) return
+                            {/* NEW: 2-row Month Grid (6 per row) */}
+                            <div className="flex flex-col gap-1.5 py-1 px-4 border-r border-slate-100 items-end">
+                                <div className="flex items-center gap-1">
+                                    {MONTH_NAMES_SHORT.slice(0, 6).map((name, i) => {
+                                        const monthNum = i + 1
+                                        const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
+                                        const isActive = optimisticMonth === mStr
+                                        const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
                                         
-                                        startTransition(async () => {
-                                            const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
-                                            const res = await migrateBatchItemsToPhasesAction()
-                                            if (res.success) {
-                                                toast.success(`Migration complete! Updated ${res.updatedCount} items.`)
-                                                router.refresh()
-                                            } else {
-                                                toast.error(res.error || "Migration failed")
-                                            }
-                                        })
-                                    }}
-                                    disabled={isPending}
-                                    variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
-                                >
-                                    {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5 text-slate-400" />}
-                                    <span>Re-align Masters</span>
-                                </Button>
-                                <div className="w-[130px] shrink-0">
+                                        return (
+                                            <button
+                                                key={mStr}
+                                                onClick={() => handleMonthSelect(mStr)}
+                                                disabled={isPending}
+                                                className={cn(
+                                                    "w-11 h-8 rounded-lg flex items-center justify-center text-[10px] font-black uppercase tracking-tighter transition-all border",
+                                                    isActive 
+                                                        ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                                        : isCurrent
+                                                            ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
+                                                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                                )}
+                                            >
+                                                {loadingMonth === mStr ? <Loader2 className="h-3 w-3 animate-spin" /> : name}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    {MONTH_NAMES_SHORT.slice(6, 12).map((name, i) => {
+                                        const monthNum = i + 7
+                                        const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
+                                        const isActive = optimisticMonth === mStr
+                                        const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
+                                        
+                                        return (
+                                            <button
+                                                key={mStr}
+                                                onClick={() => handleMonthSelect(mStr)}
+                                                disabled={isPending}
+                                                className={cn(
+                                                    "w-11 h-8 rounded-lg flex items-center justify-center text-[10px] font-black uppercase tracking-tighter transition-all border",
+                                                    isActive 
+                                                        ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                                        : isCurrent
+                                                            ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
+                                                            : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                                )}
+                                            >
+                                                {loadingMonth === mStr ? <Loader2 className="h-3 w-3 animate-spin" /> : name}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 py-1 px-4 border-r border-slate-100 shrink-0">
+                                <div className="w-[100px] shrink-0">
                                     <Combobox
                                         value={selectedYear}
                                         onValueChange={(v) => v && setSelectedYear(v)}
                                         items={yearSelectorItems}
                                         placeholder="Year"
-                                        inputPlaceholder="Year..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
+                                        triggerClassName="h-8 border-slate-100 bg-slate-50/50 rounded-lg text-[10px] font-black"
                                     />
                                 </div>
-                                <div className="w-[210px] shrink-0">
-                                    <Combobox
-                                        value={optimisticMonth || undefined}
-                                        onValueChange={(v) => v && handleMonthSelect(v)}
-                                        items={monthSelectorItems}
-                                        placeholder="Select month"
-                                        inputPlaceholder="Search month..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
-                                    />
-                                </div>
-                                <div className="w-[220px] shrink-0">
-                                    <Combobox
-                                        value={currentPhaseId || undefined}
-                                        onValueChange={(phaseId) => {
-                                            const nextPhase = effectivePhases.find((phase: any) => phase.id === phaseId)
-                                            if (!nextPhase) return
-                                            handlePeriodSelect(nextPhase.period_type || 'before', nextPhase.id)
-                                        }}
-                                        items={phaseSelectorItems}
-                                        placeholder="Select phase"
-                                        inputPlaceholder="Search phase..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
-                                    />
-                                </div>
-                                <div className="h-10 px-3 rounded-xl border border-indigo-100 bg-indigo-50/60 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-indigo-700 shrink-0">
-                                    <span>Range</span>
-                                    <span className="text-indigo-500">{getPhaseRangeLabel(currentPhase)}</span>
-                                </div>
+                                <Tabs 
+                                    value={currentPhaseId || undefined} 
+                                    onValueChange={(phaseId) => {
+                                        const nextPhase = effectivePhases.find((phase: any) => phase.id === phaseId)
+                                        if (!nextPhase) return
+                                        handlePeriodSelect(nextPhase.period_type || 'before', nextPhase.id)
+                                    }}
+                                    className="w-full"
+                                >
+                                    <TabsList className="bg-slate-100 p-0.5 rounded-lg h-9 w-full">
+                                        {effectivePhases.map((phase: any) => (
+                                            <TabsTrigger 
+                                                key={phase.id} 
+                                                value={phase.id}
+                                                className="rounded-md px-2 h-full text-[9px] font-black uppercase tracking-tight data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm"
+                                            >
+                                                {phase.label}
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+                                </Tabs>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -343,10 +360,10 @@ export function BatchPageClientV2({
                                         href={globalSheetUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="h-10 px-3 flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all font-black text-[9px] uppercase tracking-widest shadow-sm shrink-0"
+                                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm shrink-0"
+                                        title={globalSheetName || "Open Google Sheet"}
                                     >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                        <span>Sheet</span>
+                                        <FileSpreadsheet className="h-5 w-5" />
                                     </a>
                                 )}
                                 <Button
@@ -355,15 +372,14 @@ export function BatchPageClientV2({
                                     className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 text-indigo-600 bg-indigo-50/10 border-indigo-100 shrink-0"
                                 >
                                     <Sparkles className="h-4 w-4" />
-                                    <span>Masters</span>
+                                    <span>Template</span>
                                 </Button>
                                 <Button
                                     onClick={() => setSettingsOpen(true)}
                                     variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
+                                    className="h-10 w-10 p-0 rounded-xl border-slate-200 hover:bg-slate-50 shrink-0"
                                 >
                                     <Settings className="h-4 w-4 text-slate-400" />
-                                    <span>Config</span>
                                 </Button>
                             </div>
                         </div>
