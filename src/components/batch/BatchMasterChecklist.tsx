@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +30,7 @@ interface BatchMasterChecklistProps {
     initialPhaseId?: string | null
     refreshNonce?: number
     onPhaseChange?: (phaseId: string) => void
+    onManagePhases?: () => void
 }
 
 export function BatchMasterChecklist({
@@ -41,6 +42,7 @@ export function BatchMasterChecklist({
     initialPhaseId = null,
     refreshNonce = 0,
     onPhaseChange,
+    onManagePhases,
 }: BatchMasterChecklistProps) {
     const currentYear = new Date().getFullYear()
     const currentMonth = new Date().getMonth() + 1 // 1-12
@@ -95,10 +97,18 @@ export function BatchMasterChecklist({
     const [itemsByPhase, setItemsByPhase] = useState<Record<string, any[]>>({})
 
     // Effective phases: use phases from DB, or fall back to 2 synthetic phases if none configured
-    const effectivePhases = phases.length > 0 ? phases : [
-        { id: 'before', bank_type: bankType, label: 'Phase 1', period_type: 'before', cutoff_day: 15, sort_order: 0, is_active: true },
-        { id: 'after', bank_type: bankType, label: 'Phase 2', period_type: 'after', cutoff_day: 15, sort_order: 1, is_active: true }
-    ]
+    const effectivePhases = useMemo(() => {
+        const list = phases.length > 0 ? phases : [
+            { id: 'before', bank_type: bankType, label: 'Phase 1', period_type: 'before', cutoff_day: 15, sort_order: 0, is_active: true },
+            { id: 'after', bank_type: bankType, label: 'Phase 2', period_type: 'after', cutoff_day: 15, sort_order: 1, is_active: true }
+        ]
+        
+        // Sort chronologically: Before (by day) -> After (by day)
+        return [...list].sort((a: any, b: any) => {
+            if (a.period_type !== b.period_type) return a.period_type === 'before' ? -1 : 1
+            return (a.cutoff_day || 0) - (b.cutoff_day || 0)
+        })
+    }, [phases, bankType])
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
@@ -218,17 +228,17 @@ export function BatchMasterChecklist({
                 // prioritize by cutoff_day matching or finding the first phase that covers the due_date.
                 const matchedPhases = activePhases.filter((p: any) => p.period_type === master.cutoff_period && p.bank_type === bankType)
                 
-                if (matchedPhases.length === 1) {
-                    phaseId = matchedPhases[0].id
-                } else if (matchedPhases.length > 1) {
-                    // Use due_date as tie-breaker
-                    const dueDay = master.accounts?.due_date
+                if (matchedPhases.length >= 1) {
+                    // Use due_date as tie-breaker or pick the first matching type
+                    const dueDay = master.accounts?.due_date || master.accounts?.statement_day
                     const bestMatch = dueDay 
                         ? (matchedPhases.find((p: any) => p.cutoff_day >= dueDay) || matchedPhases[matchedPhases.length - 1])
                         : matchedPhases[0]
                     phaseId = bestMatch.id
                 } else if (activePhases.length > 0) {
-                    phaseId = activePhases[0].id
+                    // Critical fallback: If bank_type matches, use first phase of THAT bank
+                    const bankMatches = activePhases.filter((p: any) => p.bank_type === bankType)
+                    phaseId = bankMatches.length > 0 ? bankMatches[0].id : activePhases[0].id
                 }
             }
 
@@ -432,6 +442,15 @@ export function BatchMasterChecklist({
     function openMasterItemEditor(item: any) {
         setEditingMasterItem(item)
         setFocusedMasterItemId(item?.id || null)
+        setIsMasterItemSlideOpen(true)
+    }
+
+    function openMasterItemAdder(phaseId: string) {
+        const phase = effectivePhases.find((p: any) => p.id === phaseId)
+        setEditingMasterItem({ 
+            phase_id: phaseId,
+            cutoff_period: phase?.period_type || 'before'
+        })
         setIsMasterItemSlideOpen(true)
     }
 
@@ -888,30 +907,80 @@ export function BatchMasterChecklist({
                 onValueChange={selectPhase}
                 className="space-y-4"
             >
-                <div className="overflow-x-auto pb-1">
-                    <TabsList className="h-12 p-1 rounded-2xl bg-slate-100 border border-slate-200 w-max min-w-full justify-start shadow-inner">
-                        {(period ? effectivePhases.filter((p: any) => p.period_type === period) : effectivePhases).map((phase: any) => {
-                            const phaseItems = itemsByPhase[phase.id] || []
-                            const done = phaseItems.length > 0 && phaseItems.every((i: any) => i.status === 'confirmed')
-                            return (
-                                <TabsTrigger
-                                    key={phase.id}
-                                    value={phase.id}
-                                    className="h-10 px-4 rounded-xl text-[11px] font-black uppercase tracking-wider border border-transparent data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-indigo-700 data-[state=active]:shadow-md"
-                                >
-                                    {phase.label}
-                                    <span className={cn(
-                                        "ml-2 inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] border transition-colors",
-                                        done
-                                            ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                                            : "bg-slate-50 text-slate-500 border-slate-200"
-                                    )}>
-                                        {phaseItems.filter((i: any) => i.status === 'confirmed').length}/{phaseItems.length}
-                                    </span>
-                                </TabsTrigger>
-                            )
-                        })}
-                    </TabsList>
+                <div className="flex items-center gap-3 w-full no-scrollbar">
+                    <div className="flex-1 overflow-x-auto no-scrollbar pb-1">
+                        <TabsList className="h-14 p-1.5 rounded-[22px] bg-slate-100/50 border border-slate-200 justify-start shadow-inner flex flex-nowrap w-max gap-2">
+                             {/* Single container for all tabs with visual groupings */}
+                             <div className="flex items-center gap-2 shrink-0">
+                                {/* Before Group */}
+                                <div className="flex items-center gap-1 bg-white/80 p-1 rounded-[18px] border border-slate-200/60 shadow-sm shrink-0">
+                                    {effectivePhases.filter((p: any) => p.period_type === 'before').map((phase: any) => {
+                                        const phaseItems = itemsByPhase[phase.id] || []
+                                        const done = phaseItems.length > 0 && phaseItems.every((i: any) => i.status === 'confirmed')
+                                        return (
+                                            <TabsTrigger
+                                                key={phase.id}
+                                                value={phase.id}
+                                                className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border border-transparent data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-indigo-700 data-[state=active]:shadow-md transition-all whitespace-nowrap"
+                                            >
+                                                <div className="flex items-center gap-1.5">
+                                                    {phase.label}
+                                                    <span className={cn(
+                                                        "inline-flex items-center rounded-md px-1 py-0.5 text-[8px] border transition-colors",
+                                                        done
+                                                            ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                                            : "bg-slate-100 text-slate-500 border-slate-200 group-data-[state=active]:bg-indigo-500 group-data-[state=active]:text-white group-data-[state=active]:border-indigo-400"
+                                                    )}>
+                                                        {phaseItems.filter((i: any) => i.status === 'confirmed').length}/{phaseItems.length}
+                                                    </span>
+                                                </div>
+                                            </TabsTrigger>
+                                        )
+                                    })}
+                                </div>
+
+                                <div className="flex items-center justify-center shrink-0">
+                                    <div className="h-6 w-[1.5px] bg-slate-200 rounded-full mx-1" />
+                                </div>
+
+                                {/* After Group */}
+                                <div className="flex items-center gap-1 bg-white/80 p-1 rounded-[18px] border border-slate-200/60 shadow-sm shrink-0">
+                                    {effectivePhases.filter((p: any) => p.period_type === 'after').map((phase: any) => {
+                                        const phaseItems = itemsByPhase[phase.id] || []
+                                        const done = phaseItems.length > 0 && phaseItems.every((i: any) => i.status === 'confirmed')
+                                        return (
+                                            <TabsTrigger
+                                                key={phase.id}
+                                                value={phase.id}
+                                                className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border border-transparent data-[state=active]:bg-rose-600 data-[state=active]:text-white data-[state=active]:border-rose-700 data-[state=active]:shadow-md transition-all whitespace-nowrap"
+                                            >
+                                                <div className="flex items-center gap-1.5">
+                                                    {phase.label}
+                                                    <span className={cn(
+                                                        "inline-flex items-center rounded-md px-1 py-0.5 text-[8px] border transition-colors",
+                                                        done
+                                                            ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                                            : "bg-slate-100 text-slate-500 border-slate-200 group-data-[state=active]:bg-rose-500 group-data-[state=active]:text-white group-data-[state=active]:border-rose-400"
+                                                    )}>
+                                                        {phaseItems.filter((i: any) => i.status === 'confirmed').length}/{phaseItems.length}
+                                                    </span>
+                                                </div>
+                                            </TabsTrigger>
+                                        )
+                                    })}
+                                </div>
+                             </div>
+                        </TabsList>
+                    </div>
+                    
+                    <Button
+                        variant="ghost"
+                        onClick={onManagePhases}
+                        className="h-12 px-4 rounded-2xl border border-dashed border-slate-300 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-white text-[10px] font-black uppercase tracking-widest shrink-0 transition-all gap-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>Manage Phases</span>
+                    </Button>
                 </div>
 
                 {(period ? effectivePhases.filter((p: any) => p.period_type === period) : effectivePhases).map((phase: any) => (
@@ -932,6 +1001,7 @@ export function BatchMasterChecklist({
                             setSelectedItemIds={setSelectedItemIds}
                             onPhaseDirtyChange={handlePhaseDirtyChange}
                             onEditMasterItem={openMasterItemEditor}
+                            onAddMasterItem={() => openMasterItemAdder(phase.id)}
                             focusedMasterItemId={focusedMasterItemId}
                         />
                     </TabsContent>
@@ -1105,7 +1175,7 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, focusedMasterItemId }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
@@ -1273,6 +1343,16 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     title="Force Refresh"
                 >
                     <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onAddMasterItem}
+                    className="h-8 px-2.5 rounded-xl border border-dashed border-slate-200 hover:bg-slate-100 hover:border-indigo-200 text-slate-400 hover:text-indigo-600 font-black text-[9px] uppercase tracking-widest gap-1.5 shrink-0 transition-all ml-1"
+                >
+                    <Plus className="h-3 w-3" />
+                    <span>Add</span>
                 </Button>
 
                 <Button

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Person } from '@/types/moneyflow.types';
-import { getRecentPeopleByTransactions } from '@/services/people.service';
+import { getRecentPeopleAction } from '@/actions/people-actions';
 import { cn } from '@/lib/utils';
 import { User } from 'lucide-react';
 import { CustomTooltip } from '@/components/ui/custom-tooltip';
@@ -19,7 +19,7 @@ export function RecentPeopleList({ isCollapsed, onClick }: { isCollapsed: boolea
         // Fetch recent people based on last transaction
         const fetchRecent = async () => {
             try {
-                const data = await getRecentPeopleByTransactions(4);
+                const data = await getRecentPeopleAction(4);
                 if (isMounted) setRecentPeople(data);
             } catch (err) {
                 if (isMounted) console.error('Failed to fetch recent people:', err);

@@ -99,8 +99,8 @@ export function BatchMasterItemSlide({
                     bank_name: '',
                     bank_code: '',
                     target_account_id: 'none',
-                    cutoff_period: 'before',
-                    phase_id: phases[0]?.id || '',
+                    cutoff_period: item?.cutoff_period || 'before',
+                    phase_id: item?.phase_id || phases[0]?.id || '',
                 })
             }
         }
@@ -116,7 +116,8 @@ export function BatchMasterItemSlide({
 
             // Auto-suggest Cutoff Period and Phase
             const dueDay = target.due_date || target.statement_day
-            if (dueDay) {
+            // FIX: Only auto-suggest if person picker triggered this, NOT if we have a manual creation context (Quick Add)
+            if (dueDay && !item?.phase_id) {
                 // Find the best matching phase based on due_date
                 if (phases.length > 0) {
                     const matchedPhase = phases.find(p =>
@@ -307,10 +308,16 @@ export function BatchMasterItemSlide({
     }
 
     const selectedPhaseObj = phases.find(p => p.id === form.watch('phase_id'))
-    const cutoffDay = selectedPhaseObj?.cutoff_day || 15;
+    // Loosen warning: only warn if due date is significantly outside the phase's typical range
+    // For 'before' phase (1-cutoff), warn if due date is > cutoff + 2 
+    // For 'after' phase (cutoff+1-31), warn if due date is <= cutoff - 2
+    const cutoffDay = selectedPhaseObj?.cutoff_day || (selectedPhaseObj?.period_type === 'before' ? 15 : 15);
     const effectiveDay = selectedAccount ? Number(selectedAccount.due_date || selectedAccount.statement_day || 0) : 0;
+    
     const isWrongPeriod = effectiveDay > 0 && selectedPhaseObj && (
-        selectedPhaseObj.period_type === 'before' ? effectiveDay > selectedPhaseObj.cutoff_day : effectiveDay <= selectedPhaseObj.cutoff_day
+        selectedPhaseObj.period_type === 'before' 
+            ? effectiveDay > (selectedPhaseObj.cutoff_day + 2) // Allow 2 days past cutoff
+            : effectiveDay < (selectedPhaseObj.cutoff_day - 5) // Allow more leeway for after phases
     );
 
     return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Plus, Filter, CheckCircle2, TrendingUp, Archive, LayoutGrid, Calendar, RotateCw, X } from "lucide-react";
+import { Search, Plus, Filter, CheckCircle2, TrendingUp, Archive, LayoutGrid, Calendar, RotateCw, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ interface PeopleTableHeaderV2Props {
     availableYears: number[];
     onRefreshAll?: () => void;
     isSyncingAll?: boolean;
+    onRealignAll?: () => void;
+    isRealigningAll?: boolean;
     canResetSort?: boolean;
     onResetSort?: () => void;
     migrationDialog?: React.ReactNode;
@@ -52,6 +54,8 @@ export function PeopleTableHeaderV2({
     availableYears,
     onRefreshAll,
     isSyncingAll,
+    onRealignAll,
+    isRealigningAll,
     canResetSort,
     onResetSort,
     migrationDialog,
@@ -207,14 +211,31 @@ export function PeopleTableHeaderV2({
                 variant="outline"
                 size="sm"
                 className={cn(
-                    "h-10 px-3 gap-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-semibold shadow-sm transition-all",
+                    "h-10 px-3 gap-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap",
                     isSyncingAll && "opacity-50 cursor-not-allowed"
                 )}
                 onClick={onRefreshAll}
                 disabled={isSyncingAll}
+                title="Sync all people sheets from Google Sheets"
             >
                 <RotateCw className={cn("h-4 w-4", isSyncingAll && "animate-spin")} />
-                <span className="hidden lg:inline">Sync All Sheets</span>
+                <span className="hidden lg:inline">Sheets</span>
+            </Button>
+
+            {/* Re-align All Cycles Button */}
+            <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                    "h-10 px-3 gap-2 border-slate-200 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-700 font-bold shadow-sm transition-all whitespace-nowrap",
+                    isRealigningAll && "opacity-50 cursor-not-allowed"
+                )}
+                onClick={onRealignAll}
+                disabled={isRealigningAll}
+                title="Re-calculate all debt cycles in database"
+            >
+                <RefreshCw className={cn("h-4 w-4", isRealigningAll && "animate-spin")} />
+                <span className="hidden lg:inline">Re-align</span>
             </Button>
 
             {/* Migration Dialog */}

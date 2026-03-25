@@ -12,11 +12,11 @@ export interface PeopleColumnConfig {
 
 const defaultPeopleColumns: PeopleColumnConfig[] = [
     { key: 'name', label: 'Name', defaultWidth: 160, minWidth: 140, frozen: true },
-    { key: 'base_lend', label: 'Original Amount', defaultWidth: 140, minWidth: 120 },
+    { key: 'base_lend', label: 'All Debt Remains', defaultWidth: 140, minWidth: 120 },
     { key: 'repayment', label: 'Repayment', defaultWidth: 140, minWidth: 120 },
     { key: 'cashback_total', label: 'Cashback Total', defaultWidth: 130, minWidth: 110 },
+    { key: 'current_tag', label: 'Current Tag', defaultWidth: 320, minWidth: 300 },
     { key: 'balance', label: 'Remaining Amount', defaultWidth: 140, minWidth: 120 },
-    { key: 'current_tag', label: 'Current Tag', defaultWidth: 300, minWidth: 280 },
     { key: 'current_debt', label: 'Outstanding Debt', defaultWidth: 140, minWidth: 120 },
     { key: 'net_lend', label: 'Previous Debt', defaultWidth: 130, minWidth: 110 },
     { key: 'action', label: 'Actions', defaultWidth: 100, minWidth: 80, frozen: true },
@@ -30,12 +30,12 @@ export function usePeopleColumnPreferences() {
     const [visibleColumns, setVisibleColumns] = useState<Record<PeopleColumnKey, boolean>>({
         name: true,
         current_tag: true,
-        current_debt: false, // BUG #5: Hide from row
+        current_debt: false,
         base_lend: true,
         repayment: true,
         cashback_total: true,
-        net_lend: false, // BUG #5: Hide from row
-        balance: true,
+        net_lend: false,
+        balance: false, // Hidden by default (redundant with current_tag)
         action: true,
     });
 
@@ -111,7 +111,7 @@ export function usePeopleColumnPreferences() {
             repayment: true,
             cashback_total: true,
             net_lend: false,
-            balance: true,
+            balance: false,
             action: true,
         });
         const map = {} as Record<PeopleColumnKey, number>;

@@ -78,17 +78,24 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         const yearEnd = `${year}-12-31 23:59:59`
         const fallbackFundingByBatchMap = new Map<string, any>()
         try {
+            // Broaden the search and parse metadata in memory to avoid 400 errors with complex JSON filters in PocketBase
             const fallbackFundingResult = await pocketbaseList<any>('transactions', {
-                filter: `(metadata ~ 'batch_funding' || metadata ~ 'batch_step') && created >= '${yearStart}' && created <= '${yearEnd}'`,
-                perPage: 200,
+                filter: `created >= "${yearStart}" && created <= "${yearEnd}"`,
+                perPage: 500,
                 sort: '-created',
                 expand: 'account_id,target_account_id',
             })
             
             fallbackFundingResult.items.forEach(txn => {
-                const meta = typeof txn.metadata === 'string' ? JSON.parse(txn.metadata) : txn.metadata
+                let meta: any = null
+                try {
+                    meta = typeof txn.metadata === 'string' ? JSON.parse(txn.metadata) : txn.metadata
+                } catch {}
+                
                 const bId = meta?.batch_id
-                if (bId && !fallbackFundingByBatchMap.has(bId)) {
+                const isBatchRelated = meta?.batch_funding || meta?.batch_step || txn.label?.includes('Batch')
+                
+                if (bId && isBatchRelated && !fallbackFundingByBatchMap.has(bId)) {
                     fallbackFundingByBatchMap.set(bId, {
                         ...txn,
                         account: txn?.expand?.account_id || null,

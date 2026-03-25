@@ -311,3 +311,8 @@ export async function syncAllPeopleDebtCyclesAction() {
   revalidatePath('/people');
   return { success: true, count: results.length };
 }
+
+export async function getRecentPeopleAction(limit: number = 5) {
+  const { getRecentPeopleByTransactions } = await import('@/services/people.service')
+  return await getRecentPeopleByTransactions(limit)
+}

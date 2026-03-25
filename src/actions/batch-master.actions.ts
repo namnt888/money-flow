@@ -41,19 +41,9 @@ export async function upsertBatchMasterItemAction(item: Partial<BatchMasterItem>
         const id = item.id ? toPocketBaseId(item.id, 'batchmaster') : toPocketBaseId(`${item.bank_type || 'MBB'}:${item.bank_number || ''}:${Date.now()}`, 'batchmaster')
         const payload = normalizeMasterPayload(item, id)
 
-        let data: any
-        try {
-            data = item.id
-                ? await pocketbaseUpdate<any>('batch_master_items', id, payload)
-                : await pocketbaseCreate<any>('batch_master_items', payload)
-        } catch (error) {
-            if (!isUnknownFieldError(error, 'phase_id')) throw error
-
-            const { phase_id: _phaseId, ...fallbackPayload } = payload as any
-            data = item.id
-                ? await pocketbaseUpdate<any>('batch_master_items', id, fallbackPayload)
-                : await pocketbaseCreate<any>('batch_master_items', fallbackPayload)
-        }
+        const data = item.id
+            ? await pocketbaseUpdate<any>('batch_master_items', id, payload)
+            : await pocketbaseCreate<any>('batch_master_items', payload)
 
         revalidatePath('/batch/settings')
         revalidatePath('/batch')
@@ -63,6 +53,13 @@ export async function upsertBatchMasterItemAction(item: Partial<BatchMasterItem>
         console.error('Error upserting batch master item:', error)
         return { success: false, error: error.message }
     }
+}
+
+/**
+ * Action to update a master checklist item
+ */
+export async function updateBatchMasterItemAction(id: string, updates: Partial<BatchMasterItem>) {
+    return upsertBatchMasterItemAction({ ...updates, id })
 }
 
 /**
@@ -176,11 +173,12 @@ export async function migrateBatchItemsToPhasesAction(params?: { bankType: 'MBB'
                 else bestPhase = matchedPhases[matchedPhases.length - 1] // Fallback to largest cutoff
             }
 
+            // Resolve logical cutoff from phase_id mapping if current metadata is missing it
             const currentPhaseId = item.phase_id
-            const currentCutoff = item.cutoff_period
+            const currentCutoff = item.cutoff_period || item.expand?.phase_id?.period_type || 'before'
 
-            // Update if phase_id mismatch OR legacy cutoff_period string mismatch
-            if (currentPhaseId !== bestPhase.id || currentCutoff !== bestPhase.period_type) {
+            // Update if phase_id is missing OR mismatch with detected best phase
+            if (!currentPhaseId || currentPhaseId !== bestPhase.id) {
                 console.log(`[Migration] Updating item ${item.id}: ${currentCutoff} -> ${bestPhase.period_type}, Phase ${currentPhaseId} -> ${bestPhase.id}`)
                 try {
                     await pocketbaseUpdate('batch_master_items', item.id, {

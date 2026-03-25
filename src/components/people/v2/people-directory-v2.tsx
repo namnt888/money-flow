@@ -263,6 +263,7 @@ export function PeopleDirectoryV2({
   };
 
   const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [isRealigningAll, setIsRealigningAll] = useState(false);
 
   const handleRefreshAll = async () => {
     setIsSyncingAll(true);
@@ -277,6 +278,23 @@ export function PeopleDirectoryV2({
       router.refresh();
     } finally {
       setIsSyncingAll(false);
+    }
+  };
+
+  const handleRealignAll = async () => {
+    setIsRealigningAll(true);
+    const { syncAllPeopleDebtCyclesAction } = await import("@/actions/people-actions");
+    const promise = syncAllPeopleDebtCyclesAction();
+    toast.promise(promise, {
+      loading: "Re-aligning all debt cycles...",
+      success: "All debt cycles re-aligned successfully!",
+      error: "Failed to re-align debt cycles",
+    });
+    try {
+      await promise;
+      router.refresh();
+    } finally {
+      setIsRealigningAll(false);
     }
   };
 
@@ -319,6 +337,8 @@ export function PeopleDirectoryV2({
         onToggleArchived={() => setShowArchived(!showArchived)}
         onRefreshAll={handleRefreshAll}
         isSyncingAll={isSyncingAll}
+        onRealignAll={handleRealignAll}
+        isRealigningAll={isRealigningAll}
         canResetSort={!!sortConfig}
         onResetSort={handleResetSort}
         migrationDialog={<MigrationDialog people={people} />}

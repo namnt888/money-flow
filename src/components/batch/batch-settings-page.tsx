@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -47,50 +47,68 @@ export function BatchSettingsPage({
     const [originalMBB, setOriginalMBB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
     const [originalVIB, setOriginalVIB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
 
-    // Load settings on mount only if not provided via props
+    const isInitialized = useRef(false)
+
+    // Load settings on mount only if not provided via props or if both are null
     useEffect(() => {
-        if (!initialSettings) {
+        console.log('[DEBUG] BatchSettingsPage Received Props:', initialSettings)
+        const hasData = initialSettings && (initialSettings.MBB || initialSettings.VIB)
+        
+        // Prevent re-initialization if already done unless props explicitly changed to non-null
+        if (isInitialized.current && !initialSettings) return;
+
+        if (!hasData) {
+            console.log('[DEBUG] No initial settings data found, calling loadSettings()...')
             loadSettings()
         } else {
+            console.log('[DEBUG] Applying initial settings data...')
             // Apply initial settings
             if (initialSettings.MBB) {
                 const mbbData = initialSettings.MBB
+                console.log('[DEBUG] MBB Data:', mbbData)
                 setMbbSheetUrl(mbbData.sheet_url || '')
                 setMbbImageUrl(mbbData.image_url || '')
                 setMbbWebhookUrl(mbbData.webhook_url || '')
-                setMbbCutoffDay(mbbData.cutoff_day || 15)
+                setMbbCutoffDay(mbbData.cutoff_day ?? 15)
                 setMbbDisplaySheetUrl(mbbData.display_sheet_url || '')
                 setMbbDisplaySheetName(mbbData.display_sheet_name || '')
                 setMbbTabName(mbbData.sheet_name || '')
-                setOriginalMBB({
+                
+                const originalValue = {
                     sheet: mbbData.sheet_url || '',
                     image: mbbData.image_url || '',
                     webhook: mbbData.webhook_url || '',
-                    cutoff: mbbData.cutoff_day || 15,
+                    cutoff: mbbData.cutoff_day ?? 15,
                     displaySheetUrl: mbbData.display_sheet_url || '',
                     displaySheetName: mbbData.display_sheet_name || '',
                     tabName: mbbData.sheet_name || ''
-                })
+                }
+                setOriginalMBB(originalValue)
             }
             if (initialSettings.VIB) {
                 const vibData = initialSettings.VIB
+                console.log('[DEBUG] VIB Data:', vibData)
                 setVibSheetUrl(vibData.sheet_url || '')
                 setVibImageUrl(vibData.image_url || '')
                 setVibWebhookUrl(vibData.webhook_url || '')
-                setVibCutoffDay(vibData.cutoff_day || 15)
+                setVibCutoffDay(vibData.cutoff_day ?? 15)
                 setVibDisplaySheetUrl(vibData.display_sheet_url || '')
                 setVibDisplaySheetName(vibData.display_sheet_name || '')
                 setVibTabName(vibData.sheet_name || '')
-                setOriginalVIB({
+                
+                const originalValue = {
                     sheet: vibData.sheet_url || '',
                     image: vibData.image_url || '',
                     webhook: vibData.webhook_url || '',
-                    cutoff: vibData.cutoff_day || 15,
+                    cutoff: vibData.cutoff_day ?? 15,
                     displaySheetUrl: vibData.display_sheet_url || '',
                     displaySheetName: vibData.display_sheet_name || '',
                     tabName: vibData.sheet_name || ''
-                })
+                }
+                setOriginalVIB(originalValue)
             }
+            setInitialLoading(false)
+            isInitialized.current = true
         }
     }, [initialSettings])
 
