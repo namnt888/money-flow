@@ -109,7 +109,7 @@ export async function getDashboardStats(
     const totalAssets = accountResp.items.reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
 
     // 3. Monthly Spend & Category Stats
-    const expenseResp = await pocketbaseList<any>('transactions', {
+    const expenseResp = await pocketbaseList<any>('pvl_txn_001', {
       filter: `type = "expense" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
       expand: 'category_id',
       perPage: 1000
@@ -131,7 +131,7 @@ export async function getDashboardStats(
       .slice(0, 10);
 
     // 4. Monthly Income
-    const incomeResp = await pocketbaseList<any>('transactions', {
+    const incomeResp = await pocketbaseList<any>('pvl_txn_001', {
       filter: `type = "income" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
       perPage: 500
     });
@@ -172,7 +172,7 @@ export async function getDashboardStats(
     const refundAccount = await pocketbaseGetById<any>('accounts', refundPbId).catch(() => null);
     const refundBalance = refundAccount?.current_balance || 0;
 
-    const refundTxResp = await pocketbaseList<any>('transactions', {
+    const refundTxResp = await pocketbaseList<any>('pvl_txn_001', {
       filter: `to_account_id = "${refundPbId}" && status != "void"`,
       sort: '-date',
       perPage: 3
@@ -194,7 +194,7 @@ export async function getDashboardStats(
     const pendingBatchAmount = batchItemsResp.items.reduce((sum, item) => sum + Math.abs(item.amount || 0), 0);
 
     // 9. Recent Transactions
-    const recentTxResp = await pocketbaseList<any>('transactions', {
+    const recentTxResp = await pocketbaseList<any>('pvl_txn_001', {
       filter: 'status != "void"',
       sort: '-date',
       perPage: 5,

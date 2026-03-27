@@ -102,7 +102,7 @@ export async function deleteShop(id: string, targetId?: string): Promise<{ succe
     const pbId = toPocketBaseId(id, 'shops')
     
     // 1. Check for existing transactions
-    const txns = await pocketbaseList<any>('transactions', {
+    const txns = await pocketbaseList<any>('pvl_txn_001', {
       filter: `shop_id='${pbId}'`,
       perPage: 1
     })
@@ -116,12 +116,12 @@ export async function deleteShop(id: string, targetId?: string): Promise<{ succe
 
       // 2. Handover transactions to target shop
       const targetPbId = toPocketBaseId(targetId, 'shops')
-      const allTxns = await pocketbaseList<any>('transactions', {
+      const allTxns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `shop_id='${pbId}'`,
         perPage: 500
       })
       for (const txn of allTxns.items) {
-        await pocketbaseUpdate('transactions', txn.id, { shop_id: targetPbId })
+        await pocketbaseUpdate('pvl_txn_001', txn.id, { shop_id: targetPbId })
       }
     }
 
@@ -155,7 +155,7 @@ export async function deleteShopsBulk(ids: string[], targetId?: string): Promise
     const pbIds = ids.map(id => toPocketBaseId(id, 'shops'))
     
     for (const pbId of pbIds) {
-      const txns = await pocketbaseList<any>('transactions', {
+      const txns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `shop_id='${pbId}'`,
         perPage: 1
       })
@@ -169,12 +169,12 @@ export async function deleteShopsBulk(ids: string[], targetId?: string): Promise
     if (targetId && idsWithTransactions.length > 0) {
       const targetPbId = toPocketBaseId(targetId, 'shops')
       for (const pbId of idsWithTransactions) {
-        const allTxns = await pocketbaseList<any>('transactions', {
+        const allTxns = await pocketbaseList<any>('pvl_txn_001', {
           filter: `shop_id='${pbId}'`,
           perPage: 500
         })
         for (const txn of allTxns.items) {
-          await pocketbaseUpdate('transactions', txn.id, { shop_id: targetPbId })
+          await pocketbaseUpdate('pvl_txn_001', txn.id, { shop_id: targetPbId })
         }
       }
     }
@@ -196,15 +196,15 @@ export async function archiveShop(id: string, targetId?: string): Promise<{ succ
     
     if (targetId) {
       const targetPbId = toPocketBaseId(targetId, 'shops')
-      const allTxns = await pocketbaseList<any>('transactions', {
+      const allTxns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `shop_id='${pbId}'`,
         perPage: 500
       })
       for (const txn of allTxns.items) {
-        await pocketbaseUpdate('transactions', txn.id, { shop_id: targetPbId })
+        await pocketbaseUpdate('pvl_txn_001', txn.id, { shop_id: targetPbId })
       }
     } else {
-      const txns = await pocketbaseList<any>('transactions', {
+      const txns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `shop_id='${pbId}' && status != 'void'`,
         perPage: 1
       })
@@ -228,7 +228,7 @@ export async function getShopStats(year: number) {
   const endDate = `${year}-12-31 23:59:59.999Z`
 
   try {
-    const response = await pocketbaseList<any>('transactions', {
+    const response = await pocketbaseList<any>('pvl_txn_001', {
       filter: `occurred_at >= '${startDate}' && occurred_at <= '${endDate}' && status != 'void'`,
       perPage: 2000
     })

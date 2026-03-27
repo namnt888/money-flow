@@ -164,7 +164,7 @@ export async function getPeople(options?: {
     });
 
     // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
-    const txnsResponse = await pocketbaseList<any>("transactions", {
+    const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
       filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
       perPage: 1500, // Safe limit for recent data
       sort: "-date",
@@ -399,7 +399,7 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     // 4. Calculate Balance from Transactions
     let balance = 0;
     if (debtAccountId) {
-      const txnsResponse = await pocketbaseList<any>("transactions", {
+      const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
         filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}') && status!='void'`,
         perPage: 1000,
       });
@@ -421,7 +421,7 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     if (debtAccountId) {
       filterParts.push(`account_id='${debtAccountId}'`, `to_account_id='${debtAccountId}'`);
     }
-    const recentTxnsResponse = await pocketbaseList<any>("transactions", {
+    const recentTxnsResponse = await pocketbaseList<any>("pvl_txn_001", {
       filter: `(${filterParts.join(" || ")}) && status!='void'`,
       sort: "-date",
       perPage: 10,
@@ -444,7 +444,7 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
     const currentMonthTag = toYYYYMMFromDate(now);
 
     if (debtAccountId) {
-      const allStatsTxns = await pocketbaseList<any>("transactions", {
+      const allStatsTxns = await pocketbaseList<any>("pvl_txn_001", {
         filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}' || person_id='${pbId}') && status!='void'`,
         perPage: 1000,
       });
@@ -633,7 +633,7 @@ export async function getRecentPeopleByTransactions(
 ): Promise<MoneyflowPerson[]> {
   console.log("[DB:PB] transactions.recent_people");
   try {
-    const response = await pocketbaseList<any>("transactions", {
+    const response = await pocketbaseList<any>("pvl_txn_001", {
       filter: "person_id != null",
       sort: "-occurred_at",
       perPage: 50,

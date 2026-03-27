@@ -14,6 +14,14 @@
 
 import { Json } from "@/types/database.types";
 import { CashbackMode } from "@/types/moneyflow.types";
+import { 
+  pocketbaseList, 
+  pocketbaseGetById, 
+  pocketbaseCreate, 
+  pocketbaseUpdate, 
+  pocketbaseDelete, 
+  toPocketBaseId 
+} from "./server";
 
 /**
  * PocketBase transaction record structure
@@ -254,42 +262,12 @@ export async function loadPocketBaseTransactions(options: {
     filters.push(`shop_id='${options.shopId}'`);
   }
 
-  const filterParam = filters.length > 0 ? `&filter=${encodeURIComponent(filters.join(' && '))}` : '';
-  const limitParam = options.limit ? `&perPage=${options.limit}` : '&perPage=500';
-  const sortParam = '&sort=-date'; // Most recent first
-
-  const url = `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records?${filterParam}${limitParam}${sortParam}`;
-
-  console.log('[loadPocketBaseTransactions] Query start:', {
-    accountId: options.accountId,
-    transactionId: options.transactionId,
-    personId: options.personId,
-    categoryId: options.categoryId,
-    shopId: options.shopId,
-    includeVoided: options.includeVoided,
-    filters,
-    url,
-  });
-
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store', // Always fetch fresh data
+    const data = await pocketbaseList<PocketBaseTransaction>(PB_TXN_COLLECTION, {
+      filter: filters.join(' && '),
+      perPage: options.limit || 500,
+      sort: '-date'
     });
-
-    if (!response.ok) {
-      console.error('[loadPocketBaseTransactions] API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        url
-      });
-      return [];
-    }
-
-    const data = await response.json();
     const items = (data.items || []) as PocketBaseTransaction[];
 
     const filteredItems = options.includeVoided
@@ -360,17 +338,10 @@ export async function buildAccountIdBridge(): Promise<{
   const PB_API_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-db.reiwarden.io.vn';
   
   try {
-    const response = await fetch(
-      `${PB_API_URL}/api/collections/pvl_acc_001/records?perPage=500&fields=id,name,sb_account_id`,
-      { cache: 'no-store' }
-    );
-
-    if (!response.ok) {
-      console.warn('[buildAccountIdBridge] Failed to fetch accounts from PB');
-      return { pbToSb: new Map(), sbToPb: new Map(), bridges: [] };
-    }
-
-    const data = await response.json();
+    const data = await pocketbaseList<any>('pvl_acc_001', {
+      perPage: 500,
+      fields: 'id,name,sb_account_id'
+    });
     const items = data.items || [];
 
     const pbToSb = new Map<string, string>();
@@ -434,26 +405,7 @@ export async function createPocketBaseTransaction(
   input: PocketBaseTransactionMutationInput,
 ): Promise<string | null> {
   try {
-    const response = await fetch(
-      `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPocketBaseMutationPayload(input)),
-        cache: 'no-store',
-      },
-    );
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error('[createPocketBaseTransaction] API error:', {
-        status: response.status,
-        body,
-      });
-      return null;
-    }
-
-    const created = await response.json();
+    const created = await pocketbaseCreate<any>(PB_TXN_COLLECTION, buildPocketBaseMutationPayload(input));
     return created?.id ?? null;
   } catch (error) {
     console.error('[createPocketBaseTransaction] Failed:', error);
@@ -466,26 +418,7 @@ export async function updatePocketBaseTransaction(
   input: PocketBaseTransactionMutationInput,
 ): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records/${id}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPocketBaseMutationPayload(input)),
-        cache: 'no-store',
-      },
-    );
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error('[updatePocketBaseTransaction] API error:', {
-        id,
-        status: response.status,
-        body,
-      });
-      return false;
-    }
-
+    await pocketbaseUpdate(PB_TXN_COLLECTION, id, buildPocketBaseMutationPayload(input));
     return true;
   } catch (error) {
     console.error('[updatePocketBaseTransaction] Failed:', { id, error });
@@ -495,24 +428,7 @@ export async function updatePocketBaseTransaction(
 
 export async function deletePocketBaseTransaction(id: string): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records/${id}`,
-      {
-        method: 'DELETE',
-        cache: 'no-store',
-      },
-    );
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error('[deletePocketBaseTransaction] API error:', {
-        id,
-        status: response.status,
-        body,
-      });
-      return false;
-    }
-
+    await pocketbaseDelete(PB_TXN_COLLECTION, id);
     return true;
   } catch (error) {
     console.error('[deletePocketBaseTransaction] Failed:', { id, error });
@@ -522,47 +438,15 @@ export async function deletePocketBaseTransaction(id: string): Promise<boolean> 
 
 export async function voidPocketBaseTransaction(id: string): Promise<boolean> {
   try {
-    const getResponse = await fetch(
-      `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records/${id}`,
-      { cache: 'no-store' },
-    );
+    const current = await pocketbaseGetById<any>(PB_TXN_COLLECTION, id);
+    if (!current) return false;
 
-    if (!getResponse.ok) {
-      const body = await getResponse.text();
-      console.error('[voidPocketBaseTransaction] Failed to fetch record:', {
-        id,
-        status: getResponse.status,
-        body,
-      });
-      return false;
-    }
-
-    const current = await getResponse.json();
     const metadata = {
       ...(current?.metadata ?? {}),
       status: 'void',
     };
 
-    const patchResponse = await fetch(
-      `${PB_API_URL}/api/collections/${PB_TXN_COLLECTION}/records/${id}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metadata }),
-        cache: 'no-store',
-      },
-    );
-
-    if (!patchResponse.ok) {
-      const body = await patchResponse.text();
-      console.error('[voidPocketBaseTransaction] API error:', {
-        id,
-        status: patchResponse.status,
-        body,
-      });
-      return false;
-    }
-
+    await pocketbaseUpdate(PB_TXN_COLLECTION, id, { metadata });
     return true;
   } catch (error) {
     console.error('[voidPocketBaseTransaction] Failed:', { id, error });

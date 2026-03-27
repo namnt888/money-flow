@@ -115,7 +115,7 @@ export async function getCategoryStats(year: number) {
 
   try {
     // This could potentially fetch thousands of txns, but typical personal use is limited
-    const response = await pocketbaseList<any>('transactions', {
+    const response = await pocketbaseList<any>('pvl_txn_001', {
       filter: `occurred_at >= '${startDate}' && occurred_at <= '${endDate}' && status != 'void'`,
       perPage: 2000
     })
@@ -157,7 +157,7 @@ export async function deleteCategory(id: string, targetId?: string): Promise<{ s
     const pbId = toPocketBaseId(id, 'categories')
     
     // 1. Check for existing transactions
-    const txns = await pocketbaseList<any>('transactions', {
+    const txns = await pocketbaseList<any>('pvl_txn_001', {
       filter: `category_id='${pbId}'`,
       perPage: 1
     })
@@ -171,13 +171,13 @@ export async function deleteCategory(id: string, targetId?: string): Promise<{ s
 
       // 2. Handover transactions to target category
       const targetPbId = toPocketBaseId(targetId, 'categories')
-      const allTxns = await pocketbaseList<any>('transactions', {
+      const allTxns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `category_id='${pbId}'`,
         perPage: 500
       })
       
       for (const txn of allTxns.items) {
-        await pocketbaseUpdate('transactions', txn.id, { category_id: targetPbId })
+        await pocketbaseUpdate('pvl_txn_001', txn.id, { category_id: targetPbId })
       }
     }
 
@@ -212,7 +212,7 @@ export async function deleteCategoriesBulk(ids: string[], targetId?: string): Pr
     const pbIds = ids.map(id => toPocketBaseId(id, 'categories'))
     
     for (const pbId of pbIds) {
-      const txns = await pocketbaseList<any>('transactions', {
+      const txns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `category_id='${pbId}'`,
         perPage: 1
       })
@@ -227,12 +227,12 @@ export async function deleteCategoriesBulk(ids: string[], targetId?: string): Pr
     if (targetId && idsWithTransactions.length > 0) {
       const targetPbId = toPocketBaseId(targetId, 'categories')
       for (const pbId of idsWithTransactions) {
-        const allTxns = await pocketbaseList<any>('transactions', {
+        const allTxns = await pocketbaseList<any>('pvl_txn_001', {
           filter: `category_id='${pbId}'`,
           perPage: 500
         })
         for (const txn of allTxns.items) {
-          await pocketbaseUpdate('transactions', txn.id, { category_id: targetPbId })
+          await pocketbaseUpdate('pvl_txn_001', txn.id, { category_id: targetPbId })
         }
       }
     }
@@ -255,15 +255,15 @@ export async function archiveCategory(id: string, targetId?: string): Promise<{ 
     
     if (targetId) {
       const targetPbId = toPocketBaseId(targetId, 'categories')
-      const allTxns = await pocketbaseList<any>('transactions', {
+      const allTxns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `category_id='${pbId}'`,
         perPage: 500
       })
       for (const txn of allTxns.items) {
-        await pocketbaseUpdate('transactions', txn.id, { category_id: targetPbId })
+        await pocketbaseUpdate('pvl_txn_001', txn.id, { category_id: targetPbId })
       }
     } else {
-      const txns = await pocketbaseList<any>('transactions', {
+      const txns = await pocketbaseList<any>('pvl_txn_001', {
         filter: `category_id='${pbId}' && status != 'void'`,
         perPage: 1
       })

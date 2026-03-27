@@ -1672,7 +1672,7 @@ export async function loadPocketBaseTransactions(options: {
 }): Promise<TransactionWithDetails[]> {
   if (options.transactionId) {
     const inputId = options.transactionId;
-    const hashedId = toPocketBaseId(inputId, "transactions");
+    const hashedId = toPocketBaseId(inputId, "pvl_txn_001");
     const candidateIds = hashedId !== inputId ? [inputId, hashedId] : [inputId];
 
     for (const candidateId of candidateIds) {
@@ -2118,7 +2118,7 @@ export async function getPocketBaseUnifiedTransactions(
     const remaining = limit - records.length;
     const perPage = Math.min(200, remaining);
     try {
-      const response = await pocketbaseList<PocketBaseRecord>("transactions", {
+      const response = await pocketbaseList<PocketBaseRecord>("pvl_txn_001", {
         page,
         perPage,
         ...baseParams,

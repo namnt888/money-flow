@@ -89,7 +89,7 @@ export async function refreshAccountCashback(accountId: string) {
     }
 
     // 2. Fetch all transactions for this account
-    const txnsResp = await pocketbaseList<any>('transactions', {
+    const txnsResp = await pocketbaseList<any>('pvl_txn_001', {
         filter: `account_id = "${pbAccountId}" || to_account_id = "${pbAccountId}"`,
         perPage: 5000,
         sort: '-occurred_at'
@@ -130,7 +130,7 @@ export async function refreshAccountCashback(accountId: string) {
         }
 
         if (needsUpdate) {
-            await pocketbaseUpdate('transactions', txn.id, updates);
+            await pocketbaseUpdate('pvl_txn_001', txn.id, updates);
         }
 
         if (resolvedCycleTag) {

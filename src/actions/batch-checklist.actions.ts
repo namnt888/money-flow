@@ -1,6 +1,7 @@
 'use server'
 
-import { pocketbaseList } from '@/services/pocketbase/server'
+import { pocketbaseList, toPocketBaseId } from '@/services/pocketbase/server'
+import { loadPocketBaseTransactions } from '@/services/pocketbase/transaction.service'
 
 /**
  * Fetch all data needed for the 12-month recurring checklist
@@ -11,7 +12,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         
         // 1. Fetch Master Items
         const masterResult = await pocketbaseList<any>('batch_master_items', {
-            filter: `bank_type = "${bankType}" && is_active = true`,
+            filter: `bank_type = '${bankType}' && is_active = true`,
             sort: 'sort_order',
             perPage: 500,
             expand: 'target_account_id,target_account_id.owner_id,target_account_id.holder_person_id',
@@ -32,7 +33,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         // 2. Fetch Batches for the given year
         const yearPattern = `${year}-`
         const batchesResult = await pocketbaseList<any>('batches', {
-            filter: `bank_type = "${bankType}" && month_year ~ "${yearPattern}"`,
+            filter: `bank_type = '${bankType}' && month_year ~ '${yearPattern}'`,
             perPage: 200, // Safe limit
             sort: 'month_year',
         })
@@ -64,7 +65,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         let phases: any[] = []
         try {
             const phasesResult = await pocketbaseList<any>('batch_phases', {
-                filter: `bank_type = "${bankType}" && is_active = true`,
+                filter: `bank_type = '${bankType}' && is_active = true`,
                 perPage: 100,
                 sort: 'sort_order',
             })
@@ -78,28 +79,22 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         const yearEnd = `${year}-12-31 23:59:59`
         const fallbackFundingByBatchMap = new Map<string, any>()
         try {
-            // Broaden the search and parse metadata in memory to avoid 400 errors with complex JSON filters in PocketBase
-            const fallbackFundingResult = await pocketbaseList<any>('transactions', {
-                filter: `created >= "${yearStart}" && created <= "${yearEnd}"`,
-                perPage: 500,
-                sort: '-created',
-                expand: 'account_id,target_account_id',
+            // Use standardized loader for transactions
+            const txns = await loadPocketBaseTransactions({
+                limit: 500,
+                // The loader handles date sorting and collection naming (pvl_txn_001)
             })
             
-            fallbackFundingResult.items.forEach(txn => {
-                let meta: any = null
-                try {
-                    meta = typeof txn.metadata === 'string' ? JSON.parse(txn.metadata) : txn.metadata
-                } catch {}
-                
+            txns.forEach((txn: any) => {
+                const meta: any = txn.metadata || {}
                 const bId = meta?.batch_id
-                const isBatchRelated = meta?.batch_funding || meta?.batch_step || txn.label?.includes('Batch')
+                const isBatchRelated = meta?.batch_funding || meta?.batch_step || txn.note?.includes('Batch')
                 
                 if (bId && isBatchRelated && !fallbackFundingByBatchMap.has(bId)) {
                     fallbackFundingByBatchMap.set(bId, {
                         ...txn,
-                        account: txn?.expand?.account_id || null,
-                        target_account: txn?.expand?.target_account_id || null,
+                        account: { id: txn.account_id }, // Simplified for checklist view
+                        target_account: txn.target_account_id ? { id: txn.target_account_id } : null,
                     })
                 }
             })
@@ -117,9 +112,10 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         const explicitFundingIds = batches.map(b => b.funding_transaction_id).filter(id => id && !Array.from(fallbackFundingByBatchMap.values()).some(v => v.id === id))
         if (explicitFundingIds.length > 0) {
             try {
-                const explicitTxns = await pocketbaseList<any>('transactions', {
+                // Use pvl_txn_001 directly for known explicit IDs
+                const explicitTxns = await pocketbaseList<any>('pvl_txn_001', {
                     filter: explicitFundingIds.map(id => `id='${id}'`).join(' || '),
-                    expand: 'account_id,target_account_id'
+                    expand: 'account_id,to_account_id'
                 })
                 explicitTxns.items.forEach(txn => {
                     // Match to batches
@@ -128,7 +124,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
                         batch.funding_transaction = {
                             ...txn,
                             account: txn?.expand?.account_id || null,
-                            target_account: txn?.expand?.target_account_id || null,
+                            target_account: txn?.expand?.to_account_id || null,
                         }
                     }
                 })

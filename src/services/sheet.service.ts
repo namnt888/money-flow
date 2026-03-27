@@ -481,7 +481,7 @@ export async function syncAllTransactions(personId: string) {
     }
 
     const pbPersonId = toPocketBaseId(personId, 'people')
-    const data = await pocketbaseList('transactions', {
+    const data = await pocketbaseList('pvl_txn_001', {
       filter: `person_id = "${pbPersonId}" && status != "void"`,
       expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
       sort: 'occurred_at'
@@ -737,7 +737,7 @@ export async function syncCycleTransactions(
 
     // Construct filter for tags
     const tagFilter = tags.map(t => `tag = "${t}"`).join(' || ')
-    const data = await pocketbaseList('transactions', {
+    const data = await pocketbaseList('pvl_txn_001', {
       filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
       expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
       sort: 'occurred_at'

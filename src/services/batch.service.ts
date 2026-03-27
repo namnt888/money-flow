@@ -1257,7 +1257,7 @@ export async function confirmBatchSource(batchId: string, realAccountId: string)
         // 2. Calculate Total Amount (from funding transaction)
         if (!batch.funding_transaction_id) throw new Error('Batch not funded yet')
 
-        const fundingTxn = await pocketbaseGetById<any>('transactions', batch.funding_transaction_id)
+        const fundingTxn = await pocketbaseGetById<any>('pvl_txn_001', batch.funding_transaction_id)
         const amount = Math.abs(fundingTxn?.amount || 0)
         if (amount <= 0) throw new Error('No funded amount found')
 
