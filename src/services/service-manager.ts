@@ -187,7 +187,7 @@ export async function distributeService(
       };
       const personId = member.is_owner ? null : member.person_id;
 
-      const pbTxnId = toPocketBaseId(`svc-${serviceId}-${member.person_id}-${monthTag}`, 'transactions');
+      const pbTxnId = toPocketBaseId(`svc-${serviceId}-${member.person_id}-${monthTag}`, 'pvl_txn_001');
       const payload = {
         id: pbTxnId,
         date: transactionDate,
@@ -207,7 +207,7 @@ export async function distributeService(
       };
 
       const filter = `metadata~"${serviceId}" && metadata~"${member.person_id}" && metadata~"${monthTag}"`;
-      const existingTxns = await pocketbaseList<any>('transactions', {
+      const existingTxns = await pocketbaseList<any>('pvl_txn_001', {
         filter,
         perPage: 1
       });
@@ -215,9 +215,9 @@ export async function distributeService(
       let transactionId: string;
       if (existingTxns.items.length > 0) {
         transactionId = existingTxns.items[0].id;
-        await pocketbaseUpdate('transactions', transactionId, payload);
+        await pocketbaseUpdate('pvl_txn_001', transactionId, payload);
       } else {
-        const newTx = await pocketbaseCreate<any>('transactions', payload);
+        const newTx = await pocketbaseCreate<any>('pvl_txn_001', payload);
         transactionId = newTx.id;
       }
 
@@ -430,7 +430,7 @@ export async function distributeAllServices(
 
         // More robust metadata check: look for the exact ID and month tag in metadata keys
         const filter = `status="posted" && metadata.service_id="${service.id}" && metadata.month_tag="${monthTag}"`;
-        const existingTx = await pocketbaseList<any>('transactions', {
+        const existingTx = await pocketbaseList<any>('pvl_txn_001', {
           filter,
           perPage: 1
         });
@@ -475,7 +475,7 @@ export async function recallServiceDistribution(monthTag: string) {
   logSource('PB', context);
 
     const filter = `status="posted" && metadata.month_tag="${monthTag}" && metadata.service_id != ""`;
-    const txnsRes = await pocketbaseList<any>('transactions', {
+    const txnsRes = await pocketbaseList<any>('pvl_txn_001', {
       filter,
     expand: 'shop_id'
   });
@@ -487,7 +487,7 @@ export async function recallServiceDistribution(monthTag: string) {
   let recalledCount = 0;
 
   for (const txn of txns) {
-    await pocketbaseUpdate('transactions', txn.id, { status: 'void' });
+    await pocketbaseUpdate('pvl_txn_001', txn.id, { status: 'void' });
     recalledCount++;
 
     if (txn.person_id) {

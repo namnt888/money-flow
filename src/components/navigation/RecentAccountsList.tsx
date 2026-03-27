@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Account } from '@/types/moneyflow.types';
-import { getRecentAccountsByTransactions } from '@/services/account.service';
+import { getRecentAccountsAction } from '@/actions/account-actions';
 import { cn } from '@/lib/utils';
 import { Landmark } from 'lucide-react';
 import { CustomTooltip } from '@/components/ui/custom-tooltip';
@@ -17,7 +17,7 @@ export function RecentAccountsList({ isCollapsed, onClick }: { isCollapsed: bool
         let isMounted = true;
         const fetchRecent = async () => {
             try {
-                const data = await getRecentAccountsByTransactions(4);
+                const data = await getRecentAccountsAction(4);
                 if (isMounted) setRecentAccounts(data);
             } catch (err) {
                 if (isMounted) console.error('Failed to fetch recent accounts:', err);

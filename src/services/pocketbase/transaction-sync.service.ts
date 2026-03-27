@@ -24,7 +24,7 @@ function mapToPocketBaseTransaction(t: any) {
         final_price: parseFloat(String(t.final_price || 0)),
         cashback_amount: parseFloat(String(t.cashback_share_fixed || 0)),
         is_installment: Boolean(t.is_installment),
-        parent_transaction_id: t.parent_transaction_id ? toPocketBaseId(t.parent_transaction_id, 'transactions') : null,
+        parent_transaction_id: t.parent_transaction_id ? toPocketBaseId(t.parent_transaction_id, 'pvl_txn_001') : null,
         metadata: {
             ...(t.metadata || {}),
             persisted_cycle_tag: t.persisted_cycle_tag || null
@@ -35,7 +35,7 @@ function mapToPocketBaseTransaction(t: any) {
 export async function syncTransactionCreateToPB(supabaseTransaction: any) {
     if (!supabaseTransaction?.id) return
 
-    const pbId = toPocketBaseId(supabaseTransaction.id, 'transactions')
+    const pbId = toPocketBaseId(supabaseTransaction.id, 'pvl_txn_001')
     const payload = mapToPocketBaseTransaction(supabaseTransaction)
 
     console.log(`[DB:PB] Syncing CREATE for transaction ${supabaseTransaction.id} -> ${pbId}`)
@@ -43,11 +43,11 @@ export async function syncTransactionCreateToPB(supabaseTransaction: any) {
     try {
         // PocketBase API doesn't have a direct upsert in the same way, 
         // but the server helpers handle the request.
-        await pocketbaseCreate('transactions', { id: pbId, ...payload })
+        await pocketbaseCreate('pvl_txn_001', { id: pbId, ...payload })
     } catch (err) {
         // If it already exists, try update
         try {
-            await pocketbaseUpdate('transactions', pbId, payload)
+            await pocketbaseUpdate('pvl_txn_001', pbId, payload)
         } catch (patchErr) {
             console.error(`[DB:PB] Sync CREATE failed for ${pbId}:`, patchErr)
         }
@@ -55,25 +55,25 @@ export async function syncTransactionCreateToPB(supabaseTransaction: any) {
 }
 
 export async function syncTransactionUpdateToPB(transactionId: string, supabaseTransaction: any) {
-    const pbId = toPocketBaseId(transactionId, 'transactions')
+    const pbId = toPocketBaseId(transactionId, 'pvl_txn_001')
     const payload = mapToPocketBaseTransaction(supabaseTransaction)
 
     console.log(`[DB:PB] Syncing UPDATE for transaction ${transactionId} -> ${pbId}`)
 
     try {
-        await pocketbaseUpdate('transactions', pbId, payload)
+        await pocketbaseUpdate('pvl_txn_001', pbId, payload)
     } catch (err) {
         console.error(`[DB:PB] Sync UPDATE failed for ${pbId}:`, err)
     }
 }
 
 export async function syncTransactionDeleteToPB(transactionId: string) {
-    const pbId = toPocketBaseId(transactionId, 'transactions')
+    const pbId = toPocketBaseId(transactionId, 'pvl_txn_001')
 
     console.log(`[DB:PB] Syncing DELETE for transaction ${transactionId} -> ${pbId}`)
 
     try {
-        await pocketbaseDelete('transactions', pbId)
+        await pocketbaseDelete('pvl_txn_001', pbId)
     } catch (err) {
         console.error(`[DB:PB] Sync DELETE failed for ${pbId}:`, err)
     }

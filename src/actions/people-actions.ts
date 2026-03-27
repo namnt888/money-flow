@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createPerson, ensureDebtAccount, updatePerson, getPersonWithSubs, getPeople } from '@/services/people.service'
-import { getPersonDetails, getDebtByTags } from '@/services/debt.service';
+import { getPersonDetails, getDebtByTags, syncPersonDebtCycle } from '@/services/debt.service';
 import { getAccounts, getAccountTransactions } from '@/services/account.service';
 import { getCategories } from '@/services/category.service';
 import { getShops, createShop } from '@/services/shop.service';
@@ -281,5 +281,38 @@ export async function rolloverDebtAction(
 }
 
 export async function getPeopleAction() {
-  return await getPeople();
+  const people = await getPeople();
+  console.log(`[PeopleAction] Fetched ${people?.length || 0} people`);
+  return people;
+}
+
+export async function syncPeopleDebtAction(personId: string, tag: string) {
+  const result = await syncPersonDebtCycle(personId, tag);
+  if (result.success) {
+    revalidatePath(`/people/${personId}`);
+    revalidatePath('/people');
+  }
+  return result;
+}
+
+export async function syncAllPeopleDebtCyclesAction() {
+  const people = await getPeople({ includeArchived: false });
+  const results = [];
+  
+  for (const p of people) {
+    try {
+      const res = await syncPersonDebtCycle(p.id, 'all');
+      results.push({ id: p.id, name: p.name, success: res.success });
+    } catch (err) {
+      results.push({ id: p.id, name: p.name, success: false });
+    }
+  }
+  
+  revalidatePath('/people');
+  return { success: true, count: results.length };
+}
+
+export async function getRecentPeopleAction(limit: number = 5) {
+  const { getRecentPeopleByTransactions } = await import('@/services/people.service')
+  return await getRecentPeopleByTransactions(limit)
 }

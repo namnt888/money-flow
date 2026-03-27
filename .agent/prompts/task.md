@@ -1,29 +1,89 @@
-### ROLE: SENIOR FULLSTACK ENGINEER (NEXT.JS 16 / TURBOPACK)
+TASK: Fix UI inconsistencies and resolve runtime/concurrency errors across People Details, Batch Details, and Account Details
 
-### TASK: CRITICAL DATA SYNC & UI REFACTOR
-The current implementation is hallucinating data. You must strictly follow these logic rules to fix the "People Detail" page based on the "Account" source of truth.
+  People Details → “View Cycle History” (Debt History modal)
+    Current problems
+      Cycle rows are visually misaligned and do not follow a consistent grid
+      Initial / Total Back / Repaid / Status sections break row balance
+      Settled status overflows card height and breaks layout
+      Color usage is inconsistent (green/red tones vary, status looks like button in some rows)
+      Vertical spacing and padding differ between cycles
 
-1. FIX MESSAGING ERRORS: 
-- Resolve 'tx_ack_timeout' and 'tx_attempts_exceeded'.
-- Ensure the data bridge between the Chrome extension (ID: iohjgamcilhbgmhbnllfolmkmmekfmci) and the app is stable. If messaging fails, fallback to direct API/State fetching.
+    Expected UI (follow mockup strictly)
+      Each cycle renders as one consistent row card
+      Fixed layout order: Cycle | Initial | Total Back | Repaid | Status
+      Status rendering rules
+        Settled shows as subtle green badge
+        Remain or outstanding shows as red or warning badge
+        Status must never be full height or act like a button
+      Color rules
+        Initial uses neutral color
+        Total Back uses orange
+        Repaid uses green
+      No overflow or wrapping issues on desktop or mobile
 
-2. SUMMARY CARD CLEANUP:
-- DELETE "Net Lend" card. It is redundant as it mirrors "Remains".
-- FIX "Cashback": Currently defaulting to 0 (Incorrect). It must fetch the total cashback for the selected Account Cycle (e.g., 25.02 - 24.03).
-- RE-CALCULATE "Remains": Remains = Original Spend - Correct Cashback.
+    Technical constraints
+      Use CSS Grid or Flex with fixed columns
+      Do not hardcode heights
+      Center status badge vertically
+      Reuse existing design tokens or Tailwind utilities
 
-3. REWARD SECTION REFACTOR (GLOBAL VS LOCAL):
-- STOP using local person transaction values (+-66,762) for the Reward Widget.
-- SOURCE OF TRUTH: If an Account filter is active, the Reward section MUST display Global Account Data:
-    - Status: 100% Earned / Qualified
-    - My Profit: 219.741 (Ensure label is ABOVE the value)
-    - Earned: 366.235
-    - Shared: 146.494
-    - Actual: 0
+  Batch Details page → Runtime error and console spam
+    Context
+      URL: /batch/mbb?month=2026-03&period=after&phase=71ged91y4seybfu
+      Stack: Next.js 16 (Turbopack), PocketBase
 
-4. CYCLE DROPDOWN LOGIC:
-- Fix the blank Cycle dropdown. When an Account is selected, fetch its specific cycles.
-- Default to the "Current Cycle" based on today's date (18.03.2026).
+    Observed issues
+      Runtime AbortError: Lock broken by another request with the 'steal' option
+      Console continuously logs failed requests
+        PocketBase request failed with status 400
+        Endpoint: /api/collections/transactions/records
+        Payload is an empty object
 
-### REQUIREMENT: 
-Check your math. If "Earned" is 366k and "Shared" is 146k, "My Profit" must be the result of their difference. Do not display -1,331k or "Need for Reward" when the account is already Qualified.
+    Required investigation
+      Identify why multiple concurrent API requests are being triggered
+        Check useEffect dependency arrays
+        Check refetch or re-render loops (react-query, server actions, component remount)
+      Identify where PocketBase transaction lock with “steal” option is used
+      Identify why request payload is empty
+        Request fired before required state is available
+        Frontend data mapping does not match PocketBase schema
+
+    Expected fix
+      Stop all duplicated and infinite API requests
+      Prevent PocketBase lock stealing between concurrent requests
+      Ensure API calls run only once per valid lifecycle
+      Add guard conditions, debounce, or readiness checks
+      Console must remain clean after fix
+      UI must handle failure gracefully (toast or safe empty state)
+
+  Account Details → Shared component issues
+    Cycle date picker dropdown (global component)
+      Current problems
+        Dropdown is too tall and breaks page layout
+        Too many cycles are displayed at once
+      Expected behavior
+        Set a max height for dropdown
+        Show around six items
+        Remaining items must be scrollable
+        Fix must be applied in the shared component, not locally duplicated
+
+    Edit Account slide → RELATIVE ownership mode
+      Bug description
+        Open Edit Account from batch flow or account details page
+        Switch ownership to RELATIVE
+        People list does not appear and shows “No person found” even though data exists
+      Required checks
+        Data source must not be incorrectly filtered by route or context
+        State must be reset correctly when the slide opens
+        Fetch logic must not depend on missing accountId or ownerId
+      Expected fix
+        RELATIVE mode always loads correct people list
+        Behavior must be identical regardless of entry page
+        Empty state only allowed when database is truly empty
+        Fetch errors must not fail silently
+
+  Output requirements
+    UI must match mockup exactly
+    Root cause and fix reasoning must be clearly explained
+    Avoid unrelated refactors
+    Fixes must be stable and reusable across global components

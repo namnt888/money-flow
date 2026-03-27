@@ -51,6 +51,7 @@ export async function updateBatchSettingsAction(
 export async function getBatchSettingsAction(bankType: 'MBB' | 'VIB') {
     try {
         const data = await getBatchSettingsRecord(bankType)
+        console.log(`[DEBUG] getBatchSettingsAction(${bankType}):`, data)
         if (!data) {
             return { success: false, error: `No batch settings found for ${bankType}` }
         }

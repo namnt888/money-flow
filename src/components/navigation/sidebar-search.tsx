@@ -56,10 +56,20 @@ export function SidebarSearch({
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch('/api/sidebar/search', {
+        const url = new URL('/api/sidebar/search', window.location.origin).toString();
+        const response = await fetch(url, {
           method: 'GET',
           cache: 'no-store',
         })
+
+        if (!response.ok) {
+           throw new Error(`Server returned ${response.status}`)
+        }
+
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+           throw new Error('Server did not return JSON')
+        }
 
         const payload = await response.json()
 

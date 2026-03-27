@@ -159,7 +159,7 @@ export async function getPendingInstallmentTransactions() {
   const context = 'getPendingInstallmentTransactions';
   return executeWithFallback(
     async () => {
-      const res = await pocketbaseList<any>('transactions', {
+      const res = await pocketbaseList<any>('pvl_txn_001', {
         filter: 'is_installment=true && installment_plan_id=null',
         sort: '-occurred_at'
       });
@@ -226,7 +226,7 @@ export async function checkAndAutoSettleInstallment(planId: string) {
       const plan = await pocketbaseGetById<any>('installments', pbPlanId);
       if (!plan) return;
 
-      const txnsRes = await pocketbaseList<any>('transactions', {
+      const txnsRes = await pocketbaseList<any>('pvl_txn_001', {
         filter: `installment_plan_id="${pbPlanId}"`,
         fields: 'amount,type'
       });
@@ -292,8 +292,8 @@ export async function convertTransactionToInstallment(payload: {
 
   // PB Primary
   try {
-    const pbTxnId = toPocketBaseId(payload.transactionId, 'transactions');
-    const txn = await pocketbaseGetById<any>('transactions', pbTxnId);
+    const pbTxnId = toPocketBaseId(payload.transactionId, 'pvl_txn_001');
+    const txn = await pocketbaseGetById<any>('pvl_txn_001', pbTxnId);
     if (!txn) throw new Error('Transaction not found in PB');
 
     const totalAmount = Math.abs(txn.amount || 0);
@@ -317,7 +317,7 @@ export async function convertTransactionToInstallment(payload: {
       debtor_id: payload.debtorId ? toPocketBaseId(payload.debtorId, 'people') : null
     });
 
-    await pocketbaseUpdate('transactions', pbTxnId, { installment_plan_id: pbId });
+    await pocketbaseUpdate('pvl_txn_001', pbTxnId, { installment_plan_id: pbId });
 
     if (payload.fee > 0) {
       const { createTransaction } = await import('./transaction.service');
@@ -541,7 +541,7 @@ export async function getInstallmentRepayments(planId: string) {
   return executeWithFallback(
     async () => {
       const pbPlanId = toPocketBaseId(planId, 'installments');
-      const res = await pocketbaseList<any>('transactions', {
+      const res = await pocketbaseList<any>('pvl_txn_001', {
         filter: `installment_plan_id="${pbPlanId}"`,
         sort: '-occurred_at',
         expand: 'created_by'

@@ -7,8 +7,8 @@ import { BatchSettingsSlide } from '@/components/batch/batch-settings-slide'
 import { BatchMasterChecklist } from '@/components/batch/BatchMasterChecklist'
 import { BatchMasterSlide } from '@/components/batch/BatchMasterSlide'
 import { Button } from '@/components/ui/button'
-import { Tabs } from '@/components/ui/tabs'
-import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, RotateCcw, FileSpreadsheet, Pause, CheckCircle2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -79,6 +79,7 @@ export function BatchPageClientV2({
     const [selectedYear, setSelectedYear] = useState(() =>
         currentMonth ? currentMonth.split('-')[0] : String(new Date().getFullYear())
     )
+
 
     useEffect(() => {
         setOptimisticMonth(currentMonth)
@@ -264,53 +265,121 @@ export function BatchPageClientV2({
 
                         {/* RIGHT: MONTH TABS & ACTIONS */}
                         <div className="flex items-center gap-4 flex-1 justify-end min-w-0">
-                            <div className="flex items-center gap-2 py-1 pr-4 border-r border-slate-100">
-                                <Button
-                                    onClick={handleSyncCurrentPhase}
-                                    disabled={isSyncingMaster || isPending}
-                                    variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
-                                >
-                                    {isSyncingMaster ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 text-slate-400" />}
-                                    <span>Sync Master</span>
-                                </Button>
-                                <div className="w-[130px] shrink-0">
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {/* Re-align Button - Moved before months */}
+                                    <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-8 w-8 rounded-lg p-0 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                        onClick={async () => {
+                                            const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
+                                            const result = await migrateBatchItemsToPhasesAction({ bankType: bankType as any })
+                                            if (result.success) {
+                                                toast.success(`Đã đồng bộ ${result.updatedCount} items`)
+                                                router.refresh()
+                                            } else {
+                                                toast.error('Đồng bộ thất bại')
+                                            }
+                                        }}
+                                        title="Re-align Master Templates"
+                                    >
+                                        <RotateCcw className="h-4 w-4" />
+                                    </Button>
+
+                                    <div className="h-4 w-px bg-slate-100 mx-1" />
+
+                                    {MONTH_NAMES_FULL.map((name, i) => {
+                                        const monthNum = i + 1
+                                        const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
+                                        const isActive = optimisticMonth === mStr
+                                        const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
+                                        
+                                        // Calculate stats for tooltips
+                                        const monthBatches = batches.filter(b => b.month_year === mStr)
+                                        const mTotal = monthBatches.reduce((acc, b) => acc + (b.total_items || 0), 0)
+                                        const mConfirmed = monthBatches.reduce((acc, b) => acc + (b.confirmed_items || 0), 0)
+                                        const mPending = Math.max(0, mTotal - mConfirmed)
+
+                                        return (
+                                            <div key={mStr} className="group relative">
+                                                <button
+                                                    onClick={() => handleMonthSelect(mStr)}
+                                                    disabled={isPending}
+                                                    className={cn(
+                                                        "px-3 h-8 rounded-lg flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap",
+                                                        isActive 
+                                                            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                                            : isCurrent
+                                                                ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
+                                                                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                                    )}
+                                                >
+                                                    {loadingMonth === mStr ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <>
+                                                            <span>{name}</span>
+                                                            {mTotal > 0 && (
+                                                                <div className={cn(
+                                                                    "flex items-center gap-1 pl-1.5 border-l",
+                                                                    isActive ? "border-white/20" : "border-slate-100"
+                                                                )}>
+                                                                    <span>{mPending}</span>
+                                                                    {mPending > 0 ? (
+                                                                        <Pause className="h-2.5 w-2.5 fill-current" />
+                                                                    ) : (
+                                                                        <CheckCircle2 className="h-2.5 w-2.5" />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {/* Tooltip Overlay */}
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100] animate-in fade-in slide-in-from-bottom-1 duration-200">
+                                                    <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-800 min-w-[160px]">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 border-b border-slate-800 pb-1">
+                                                            {name} Status
+                                                        </p>
+                                                        <div className="space-y-1.5">
+                                                            {monthBatches.length > 0 ? monthBatches.map(b => {
+                                                                const phase = phases.find(p => p.id === b.phase_id)
+                                                                return (
+                                                                    <div key={b.id} className="flex items-center justify-between gap-4">
+                                                                        <span className="text-[10px] font-medium text-slate-300">
+                                                                            {phase?.label || b.period || 'Phase'}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-black tabular-nums">
+                                                                            {b.confirmed_items}/{b.total_items}
+                                                                        </span>
+                                                                    </div>
+                                                                )
+                                                            }) : (
+                                                                <p className="text-[9px] text-slate-500 italic">No cycles started</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center">
+                                                            <span className="text-[10px] font-black text-indigo-400">TOTAL</span>
+                                                            <span className="text-[10px] font-black">{mConfirmed}/{mTotal}</span>
+                                                        </div>
+                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-slate-800" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                <div className="h-8 w-px bg-slate-100 mx-1 shrink-0" />
+                                <div className="w-[100px] shrink-0">
                                     <Combobox
                                         value={selectedYear}
                                         onValueChange={(v) => v && setSelectedYear(v)}
                                         items={yearSelectorItems}
                                         placeholder="Year"
-                                        inputPlaceholder="Year..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
+                                        hideClearButton={true}
+                                        triggerClassName="h-8 border-slate-100 bg-slate-50/50 rounded-lg text-[10px] font-black pr-1"
                                     />
-                                </div>
-                                <div className="w-[210px] shrink-0">
-                                    <Combobox
-                                        value={optimisticMonth || undefined}
-                                        onValueChange={(v) => v && handleMonthSelect(v)}
-                                        items={monthSelectorItems}
-                                        placeholder="Select month"
-                                        inputPlaceholder="Search month..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
-                                    />
-                                </div>
-                                <div className="w-[220px] shrink-0">
-                                    <Combobox
-                                        value={currentPhaseId || undefined}
-                                        onValueChange={(phaseId) => {
-                                            const nextPhase = effectivePhases.find((phase: any) => phase.id === phaseId)
-                                            if (!nextPhase) return
-                                            handlePeriodSelect(nextPhase.period_type || 'before', nextPhase.id)
-                                        }}
-                                        items={phaseSelectorItems}
-                                        placeholder="Select phase"
-                                        inputPlaceholder="Search phase..."
-                                        triggerClassName="h-10 border-slate-200 rounded-xl text-xs font-black"
-                                    />
-                                </div>
-                                <div className="h-10 px-3 rounded-xl border border-indigo-100 bg-indigo-50/60 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-indigo-700 shrink-0">
-                                    <span>Range</span>
-                                    <span className="text-indigo-500">{getPhaseRangeLabel(currentPhase)}</span>
                                 </div>
                             </div>
 
@@ -320,30 +389,29 @@ export function BatchPageClientV2({
                                         href={globalSheetUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="h-10 px-3 flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all font-black text-[9px] uppercase tracking-widest shadow-sm shrink-0"
+                                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm shrink-0"
+                                        title={globalSheetName || "Open Google Sheet"}
                                     >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                        <span>Sheet</span>
+                                        <FileSpreadsheet className="h-5 w-5" />
                                     </a>
                                 )}
                                 <Button
                                     onClick={() => setTemplateOpen(true)}
                                     variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 text-indigo-600 bg-indigo-50/10 border-indigo-100 shrink-0"
+                                    className="h-10 px-3 rounded-xl border-amber-200 hover:bg-amber-50 font-black text-[9px] uppercase tracking-widest gap-2 text-amber-600 bg-amber-50/10 shrink-0"
                                 >
                                     <Sparkles className="h-4 w-4" />
-                                    <span>Masters</span>
+                                    <span>Phases</span>
                                 </Button>
                                 <Button
                                     onClick={() => setSettingsOpen(true)}
                                     variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 shrink-0"
+                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 text-slate-600 shrink-0"
                                 >
-                                    <Settings className="h-4 w-4 text-slate-400" />
-                                    <span>Config</span>
+                                    <Settings className="h-4 w-4" />
+                                    <span>Settings</span>
                                 </Button>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -367,6 +435,7 @@ export function BatchPageClientV2({
                                     monthYear={currentMonth || ''}
                                     initialPhaseId={currentPhaseId}
                                     refreshNonce={checklistRefreshNonce}
+                                    onManagePhases={() => setTemplateOpen(true)}
                                     onPhaseChange={(phaseId) => {
                                         const nextPhase = effectivePhases.find((phase: any) => phase.id === phaseId)
                                         if (!nextPhase || !currentMonth) return
@@ -404,6 +473,7 @@ export function BatchPageClientV2({
                 accounts={accounts}
                 categories={categories}
                 bankMappings={bankMappings}
+                initialPhaseId={selectedPhaseParam}
             />
         </div >
     )

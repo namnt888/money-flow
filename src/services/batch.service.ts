@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
+import { pocketbaseList, pocketbaseGetById, pocketbaseUpdate, pocketbaseDelete, toPocketBaseId } from '@/services/pocketbase/server'
 import { Database } from '@/types/database.types'
 import { addMonths } from 'date-fns'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
 import { isLegacyMMMYY, isYYYYMM, normalizeMonthTag, toLegacyMMMYYFromDate, toYYYYMMFromDate } from '@/lib/month-tag'
-import { pocketbaseDelete, pocketbaseGetById, pocketbaseList, pocketbaseUpdate, toPocketBaseId } from '@/services/pocketbase/server'
 
 export type Batch = Database['public']['Tables']['batches']['Row']
 export type BatchItem = Database['public']['Tables']['batch_items']['Row']
@@ -17,25 +17,30 @@ export type FundBatchResult = {
 }
 
 export async function getBatches() {
-    const supabase: any = createClient()
-    const { data, error } = await supabase
-        .from('batches')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-    if (error) throw error
-    return data
+    // const supabase: any = createClient()
+    const { items } = await pocketbaseList<any>('batches', {
+        sort: '-month_year,-created_at',
+        perPage: 100,
+    })
+    return items
 }
 
 export async function getBatchById(id: string) {
-    const supabase: any = createClient()
-    const { data, error } = await supabase
-        .from('batches')
-        .select('*, batch_items(*, target_account:accounts(name, type, cashback_config))')
-        .eq('id', id)
-        .single()
-
-    if (error) throw error
+    // PB expansion: batch_items(batch_id).target_account_id(target_account_id)
+    const data = await pocketbaseGetById<any>('batches', id, 'batch_items(batch_id),batch_items(batch_id).target_account_id')
+    
+    // Map expansion back to match Supabase structure
+    if (data && data.expand?.['batch_items(batch_id)']) {
+        data.batch_items = data.expand['batch_items(batch_id)'].map((item: any) => {
+            if (item.expand?.target_account_id) {
+                item.target_account = item.expand.target_account_id
+            }
+            return item
+        })
+    } else {
+        data.batch_items = []
+    }
+    
     return data
 }
 
@@ -1252,7 +1257,7 @@ export async function confirmBatchSource(batchId: string, realAccountId: string)
         // 2. Calculate Total Amount (from funding transaction)
         if (!batch.funding_transaction_id) throw new Error('Batch not funded yet')
 
-        const fundingTxn = await pocketbaseGetById<any>('transactions', batch.funding_transaction_id)
+        const fundingTxn = await pocketbaseGetById<any>('pvl_txn_001', batch.funding_transaction_id)
         const amount = Math.abs(fundingTxn?.amount || 0)
         if (amount <= 0) throw new Error('No funded amount found')
 
@@ -1536,40 +1541,31 @@ export async function updateBatchNoteMode(batchId: string, mode: 'previous' | 'c
  * Get batches filtered by bank type
  */
 export async function getBatchesByType(bankType: 'MBB' | 'VIB', isArchived?: boolean) {
-    const supabase: any = createClient()
-    let query = supabase
-        .from('batches')
-        .select('*, batch_items(count)')
-        .eq('bank_type', bankType)
+    try {
+        const filters = [`bank_type = "${bankType}"`]
+        if (isArchived !== undefined) {
+            filters.push(`is_archived = ${isArchived}`)
+        }
 
-    if (isArchived !== undefined) {
-        query = query.eq('is_archived', isArchived)
+        const { items } = await pocketbaseList<any>('batches', {
+            filter: filters.join(' && '),
+            sort: '-month_year',
+            perPage: 100,
+        })
+
+        return items || []
+    } catch (error: any) {
+        console.error(`[getBatchesByType] Failed for ${bankType}:`, error.message)
+        return [] // Graceful failure to prevent page crash
     }
-
-    const { data, error } = await query
-        .order('month_year', { ascending: false })
-        .order('created_at', { ascending: false })
-
-    if (error) throw error
-    return data
 }
 
 export async function archiveBatch(id: string) {
-    const supabase: any = createClient()
-    const { error } = await supabase
-        .from('batches')
-        .update({ is_archived: true })
-        .eq('id', id)
-    if (error) throw error
+    await pocketbaseUpdate('batches', id, { is_archived: true })
 }
 
 export async function restoreBatch(id: string) {
-    const supabase: any = createClient()
-    const { error } = await supabase
-        .from('batches')
-        .update({ is_archived: false })
-        .eq('id', id)
-    if (error) throw error
+    await pocketbaseUpdate('batches', id, { is_archived: false })
 }
 
 
@@ -1665,15 +1661,15 @@ export async function createBatchFromClone(params: {
  * Get batch settings for a specific bank type
  */
 export async function getBatchSettings(bankType: 'MBB' | 'VIB') {
-    const supabase: any = createClient()
-    const { data, error } = await supabase
-        .from('batch_settings')
-        .select('*')
-        .eq('bank_type', bankType)
-        .single()
-
-    if (error) throw error
-    return data
+    try {
+        const { items } = await pocketbaseList<any>('batch_settings', {
+            filter: `bank_type = "${bankType}"`,
+            perPage: 1,
+        })
+        return items[0] || null
+    } catch {
+        return null
+    }
 }
 
 /**

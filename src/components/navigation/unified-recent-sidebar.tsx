@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Account, Person } from '@/types/moneyflow.types'
-import { getRecentAccountsByTransactions } from '@/services/account.service'
-import { getRecentPeopleByTransactions } from '@/services/people.service'
+import { getRecentAccountsAction } from '@/actions/account-actions'
+import { getRecentPeopleAction } from '@/actions/people-actions'
 import { cn } from '@/lib/utils'
 import { Landmark, User, Loader2 } from 'lucide-react'
 import { CustomTooltip } from '@/components/ui/custom-tooltip'
@@ -32,8 +32,8 @@ export function UnifiedRecentSidebar({ isCollapsed, searchQuery = '' }: UnifiedR
       try {
         setIsLoading(true)
         const [accounts, people] = await Promise.all([
-          getRecentAccountsByTransactions(4), // Fetch a few more for the flyout
-          getRecentPeopleByTransactions(4)
+          getRecentAccountsAction(4), // Fetch a few more for the flyout
+          getRecentPeopleAction(4)
         ])
         setRecentAccounts(accounts)
         setRecentPeople(people)

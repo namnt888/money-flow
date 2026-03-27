@@ -59,8 +59,9 @@ interface TransactionControlBarProps {
     isPending?: boolean
     initialSheetUrl?: string | null
     onRefresh?: () => void
-    setIsGlobalLoading?: (loading: boolean) => void
-    setLoadingMessage?: (msg: string | null) => void
+    setIsGlobalLoading?: (val: boolean) => void
+    setLoadingMessage?: (val: string | null) => void
+    onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
 }
 
 import { useRouter } from 'next/navigation'
@@ -135,6 +136,7 @@ export function TransactionControlBar({
     onRefresh,
     setIsGlobalLoading,
     setLoadingMessage,
+    onSyncCycle,
 }: TransactionControlBarProps) {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const isSettled = Math.abs(activeCycle.remains) < 100
@@ -398,6 +400,7 @@ export function TransactionControlBar({
                             splitMode={true}
                             linkedLabel="Sheet"
                             unlinkedLabel="Sheet"
+                            onSyncCycle={onSyncCycle}
                         />
                     </div>
                 </div>
@@ -445,6 +448,7 @@ export function TransactionControlBar({
                         onCycleSelect={(tag: string) => onCycleSelect ? onCycleSelect(tag, selectedYear) : onCycleChange(tag)}
                         selectedYearValue={selectedYear}
                         onYearSelect={onYearChange}
+                        onSyncCycle={onSyncCycle}
                     />
                 </div>
 

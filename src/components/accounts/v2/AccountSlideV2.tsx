@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search } from "lucide-react";
+import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search } from "lucide-react";
 import { updateAccountConfig } from "@/services/account.service";
 import { createAccount } from "@/actions/account-actions";
 import { toast } from "sonner";
@@ -72,11 +72,15 @@ function PersonPickerDropdown({
     selectedId,
     onSelect,
     onCreateNew,
+    onRefresh,
+    refreshing = false,
 }: {
     people: Person[];
     selectedId: string | null;
     onSelect: (id: string) => void;
     onCreateNew: () => void;
+    onRefresh?: () => void;
+    refreshing?: boolean;
 }) {
     const [search, setSearch] = React.useState('');
     const filtered = people
@@ -96,11 +100,22 @@ function PersonPickerDropdown({
                     className="flex-1 text-[11px] bg-transparent outline-none placeholder:text-slate-400"
                     autoFocus
                 />
+                {onRefresh && (
+                    <button 
+                        onClick={onRefresh} 
+                        disabled={refreshing}
+                        className="p-1 hover:bg-slate-100 rounded text-slate-400 disabled:opacity-50"
+                    >
+                        <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
+                    </button>
+                )}
             </div>
             {/* Filtered list */}
             <div className="max-h-[200px] overflow-y-auto p-1">
                 {filtered.length === 0 && (
-                    <div className="py-4 text-center text-[11px] text-slate-400">No person found.</div>
+                    <div className="py-4 text-center text-[11px] text-slate-400">
+                        {people.length === 0 ? "Problem loading people list." : "No person found."}
+                    </div>
                 )}
                 {filtered.map(p => (
                     <button
@@ -582,10 +597,31 @@ export function AccountSlideV2({
     // Initial data fetch
     useEffect(() => {
         if (open) {
-            getPeopleAction().then(setPeople);
+            console.log('[AccountSlideV2] Fetching initial people & services...');
+            getPeopleAction().then(res => {
+                console.log(`[AccountSlideV2] Fetched ${res?.length || 0} people`);
+                setPeople(res || []);
+            }).catch(err => {
+                console.error('[AccountSlideV2] Initial fetch failed:', err);
+            });
             getServicesAction().then(res => setSubscriptions(res as any));
         }
     }, [open]);
+
+    const refreshPeople = async () => {
+        setPerformingAction(true);
+        try {
+            const res = await getPeopleAction();
+            console.log(`[AccountSlideV2] Manual Refresh: Fetched ${res?.length || 0} people`);
+            setPeople(res || []);
+            toast.success('People list updated');
+        } catch (err) {
+            console.error('[AccountSlideV2] Refresh failed:', err);
+            toast.error('Failed to refresh people');
+        } finally {
+            setPerformingAction(false);
+        }
+    };
 
     const handlePersonCreated = (result: any) => {
         if (result && result.person) {
@@ -1328,6 +1364,8 @@ export function AccountSlideV2({
                                                             setOpenHolderPersonPopover(false);
                                                             setIsPeopleSlideOpen(true);
                                                         }}
+                                                        onRefresh={refreshPeople}
+                                                        refreshing={performingAction}
                                                     />
                                                 </PopoverContent>
                                             </Popover>

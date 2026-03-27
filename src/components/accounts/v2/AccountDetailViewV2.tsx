@@ -14,6 +14,7 @@ import { AccountDetailHeaderV2 } from './AccountDetailHeaderV2'
 import { AccountDetailTransactions } from './AccountDetailTransactions'
 import { getAccountCashbackStatsAction } from '@/actions/account-cashback-actions'
 import { AccountContentWrapper } from '@/components/moneyflow/account-content-wrapper'
+import { resolveTransactionCycleTag } from '@/lib/cycle-utils'
 import { normalizeMonthTag } from '@/lib/month-tag'
 import { useRecentItems } from '@/hooks/use-recent-items'
 import { Info } from 'lucide-react'
@@ -23,45 +24,7 @@ import { useAppFavicon } from '@/hooks/use-app-favicon'
 import { AccountDetailInvestment } from './AccountDetailInvestment'
 import { cn } from '@/lib/utils'
 
-function resolveTransactionCycleTag(
-    transaction: {
-        persisted_cycle_tag?: string | null
-        derived_cycle_tag?: string | null
-        tag?: string | null
-        occurred_at?: string | null
-        date?: string | null
-        created_at?: string | null
-    },
-    account: Account
-): string {
-    const persisted = normalizeMonthTag(transaction.persisted_cycle_tag || '')
-    if (persisted) return persisted
-
-    const derived = normalizeMonthTag(transaction.derived_cycle_tag || '')
-    if (derived) return derived
-
-    const statementDay = Number(account.statement_day || 0)
-    if (account.type === 'credit_card' && statementDay > 0) {
-        const rawDate = transaction.occurred_at || transaction.date || transaction.created_at
-        if (rawDate) {
-            const parsed = new Date(rawDate)
-            if (!Number.isNaN(parsed.getTime())) {
-                let year = parsed.getFullYear()
-                let month = parsed.getMonth() + 1
-                if (parsed.getDate() > statementDay) {
-                    month += 1
-                    if (month > 12) {
-                        month = 1
-                        year += 1
-                    }
-                }
-                return `${year}-${String(month).padStart(2, '0')}`
-            }
-        }
-    }
-
-    return normalizeMonthTag(transaction.tag || '') || ''
-}
+// Shared utility imported from @/lib/cycle-utils
 
 type PendingBatchItem = {
     id: string
@@ -210,8 +173,14 @@ export function AccountDetailViewV2({
 
             if (isInitial) return;
 
+            // Use resolveTransactionCycleTag to determine the year the transaction belongs to
+            const txCycleTag = resolveTransactionCycleTag(tx, account);
+            const txYearMatch = txCycleTag && /^\d{4}-\d{2}$/.test(txCycleTag) 
+                ? parseInt(txCycleTag.split('-')[0]) 
+                : (date ? date.getFullYear() : null);
+
             // Stats for target year
-            if (year === targetYear) {
+            if (txYearMatch === targetYear) {
                 const isTargetAccount = tx.target_account_id === account.id || tx.to_account_id === account.id;
                 const isSourceAccount = tx.account_id === account.id || tx.source_account_id === account.id;
 

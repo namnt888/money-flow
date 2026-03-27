@@ -20,7 +20,9 @@ import { PeopleTableHeaderV2, FilterStatus } from "./people-table-header-v2";
 import {
   syncAllSheetDataAction,
   syncAllPeopleSheetsAction,
+  syncPeopleDebtAction,
 } from "@/actions/people-actions";
+import { MigrationDialog } from "./MigrationDialog";
 import { PeopleColumnKey } from "@/hooks/usePeopleColumnPreferences";
 
 interface PeopleDirectoryV2Props {
@@ -261,22 +263,39 @@ export function PeopleDirectoryV2({
   };
 
   const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [isRealigningAll, setIsRealigningAll] = useState(false);
 
   const handleRefreshAll = async () => {
     setIsSyncingAll(true);
     const promise = syncAllPeopleSheetsAction();
     toast.promise(promise, {
       loading: "Syncing all sheets...",
-      success: (results) => {
-        const succeeded = results.filter((r) => r.success).length;
-        const failed = results.filter((r) => !r.success).length;
-        return `Successfully synced ${succeeded} sheets${failed > 0 ? `, ${failed} failed` : ""}`;
-      },
-      error: "Failed to sync sheets",
+      success: "All sheets synced successfully!",
+      error: "Failed to sync all sheets",
     });
-    await promise;
-    router.refresh();
-    setIsSyncingAll(false);
+    try {
+      await promise;
+      router.refresh();
+    } finally {
+      setIsSyncingAll(false);
+    }
+  };
+
+  const handleRealignAll = async () => {
+    setIsRealigningAll(true);
+    const { syncAllPeopleDebtCyclesAction } = await import("@/actions/people-actions");
+    const promise = syncAllPeopleDebtCyclesAction();
+    toast.promise(promise, {
+      loading: "Re-aligning all debt cycles...",
+      success: "All debt cycles re-aligned successfully!",
+      error: "Failed to re-align debt cycles",
+    });
+    try {
+      await promise;
+      router.refresh();
+    } finally {
+      setIsRealigningAll(false);
+    }
   };
 
   const handleSyncPerson = async (personId: string) => {
@@ -309,17 +328,20 @@ export function PeopleDirectoryV2({
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         availableYears={availableYears}
-        onAdd={() => {
+        onAddPerson={() => {
           setSelectedPerson(null);
           setIsSlideOpen(true);
         }}
         stats={stats}
         showArchived={showArchived}
-        onToggleArchived={setShowArchived}
+        onToggleArchived={() => setShowArchived(!showArchived)}
         onRefreshAll={handleRefreshAll}
         isSyncingAll={isSyncingAll}
+        onRealignAll={handleRealignAll}
+        isRealigningAll={isRealigningAll}
         canResetSort={!!sortConfig}
         onResetSort={handleResetSort}
+        migrationDialog={<MigrationDialog people={people} />}
       />
 
       {/* Main Content Area */}

@@ -91,7 +91,7 @@ export function PeopleRowDetailsV2({
 
   const cycleStatsForYear = useMemo(() => {
     if (!selectedYear) return cycleStats;
-    return cycleStats.filter((cycle) => cycle.tag.startsWith(selectedYear));
+    return cycleStats.filter((cycle) => cycle.tag && cycle.tag.startsWith(selectedYear));
   }, [cycleStats, selectedYear]);
 
   const activeCycleTagForYear = useMemo(() => {

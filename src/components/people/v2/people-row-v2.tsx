@@ -212,12 +212,8 @@ function renderCell(
   onSync?: (pid: string) => void,
   accounts?: Account[],
 ) {
-  const currentBaseLend = person.current_cycle_base_lend ?? 0;
-  const currentRepaid = person.current_cycle_repaid ?? 0;
-  const currentCashback = person.current_cycle_cashback ?? 0;
-  const prevDebt = person.outstanding_debt ?? 0;
+  const totalBalance = person.balance ?? 0;
   const currentCycleDebt = person.current_cycle_debt ?? 0;
-  const totalBalance = person.current_debt_balance ?? 0;
   const { copied, setCopied } = copyState;
 
   switch (key) {
@@ -388,55 +384,64 @@ function renderCell(
       const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const cycleSheet = person.cycle_sheets?.find(
         (s) => s.cycle_tag === currentTag,
-      );
-      return (
-        <div className="flex items-center gap-2">
-          <div className="w-[280px] min-w-[280px] flex items-center">
-            {person.sheet_link ? (
-              <div className="flex items-center gap-1.5 w-full">
-                <ManageSheetButton
-                  personId={person.id}
-                  cycleTag={currentTag}
-                  initialSheetUrl={cycleSheet?.sheet_url}
-                  scriptLink={person.sheet_link}
-                  googleSheetUrl={person.google_sheet_url}
-                  sheetFullImg={person.sheet_full_img}
-                  showBankAccount={person.sheet_show_bank_account ?? undefined}
-                  sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
-                  showQrImage={person.sheet_show_qr_image ?? undefined}
-                  accounts={accounts}
-                  buttonClassName="h-8 text-xs px-3 w-full"
-                  size="sm"
-                  showCycleAction={true}
-                  splitMode={true}
-                />
-                {overdueCount > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="h-5 px-1.5 border-rose-200 bg-rose-50 text-rose-600 text-[10px] font-black border-dashed flex-shrink-0"
-                  >
-                    +{overdueCount}
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center gap-2 h-9 border border-slate-200 bg-white rounded-lg shadow-sm px-2">
-                <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 uppercase tracking-tight">
-                  <Calendar className="h-3 w-3 opacity-50" />
-                  {person.current_cycle_label || "NO TAG"}
-                </span>
-                {overdueCount > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="h-4 px-1 border-rose-200 bg-rose-50 text-rose-600 text-[9px] font-black border-dashed flex-shrink-0"
-                  >
-                    +{overdueCount}
-                  </Badge>
-                )}
-              </div>
-            )}
+      );      return (
+          <div className="w-[380px] min-w-[380px] flex items-center gap-3 pr-2 h-full">
+            <div className="flex-1 min-w-0 pr-1">
+              {person.sheet_link ? (
+                <div className="flex items-center gap-2 w-full">
+                  <div className="flex-1 min-w-0">
+                    <ManageSheetButton
+                      personId={person.id}
+                      cycleTag={currentTag}
+                      initialSheetUrl={cycleSheet?.sheet_url}
+                      scriptLink={person.sheet_link}
+                      googleSheetUrl={person.google_sheet_url}
+                      sheetFullImg={person.sheet_full_img}
+                      showBankAccount={person.sheet_show_bank_account ?? undefined}
+                      sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
+                      showQrImage={person.sheet_show_qr_image ?? undefined}
+                      accounts={accounts}
+                      buttonClassName="h-8 text-[11px] px-3 w-full font-black rounded-lg"
+                      size="sm"
+                      showCycleAction={true}
+                      splitMode={true}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 h-8 border border-slate-200 bg-slate-50/50 rounded-lg px-3">
+                  <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight flex-1">
+                    <Calendar className="h-3 w-3 opacity-50" />
+                    {person.current_cycle_label || "NO TAG"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end h-8 border-l border-slate-200 pl-3 min-w-[120px]">
+               <div className={cn(
+                  "flex items-center gap-2 px-2.5 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap",
+                  currentCycleDebt > 0 
+                    ? "bg-rose-50 border-rose-100" 
+                    : currentCycleDebt < 0 
+                      ? "bg-emerald-50 border-emerald-100" 
+                      : "bg-slate-50 border-slate-100"
+               )}>
+                 <span className={cn(
+                   "text-[12px] font-black tabular-nums tracking-tighter whitespace-nowrap leading-none",
+                   currentCycleDebt > 0 ? "text-rose-600" : currentCycleDebt < 0 ? "text-emerald-600" : "text-slate-500"
+                 )}>
+                   {currentCycleDebt !== 0 ? formatMoneyVND(currentCycleDebt) : "0"}
+                 </span>
+
+                 {overdueCount > 0 && (
+                    <div className="h-4 px-1.5 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center min-w-[22px] flex-shrink-0 leading-none">
+                      +{overdueCount}
+                    </div>
+                 )}
+               </div>
+            </div>
           </div>
-        </div>
       );
     }
     case "current_debt": // Outstanding (including historical)
@@ -446,45 +451,42 @@ function renderCell(
           className="text-amber-600 font-bold"
         />
       );
-    case "base_lend":
+    case "base_lend": // All Debt Remains (Renamed)
+      if (totalBalance === 0) {
+        return (
+          <div className="flex items-center gap-1 p-1 px-2 rounded-full bg-emerald-50 border border-emerald-100 w-fit">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase text-emerald-600 tracking-tighter">Settled</span>
+          </div>
+        )
+      }
       return (
         <AmountCellV2
-          amount={currentBaseLend}
-          className="text-slate-500 font-bold"
+          amount={totalBalance}
+          className="text-amber-600 font-bold"
         />
       );
-    case "repayment": // Total Repaid
+    case "repayment": // Current Month Repaid
       return (
         <AmountCellV2
-          amount={currentRepaid}
+          amount={person.current_cycle_repaid || 0}
           className="text-emerald-600 font-bold"
         />
       );
-    case "cashback_total": // Total Cashback
+    case "cashback_total": // Current Month Cashback
       return (
         <AmountCellV2
-          amount={currentCashback}
+          amount={person.current_cycle_cashback || 0}
           className="text-amber-500 font-bold"
         />
       );
-    case "net_lend": // Prev Debt
+    case "net_lend": // Prev Debt (Historical only)
+      const historicalBalance = totalBalance - currentCycleDebt;
       return (
-        <AmountCellV2 amount={prevDebt} className="text-sky-600 font-bold" />
+        <AmountCellV2 amount={historicalBalance} className="text-sky-600 font-bold" />
       );
-    case "balance": // Remains (Net remaining for current cycle)
-      return (
-        <AmountCellV2
-          amount={currentCycleDebt}
-          className={cn(
-            "font-black text-xs",
-            currentCycleDebt > 0
-              ? "text-rose-600"
-              : currentCycleDebt < 0
-                ? "text-emerald-600"
-                : "text-slate-400",
-          )}
-        />
-      );
+    case "balance": // Redundant (Hidden by default)
+      return null;
     case "action":
       return (
         <TooltipProvider>

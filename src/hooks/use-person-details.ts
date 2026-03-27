@@ -25,6 +25,7 @@ export interface DebtCycle {
   serverStatus?: any;
   remains: number;
   isSettled: boolean;
+  isSynced?: boolean;
 }
 
 interface UsePersonDetailsProps {
@@ -49,14 +50,17 @@ export function usePersonDetails({
     const persisted = (txn as any).persisted_cycle_tag as string | undefined;
     const debtCycle = (txn as any).debt_cycle_tag as string | undefined;
     const metadataTag = metadata.tag as string | undefined;
+    
+    // Prioritize Debt Cycle Tag first
     const rawTag =
       debtCycle ||
       metadataDebtCycle ||
-      txn.tag ||
       persisted ||
       metadataPersisted ||
+      txn.tag ||
       metadataTag ||
       "";
+    
     const normalized = normalizeMonthTag(rawTag);
     if (normalized && normalized.trim()) {
       return normalized.trim();
@@ -108,23 +112,14 @@ export function usePersonDetails({
         const isSpend = ((type_lower === "expense" || type_lower === "debt") || (type_lower === "income" && rawAmount < 0)) && 
                         !isRollover && !isCashback && !isRepayment;
 
-        // Cashback calculation (Simplified but consistent)
+        // Cashback calculation - Strictly Shared
+        const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
+        const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
+        
         let cb = 0;
-        if (txn.final_price !== null && txn.final_price !== undefined) {
-          const effectiveFinal = Math.abs(Number(txn.final_price));
-          if (absAmount > effectiveFinal) {
-            cb = absAmount - effectiveFinal;
-          }
-        } else {
-          const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
-          const sharePercent = txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0;
-          const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
-          if (shareAmount > 0) {
-            cb = shareAmount;
-          } else if (sharePercent > 0 || shareFixed > 0) {
-            const normalizedPercent = normalizeRate(sharePercent);
-            cb = absAmount * normalizedPercent + shareFixed;
-          }
+        if (sharePercent > 0 || shareFixed > 0) {
+          const normalizedPercent = normalizeRate(sharePercent);
+          cb = absAmount * normalizedPercent + shareFixed;
         }
 
         if (isSpend) {
@@ -229,28 +224,14 @@ export function usePersonDetails({
             const isSpend = ((type_lower === "expense" || type_lower === "debt") || (type_lower === "income" && rawAmount < 0)) && 
                             !isRollover && !isCashback && !isRepayment;
 
-            // Cashback Calculation
-            let cb = 0;
-            if (txn.final_price !== null && txn.final_price !== undefined) {
-              const effectiveFinal = Math.abs(Number(txn.final_price));
-              if (absAmount > effectiveFinal) {
-                cb = absAmount - effectiveFinal;
-              }
-            }
-            
-            // For debts, explicit share percentage or amount should take precedence or combined
-            const shareAmount = Number(txn.cashback_share_amount ?? metadata.cashback_share_amount ?? 0);
+            // Cashback calculation - Strictly Shared
             const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
             const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
             
-            if (shareAmount > 0) {
-              cb = Math.max(cb, shareAmount);
-            } else if (sharePercent > 0 || shareFixed > 0) {
-              // Note: For debt sharing, we treat percent as relative to AMOUUNT usually 
-              // (e.g. 4% of bill which happens to be 40% of cashback)
+            let cb = 0;
+            if (sharePercent > 0 || shareFixed > 0) {
               const normalizedPercent = normalizeRate(sharePercent);
-              const computedShared = absAmount * normalizedPercent + shareFixed;
-              cb = Math.max(cb, computedShared);
+              cb = absAmount * normalizedPercent + shareFixed;
             }
 
             if (isSpend) {
@@ -310,6 +291,7 @@ export function usePersonDetails({
           serverStatus,
           remains,
           isSettled,
+          isSynced: serverStatus?.isSynced ?? false,
         } as DebtCycle;
       })
       .sort((a, b) => {

@@ -200,7 +200,7 @@
   "collectionName": "accounts",
   "credit_limit": 38000000,
   "currency": "VND",
-  "current_balance": 15023503,
+  "current_balance": 30059753,
   "due_date": 9,
   "holder_person_id": "",
   "holder_type": "me",
@@ -215,19 +215,4 @@
   "slug": "83a27121-0e34-4231-b060-2818da672eca",
   "statement_day": 20,
   "type": "credit_card"
-}
-/* categories */
-{
-  "collectionId": "pvl_cat_001",
-  "collectionName": "categories",
-  "icon": "",
-  "id": "29dpd8e14tindx3",
-  "image_url": "https://cdn-icons-png.flaticon.com/512/1875/1875684.png",
-  "is_archived": false,
-  "kind": "external",
-  "mcc_codes": null,
-  "name": "Insurance",
-  "parent_id": "",
-  "slug": "f312074c-24ed-4e68-a198-bdf99f53452a",
-  "type": "expense"
 }

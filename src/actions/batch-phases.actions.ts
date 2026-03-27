@@ -60,6 +60,7 @@ export async function createBatchPhaseAction(params: {
     periodType: 'before' | 'after'
     cutoffDay: number
     sortOrder?: number
+    itemIds?: string[]
 }) {
     try {
         // Auto-assign sort_order if not provided
@@ -85,6 +86,16 @@ export async function createBatchPhaseAction(params: {
             is_active: true,
         })
 
+        // Link items if provided
+        if (params.itemIds && params.itemIds.length > 0) {
+            for (const itemId of params.itemIds) {
+                await pocketbaseUpdate<any>('batch_master_items', toPocketBaseId(itemId, 'batchmaster'), {
+                    phase_id: id,
+                    cutoff_period: params.periodType,
+                })
+            }
+        }
+
         revalidatePath('/batch')
         revalidatePath('/batch/settings')
 
@@ -106,6 +117,7 @@ export async function updateBatchPhaseAction(
         cutoffDay?: number
         sortOrder?: number
         isActive?: boolean
+        itemIds?: string[] // The full list of item IDs that should be in this phase
     }
 ) {
     try {
@@ -117,6 +129,34 @@ export async function updateBatchPhaseAction(
         if (updates.isActive !== undefined) updateData.is_active = updates.isActive
 
         const data = await pocketbaseUpdate<any>('batch_phases', toPocketBaseId(id, 'batchph'), updateData)
+
+        // Clear existing items linkage and re-link new ones if itemIds is provided
+        if (updates.itemIds !== undefined) {
+            // 1. Get current linked items
+            const currentLinked = await pocketbaseList<any>('batch_master_items', {
+                filter: `phase_id = "${id}"`,
+                perPage: 1000,
+            })
+            
+            // 2. Unlink those NOT in the new list
+            const newItemIdsSet = new Set(updates.itemIds)
+            for (const item of currentLinked.items || []) {
+                if (!newItemIdsSet.has(item.id)) {
+                    await pocketbaseUpdate<any>('batch_master_items', item.id, {
+                        phase_id: null,
+                    })
+                }
+            }
+
+            // 3. Link NEW ones
+            for (const itemId of updates.itemIds) {
+                await pocketbaseUpdate<any>('batch_master_items', toPocketBaseId(itemId, 'batchmaster'), {
+                    phase_id: id,
+                    // If we have a periodType, sync it too
+                    ...(updates.periodType ? { cutoff_period: updates.periodType } : {})
+                })
+            }
+        }
 
         revalidatePath('/batch')
         revalidatePath('/batch/settings')

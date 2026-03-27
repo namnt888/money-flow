@@ -296,3 +296,8 @@ export async function syncAllAccountsCashbackAction() {
     return { success: false, error: (error as any).message };
   }
 }
+
+export async function getRecentAccountsAction(limit: number = 5) {
+  const { getRecentAccountsByTransactions } = await import('@/services/account.service')
+  return await getRecentAccountsByTransactions(limit)
+}
