@@ -40,6 +40,7 @@ export default async function VIBBatchPage(props: {
         pocketbaseList<any>('batch_phases', {
             filter: `bank_type = "${bankType}" && is_active = true`,
             sort: 'sort_order',
+            page: 1,
             perPage: 100,
         }),
         getPocketBaseAccounts() as Promise<Account[]>,
@@ -61,27 +62,30 @@ export default async function VIBBatchPage(props: {
     if (effectiveMonth && !searchParams.phase) {
         try {
             const monthBatches = visibleBatches.filter((b) => b.month_year === effectiveMonth)
-            const monthBatchIds = monthBatches.map((b) => b.id)
+            const monthBatchIds = monthBatches.map((b) => b.id).filter(Boolean) as string[]
 
             if (monthBatchIds.length > 0) {
                 const filter = monthBatchIds.length === 1 
                     ? `batch_id = "${monthBatchIds[0]}"`
                     : `(${monthBatchIds.map(id => `batch_id = "${id}"`).join(' || ')})`
                 
-                // Keep perPage small and use system sort to avoid 400 if possible, 
-                // but if it 400s we fallback to first phase
+                // Add page: 1 to avoid PB 400 if it strictly requires pagination params
                 const latestItemRes = await pocketbaseList<any>('batch_items', {
                     filter,
                     sort: '-updated',
+                    page: 1,
                     perPage: 1,
-                }).catch(() => null)
+                }).catch((err) => {
+                    console.error(`[Smart Phase Selection] Query failed for ${bankType} / ${effectiveMonth}:`, err)
+                    return null
+                })
                 
                 if (latestItemRes?.items && latestItemRes.items.length > 0) {
                     autoSelectedPhaseId = latestItemRes.items[0]?.phase_id || null
                 }
             }
         } catch (e: unknown) {
-            console.error(`[Smart Phase Selection] Query failed for ${bankType} / ${effectiveMonth}:`, e)
+            console.error(`[Smart Phase Selection] Internal Error for ${bankType}:`, e)
         }
     }
 

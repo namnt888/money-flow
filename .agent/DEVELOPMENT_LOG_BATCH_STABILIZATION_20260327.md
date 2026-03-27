@@ -57,9 +57,15 @@
 
 ---
 
-## 🚀 Deployment / Git
--   All changes committed and ready for PR.
--   `pocketbase-setup.js` kept as an utility for future data migrations.
+---
+ 
+## 📜 Git History Snapshot (2026-03-27)
+- `2681be6` - feat: stabilize batch and people modules, fix TS build errors (2026-03-27)
+- `ecad49f` - fix: batch import sorting and phase selection (2026-03-27)
+- `ee3f3dc` - fix: smart phase selection for batch import (2026-03-27)
+- `fb427e0` - feat: batch module stability and data integrity fix (2026-03-27)
+- `b58c0ff` - fix(people): synchronization (2026-03-22)
+- `f49c0a1` - feat: people module refactor (2026-03-22)
 
 ---
 **Status**: STABLE | **Performance**: OPTIMIZED

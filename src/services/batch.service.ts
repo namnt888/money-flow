@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { pocketbaseList, pocketbaseGetById, pocketbaseUpdate, pocketbaseDelete, toPocketBaseId } from '@/services/pocketbase/server'
+import { pocketbaseList, pocketbaseGetById, pocketbaseUpdate, pocketbaseDelete, toPocketBaseId, pocketbaseCreate } from '@/services/pocketbase/server'
 import { Database } from '@/types/database.types'
 import { addMonths } from 'date-fns'
 import { SYSTEM_ACCOUNTS, SYSTEM_CATEGORIES } from '@/lib/constants'
@@ -20,6 +20,7 @@ export async function getBatches() {
     // const supabase: any = createClient()
     const { items } = await pocketbaseList<any>('batches', {
         sort: '-month_year,-created_at',
+        page: 1,
         perPage: 100,
     })
     return items
@@ -141,6 +142,13 @@ export async function deleteBatch(id: string) {
 }
 
 export async function addBatchItem(item: Database['public']['Tables']['batch_items']['Insert']) {
+    const isPB = item.batch_id && item.batch_id.length === 15 && !item.batch_id.includes('-');
+    if (isPB) {
+        return await pocketbaseCreate<any>('batch_items', {
+            ...item,
+            updated: new Date().toISOString()
+        })
+    }
     const supabase: any = createClient()
     const { data, error } = await supabase
         .from('batch_items')
@@ -153,6 +161,15 @@ export async function addBatchItem(item: Database['public']['Tables']['batch_ite
 }
 
 export async function updateBatchItem(id: string, item: Database['public']['Tables']['batch_items']['Update']) {
+    const isPB = id && id.length === 15 && !id.includes('-');
+    if (isPB) {
+        // pocketbaseUpdate will handle the update and return the record
+        // We ensure 'updated' timestamp is fresh as requested by user for smart-selection
+        return await pocketbaseUpdate<any>('batch_items', id, {
+            ...item,
+            updated: new Date().toISOString()
+        })
+    }
     const supabase: any = createClient()
 
     // Safety check: Prevent changing core fields of a confirmed item
@@ -446,10 +463,12 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
 export async function revertBatchItem(transactionId: string) {
     const isPB = transactionId && transactionId.length === 15 && !transactionId.includes('-');
     if (isPB) {
-        const itemsByTxn = await pocketbaseList<any>('batch_items', {
-            filter: `transaction_id = "${transactionId}"`
+        const itemsByTxnResult = await pocketbaseList<any>('batch_items', {
+            filter: `transaction_id = '${transactionId}'`,
+            page: 1,
+            perPage: 100,
         })
-        let item = itemsByTxn.items[0]
+        let item = itemsByTxnResult.items[0]
 
         if (!item) {
             try {
@@ -1549,6 +1568,7 @@ export async function getBatchesByType(bankType: 'MBB' | 'VIB', isArchived?: boo
         const { items } = await pocketbaseList<Batch>('batches', {
             filter: filters.join(' && '),
             sort: '-month_year',
+            page: 1,
             perPage: 100,
         })
 
@@ -1663,6 +1683,7 @@ export async function getBatchSettings(bankType: 'MBB' | 'VIB') {
     try {
         const { items } = await pocketbaseList<any>('batch_settings', {
             filter: `bank_type = "${bankType}"`,
+            page: 1,
             perPage: 1,
         })
         return items[0] || null
