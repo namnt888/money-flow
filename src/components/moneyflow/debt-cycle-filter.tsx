@@ -117,7 +117,7 @@ function DebtCycleCard({
                         {isSettled ? 'Settled' : cycle.netBalance > 0 ? 'They owe me' : 'I owe them'}
                     </span>
                     <p className="text-[10px] text-gray-500 mt-1">
-                        <span>P: {formatCurrency(Math.abs(cycle.originalPrincipal))}</span>
+                        <span>P: {formatCurrency(Math.abs(cycle.originalPrincipal ?? 0))}</span>
                         <span className="mx-1 text-slate-300">|</span>
                         <span className="text-amber-600">CB: {formatCurrency(Math.abs(cycle.totalBack ?? 0))}</span>
                     </p>

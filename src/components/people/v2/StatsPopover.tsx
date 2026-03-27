@@ -78,7 +78,7 @@ export function StatsPopover({
             if (res.success) {
                 toast.success('Debt cycle synced successfully')
             } else {
-                toast.error(res.error || 'Failed to sync debt cycle')
+                toast.error((res as any).error || (res as any).message || 'Failed to sync debt cycle')
             }
         } catch (err) {
             toast.error('Unexpected error during sync')

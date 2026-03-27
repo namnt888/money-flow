@@ -9,10 +9,11 @@ import { pocketbaseList } from '@/services/pocketbase/server'
 
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import type { Account, Category } from '@/types/moneyflow.types'
 
 export async function generateMetadata(): Promise<Metadata> {
-    const accounts = await getPocketBaseAccounts()
-    const matched = accounts.find((a: any) => a.name.toLowerCase().includes('vib'))
+    const accounts = await getPocketBaseAccounts() as Account[]
+    const matched = accounts.find((a) => a.name.toLowerCase().includes('vib'))
     return {
         title: 'VIB Batch',
         icons: matched?.image_url ? { icon: matched.image_url } : undefined
@@ -41,26 +42,26 @@ export default async function VIBBatchPage(props: {
             sort: 'sort_order',
             perPage: 100,
         }),
-        getPocketBaseAccounts(),
-        getCategories(),
+        getPocketBaseAccounts() as Promise<Account[]>,
+        getCategories() as Promise<Category[]>,
         getSheetWebhookLinks(),
         getBankMappings(bankType),
         getAccountsWithActiveInstallments()
     ])
 
     const phases = phaseResult.items || []
-    const visibleBatches = batches.filter((b: any) => !b.is_archived)
+    const visibleBatches = batches.filter((b) => !b.is_archived)
     const cutoffDay = settings?.cutoff_day || 15
     
     // 2. Determine effective month
-    const effectiveMonth = month || (visibleBatches.length > 0 ? [...visibleBatches].sort((a: any, b: any) => (b.month_year || '').localeCompare(a.month_year || ''))[0]?.month_year : null)
+    const effectiveMonth = month || (visibleBatches.length > 0 ? [...visibleBatches].sort((a, b) => (b.month_year || '').localeCompare(a.month_year || ''))[0]?.month_year : null)
 
     // 3. Smart Phase Selection Logic
-    let autoSelectedPhaseId = null
+    let autoSelectedPhaseId: string | null = null
     if (effectiveMonth && !searchParams.phase) {
         try {
-            const monthBatches = visibleBatches.filter((b: any) => b.month_year === effectiveMonth)
-            const monthBatchIds = monthBatches.map((b: any) => b.id)
+            const monthBatches = visibleBatches.filter((b) => b.month_year === effectiveMonth)
+            const monthBatchIds = monthBatches.map((b) => b.id)
 
             if (monthBatchIds.length > 0) {
                 const filter = monthBatchIds.length === 1 
@@ -79,8 +80,8 @@ export default async function VIBBatchPage(props: {
                     autoSelectedPhaseId = latestItemRes.items[0]?.phase_id || null
                 }
             }
-        } catch (e: any) {
-            console.error(`[Smart Phase Selection] Query failed for ${bankType} / ${effectiveMonth}:`, e?.message || e)
+        } catch (e: unknown) {
+            console.error(`[Smart Phase Selection] Query failed for ${bankType} / ${effectiveMonth}:`, e)
         }
     }
 

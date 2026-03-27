@@ -9,7 +9,7 @@ import { getAccountStats } from "@/services/account.service";
  */
 export async function handleBotQuery(text: string, profileId: string): Promise<string[] | null> {
     const normalized = text.toLowerCase().trim();
-    const supabase = createServiceClient();
+    const supabase = createServiceClient() as any;
 
     // 1. Check for Budget / Account Balance queries
     // Examples: "msb con bao nhieu", "the vcb con budget khong", "balance credit card"
@@ -26,7 +26,7 @@ export async function handleBotQuery(text: string, profileId: string): Promise<s
 
         if (accounts && accounts.length > 0) {
             // Find which account the user is asking about
-            const matchedAccount = accounts.find(a => 
+            const matchedAccount = accounts.find((a: any) => 
                 normalized.includes(a.name.toLowerCase()) || 
                 (a.type === 'credit_card' && normalized.includes('credit'))
             );
@@ -39,16 +39,18 @@ export async function handleBotQuery(text: string, profileId: string): Promise<s
                 ];
 
                 if (matchedAccount.type === 'credit_card' && stats) {
-                    replies.push(`- Spent this cycle: ${formatMoneyVND(stats.spent_this_cycle)}`);
-                    replies.push(`- Remaining limit: ${formatMoneyVND(stats.remaining_limit)}`);
-                    if (stats.max_budget) {
-                        replies.push(`- Cashback budget: ${formatMoneyVND(stats.spent_this_cycle)} / ${formatMoneyVND(stats.max_budget)}`);
+                    replies.push(`- Spent this cycle: ${formatMoneyVND(stats.currentSpend)}`);
+                    if (stats.remainingBudget !== null) {
+                        replies.push(`- Remaining budget: ${formatMoneyVND(stats.remainingBudget)}`);
+                    }
+                    if (stats.maxCashback) {
+                        replies.push(`- Cashback budget: ${formatMoneyVND(stats.currentSpend)} / ${formatMoneyVND(stats.maxCashback)}`);
                     }
                 }
                 
                 return replies;
             } else if (normalized.includes("tat ca") || normalized.includes("summary")) {
-                const lines = accounts.map(a => `- ${a.name}: ${formatMoneyVND(a.current_balance)}`);
+                const lines = accounts.map((a: any) => `- ${a.name}: ${formatMoneyVND(a.current_balance)}`);
                 return ["Summary of all accounts:", ...lines];
             }
         }
@@ -81,7 +83,7 @@ export async function handleBotQuery(text: string, profileId: string): Promise<s
             .limit(5);
 
         if (txns && txns.length > 0) {
-            const lines = txns.map(t => {
+            const lines = txns.map((t: any) => {
                 const dateStr = new Date(t.date).toLocaleDateString('vi-VN');
                 return `- [${dateStr}] ${formatMoneyVND(t.amount)}: ${t.note || 'No note'}`;
             });

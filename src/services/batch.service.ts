@@ -1265,9 +1265,8 @@ export async function confirmBatchSource(batchId: string, realAccountId: string)
         const txnId = await createTransaction({
             occurred_at: new Date().toISOString(),
             note: `Confirm Source for Batch: ${batch.name}`,
-            status: 'posted',
             tag: 'BATCH_CONFIRM',
-            account_id: toPocketBaseId(realAccountId, 'accounts'),
+            source_account_id: toPocketBaseId(realAccountId, 'accounts'),
             target_account_id: toPocketBaseId(SYSTEM_ACCOUNTS.DRAFT_FUND, 'accounts'),
             amount: amount,
             type: 'transfer'
@@ -1547,7 +1546,7 @@ export async function getBatchesByType(bankType: 'MBB' | 'VIB', isArchived?: boo
             filters.push(`is_archived = ${isArchived}`)
         }
 
-        const { items } = await pocketbaseList<any>('batches', {
+        const { items } = await pocketbaseList<Batch>('batches', {
             filter: filters.join(' && '),
             sort: '-month_year',
             perPage: 100,

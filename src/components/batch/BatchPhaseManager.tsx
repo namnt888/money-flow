@@ -11,7 +11,6 @@ import { listAllBatchPhasesAction, createBatchPhaseAction, updateBatchPhaseActio
 import { getBatchMasterItemsAction } from '@/actions/batch-master.actions'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { ChecklistDialog } from '@/components/ui/checklist-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface BatchPhaseManagerProps {

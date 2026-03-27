@@ -37,6 +37,19 @@
 
 ---
 
+## 👥 People & Debt Module Analysis (Pre-Refactor)
+*   **Current State**: The `/people` page uses `PeopleDirectoryV2` as a central hub. It fetches people, subscriptions, and financial metadata in parallel.
+*   **Key Logic**:
+    *   **Heuristic Sorting**: Prioritizes people with active Google Sheet configurations and outstanding balance.
+    *   **Deep Integration**: Seamlessly triggers `TransactionSlideV2` for lending/repayment actions.
+    *   **Data Consistency**: Uses `syncAllPeopleDebtCyclesAction` for historical realignment.
+*   **Refactor Plan (Future)**: 
+    *   Align "Current Tag" displays with the "Unified Transaction Table" style.
+    *   Optimize multi-sheet sync performance (similar to Batch optimizations).
+    *   Standardize debt calculation formulas across all views.
+
+---
+
 ## 📅 Future Plan: Phase 17 - Caching & Advanced Tracking
 1.  **Cookie-based Persistent State**: Store `last_selected_phase` in cookies to eliminate "Smart Selection" queries on every refresh.
 2.  **Credit Card Advance & Profit Tracking**: (See `.agent/HANDOVER_PHASE_16_CREDIT_PROFIT.md` for context).
