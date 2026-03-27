@@ -52,7 +52,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
                 try {
                     const chunkResult = await pocketbaseList<any>('batch_items', {
                         filter: batchFilter,
-                        perPage: 500, // Max safe perPage
+                        perPage: 1000, // Increased limit
                     })
                     batchItems = [...batchItems, ...(chunkResult.items || [])]
                 } catch (e) {

@@ -13,7 +13,34 @@ interface UpsertBatchItemParams {
     bankNumber: string
     bankName: string
     targetAccountId: string | null
+    accountName?: string
+    phaseName?: string
     phaseId?: string
+    note?: string
+    metadata?: any
+}
+
+
+/**
+ * Utility to generate a descriptive note for a batch item
+ */
+function generateBatchItemNote(params: {
+    receiverName: string
+    period: 'before' | 'after'
+    monthYear: string
+    bankType: 'MBB' | 'VIB'
+    accountName?: string
+    phaseName?: string
+}) {
+    const [year, month] = params.monthYear.split('-')
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthYearStr = `${monthNames[parseInt(month) - 1]}${year}` // e.g. Mar2026
+    
+    const bankTypeName = params.bankType === 'MBB' ? 'Mbb' : 'Vib'
+    const accountPart = params.accountName || params.receiverName
+    const phasePart = params.phaseName || (params.period === 'before' ? 'Before' : 'After')
+    
+    return `${accountPart} ${phasePart} ${monthYearStr} by ${bankTypeName}`
 }
 
 /**
@@ -22,54 +49,87 @@ interface UpsertBatchItemParams {
  */
 export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams) {
     try {
-        // 1. Ensure Batch exists
         // monthYear is YYYY-MM
         const [year, month] = params.monthYear.split('-')
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         const monthName = `${monthNames[parseInt(month) - 1]} ${year} (${params.period === 'before' ? 'Early' : 'Late'})`
 
-        const batchResult = await pocketbaseList<any>('batches', {
-            filter: `month_year = "${params.monthYear}" && bank_type = "${params.bankType}"`,
-            perPage: 100,
-        })
-        let batch = batchResult.items || []
+        // Generate deterministic ID first
+        const batchIdPart = params.phaseId || params.period
+        const deterministicBatchId = toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches')
 
-        // Manual filter by period name suffix or column if possible
-        const expectedSuffix = params.period === 'before' ? '(Early)' : '(Late)'
-        // Manual filter: search by phaseId first, then fallback to matching period
-        const matchedBatch = params.phaseId
-            ? batch.find((b: any) => b.phase_id === params.phaseId)
-            : batch.find((b: any) =>
-                (b.period === params.period) ||
-                (b.name?.includes(expectedSuffix))
-            )
-        
-        let batchId = matchedBatch?.id
+        let batchId: string | undefined = undefined
+
+        // Try to fetch by deterministic ID directly first (most reliable)
+        try {
+            const existingBatchResult = await pocketbaseList<any>('batches', {
+                filter: `id = "${deterministicBatchId}"`,
+                perPage: 1
+            })
+            if (existingBatchResult.items && existingBatchResult.items.length > 0) {
+                batchId = existingBatchResult.items[0].id
+            }
+        } catch (err) {
+            console.warn('Failed to fetch batch by ID, falling back to filter:', err)
+        }
 
         if (!batchId) {
-            // Create batch - Use Phase ID in seed if available to avoid period ID collisions
-            const batchIdPart = params.phaseId || params.period
+            const batchResult = await pocketbaseList<any>('batches', {
+                filter: `month_year = "${params.monthYear}" && bank_type = "${params.bankType}"`,
+                perPage: 100,
+            })
+            const batchItems = batchResult.items || []
+
+            // Manual filter logic
+            const expectedSuffix = params.period === 'before' ? '(Early)' : '(Late)'
+            const matchedBatch = params.phaseId
+                ? batchItems.find((b: any) => b.phase_id === params.phaseId)
+                : batchItems.find((b: any) =>
+                    (b.period === params.period) ||
+                    (b.name?.includes(expectedSuffix))
+                )
+            
+            batchId = matchedBatch?.id
+        }
+
+        if (!batchId) {
+            // Create batch
             const insertData: any = {
-                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches'),
-                    month_year: params.monthYear,
-                    name: monthName,
-                    bank_type: params.bankType,
-                    period: params.period,
-                    status: 'draft'
-                }
+                id: deterministicBatchId,
+                month_year: params.monthYear,
+                name: monthName,
+                bank_type: params.bankType,
+                period: params.period,
+                status: 'draft'
+            }
             let newBatch: any
             try {
                 newBatch = await pocketbaseCreate<any>('batches', { 
                     ...insertData, 
                     phase_id: params.phaseId || null 
                 })
-            } catch {
-                // Fallback if phase_id or period column is not available
-                const { ...fallbackInsert } = insertData
-                newBatch = await pocketbaseCreate<any>('batches', fallbackInsert)
+                batchId = newBatch.id
+            } catch (createErr: any) {
+                // If it still fails due to uniqueness, try one last time to find it by ID or filter
+                const message = String(createErr?.message || '')
+                if (message.includes('validation_not_unique')) {
+                     const retryResult = await pocketbaseList<any>('batches', {
+                        filter: `id = "${deterministicBatchId}"`,
+                        perPage: 1
+                    })
+                    batchId = retryResult.items?.[0]?.id
+                    if (!batchId) throw createErr // Still not found? Throw up.
+                } else {
+                    // Fallback if phase_id or period column is not available
+                    try {
+                        const { ...fallbackInsert } = insertData
+                        newBatch = await pocketbaseCreate<any>('batches', fallbackInsert)
+                        batchId = newBatch.id
+                    } catch {
+                        throw createErr
+                    }
+                }
             }
-
-            batchId = newBatch.id
         }
 
         // 2. Ensure Batch Item exists
@@ -101,6 +161,18 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                     bank_number: params.bankNumber,
                     bank_name: params.bankName,
                     target_account_id: targetAccountId,
+                    month_year: params.monthYear,
+                    phase_id: params.phaseId || null,
+                    bank_type: params.bankType,
+                    note: params.note || generateBatchItemNote({
+                        receiverName: params.receiverName,
+                        accountName: params.accountName,
+                        phaseName: params.phaseName,
+                        period: params.period,
+                        monthYear: params.monthYear,
+                        bankType: params.bankType
+                    }),
+                    metadata: params.metadata || { last_updated: new Date().toISOString() },
                 })
             } catch {
                 await pocketbaseUpdate<any>('batch_items', existingItem.id, {
@@ -108,6 +180,17 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                     receiver_name: params.receiverName,
                     bank_number: params.bankNumber,
                     bank_name: params.bankName,
+                    month_year: params.monthYear,
+                    phase_id: params.phaseId || null,
+                    bank_type: params.bankType,
+                    note: params.note || generateBatchItemNote({
+                        receiverName: params.receiverName,
+                        accountName: params.accountName,
+                        phaseName: params.phaseName,
+                        period: params.period,
+                        monthYear: params.monthYear,
+                        bankType: params.bankType
+                    }),
                 })
             }
         } else {
@@ -122,6 +205,18 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                         bank_number: params.bankNumber,
                         bank_name: params.bankName,
                         target_account_id: targetAccountId,
+                        month_year: params.monthYear,
+                        phase_id: params.phaseId || null,
+                        bank_type: params.bankType,
+                        note: params.note || generateBatchItemNote({
+                            receiverName: params.receiverName,
+                            accountName: params.accountName,
+                            phaseName: params.phaseName,
+                            period: params.period,
+                            monthYear: params.monthYear,
+                            bankType: params.bankType
+                        }),
+                        metadata: params.metadata || { created_at: new Date().toISOString() },
                         status: 'draft'
                     })
             } catch (createError: any) {
@@ -136,6 +231,18 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             bank_number: params.bankNumber,
                             bank_name: params.bankName,
                             target_account_id: targetAccountId,
+                            month_year: params.monthYear,
+                            phase_id: params.phaseId || null,
+                            bank_type: params.bankType,
+                            note: params.note || generateBatchItemNote({
+                                receiverName: params.receiverName,
+                                accountName: params.accountName,
+                                phaseName: params.phaseName,
+                                period: params.period,
+                                monthYear: params.monthYear,
+                                bankType: params.bankType
+                            }),
+                            metadata: params.metadata || { last_updated: new Date().toISOString() },
                             status: 'draft',
                         })
                     } catch {
@@ -145,6 +252,17 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             receiver_name: params.receiverName,
                             bank_number: params.bankNumber,
                             bank_name: params.bankName,
+                            month_year: params.monthYear,
+                            phase_id: params.phaseId || null,
+                            bank_type: params.bankType,
+                            note: params.note || generateBatchItemNote({
+                                receiverName: params.receiverName,
+                                accountName: params.accountName,
+                                phaseName: params.phaseName,
+                                period: params.period,
+                                monthYear: params.monthYear,
+                                bankType: params.bankType
+                            }),
                             status: 'draft',
                         })
                     }
@@ -159,6 +277,17 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             receiver_name: params.receiverName,
                             bank_number: params.bankNumber,
                             bank_name: params.bankName,
+                            month_year: params.monthYear,
+                            phase_id: params.phaseId || null,
+                            bank_type: params.bankType,
+                            note: params.note || generateBatchItemNote({
+                                receiverName: params.receiverName,
+                                accountName: params.accountName,
+                                phaseName: params.phaseName,
+                                period: params.period,
+                                monthYear: params.monthYear,
+                                bankType: params.bankType
+                            }),
                             status: 'draft',
                         })
                     } catch {
@@ -188,6 +317,20 @@ export async function bulkInitializeFromMasterAction(params: {
     try {
         // 1. Fetch all active master items (prefer phase_id, fallback to cutoff_period)
         let masterItems: any[] = []
+        let phaseLabel: string | undefined = undefined
+
+        if (params.phaseId) {
+            try {
+                const phaseRes = await pocketbaseList<any>('batch_phases', {
+                    filter: `id = "${params.phaseId}"`,
+                    perPage: 1
+                })
+                phaseLabel = phaseRes.items?.[0]?.label
+            } catch (e) {
+                console.warn('Failed to fetch phase label:', e)
+            }
+        }
+
         try {
             const filter = params.phaseId
                 ? `bank_type = "${params.bankType}" && is_active = true && phase_id = "${params.phaseId}"`
@@ -197,6 +340,7 @@ export async function bulkInitializeFromMasterAction(params: {
                 filter,
                 perPage: 1000,
                 sort: 'sort_order',
+                expand: 'target_account_id'
             })
             masterItems = masterResult.items || []
         } catch (phaseErr) {
@@ -232,12 +376,41 @@ export async function bulkInitializeFromMasterAction(params: {
             (!params.phaseId && (b.period === params.period || b.name?.includes(expectedSuffix)))
         ) || null
 
-        let batchId = batch?.id
+        // Use Phase ID in seed to avoid period ID collisions (Multiple's for After 15/After 20)
+        const batchIdPart = params.phaseId || params.period
+        const deterministicBatchId = toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches')
+
+        let batchId: string | undefined = undefined
+
+        // Try direct ID lookup first
+        try {
+            const existingBatchResult = await pocketbaseList<any>('batches', {
+                filter: `id = "${deterministicBatchId}"`,
+                perPage: 1
+            })
+            if (existingBatchResult.items?.[0]) {
+                batchId = existingBatchResult.items[0].id
+            }
+        } catch {}
+
         if (!batchId) {
-            // Use Phase ID in seed to avoid period ID collisions (Multiple's for After 15/After 20)
-            const batchIdPart = params.phaseId || params.period
+            const allBatchesResult = await pocketbaseList<any>('batches', {
+                filter: `month_year = "${params.monthYear}" && bank_type = "${params.bankType}"`,
+                perPage: 100,
+            })
+            const allBatches = allBatchesResult.items || []
+
+            const expectedSuffix = params.period === 'before' ? '(Early)' : '(Late)'
+            const batch = allBatches?.find((b: any) =>
+                (params.phaseId && b.phase_id === params.phaseId) ||
+                (!params.phaseId && (b.period === params.period || b.name?.includes(expectedSuffix)))
+            ) || null
+            batchId = batch?.id
+        }
+
+        if (!batchId) {
             const insertData: any = {
-                id: toPocketBaseId(`${params.bankType}:${params.monthYear}:${batchIdPart}`, 'batches'),
+                id: deterministicBatchId,
                 month_year: params.monthYear,
                 name: monthName,
                 bank_type: params.bankType,
@@ -250,9 +423,23 @@ export async function bulkInitializeFromMasterAction(params: {
                     phase_id: params.phaseId || null,
                 })
                 batchId = newBatch.id
-            } catch (e) {
-                const newBatch = await pocketbaseCreate<any>('batches', insertData)
-                batchId = newBatch.id
+            } catch (createErr: any) {
+                if (String(createErr?.message).includes('validation_not_unique')) {
+                    const retryResult = await pocketbaseList<any>('batches', {
+                        filter: `id = "${deterministicBatchId}"`,
+                        perPage: 1
+                    })
+                    batchId = retryResult.items?.[0]?.id
+                }
+                
+                if (!batchId) {
+                    try {
+                        const newBatch = await pocketbaseCreate<any>('batches', insertData)
+                        batchId = newBatch.id
+                    } catch {
+                        throw createErr
+                    }
+                }
             }
         }
 
@@ -277,6 +464,17 @@ export async function bulkInitializeFromMasterAction(params: {
                 bank_number: m.bank_number,
                 bank_name: m.bank_name,
                 target_account_id: m.target_account_id,
+                month_year: params.monthYear,
+                phase_id: params.phaseId || null,
+                bank_type: params.bankType,
+                note: generateBatchItemNote({
+                    receiverName: m.receiver_name,
+                    accountName: m.expand?.target_account_id?.name || m.bank_name,
+                    phaseName: phaseLabel,
+                    period: params.period,
+                    monthYear: params.monthYear,
+                    bankType: params.bankType
+                }),
                 status: 'draft'
             }))
 

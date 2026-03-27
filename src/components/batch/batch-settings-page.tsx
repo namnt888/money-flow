@@ -312,6 +312,16 @@ export function BatchSettingsPage({
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">GAS Webhook URL (Legacy/Optional)</Label>
+                                                <Input value={mbbWebhookUrl} onChange={(e) => setMbbWebhookUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cutoff Day</Label>
+                                                <Input type="number" value={mbbCutoffDay} onChange={(e) => setMbbCutoffDay(parseInt(e.target.value) || 15)} className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Display Name</Label>
                                                 <Input value={mbbDisplaySheetName} onChange={(e) => setMbbDisplaySheetName(e.target.value)} placeholder="Master MBB" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
                                             </div>
@@ -365,6 +375,16 @@ export function BatchSettingsPage({
                                             <div className="space-y-2">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Sheet URL (Display)</Label>
                                                 <Input value={vibDisplaySheetUrl} onChange={(e) => setVibDisplaySheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">GAS Webhook URL (Legacy/Optional)</Label>
+                                                <Input value={vibWebhookUrl} onChange={(e) => setVibWebhookUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cutoff Day</Label>
+                                                <Input type="number" value={vibCutoffDay} onChange={(e) => setVibCutoffDay(parseInt(e.target.value) || 15)} className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

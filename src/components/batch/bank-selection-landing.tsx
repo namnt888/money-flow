@@ -6,8 +6,10 @@ import { BankLinkWithLoading } from './bank-link-with-loading'
 import { BankSettingsSlideTrigger } from './bank-settings-slide'
 import { getBatchesByType, getBatchSettings } from '@/services/batch.service'
 import { cn } from '@/lib/utils'
+import { toYYYYMMFromDate } from '@/lib/month-tag'
 
 export async function BankSelectionLanding() {
+    const currentMonth = toYYYYMMFromDate(new Date())
     // Load settings and data directly via service layer to avoid server-action prerender noise
     const [mbbSetting, vibSetting, mbbBatches, vibBatches] = await Promise.all([
         getBatchSettings('MBB').catch(() => null),
@@ -39,7 +41,7 @@ export async function BankSelectionLanding() {
             imageUrl: mbbSetting?.image_url || null,
             color: 'indigo',
             gradient: 'from-blue-600 to-indigo-700',
-            href: '/batch/mbb',
+            href: `/batch/mbb?month=${currentMonth}`,
             stats: mbbStats
         },
         {
@@ -49,7 +51,7 @@ export async function BankSelectionLanding() {
             imageUrl: vibSetting?.image_url || null,
             color: 'purple',
             gradient: 'from-purple-600 to-fuchsia-700',
-            href: '/batch/vib',
+            href: `/batch/vib?month=${currentMonth}`,
             stats: vibStats
         }
     ]
