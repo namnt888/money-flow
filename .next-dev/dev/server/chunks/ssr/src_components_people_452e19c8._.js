@@ -13,7 +13,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lu
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/plus.js [app-ssr] (ecmascript) <export default as Plus>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/trash-2.js [app-ssr] (ecmascript) <export default as Trash2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$b057ba__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:b057ba [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$1c7454__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:1c7454 [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -97,7 +97,7 @@ function EditSplitBillDialog({ isOpen, onClose, baseTransactionId, initialData, 
             return;
         }
         setIsSaving(true);
-        const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$b057ba__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updateSplitBillAction"])(baseTransactionId, {
+        const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$1c7454__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updateSplitBillAction"])(baseTransactionId, {
             title,
             note,
             qrImageUrl: qrImageUrl.trim() || null,
@@ -546,8 +546,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lu
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$html2canvas$40$1$2e$4$2e$1$2f$node_modules$2f$html2canvas$2f$dist$2f$html2canvas$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/html2canvas@1.4.1/node_modules/html2canvas/dist/html2canvas.esm.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c0f518__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:c0f518 [app-ssr] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$70179e__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:70179e [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$b63af4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:b63af4 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$ea5cc0__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:ea5cc0 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$add$2d$transaction$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/moneyflow/add-transaction-dialog.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$edit$2d$split$2d$bill$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/edit-split-bill-dialog.tsx [app-ssr] (ecmascript)");
 'use client';
@@ -822,7 +822,7 @@ function SplitBillRow({ bill, accounts, categories, shops, people, ownerPersonId
         }
         setIsSavingQr(true);
         const trimmed = qrInput.trim();
-        const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c0f518__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updateTransactionMetadata"])(bill.baseTransactionId, {
+        const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$b63af4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updateTransactionMetadata"])(bill.baseTransactionId, {
             split_qr_image_url: trimmed || null
         });
         if (ok) {
@@ -965,7 +965,7 @@ function SplitBillRow({ bill, accounts, categories, shops, people, ownerPersonId
         try {
             if (bill.baseTransactionId) {
                 // New split bills with base transaction
-                const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$70179e__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteSplitBillAction"])(bill.baseTransactionId);
+                const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$ea5cc0__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteSplitBillAction"])(bill.baseTransactionId);
                 setIsDeleting(false);
                 if (result.success) {
                     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(`Deleted split bill: ${result.deletedCount} transactions removed`);
@@ -2967,8 +2967,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/sheet.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$person$2d$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/person-form.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$972004__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:972004 [app-ssr] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f23417__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:f23417 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:7e5677 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:923069 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/users.js [app-ssr] (ecmascript) <export default as Users>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/info.js [app-ssr] (ecmascript) <export default as Info>");
@@ -3025,7 +3025,7 @@ function PeopleSlideV2({ open, onOpenChange, person, subscriptions, accounts, on
     const handleApply = async (values)=>{
         let result;
         if (isEdit && person) {
-            result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f23417__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(person.id, {
+            result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(person.id, {
                 name: values.name,
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
@@ -3040,7 +3040,7 @@ function PeopleSlideV2({ open, onOpenChange, person, subscriptions, accounts, on
                 success: !!result
             });
         } else {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$972004__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
                 name: values.name,
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
@@ -3267,7 +3267,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$person$2d$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/person-form.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$972004__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:972004 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:7e5677 [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -3382,7 +3382,7 @@ function CreatePersonDialog({ subscriptions, accounts, trigger, open: controlled
                             accounts: accounts,
                             onCancel: closeDialog,
                             onSubmit: async (values)=>{
-                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$972004__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
+                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
                                     name: values.name,
                                     image_url: values.image_url,
                                     sheet_link: values.sheet_link,
@@ -3971,7 +3971,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$p
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/arrow-right.js [app-ssr] (ecmascript) <export default as ArrowRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$2d2750__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:2d2750 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:231ba9 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
@@ -4003,7 +4003,7 @@ function StatsPopover({ personId, tag, originalLend, cashback, netLend, repay, r
         if (!personId || !tag || isSyncing) return;
         setIsSyncing(true);
         try {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$2d2750__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(personId, tag);
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(personId, tag);
             if (res.success) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success('Debt cycle synced successfully');
             } else {
@@ -5604,7 +5604,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$i
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/label.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c77a9a__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:c77a9a [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:0affe4 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/select.tsx [app-ssr] (ecmascript)");
@@ -5685,7 +5685,7 @@ function RolloverDebtDialog({ personId, currentCycle, allCycles = [], remains, t
         if (setLoadingMessage) setLoadingMessage('Creating rollover transactions...');
         setIsProcessing(true);
         try {
-            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c77a9a__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
+            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
             if (result.success) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(result.message || 'Debt rolled over successfully');
             } else {
@@ -6276,7 +6276,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lu
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/check.js [app-ssr] (ecmascript) <export default as Check>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f23417__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:f23417 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:923069 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$sync$2d$report$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/sync-report-dialog.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/tooltip.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/tabs.tsx [app-ssr] (ecmascript)");
@@ -6326,7 +6326,7 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 function getMonthDisplayName(tag) {
     return tag;
 }
-function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptLink = null, googleSheetUrl = null, sheetFullImg = null, showBankAccount = false, sheetBankInfo = null, sheetLinkedBankId = null, showQrImage = false, accounts = [], className, buttonClassName, size = 'sm', iconOnly = false, linkedLabel = 'Manage Sheet', unlinkedLabel = 'Manage Sheet', disabled, openAfterSuccess = false, showCycleAction = true, connectHref, showViewLink = false, splitMode = false, allCycles = [], availableYears = [], selectedYear = null, onCycleChange, onYearChange, currentCycleTag, isSettled = false, activeCycleRemains = 0, isPending = false, setIsGlobalLoading, setLoadingMessage, onSyncCycle }) {
+function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptLink = null, googleSheetUrl = null, sheetFullImg = null, showBankAccount = false, sheetBankInfo = null, sheetLinkedBankId = null, showQrImage = false, accounts = [], className, buttonClassName, size = 'sm', iconOnly = false, linkedLabel = 'Manage Sheet', unlinkedLabel = 'Manage Sheet', disabled, openAfterSuccess = false, showCycleAction = true, connectHref, showViewLink = false, splitMode = false, allCycles = [], availableYears = [], selectedYear = null, onCycleChange, onYearChange, currentCycleTag, isSettled = false, activeCycleRemains = 0, isPending = false, isMasterSheetEnabled = false, setIsGlobalLoading, setLoadingMessage, onSyncCycle }) {
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('history');
     const [historySearch, setHistorySearch] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const [historyYear, setHistoryYear] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('all');
@@ -6358,6 +6358,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
     const [currentBankInfo, setCurrentBankInfo] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(sheetBankInfo ?? '');
     const [currentLinkedBankId, setCurrentLinkedBankId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(sheetLinkedBankId ?? null);
     const [currentShowQrImage, setCurrentShowQrImage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(showQrImage);
+    const [currentIsMasterSheet, setCurrentIsMasterSheet] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(!!isMasterSheetEnabled);
     const [accountSearch, setAccountSearch] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const [lastAutoDetectedCycle, setLastAutoDetectedCycle] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
@@ -6376,6 +6377,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
         setCurrentBankInfo(sheetBankInfo ?? '');
         setCurrentLinkedBankId(sheetLinkedBankId ?? null);
         setCurrentShowQrImage(showQrImage);
+        setCurrentIsMasterSheet(!!isMasterSheetEnabled);
     }, [
         scriptLink,
         googleSheetUrl,
@@ -6385,6 +6387,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
         sheetBankInfo,
         sheetLinkedBankId,
         showQrImage,
+        isMasterSheetEnabled,
         showPopover
     ]);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
@@ -6502,7 +6505,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
         cycleYears,
         filteredCycles
     ]);
-    const hasUnsavedChanges = currentScriptLink !== (scriptLink ?? '') || currentSheetUrl !== (googleSheetUrl ?? initialSheetUrl ?? '') || currentSheetImg !== (sheetFullImg ?? '') || currentShowBankAccount !== showBankAccount || currentBankInfo !== (sheetBankInfo ?? '') || currentLinkedBankId !== (sheetLinkedBankId ?? null) || currentShowQrImage !== showQrImage;
+    const hasUnsavedChanges = currentScriptLink !== (scriptLink ?? '') || currentSheetUrl !== (googleSheetUrl ?? initialSheetUrl ?? '') || currentSheetImg !== (sheetFullImg ?? '') || currentShowBankAccount !== showBankAccount || currentBankInfo !== (sheetBankInfo ?? '') || currentLinkedBankId !== (sheetLinkedBankId ?? null) || currentShowQrImage !== showQrImage || currentIsMasterSheet !== !!isMasterSheetEnabled;
     const handleTriggerClick = (event)=>{
         event.stopPropagation();
     };
@@ -6517,14 +6520,15 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                 description: 'Updating person profile details'
             });
             try {
-                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f23417__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(personId, {
+                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(personId, {
                     sheet_link: currentScriptLink.trim() || null,
                     google_sheet_url: currentSheetUrl.trim() || null,
                     sheet_full_img: currentSheetImg.trim() || null,
                     sheet_show_bank_account: currentShowBankAccount,
                     sheet_bank_info: currentBankInfo.trim() || null,
                     sheet_linked_bank_id: currentLinkedBankId || null,
-                    sheet_show_qr_image: currentShowQrImage
+                    sheet_show_qr_image: currentShowQrImage,
+                    is_master_sheet_enabled: currentIsMasterSheet
                 });
                 if (!ok) {
                     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].dismiss(toastId);
@@ -6650,7 +6654,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                 cycleTag: cycleTag
             }, void 0, false, {
                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                lineNumber: 456,
+                lineNumber: 462,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Popover"], {
@@ -6679,17 +6683,17 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                     className: "h-4.5 w-4.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                    lineNumber: 480,
+                                                    lineNumber: 486,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 470,
+                                                lineNumber: 476,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 469,
+                                            lineNumber: 475,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -6700,18 +6704,18 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                 children: "Open Sheet in New Tab"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 484,
+                                                lineNumber: 490,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 483,
+                                            lineNumber: 489,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 468,
+                                    lineNumber: 474,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -6734,17 +6738,17 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                     className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-4 w-4", (isManaging || isSaving || isPending) && "animate-spin")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                    lineNumber: 504,
+                                                    lineNumber: 510,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 491,
+                                                lineNumber: 497,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 490,
+                                            lineNumber: 496,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -6755,18 +6759,18 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                 children: "Quick Sync to Sheet"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 508,
+                                                lineNumber: 514,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 507,
+                                            lineNumber: 513,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 489,
+                                    lineNumber: 495,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6795,7 +6799,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                 children: cycleTag || 'History'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 533,
+                                                                lineNumber: 539,
                                                                 columnNumber: 25
                                                             }, this),
                                                             allCycles.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6806,49 +6810,49 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         children: "All"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 538,
+                                                                        lineNumber: 544,
                                                                         columnNumber: 31
                                                                     }, this) : isSettled ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__["Check"], {
                                                                         className: "h-3.5 w-3.5 text-emerald-500"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 540,
+                                                                        lineNumber: 546,
                                                                         columnNumber: 31
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "font-bold text-rose-600 text-[10px]",
                                                                         children: numberFormatter.format(activeCycleRemains)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 542,
+                                                                        lineNumber: 548,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                         className: "h-3 w-3 text-slate-400 group-hover:text-slate-600"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 546,
+                                                                        lineNumber: 552,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 536,
+                                                                lineNumber: 542,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 517,
+                                                        lineNumber: 523,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                    lineNumber: 516,
+                                                    lineNumber: 522,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 515,
+                                                lineNumber: 521,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -6859,23 +6863,23 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                     children: "View Cycle History"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                    lineNumber: 553,
+                                                    lineNumber: 559,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 552,
+                                                lineNumber: 558,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                        lineNumber: 514,
+                                        lineNumber: 520,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 513,
+                                    lineNumber: 519,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -6897,22 +6901,22 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                         className: "h-4.5 w-4.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 572,
+                                                        lineNumber: 578,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                    lineNumber: 562,
+                                                    lineNumber: 568,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 561,
+                                                lineNumber: 567,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 560,
+                                            lineNumber: 566,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -6923,29 +6927,29 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                 children: "Sheet Configurations"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 577,
+                                                lineNumber: 583,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 576,
+                                            lineNumber: 582,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 559,
+                                    lineNumber: 565,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                            lineNumber: 466,
+                            lineNumber: 472,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                        lineNumber: 465,
+                        lineNumber: 471,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PopoverTrigger"], {
                         asChild: true,
@@ -6960,19 +6964,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                     className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])('h-4 w-4', !iconOnly && 'mr-2')
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 591,
+                                    lineNumber: 597,
                                     columnNumber: 15
                                 }, this),
                                 !iconOnly && label
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                            lineNumber: 584,
+                            lineNumber: 590,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                        lineNumber: 583,
+                        lineNumber: 589,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PopoverContent"], {
@@ -6998,14 +7002,14 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                         className: "h-3.5 w-3.5 mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 606,
+                                                        lineNumber: 612,
                                                         columnNumber: 19
                                                     }, this),
                                                     "Debt History"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 605,
+                                                lineNumber: 611,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TabsTrigger"], {
@@ -7016,30 +7020,30 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                         className: "h-3.5 w-3.5 mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 610,
+                                                        lineNumber: 616,
                                                         columnNumber: 19
                                                     }, this),
                                                     "Configurations"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 609,
+                                                lineNumber: 615,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                        lineNumber: 604,
+                                        lineNumber: 610,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 599,
+                                    lineNumber: 605,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                lineNumber: 598,
+                                lineNumber: 604,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7066,7 +7070,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         children: "Controller"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 627,
+                                                                        lineNumber: 633,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     pendingCycleTag !== cycleTag && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7074,13 +7078,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         children: "Applied View pending..."
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 629,
+                                                                        lineNumber: 635,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 626,
+                                                                lineNumber: 632,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7097,21 +7101,21 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                 className: "h-3 w-3 mr-1.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 645,
+                                                                                lineNumber: 651,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             "Apply View"
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 633,
+                                                                        lineNumber: 639,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "h-4 w-px bg-slate-200 mx-0.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 649,
+                                                                        lineNumber: 655,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -7125,14 +7129,14 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-3 w-3 mr-1.5", isManaging && "animate-spin")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 658,
+                                                                                lineNumber: 664,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             "Sync"
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 651,
+                                                                        lineNumber: 657,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     onSyncCycle && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -7151,24 +7155,24 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                            lineNumber: 676,
+                                                                            lineNumber: 682,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 663,
+                                                                        lineNumber: 669,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 632,
+                                                                lineNumber: 638,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 625,
+                                                        lineNumber: 631,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7181,7 +7185,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 684,
+                                                                        lineNumber: 690,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -7191,13 +7195,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "h-8 pl-8 text-xs"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 685,
+                                                                        lineNumber: 691,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 683,
+                                                                lineNumber: 689,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7213,7 +7217,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                 children: "All years"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 699,
+                                                                                lineNumber: 705,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             cycleYears.map((year)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -7221,32 +7225,32 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                     children: year
                                                                                 }, year, false, {
                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                    lineNumber: 701,
+                                                                                    lineNumber: 707,
                                                                                     columnNumber: 27
                                                                                 }, this))
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 694,
+                                                                        lineNumber: 700,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                         className: "pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 704,
+                                                                        lineNumber: 710,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 693,
+                                                                lineNumber: 699,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 682,
+                                                        lineNumber: 688,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7269,19 +7273,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                             className: "w-3 h-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                            lineNumber: 725,
+                                                                            lineNumber: 731,
                                                                             columnNumber: 25
                                                                         }, this),
                                                                         selectedYear ? `All ${selectedYear}` : 'All History'
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                    lineNumber: 724,
+                                                                    lineNumber: 730,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 710,
+                                                                lineNumber: 716,
                                                                 columnNumber: 21
                                                             }, this),
                                                             currentCycleTag && pendingCycleTag !== currentCycleTag && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7296,7 +7300,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                             className: "w-3 h-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                            lineNumber: 738,
+                                                                            lineNumber: 744,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         "Jump to Current (",
@@ -7305,12 +7309,12 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                    lineNumber: 737,
+                                                                    lineNumber: 743,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 731,
+                                                                lineNumber: 737,
                                                                 columnNumber: 23
                                                             }, this),
                                                             groupedFilteredCycles.map(({ year, cycles })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7321,7 +7325,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                             children: year
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                            lineNumber: 746,
+                                                                            lineNumber: 752,
                                                                             columnNumber: 25
                                                                         }, this),
                                                                         cycles.map((cycle)=>{
@@ -7342,7 +7346,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                 children: cycle.tag
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 767,
+                                                                                                lineNumber: 773,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             cycle.isSynced ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7351,12 +7355,12 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                     className: "h-3 w-3 text-emerald-500"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                    lineNumber: 772,
+                                                                                                    lineNumber: 778,
                                                                                                     columnNumber: 45
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 771,
+                                                                                                lineNumber: 777,
                                                                                                 columnNumber: 41
                                                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                                 className: "w-5 h-5 rounded-md bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0",
@@ -7364,18 +7368,18 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                     className: "h-3 w-3 text-slate-300"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                    lineNumber: 776,
+                                                                                                    lineNumber: 782,
                                                                                                     columnNumber: 45
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 775,
+                                                                                                lineNumber: 781,
                                                                                                 columnNumber: 41
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 766,
+                                                                                        lineNumber: 772,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7389,7 +7393,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: "Initial"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 785,
+                                                                                                        lineNumber: 791,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7397,13 +7401,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: numberFormatter.format(cycle.stats?.originalLend || 0)
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 786,
+                                                                                                        lineNumber: 792,
                                                                                                         columnNumber: 43
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 784,
+                                                                                                lineNumber: 790,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7414,7 +7418,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: "Total Back"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 793,
+                                                                                                        lineNumber: 799,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7425,13 +7429,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 794,
+                                                                                                        lineNumber: 800,
                                                                                                         columnNumber: 43
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 792,
+                                                                                                lineNumber: 798,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7442,7 +7446,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: "Repaid"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 801,
+                                                                                                        lineNumber: 807,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7450,13 +7454,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: numberFormatter.format(cycle.stats?.repay || 0)
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 802,
+                                                                                                        lineNumber: 808,
                                                                                                         columnNumber: 43
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 800,
+                                                                                                lineNumber: 806,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7471,12 +7475,12 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                                 children: cycleSettled ? "Status:" : "Remain:"
                                                                                                             }, void 0, false, {
                                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                                lineNumber: 816,
+                                                                                                                lineNumber: 822,
                                                                                                                 columnNumber: 51
                                                                                                             }, this)
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                            lineNumber: 815,
+                                                                                                            lineNumber: 821,
                                                                                                             columnNumber: 47
                                                                                                         }, this),
                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7487,7 +7491,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                                     children: cycleSettled ? "Settled" : numberFormatter.format(Math.max(0, Math.round(cycle.remains || 0)))
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                                    lineNumber: 824,
+                                                                                                                    lineNumber: 830,
                                                                                                                     columnNumber: 51
                                                                                                                 }, this),
                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7495,43 +7499,43 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                                     children: cycleSettled ? "Paid" : `· ${Math.round(remainsPercent)}%`
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                                    lineNumber: 833,
+                                                                                                                    lineNumber: 839,
                                                                                                                     columnNumber: 51
                                                                                                                 }, this)
                                                                                                             ]
                                                                                                         }, void 0, true, {
                                                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                            lineNumber: 823,
+                                                                                                            lineNumber: 829,
                                                                                                             columnNumber: 47
                                                                                                         }, this)
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                    lineNumber: 809,
+                                                                                                    lineNumber: 815,
                                                                                                     columnNumber: 43
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 808,
+                                                                                                lineNumber: 814,
                                                                                                 columnNumber: 39
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 782,
+                                                                                        lineNumber: 788,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, cycle.tag, true, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 755,
+                                                                                lineNumber: 761,
                                                                                 columnNumber: 33
                                                                             }, this);
                                                                         })
                                                                     ]
                                                                 }, year, true, {
                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                    lineNumber: 745,
+                                                                    lineNumber: 751,
                                                                     columnNumber: 23
                                                                 }, this)),
                                                             groupedFilteredCycles.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7539,24 +7543,24 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                 children: "No cycles match the current filters."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 850,
+                                                                lineNumber: 856,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 708,
+                                                        lineNumber: 714,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 624,
+                                                lineNumber: 630,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 623,
+                                            lineNumber: 629,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TabsContent"], {
@@ -7575,7 +7579,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 864,
+                                                                        lineNumber: 870,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -7585,13 +7589,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "h-8 pl-8 text-xs font-mono"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 865,
+                                                                        lineNumber: 871,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 863,
+                                                                lineNumber: 869,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7601,7 +7605,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 874,
+                                                                        lineNumber: 880,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -7611,19 +7615,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "h-8 pl-8 text-xs font-mono"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 875,
+                                                                        lineNumber: 881,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 873,
+                                                                lineNumber: 879,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 862,
+                                                        lineNumber: 868,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7641,12 +7645,12 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                     className: "h-4 w-4 text-indigo-600"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                    lineNumber: 890,
+                                                                                    lineNumber: 896,
                                                                                     columnNumber: 27
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 889,
+                                                                                lineNumber: 895,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7657,7 +7661,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         children: "Default Bank Account"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 893,
+                                                                                        lineNumber: 899,
                                                                                         columnNumber: 27
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7665,19 +7669,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         children: "Auto-filled for repayment transactions"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 894,
+                                                                                        lineNumber: 900,
                                                                                         columnNumber: 27
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 892,
+                                                                                lineNumber: 898,
                                                                                 columnNumber: 25
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 888,
+                                                                        lineNumber: 894,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$combobox$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Combobox"], {
@@ -7690,7 +7694,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                     className: "w-4 h-4 rounded-none object-contain bg-white"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                    lineNumber: 906,
+                                                                                    lineNumber: 912,
                                                                                     columnNumber: 31
                                                                                 }, void 0) : undefined
                                                                             })),
@@ -7713,13 +7717,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                         className: "h-9 text-xs"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 898,
+                                                                        lineNumber: 904,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 887,
+                                                                lineNumber: 893,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7738,7 +7742,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-3.5 w-3.5", currentShowBankAccount ? "text-emerald-500" : "text-slate-500")
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 935,
+                                                                                                lineNumber: 941,
                                                                                                 columnNumber: 29
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7749,7 +7753,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: "Sync Bank Info to Sheet"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 937,
+                                                                                                        lineNumber: 943,
                                                                                                         columnNumber: 31
                                                                                                     }, this),
                                                                                                     currentShowBankAccount && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7757,19 +7761,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                         children: "Auto-populates bank details on sheet"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                        lineNumber: 938,
+                                                                                                        lineNumber: 944,
                                                                                                         columnNumber: 58
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 936,
+                                                                                                lineNumber: 942,
                                                                                                 columnNumber: 29
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 934,
+                                                                                        lineNumber: 940,
                                                                                         columnNumber: 27
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$switch$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Switch"], {
@@ -7779,13 +7783,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         className: "scale-75 origin-right"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 941,
+                                                                                        lineNumber: 947,
                                                                                         columnNumber: 27
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 933,
+                                                                                lineNumber: 939,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             currentShowBankAccount && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7796,7 +7800,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         children: "Manual Override / Bank Text"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 951,
+                                                                                        lineNumber: 957,
                                                                                         columnNumber: 29
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -7806,19 +7810,19 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         className: "h-8 text-xs bg-white/50 border-emerald-200/50 focus:bg-white transition-colors"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 952,
+                                                                                        lineNumber: 958,
                                                                                         columnNumber: 29
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 950,
+                                                                                lineNumber: 956,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 929,
+                                                                        lineNumber: 935,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7834,7 +7838,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-3.5 w-3.5", currentShowQrImage ? "text-indigo-500" : "text-slate-500")
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 969,
+                                                                                                lineNumber: 975,
                                                                                                 columnNumber: 29
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7844,18 +7848,18 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                                     children: "Show QR Code on Sheet"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                    lineNumber: 971,
+                                                                                                    lineNumber: 977,
                                                                                                     columnNumber: 31
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                                lineNumber: 970,
+                                                                                                lineNumber: 976,
                                                                                                 columnNumber: 29
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 968,
+                                                                                        lineNumber: 974,
                                                                                         columnNumber: 27
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$switch$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Switch"], {
@@ -7865,13 +7869,13 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                         className: "scale-75 origin-right"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                        lineNumber: 974,
+                                                                                        lineNumber: 980,
                                                                                         columnNumber: 27
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 967,
+                                                                                lineNumber: 973,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             currentShowQrImage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7883,7 +7887,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                             className: "absolute left-2 top-2 h-3 w-3 text-slate-400"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                            lineNumber: 985,
+                                                                                            lineNumber: 991,
                                                                                             columnNumber: 31
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -7893,36 +7897,36 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                             className: "h-7 pl-7 text-[10px] font-mono bg-white/50 border-indigo-200/50"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                            lineNumber: 986,
+                                                                                            lineNumber: 992,
                                                                                             columnNumber: 31
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                    lineNumber: 984,
+                                                                                    lineNumber: 990,
                                                                                     columnNumber: 29
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 983,
+                                                                                lineNumber: 989,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 963,
+                                                                        lineNumber: 969,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 927,
+                                                                lineNumber: 933,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 885,
+                                                        lineNumber: 891,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7937,7 +7941,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                 children: isSaving ? 'Saving...' : 'Save Changes'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 1002,
+                                                                lineNumber: 1008,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7954,14 +7958,14 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                                 className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-3.5 w-3.5 mr-2", isManaging && "animate-spin")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                                lineNumber: 1021,
+                                                                                lineNumber: 1027,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             isManaging ? 'Syncing...' : 'Sync Sheet Now'
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 1014,
+                                                                        lineNumber: 1020,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     currentSheetUrl && isValidLink(currentSheetUrl) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -7974,64 +7978,64 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                             className: "h-3.5 w-3.5"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                            lineNumber: 1033,
+                                                                            lineNumber: 1039,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                        lineNumber: 1026,
+                                                                        lineNumber: 1032,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                                lineNumber: 1013,
+                                                                lineNumber: 1019,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                        lineNumber: 1000,
+                                                        lineNumber: 1006,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                                lineNumber: 860,
+                                                lineNumber: 866,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                            lineNumber: 858,
+                                            lineNumber: 864,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                    lineNumber: 618,
+                                    lineNumber: 624,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                                lineNumber: 617,
+                                lineNumber: 623,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                        lineNumber: 597,
+                        lineNumber: 603,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-                lineNumber: 463,
+                lineNumber: 469,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/manage-sheet-button.tsx",
-        lineNumber: 450,
+        lineNumber: 456,
         columnNumber: 5
     }, this);
 }
@@ -8881,8 +8885,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$so
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$app$2d$favicon$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/use-app-favicon.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$cashback$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/cashback.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$person$2d$route$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/person-route.ts [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$700c32__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/pocketbase/data:700c32 [app-ssr] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$2d2750__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:2d2750 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$31d92c__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/pocketbase/data:31d92c [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:231ba9 [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -8955,7 +8959,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
         setIsGlobalLoading(true);
         setLoadingMessage(tag === 'all' ? 'Syncing ALL cycles...' : `Syncing ${tag}...`);
         try {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$2d2750__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(person.id, tag);
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(person.id, tag);
             if (!res.success) {
                 throw new Error(res.error || res.message || 'Failed to sync');
             }
@@ -8972,6 +8976,9 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
     const activeCycleTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
         if (urlTag) {
             return urlTag;
+        }
+        if (person.is_master_sheet_enabled) {
+            return 'all';
         }
         const hasCurrentData = transactions.some((txn)=>{
             const normalizedTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(getEffectiveTxnTag(txn) || '');
@@ -8995,17 +9002,24 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
         if (urlTag === 'all') {
             return null;
         }
+        if (person.is_master_sheet_enabled && !urlTag) {
+            return new Date().getFullYear().toString();
+        }
         if (urlTag && urlTag.includes('-')) {
             return urlTag.split('-')[0];
         }
-        if (activeCycleTag.includes('-')) {
+        if (activeCycleTag && activeCycleTag.includes('-')) {
             return activeCycleTag.split('-')[0];
+        }
+        if (activeCycleTag === 'all') {
+            return new Date().getFullYear().toString();
         }
         return new Date().getFullYear().toString();
     }, [
         urlTag,
         urlYear,
-        activeCycleTag
+        activeCycleTag,
+        person.is_master_sheet_enabled
     ]);
     // Data Hooks
     const { debtCycles, availableYears, currentCycle } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$person$2d$details$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePersonDetails"])({
@@ -9302,7 +9316,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                 effectiveTag
             });
             try {
-                const stats = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$700c32__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPocketBaseAccountSpendingStatsSnapshot"])(selectedAccountId, new Date(), effectiveTag === 'all' ? undefined : effectiveTag);
+                const stats = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$31d92c__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPocketBaseAccountSpendingStatsSnapshot"])(selectedAccountId, new Date(), effectiveTag === 'all' ? undefined : effectiveTag);
                 console.log('[MemberDetailView] global stats result:', stats ? 'received' : 'null', stats?.currentSpend);
                 setAccountGlobalCashbackStatus(stats);
             } catch (err) {
@@ -9614,7 +9628,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
             const results = {};
             await Promise.all(relevantAccountIds.map(async (accId)=>{
                 try {
-                    const stats = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$700c32__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPocketBaseAccountSpendingStatsSnapshot"])(accId, new Date(), activeCycleTag === 'all' ? undefined : activeCycleTag);
+                    const stats = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$31d92c__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPocketBaseAccountSpendingStatsSnapshot"])(accId, new Date(), activeCycleTag === 'all' ? undefined : activeCycleTag);
                     if (stats && isMounted) results[accId] = stats;
                 } catch (err) {
                     console.error(`Failed to fetch stats for ${accId}:`, err);
@@ -9815,7 +9829,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                 hasFilter: !!selectedAccountId
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 911,
+                lineNumber: 921,
                 columnNumber: 13
             }, this),
             activeTab === 'timeline' && activeCycle && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -9860,7 +9874,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                         setLoadingMessage: setLoadingMessage
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 936,
+                        lineNumber: 946,
                         columnNumber: 21
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9875,7 +9889,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                                             className: "h-5 w-5 animate-spin text-blue-400"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                            lineNumber: 979,
+                                            lineNumber: 989,
                                             columnNumber: 37
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9883,23 +9897,23 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                                             children: isGlobalLoading ? loadingMessage || 'Executing...' : slideMode === 'edit' ? 'Updating...' : slideMode === 'duplicate' ? 'Cloning...' : 'Saving...'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                            lineNumber: 980,
+                                            lineNumber: 990,
                                             columnNumber: 37
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                    lineNumber: 978,
+                                    lineNumber: 988,
                                     columnNumber: 33
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                lineNumber: 977,
+                                lineNumber: 987,
                                 columnNumber: 29
                             }, this),
                             isPending ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$SimpleTransactionTableSkeleton$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SimpleTransactionTableSkeleton"], {}, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                lineNumber: 990,
+                                lineNumber: 1000,
                                 columnNumber: 29
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$SimpleTransactionTable$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SimpleTransactionTable"], {
                                 transactions: cycleTransactions,
@@ -9916,13 +9930,13 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                                 setLoadingMessage: setLoadingMessage
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                                lineNumber: 992,
+                                lineNumber: 1002,
                                 columnNumber: 29
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 975,
+                        lineNumber: 985,
                         columnNumber: 21
                     }, this)
                 ]
@@ -9942,12 +9956,12 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                     setLoadingMessage: setLoadingMessage
                 }, void 0, false, {
                     fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                    lineNumber: 1013,
+                    lineNumber: 1023,
                     columnNumber: 21
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1012,
+                lineNumber: 1022,
                 columnNumber: 17
             }, this),
             activeTab === 'split-bill' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9961,12 +9975,12 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                     shops: shops
                 }, void 0, false, {
                     fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                    lineNumber: 1030,
+                    lineNumber: 1040,
                     columnNumber: 21
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1029,
+                lineNumber: 1039,
                 columnNumber: 17
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$paid$2d$transactions$2d$modal$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PaidTransactionsModal"], {
@@ -9980,7 +9994,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                 shops: shops
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1042,
+                lineNumber: 1052,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$people$2d$slide$2d$v2$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PeopleSlideV2"], {
@@ -9991,7 +10005,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                 accounts: accounts
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1053,
+                lineNumber: 1063,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$transaction$2f$slide$2d$v2$2f$transaction$2d$slide$2d$v2$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TransactionSlideV2"], {
@@ -10016,18 +10030,18 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
                 onSubmissionEnd: handleSubmissionEnd
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1061,
+                lineNumber: 1071,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(FlowLegend, {}, void 0, false, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1082,
+                lineNumber: 1092,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-        lineNumber: 909,
+        lineNumber: 919,
         columnNumber: 9
     }, this);
 }
@@ -10042,7 +10056,7 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         children: "FROM"
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1090,
+                        lineNumber: 1100,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10053,13 +10067,13 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1091,
+                        lineNumber: 1101,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1089,
+                lineNumber: 1099,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10070,7 +10084,7 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         children: "TO"
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1094,
+                        lineNumber: 1104,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10081,13 +10095,13 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1095,
+                        lineNumber: 1105,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1093,
+                lineNumber: 1103,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10097,7 +10111,7 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         className: "h-3.5 w-3.5"
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1098,
+                        lineNumber: 1108,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10105,19 +10119,19 @@ const FlowLegend = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$proj
                         children: "Flow labels are context-aware (Repayment = TO Account)"
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                        lineNumber: 1099,
+                        lineNumber: 1109,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-                lineNumber: 1097,
+                lineNumber: 1107,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/v2/MemberDetailView.tsx",
-        lineNumber: 1088,
+        lineNumber: 1098,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 }),

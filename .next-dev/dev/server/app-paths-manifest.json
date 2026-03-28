@@ -1,9 +1,6 @@
 {
-  "/api/cashback/stats/route": "app/api/cashback/stats/route.js",
   "/api/sidebar/search/route": "app/api/sidebar/search/route.js",
-  "/batch/mbb/page": "app/batch/mbb/page.js",
   "/batch/page": "app/batch/page.js",
-  "/page": "app/page.js",
   "/people/[id]/page": "app/people/[id]/page.js",
   "/people/page": "app/people/page.js"
 }

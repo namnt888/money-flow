@@ -1,15 +1,15 @@
 (globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
     script: typeof document === "object" ? document.currentScript : undefined,
     chunks: [
-  "static/chunks/_c99ce6d6._.js",
+  "static/chunks/_6fb2c234._.js",
   "static/chunks/src_components_ui_d8deed96._.js",
   "static/chunks/src_components_people_2e42a45d._.js",
   "static/chunks/src_components_transaction_f1657503._.js",
   "static/chunks/src_components_moneyflow_1ccaf86d._.js",
   "static/chunks/src_components_accounts_v2_db9e5266._.js",
   "static/chunks/src_components_8a5446bc._.js",
-  "static/chunks/src_actions_6712c4aa._.js",
-  "static/chunks/src_services_a5d7df33._.js",
+  "static/chunks/src_actions_523528b4._.js",
+  "static/chunks/src_services_78c8837d._.js",
   "static/chunks/src_f0788db9._.js",
   "static/chunks/6e028_lucide-react_dist_esm_icons_965edebc._.js",
   "static/chunks/518ff_zod_v3_a8163802._.js",

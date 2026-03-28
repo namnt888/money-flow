@@ -177,6 +177,7 @@ export type Person = {
 
   sheet_link?: string | null;
   google_sheet_url?: string | null;
+  is_master_sheet_enabled?: boolean | null;
   sheet_full_img?: string | null;
   sheet_show_bank_account?: boolean | null;
   sheet_bank_info?: string | null;

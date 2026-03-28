@@ -69,6 +69,7 @@ export interface ManageSheetButtonProps {
   sheetBankInfo?: string | null
   sheetLinkedBankId?: string | null
   showQrImage?: boolean
+  isMasterSheetEnabled?: boolean | null
   accounts?: Account[]
   className?: string
   buttonClassName?: string
@@ -138,6 +139,7 @@ export function ManageSheetButton({
   isSettled = false,
   activeCycleRemains = 0,
   isPending = false,
+  isMasterSheetEnabled = false,
   setIsGlobalLoading,
   setLoadingMessage,
   onSyncCycle,
@@ -175,6 +177,7 @@ export function ManageSheetButton({
   const [currentBankInfo, setCurrentBankInfo] = useState(sheetBankInfo ?? '')
   const [currentLinkedBankId, setCurrentLinkedBankId] = useState<string | null>(sheetLinkedBankId ?? null)
   const [currentShowQrImage, setCurrentShowQrImage] = useState(showQrImage)
+  const [currentIsMasterSheet, setCurrentIsMasterSheet] = useState(!!isMasterSheetEnabled)
   const [accountSearch, setAccountSearch] = useState('')
   const [lastAutoDetectedCycle, setLastAutoDetectedCycle] = useState<string | null>(null)
 
@@ -194,7 +197,8 @@ export function ManageSheetButton({
     setCurrentBankInfo(sheetBankInfo ?? '')
     setCurrentLinkedBankId(sheetLinkedBankId ?? null)
     setCurrentShowQrImage(showQrImage)
-  }, [scriptLink, googleSheetUrl, initialSheetUrl, sheetFullImg, showBankAccount, sheetBankInfo, sheetLinkedBankId, showQrImage, showPopover])
+    setCurrentIsMasterSheet(!!isMasterSheetEnabled)
+  }, [scriptLink, googleSheetUrl, initialSheetUrl, sheetFullImg, showBankAccount, sheetBankInfo, sheetLinkedBankId, showQrImage, isMasterSheetEnabled, showPopover])
 
   useEffect(() => {
     setHistoryYear(selectedYear ?? 'all')
@@ -300,7 +304,8 @@ export function ManageSheetButton({
     currentShowBankAccount !== showBankAccount ||
     currentBankInfo !== (sheetBankInfo ?? '') ||
     currentLinkedBankId !== (sheetLinkedBankId ?? null) ||
-    currentShowQrImage !== showQrImage
+    currentShowQrImage !== showQrImage ||
+    currentIsMasterSheet !== !!isMasterSheetEnabled
 
   const handleTriggerClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
@@ -326,6 +331,7 @@ export function ManageSheetButton({
           sheet_bank_info: currentBankInfo.trim() || null,
           sheet_linked_bank_id: currentLinkedBankId || null,
           sheet_show_qr_image: currentShowQrImage,
+          is_master_sheet_enabled: currentIsMasterSheet,
         })
         if (!ok) {
           toast.dismiss(toastId)

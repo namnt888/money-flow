@@ -30,6 +30,7 @@ export type CreatePersonPayload = {
   is_group?: boolean
   group_parent_id?: string | null
   sheet_linked_bank_id?: string | null
+  is_master_sheet_enabled?: boolean | null
 }
 
 export async function createPersonAction(payload: CreatePersonPayload) {
@@ -44,7 +45,8 @@ export async function createPersonAction(payload: CreatePersonPayload) {
       is_group: payload.is_group,
       group_parent_id: payload.group_parent_id,
       google_sheet_url: payload.google_sheet_url?.trim(),
-      sheet_linked_bank_id: payload.sheet_linked_bank_id
+      sheet_linked_bank_id: payload.sheet_linked_bank_id,
+      is_master_sheet_enabled: payload.is_master_sheet_enabled
     }
   )
 
@@ -80,6 +82,7 @@ export type UpdatePersonPayload = {
   is_archived?: boolean
   is_group?: boolean
   group_parent_id?: string | null
+  is_master_sheet_enabled?: boolean | null
 }
 
 export async function updatePersonAction(

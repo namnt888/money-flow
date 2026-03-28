@@ -128,6 +128,10 @@ export function MemberDetailView({
             return urlTag
         }
 
+        if (person.is_master_sheet_enabled) {
+            return 'all'
+        }
+
         const hasCurrentData = transactions.some((txn) => {
             const normalizedTag = normalizeMonthTag(getEffectiveTxnTag(txn) || '')
             return normalizedTag === currentMonthTag
@@ -151,14 +155,20 @@ export function MemberDetailView({
         if (urlTag === 'all') {
             return null
         }
+        if (person.is_master_sheet_enabled && !urlTag) {
+            return new Date().getFullYear().toString()
+        }
         if (urlTag && urlTag.includes('-')) {
             return urlTag.split('-')[0]
         }
-        if (activeCycleTag.includes('-')) {
+        if (activeCycleTag && activeCycleTag.includes('-')) {
             return activeCycleTag.split('-')[0]
         }
+        if (activeCycleTag === 'all') {
+            return new Date().getFullYear().toString()
+        }
         return new Date().getFullYear().toString()
-    }, [urlTag, urlYear, activeCycleTag])
+    }, [urlTag, urlYear, activeCycleTag, person.is_master_sheet_enabled])
 
     // Data Hooks
     const { debtCycles, availableYears, currentCycle } = usePersonDetails({

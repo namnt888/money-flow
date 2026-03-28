@@ -385,8 +385,8 @@ function renderCell(
       const cycleSheet = person.cycle_sheets?.find(
         (s) => s.cycle_tag === currentTag,
       );      return (
-          <div className="w-[360px] min-w-[360px] flex items-center gap-3 pr-2 h-full">
-            <div className="w-[160px] shrink-0">
+          <div className="w-full flex items-center justify-center gap-3 pr-2 h-full">
+            <div className="w-[175px] shrink-0">
               {person.sheet_link ? (
                 <ManageSheetButton
                   personId={person.id}
@@ -398,6 +398,7 @@ function renderCell(
                   showBankAccount={person.sheet_show_bank_account ?? undefined}
                   sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
                   showQrImage={person.sheet_show_qr_image ?? undefined}
+                  isMasterSheetEnabled={person.is_master_sheet_enabled}
                   accounts={accounts}
                   className="w-full h-8"
                   buttonClassName="text-[11px] font-black rounded-none"

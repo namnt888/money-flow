@@ -2223,10 +2223,6 @@
     width: 85px;
   }
 
-  .w-\[90px\] {
-    width: 90px;
-  }
-
   .w-\[95vw\] {
     width: 95vw;
   }
@@ -2263,8 +2259,8 @@
     width: 160px;
   }
 
-  .w-\[170px\] {
-    width: 170px;
+  .w-\[175px\] {
+    width: 175px;
   }
 
   .w-\[180px\] {
@@ -2669,10 +2665,6 @@
 
   .min-w-\[360px\] {
     min-width: 360px;
-  }
-
-  .min-w-\[380px\] {
-    min-width: 380px;
   }
 
   .min-w-\[420px\] {
