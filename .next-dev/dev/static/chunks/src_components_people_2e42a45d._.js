@@ -3021,7 +3021,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
     };
     const isAggregate = !cycleTag || cycleTag.toLowerCase().includes('all');
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])(splitMode ? 'flex items-center w-[280px] min-w-[280px] h-9 rounded-lg border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm' : 'inline-flex items-center gap-2', className),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])(splitMode ? 'flex items-center rounded-lg border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm' : 'inline-flex items-center gap-2', className),
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$sync$2d$report$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SyncReportDialog"], {
                 open: showReport,
@@ -3049,7 +3049,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                                 variant: "ghost",
                                                 size: "sm",
-                                                className: "rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200",
+                                                className: "rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200",
                                                 disabled: !currentSheetUrl || !isValidLink(currentSheetUrl),
                                                 onClick: (e)=>{
                                                     e.stopPropagation();
@@ -3101,7 +3101,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                                 variant: "ghost",
                                                 size: "sm",
-                                                className: "rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100",
+                                                className: "rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100",
                                                 disabled: isDisabled || isSaving,
                                                 onClick: (e)=>{
                                                     e.stopPropagation();
@@ -3150,7 +3150,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex-1 h-full border-r border-slate-200",
+                                    className: "flex-1 h-full min-w-0",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PopoverTrigger"], {
@@ -3267,7 +3267,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                                     variant: "ghost",
                                                     size: "sm",
-                                                    className: "rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none",
+                                                    className: "rounded-none w-8 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none",
                                                     disabled: isDisabled,
                                                     onClick: (e)=>{
                                                         handleTriggerClick(e);
@@ -5030,65 +5030,52 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
                 const cycleSheet = person.cycle_sheets?.find((s)=>s.cycle_tag === currentTag);
                 return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "w-[380px] min-w-[380px] flex items-center gap-3 pr-2 h-full",
+                    className: "w-[360px] min-w-[360px] flex items-center gap-3 pr-2 h-full",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex-1 min-w-0 pr-1",
-                            children: person.sheet_link ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex items-center gap-2 w-full",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex-1 min-w-0",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$manage$2d$sheet$2d$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ManageSheetButton"], {
-                                        personId: person.id,
-                                        cycleTag: currentTag,
-                                        initialSheetUrl: cycleSheet?.sheet_url,
-                                        scriptLink: person.sheet_link,
-                                        googleSheetUrl: person.google_sheet_url,
-                                        sheetFullImg: person.sheet_full_img,
-                                        showBankAccount: person.sheet_show_bank_account ?? undefined,
-                                        sheetLinkedBankId: person.sheet_linked_bank_id ?? undefined,
-                                        showQrImage: person.sheet_show_qr_image ?? undefined,
-                                        accounts: accounts,
-                                        buttonClassName: "h-8 text-[11px] px-3 w-full font-black rounded-lg",
-                                        size: "sm",
-                                        showCycleAction: true,
-                                        splitMode: true
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 393,
-                                        columnNumber: 21
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 392,
-                                    columnNumber: 19
-                                }, this)
+                            className: "w-[160px] shrink-0",
+                            children: person.sheet_link ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$manage$2d$sheet$2d$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ManageSheetButton"], {
+                                personId: person.id,
+                                cycleTag: currentTag,
+                                initialSheetUrl: cycleSheet?.sheet_url,
+                                scriptLink: person.sheet_link,
+                                googleSheetUrl: person.google_sheet_url,
+                                sheetFullImg: person.sheet_full_img,
+                                showBankAccount: person.sheet_show_bank_account ?? undefined,
+                                sheetLinkedBankId: person.sheet_linked_bank_id ?? undefined,
+                                showQrImage: person.sheet_show_qr_image ?? undefined,
+                                accounts: accounts,
+                                className: "w-full h-8",
+                                buttonClassName: "text-[11px] font-black rounded-none",
+                                size: "sm",
+                                showCycleAction: true,
+                                splitMode: true
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
                                 lineNumber: 391,
                                 columnNumber: 17
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex items-center gap-3 h-8 border border-slate-200 bg-slate-50/50 rounded-lg px-3",
+                                className: "flex items-center justify-center gap-2 h-8 w-full border border-slate-200 bg-slate-50/50 rounded-lg px-3",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight flex-1",
+                                    className: "text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__["Calendar"], {
                                             className: "h-3 w-3 opacity-50"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 414,
+                                            lineNumber: 411,
                                             columnNumber: 21
                                         }, this),
                                         person.current_cycle_label || "NO TAG"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 413,
+                                    lineNumber: 410,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                lineNumber: 412,
+                                lineNumber: 409,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
@@ -5097,38 +5084,39 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-end h-8 border-l border-slate-200 pl-3 min-w-[120px]",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center gap-2 px-2.5 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap", currentCycleDebt > 0 ? "bg-rose-50 border-rose-100" : currentCycleDebt < 0 ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-100"),
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("text-[12px] font-black tabular-nums tracking-tighter whitespace-nowrap leading-none", currentCycleDebt > 0 ? "text-rose-600" : currentCycleDebt < 0 ? "text-emerald-600" : "text-slate-500"),
-                                        children: currentCycleDebt !== 0 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatMoneyVND"])(currentCycleDebt) : "0"
+                            className: "flex items-center gap-2 border-l border-slate-200 pl-3 h-8 flex-1",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center justify-center px-1 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap w-[100px] shrink-0", currentCycleDebt > 0 ? "bg-rose-50 border-rose-100" : currentCycleDebt < 0 ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-100"),
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("text-[12px] font-black tabular-nums tracking-tighter whitespace-nowrap leading-none", currentCycleDebt > 0 ? "text-rose-600" : currentCycleDebt < 0 ? "text-emerald-600" : "text-slate-500 uppercase tracking-widest text-[10px]"),
+                                        children: currentCycleDebt !== 0 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatMoneyVND"])(currentCycleDebt) : "Settled"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 430,
+                                        lineNumber: 427,
                                         columnNumber: 18
-                                    }, this),
-                                    overdueCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "h-4 px-1.5 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center min-w-[22px] flex-shrink-0 leading-none",
-                                        children: [
-                                            "+",
-                                            overdueCount
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 438,
-                                        columnNumber: 21
                                     }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                lineNumber: 422,
-                                columnNumber: 16
-                            }, this)
-                        }, void 0, false, {
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
+                                    lineNumber: 419,
+                                    columnNumber: 16
+                                }, this),
+                                overdueCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "h-5 px-2 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 leading-none shadow-sm tooltip",
+                                    title: "Cycles Past Due",
+                                    children: [
+                                        "+",
+                                        overdueCount
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
+                                    lineNumber: 436,
+                                    columnNumber: 19
+                                }, this)
+                            ]
+                        }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 421,
+                            lineNumber: 418,
                             columnNumber: 13
                         }, this)
                     ]
@@ -5144,7 +5132,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 className: "text-amber-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 449,
+                lineNumber: 446,
                 columnNumber: 9
             }, this);
         case "base_lend":
@@ -5156,7 +5144,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                             className: "h-3.5 w-3.5 text-emerald-600"
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 458,
+                            lineNumber: 455,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5164,13 +5152,13 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                             children: "Settled"
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 459,
+                            lineNumber: 456,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                    lineNumber: 457,
+                    lineNumber: 454,
                     columnNumber: 11
                 }, this);
             }
@@ -5179,7 +5167,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 className: "text-amber-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 464,
+                lineNumber: 461,
                 columnNumber: 9
             }, this);
         case "repayment":
@@ -5188,7 +5176,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 className: "text-emerald-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 471,
+                lineNumber: 468,
                 columnNumber: 9
             }, this);
         case "cashback_total":
@@ -5197,7 +5185,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 className: "text-amber-500 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 478,
+                lineNumber: 475,
                 columnNumber: 9
             }, this);
         case "net_lend":
@@ -5207,7 +5195,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                 className: "text-sky-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 486,
+                lineNumber: 483,
                 columnNumber: 9
             }, this);
         case "balance":
@@ -5234,17 +5222,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 505,
+                                            lineNumber: 502,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 496,
+                                        lineNumber: 493,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 495,
+                                    lineNumber: 492,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5253,18 +5241,18 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                         children: "Lend Money"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 509,
+                                        lineNumber: 506,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 508,
+                                    lineNumber: 505,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 494,
+                            lineNumber: 491,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -5284,17 +5272,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 524,
+                                            lineNumber: 521,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 515,
+                                        lineNumber: 512,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 514,
+                                    lineNumber: 511,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5303,18 +5291,18 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                         children: "Repay Debt"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 528,
+                                        lineNumber: 525,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 527,
+                                    lineNumber: 524,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 513,
+                            lineNumber: 510,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -5334,17 +5322,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 543,
+                                            lineNumber: 540,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 534,
+                                        lineNumber: 531,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 533,
+                                    lineNumber: 530,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5352,29 +5340,29 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, onSync, acc
                                         children: "Edit Details"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 547,
+                                        lineNumber: 544,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 546,
+                                    lineNumber: 543,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 532,
+                            lineNumber: 529,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                    lineNumber: 493,
+                    lineNumber: 490,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 492,
+                lineNumber: 489,
                 columnNumber: 9
             }, this);
         default:

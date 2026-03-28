@@ -385,32 +385,29 @@ function renderCell(
       const cycleSheet = person.cycle_sheets?.find(
         (s) => s.cycle_tag === currentTag,
       );      return (
-          <div className="w-[380px] min-w-[380px] flex items-center gap-3 pr-2 h-full">
-            <div className="flex-1 min-w-0 pr-1">
+          <div className="w-[360px] min-w-[360px] flex items-center gap-3 pr-2 h-full">
+            <div className="w-[160px] shrink-0">
               {person.sheet_link ? (
-                <div className="flex items-center gap-2 w-full">
-                  <div className="flex-1 min-w-0">
-                    <ManageSheetButton
-                      personId={person.id}
-                      cycleTag={currentTag}
-                      initialSheetUrl={cycleSheet?.sheet_url}
-                      scriptLink={person.sheet_link}
-                      googleSheetUrl={person.google_sheet_url}
-                      sheetFullImg={person.sheet_full_img}
-                      showBankAccount={person.sheet_show_bank_account ?? undefined}
-                      sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
-                      showQrImage={person.sheet_show_qr_image ?? undefined}
-                      accounts={accounts}
-                      buttonClassName="h-8 text-[11px] px-3 w-full font-black rounded-lg"
-                      size="sm"
-                      showCycleAction={true}
-                      splitMode={true}
-                    />
-                  </div>
-                </div>
+                <ManageSheetButton
+                  personId={person.id}
+                  cycleTag={currentTag}
+                  initialSheetUrl={cycleSheet?.sheet_url}
+                  scriptLink={person.sheet_link}
+                  googleSheetUrl={person.google_sheet_url}
+                  sheetFullImg={person.sheet_full_img}
+                  showBankAccount={person.sheet_show_bank_account ?? undefined}
+                  sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
+                  showQrImage={person.sheet_show_qr_image ?? undefined}
+                  accounts={accounts}
+                  className="w-full h-8"
+                  buttonClassName="text-[11px] font-black rounded-none"
+                  size="sm"
+                  showCycleAction={true}
+                  splitMode={true}
+                />
               ) : (
-                <div className="flex items-center gap-3 h-8 border border-slate-200 bg-slate-50/50 rounded-lg px-3">
-                  <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight flex-1">
+                <div className="flex items-center justify-center gap-2 h-8 w-full border border-slate-200 bg-slate-50/50 rounded-lg px-3">
+                  <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight">
                     <Calendar className="h-3 w-3 opacity-50" />
                     {person.current_cycle_label || "NO TAG"}
                   </span>
@@ -418,9 +415,9 @@ function renderCell(
               )}
             </div>
 
-            <div className="flex items-center justify-end h-8 border-l border-slate-200 pl-3 min-w-[120px]">
+            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 h-8 flex-1">
                <div className={cn(
-                  "flex items-center gap-2 px-2.5 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap",
+                  "flex items-center justify-center px-1 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap w-[100px] shrink-0",
                   currentCycleDebt > 0 
                     ? "bg-rose-50 border-rose-100" 
                     : currentCycleDebt < 0 
@@ -429,17 +426,17 @@ function renderCell(
                )}>
                  <span className={cn(
                    "text-[12px] font-black tabular-nums tracking-tighter whitespace-nowrap leading-none",
-                   currentCycleDebt > 0 ? "text-rose-600" : currentCycleDebt < 0 ? "text-emerald-600" : "text-slate-500"
+                   currentCycleDebt > 0 ? "text-rose-600" : currentCycleDebt < 0 ? "text-emerald-600" : "text-slate-500 uppercase tracking-widest text-[10px]"
                  )}>
-                   {currentCycleDebt !== 0 ? formatMoneyVND(currentCycleDebt) : "0"}
+                   {currentCycleDebt !== 0 ? formatMoneyVND(currentCycleDebt) : "Settled"}
                  </span>
-
-                 {overdueCount > 0 && (
-                    <div className="h-4 px-1.5 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center min-w-[22px] flex-shrink-0 leading-none">
-                      +{overdueCount}
-                    </div>
-                 )}
                </div>
+
+               {overdueCount > 0 && (
+                  <div className="h-5 px-2 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 leading-none shadow-sm tooltip" title="Cycles Past Due">
+                    +{overdueCount}
+                  </div>
+               )}
             </div>
           </div>
       );

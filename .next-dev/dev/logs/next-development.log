@@ -1854,3 +1854,75 @@ Import traces:
 [00:33:15.257] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
 [00:33:15.579] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
 [00:33:16.385] Server  LOG     [Stats:PB] resolve account: {}
+[00:37:41.278] Server  LOG      ✓ Compiled in 649ms
+[00:37:58.874] Server  ERROR   Sheet sync failed: TypeError: fetch failed
+[00:37:58.915] Server  LOG     [DB:PB] people.getWithSubs {}
+[00:37:59.968] Server  LOG     [DB:PB] people.getWithSubs {}
+[00:38:00.335] Browser LOG     🎉 Submit success: true
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     🎨 defaultFormValues computed:
+[00:38:00.335] Browser LOG        initialData: undefined
+[00:38:00.335] Browser LOG        operationMode: edit
+[00:38:00.335] Browser LOG        ℹ️ No initialData - using defaults
+[00:38:00.335] Browser LOG     🎨 defaultFormValues computed:
+[00:38:00.335] Browser LOG        initialData: undefined
+[00:38:00.335] Browser LOG        operationMode: edit
+[00:38:00.335] Browser LOG        ℹ️ No initialData - using defaults
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.335] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:00.859] Server  LOG     [DB:PB] people.getWithSubs {}
+[00:38:01.293] Server  LOG     [DB:PB] people.getWithSubs {}
+[00:38:01.669] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[00:38:03.102] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     🎨 defaultFormValues computed:
+[00:38:05.336] Browser LOG        initialData: undefined
+[00:38:05.336] Browser LOG        operationMode: edit
+[00:38:05.336] Browser LOG        ℹ️ No initialData - using defaults
+[00:38:05.336] Browser LOG     🎨 defaultFormValues computed:
+[00:38:05.336] Browser LOG        initialData: undefined
+[00:38:05.336] Browser LOG        operationMode: edit
+[00:38:05.336] Browser LOG        ℹ️ No initialData - using defaults
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.336] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:05.917] Server  LOG     [Stats:PB] resolve account: {}
+[00:38:06.224] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:38:06.602] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:38:07.415] Server  LOG     [Stats:PB] resolve account: {}
+[00:38:07.718] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:38:08.117] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:38:08.961] Server  LOG     [Stats:PB] resolve account: {}
+[00:38:09.565] Server  LOG      ✓ Compiled in 713ms
+[00:38:09.760] Server  LOG     [Stats:PB] resolve account: {}
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:10.334] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[00:38:25.648] Server  LOG      ✓ Compiled in 836ms
+[00:38:42.617] Server  LOG      ✓ Compiled in 178ms
+[00:38:54.093] Server  LOG      ✓ Compiled in 3ms
+[00:39:02.426] Server  LOG      ✓ Compiled in 134ms

@@ -449,7 +449,7 @@ export function ManageSheetButton({
   return (
     <div className={cn(
       splitMode
-        ? 'flex items-center w-[280px] min-w-[280px] h-9 rounded-lg border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm'
+        ? 'flex items-center rounded-lg border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm'
         : 'inline-flex items-center gap-2',
       className
     )}>
@@ -470,7 +470,7 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200"
+                    className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200"
                     disabled={!currentSheetUrl || !isValidLink(currentSheetUrl)}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -491,7 +491,7 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
+                    className="rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
                     disabled={isDisabled || isSaving}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -510,7 +510,7 @@ export function ManageSheetButton({
               </Tooltip>
 
               {/* 3. History Trigger (Middle Info Part) */}
-              <div className="flex-1 h-full border-r border-slate-200">
+              <div className="flex-1 h-full min-w-0">
                 <Tooltip>
                   <PopoverTrigger asChild>
                     <TooltipTrigger asChild>
@@ -562,7 +562,7 @@ export function ManageSheetButton({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none"
+                      className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none"
                       disabled={isDisabled}
                       onClick={(e) => {
                         handleTriggerClick(e)

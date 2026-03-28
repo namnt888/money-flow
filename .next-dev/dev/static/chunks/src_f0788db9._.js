@@ -37,7 +37,7 @@ const defaultPeopleColumns = [
     },
     {
         key: 'current_tag',
-        label: 'Current Tag',
+        label: 'Current Tag & Amount',
         defaultWidth: 320,
         minWidth: 300
     },
