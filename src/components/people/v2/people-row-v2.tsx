@@ -385,7 +385,7 @@ function renderCell(
       const cycleSheet = person.cycle_sheets?.find(
         (s) => s.cycle_tag === currentTag,
       );      return (
-          <div className="flex items-center justify-center gap-3 pr-2 h-full mx-auto w-max">
+          <div className="flex items-center justify-start gap-3 h-full mx-auto w-[320px] pl-[5px]">
             <div className="w-[175px] shrink-0">
               {person.sheet_link ? (
                 <ManageSheetButton
@@ -416,9 +416,9 @@ function renderCell(
               )}
             </div>
 
-            <div className="flex items-center justify-start gap-2 border-l border-slate-200 pl-3 h-8 w-max shrink-0">
+            <div className="flex items-center gap-2 h-8 w-max shrink-0">
                <div className={cn(
-                  "flex items-center justify-center px-1 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap w-[100px] shrink-0",
+                  "flex items-center justify-center px-1 py-1.5 rounded-full border shadow-sm transition-all whitespace-nowrap w-[110px] shrink-0",
                   currentCycleDebt > 0 
                     ? "bg-rose-50 border-rose-100" 
                     : currentCycleDebt < 0 

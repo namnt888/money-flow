@@ -361,3 +361,25 @@ Import traces:
 [02:36:40.515] Server  LOG     [Stats:PB] resolve account: {}
 [02:36:50.780] Server  LOG      ✓ Compiled in 140ms
 [02:38:09.241] Server  LOG      ✓ Compiled in 139ms
+[03:44:00.127] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[03:44:00.728] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[03:44:02.106] Server  LOG     [DB:PB] accounts.getAll
+[03:44:10.398] Browser LOG     🎨 defaultFormValues computed:
+[03:44:10.398] Browser LOG        initialData: undefined
+[03:44:10.398] Browser LOG        operationMode: add
+[03:44:10.398] Browser LOG        ℹ️ No initialData - using defaults
+[03:44:10.398] Browser LOG     🎨 defaultFormValues computed:
+[03:44:10.398] Browser LOG        initialData: undefined
+[03:44:10.398] Browser LOG        operationMode: add
+[03:44:10.398] Browser LOG        ℹ️ No initialData - using defaults
+[03:44:30.412] Browser LOG     🎨 defaultFormValues computed:
+[03:44:30.412] Browser LOG        initialData: null
+[03:44:30.412] Browser LOG        operationMode: add
+[03:44:30.412] Browser LOG        ℹ️ No initialData - using defaults
+[03:44:30.412] Browser LOG     🎨 defaultFormValues computed:
+[03:44:30.412] Browser LOG        initialData: null
+[03:44:30.412] Browser LOG        operationMode: add
+[03:44:30.412] Browser LOG        ℹ️ No initialData - using defaults
+[03:44:30.835] Server  LOG     [DB:PB] accounts.getAll
+[03:47:22.035] Server  LOG      ✓ Compiled in 891ms
+[03:49:57.660] Server  LOG      ✓ Compiled in 292ms
