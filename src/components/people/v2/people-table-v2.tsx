@@ -71,8 +71,12 @@ export function PeopleTableV2({
         }
     };
 
-    // Track expanded groups. Default true? We'll assume yes or handle init.
-    const [closedGroups, setClosedGroups] = useState<Set<string>>(new Set());
+    // Track expanded groups. 
+    const [closedGroups, setClosedGroups] = useState<Set<string>>(() => {
+        const hasFav = people.some(p => p.is_favorite);
+        if (hasFav) return new Set(['outstanding', 'settled']);
+        return new Set(['settled']); // Still keep settled collapsed by default
+    });
 
     const visibleCols = getVisibleColumns();
 

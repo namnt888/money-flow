@@ -5571,8 +5571,17 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                 }));
         }
     };
-    // Track expanded groups. Default true? We'll assume yes or handle init.
-    const [closedGroups, setClosedGroups] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(new Set());
+    // Track expanded groups. 
+    const [closedGroups, setClosedGroups] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>{
+        const hasFav = people.some((p)=>p.is_favorite);
+        if (hasFav) return new Set([
+            'outstanding',
+            'settled'
+        ]);
+        return new Set([
+            'settled'
+        ]); // Still keep settled collapsed by default
+    });
     const visibleCols = getVisibleColumns();
     // Transform defaultPeopleColumns to match ColumnCustomizer's expected format (id instead of key)
     const customizerColumns = columnOrder.map((key)=>{
@@ -5687,17 +5696,17 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                lineNumber: 200,
+                                                lineNumber: 204,
                                                 columnNumber: 37
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                            lineNumber: 193,
+                                            lineNumber: 197,
                                             columnNumber: 33
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                        lineNumber: 192,
+                                        lineNumber: 196,
                                         columnNumber: 29
                                     }, this),
                                     visibleCols.map((col, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -5717,26 +5726,26 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                                                 children: col.label
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                                lineNumber: 216,
+                                                                lineNumber: 220,
                                                                 columnNumber: 45
                                                             }, this),
                                                             sortConfig?.key === col.key && (sortConfig.direction === 'asc' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                 className: "h-3 w-3 text-indigo-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                                lineNumber: 219,
+                                                                lineNumber: 223,
                                                                 columnNumber: 55
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                 className: "h-3 w-3 text-indigo-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                                lineNumber: 220,
+                                                                lineNumber: 224,
                                                                 columnNumber: 55
                                                             }, this))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                        lineNumber: 215,
+                                                        lineNumber: 219,
                                                         columnNumber: 41
                                                     }, this),
                                                     col.key === 'action' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5751,34 +5760,34 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                                             className: "h-3.5 w-3.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                            lineNumber: 233,
+                                                            lineNumber: 237,
                                                             columnNumber: 49
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                        lineNumber: 224,
+                                                        lineNumber: 228,
                                                         columnNumber: 45
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                lineNumber: 214,
+                                                lineNumber: 218,
                                                 columnNumber: 37
                                             }, this)
                                         }, col.key, false, {
                                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                            lineNumber: 204,
+                                            lineNumber: 208,
                                             columnNumber: 33
                                         }, this))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                lineNumber: 191,
+                                lineNumber: 195,
                                 columnNumber: 25
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                            lineNumber: 190,
+                            lineNumber: 194,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -5790,12 +5799,12 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                     children: "No members found."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                    lineNumber: 244,
+                                    lineNumber: 248,
                                     columnNumber: 33
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                lineNumber: 243,
+                                lineNumber: 247,
                                 columnNumber: 29
                             }, this) : groupedPeople.map((group)=>{
                                 const isGroupExpanded = !closedGroups.has(group.id);
@@ -5813,7 +5822,7 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                             onToggle: ()=>toggleGroup(group.id)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                            lineNumber: 253,
+                                            lineNumber: 257,
                                             columnNumber: 41
                                         }, this),
                                         isGroupExpanded && group.members.map((person)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$people$2d$row$2d$v2$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PeopleRowV2"], {
@@ -5828,30 +5837,30 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                                                 accounts: accounts
                                             }, person.id, false, {
                                                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                                lineNumber: 265,
+                                                lineNumber: 269,
                                                 columnNumber: 45
                                             }, this))
                                     ]
                                 }, group.id, true, {
                                     fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                                    lineNumber: 252,
+                                    lineNumber: 256,
                                     columnNumber: 37
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                            lineNumber: 241,
+                            lineNumber: 245,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                    lineNumber: 189,
+                    lineNumber: 193,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                lineNumber: 188,
+                lineNumber: 192,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$column$2d$customizer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ColumnCustomizer"], {
@@ -5869,13 +5878,13 @@ function PeopleTableV2({ people, accounts, onEdit, onLend, onRepay, onSync, sort
                 onReset: resetPreferences
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-                lineNumber: 286,
+                lineNumber: 290,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/v2/people-table-v2.tsx",
-        lineNumber: 187,
+        lineNumber: 191,
         columnNumber: 9
     }, this);
 }
