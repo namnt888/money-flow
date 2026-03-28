@@ -29,6 +29,7 @@ interface BatchMasterChecklistProps {
     monthYear?: string
     initialPhaseId?: string | null
     refreshNonce?: number
+    serverChecklistData?: any
     onPhaseChange?: (phaseId: string) => void
     onManagePhases?: () => void
 }
@@ -41,6 +42,7 @@ export function BatchMasterChecklist({
     monthYear,
     initialPhaseId = null,
     refreshNonce = 0,
+    serverChecklistData,
     onPhaseChange,
     onManagePhases,
 }: BatchMasterChecklistProps) {
@@ -49,10 +51,9 @@ export function BatchMasterChecklist({
     const currentMonthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`
 
     const [selectedMonth, setSelectedMonth] = useState(monthYear || currentMonthStr)
-    const [masterItems, setMasterItems] = useState<any[]>([])
-    const [batches, setBatches] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [phases, setPhases] = useState<any[]>([])
+    const [masterItems, setMasterItems] = useState<any[]>(serverChecklistData?.masterItems || [])
+    const [batches, setBatches] = useState<any[]>(serverChecklistData?.batches || [])
+    const [phases, setPhases] = useState<any[]>(serverChecklistData?.phases || [])
     const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null)
     const [performingAction, setPerformingAction] = useState(false)
     const [confirmFundOpen, setConfirmFundOpen] = useState(false)
@@ -71,7 +72,7 @@ export function BatchMasterChecklist({
     useEffect(() => {
         const handleFocus = () => {
             if (!loadedOnce.current) return
-            getChecklistDataAction(bankType, currentYear).then(result => {
+            getChecklistDataAction(bankType, selectedMonth).then(result => {
                 if (result.success && result.data) {
                     setMasterItems(result.data.masterItems || [])
                     setBatches(result.data.batches || [])
@@ -81,7 +82,7 @@ export function BatchMasterChecklist({
         }
         window.addEventListener('focus', handleFocus)
         return () => window.removeEventListener('focus', handleFocus)
-    }, [bankType, currentYear])
+    }, [bankType, selectedMonth])
 
     // Derived Account Options for Funding
     const bankAccounts = accounts?.filter((a: any) => a.type === 'bank') || []
@@ -115,8 +116,13 @@ export function BatchMasterChecklist({
     ]
 
     useEffect(() => {
-        loadData()
-    }, [bankType])
+        if (serverChecklistData) {
+            setMasterItems(serverChecklistData.masterItems || [])
+            setBatches(serverChecklistData.batches || [])
+            setPhases(serverChecklistData.phases || [])
+            loadedOnce.current = true
+        }
+    }, [serverChecklistData])
 
     useEffect(() => {
         if (monthYear) setSelectedMonth(monthYear)
@@ -148,48 +154,11 @@ export function BatchMasterChecklist({
         handleFastRefresh()
     }, [refreshNonce])
 
-    async function loadData() {
-        setLoading(true)
-        try {
-            const result = await getChecklistDataAction(bankType, currentYear)
-            if (result.success && result.data) {
-                const loadedMasters = result.data.masterItems || []
-                
-                // AUTO MIGRATE: If any master item is missing a phase_id, auto-trigger alignment
-                if (loadedMasters.some((m: any) => !m.phase_id)) {
-                    const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
-                    await migrateBatchItemsToPhasesAction({ bankType })
-                    
-                    // Re-fetch clean data after auto-migration
-                    const refresh = await getChecklistDataAction(bankType, currentYear)
-                    if (refresh.success && refresh.data) {
-                        setMasterItems(refresh.data.masterItems || [])
-                        setBatches(refresh.data.batches || [])
-                        setPhases(refresh.data.phases || [])
-                    }
-                } else {
-                    setMasterItems(loadedMasters)
-                    setBatches(result.data.batches || [])
-                    setPhases(result.data.phases || [])
-                }
-
-                const loadedPhases = result.data.phases || []
-                if (!selectedPhaseId) {
-                    const firstId = loadedPhases.length > 0 ? loadedPhases[0].id : 'before'
-                    setSelectedPhaseId(firstId)
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load checklist data', error)
-        } finally {
-            loadedOnce.current = true
-            setLoading(false)
-        }
-    }
+    // loadData removed in favor of Server-Side fetching and synchronization via serverChecklistData
 
     async function handleFastRefresh() {
         try {
-            const result = await getChecklistDataAction(bankType, currentYear)
+            const result = await getChecklistDataAction(bankType, selectedMonth)
             if (result.success && result.data) {
                 setMasterItems(result.data.masterItems || [])
                 setBatches(result.data.batches || [])
@@ -681,14 +650,7 @@ export function BatchMasterChecklist({
         }
     }
 
-    if (loading) {
-        return (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-                <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                <p>Preparing 12-month grid...</p>
-            </div>
-        )
-    }
+    // "Preparing data..." inline loader removed since we fetch synchronously on server
 
     const selectedPhase = effectivePhases.find((p: any) => p.id === selectedPhaseId)
     const phaseNameText = selectedPhase?.label || 'Phase'

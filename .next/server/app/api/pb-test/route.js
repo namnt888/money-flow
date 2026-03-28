@@ -1,0 +1,12 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/pb-test/route.js")
+R.c("server/chunks/[root-of-the-server]__467a5944._.js")
+R.c("server/chunks/src_services_cashback_policy-resolver_ts_14398150._.js")
+R.c("server/chunks/_4d57e0d9._.js")
+R.c("server/chunks/6b8b8_next_dist_d27cc928._.js")
+R.c("server/chunks/6b8b8_next_dist_c907c319._.js")
+R.c("server/chunks/[root-of-the-server]__18d2ca61._.js")
+R.c("server/chunks/_80da182b._.js")
+R.c("server/chunks/src_services_pocketbase_account-details_service_ts_8c9af893._.js")
+R.c("server/chunks/_next-internal_server_app_api_pb-test_route_actions_782fccc2.js")
+R.m(637864)
+module.exports=R.m(637864).exports
