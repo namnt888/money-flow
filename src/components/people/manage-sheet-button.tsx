@@ -999,6 +999,35 @@ export function ManageSheetButton({
                           </div>
                         )}
                       </div>
+
+                      {/* Master Year Sheet Toggle */}
+                      <div className={cn(
+                        "flex flex-col p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 transition-all",
+                        currentIsMasterSheet && "border-amber-200 bg-amber-50/30"
+                      )}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FileJson className={cn("h-3.5 w-3.5", currentIsMasterSheet ? "text-amber-500" : "text-slate-500")} />
+                            <div className="flex flex-col">
+                              <span className={cn("text-[11px] font-bold", currentIsMasterSheet ? "text-amber-900" : "text-slate-700")}>Create Master Year Sheet</span>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={currentIsMasterSheet}
+                            onCheckedChange={setCurrentIsMasterSheet}
+                            disabled={isSaving}
+                            className="scale-75 origin-right"
+                          />
+                        </div>
+
+                        {currentIsMasterSheet && (
+                          <div className="mt-2 pt-2 border-t border-amber-100 animate-in fade-in slide-in-from-top-1 px-1">
+                            <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
+                              Khi tính năng này được bật, quá trình Sync sẽ tạo hoặc cập nhật vào 1 Master Sheet của năm thay vì tạo lẻ từng tháng.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
