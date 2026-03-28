@@ -169,7 +169,7 @@ export function PeopleTableV2({
 
     const toggleGroup = (groupId: string) => {
         setClosedGroups(prev => {
-            const next = new Set(prev);
+            const next = new Set<string>(prev);
             if (next.has(groupId)) {
                 next.delete(groupId);
             } else {

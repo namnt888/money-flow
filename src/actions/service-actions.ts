@@ -156,11 +156,11 @@ export async function getServicePaymentStatusAction(serviceId: string, monthTag:
   return { confirmed: true, amount: amount, transactionId: transaction.id }
 }
 
-export async function runAllServiceDistributionsAction(options: { isTest?: boolean, source?: string } = {}) {
-  console.log('[Action] runAllServiceDistributionsAction started', options);
+export async function runAllServiceDistributionsAction(customDate?: string, options: { isTest?: boolean, source?: string } = {}) {
+  console.log('[Action] runAllServiceDistributionsAction started', { customDate, options });
   try {
     const noteSuffix = options.isTest ? ' #Test' : '';
-    const result = await distributeAllServices(undefined, options.isTest, noteSuffix, { source: options.source });
+    const result = await distributeAllServices(customDate, options.isTest, noteSuffix, { source: options.source });
 
     // Recalculate DRAFT_FUND balance after mass distribution
     const { recalculateBalance } = await import('@/services/account.service')

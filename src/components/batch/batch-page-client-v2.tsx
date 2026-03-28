@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { bulkInitializeFromMasterAction } from '@/actions/batch-speed.actions'
 import { Combobox } from '@/components/ui/combobox'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface BatchPageClientV2Props {
     batches: any[]
@@ -288,57 +289,60 @@ export function BatchPageClientV2({
 
                                     <div className="h-4 w-px bg-slate-100 mx-1" />
 
-                                    {MONTH_NAMES_FULL.map((name, i) => {
-                                        const monthNum = i + 1
-                                        const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
-                                        const isActive = optimisticMonth === mStr
-                                        const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
-                                        
-                                        // Calculate stats for tooltips
-                                        const monthBatches = batches.filter(b => b.month_year === mStr)
-                                        const mTotal = monthBatches.reduce((acc, b) => acc + (b.total_items || 0), 0)
-                                        const mConfirmed = monthBatches.reduce((acc, b) => acc + (b.confirmed_items || 0), 0)
-                                        const mPending = Math.max(0, mTotal - mConfirmed)
+                                    <TooltipProvider delayDuration={100}>
+                                        {MONTH_NAMES_FULL.map((name, i) => {
+                                            const monthNum = i + 1
+                                            const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
+                                            const isActive = optimisticMonth === mStr
+                                            const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
+                                            
+                                            // Calculate stats for tooltips
+                                            const monthBatches = batches.filter(b => b.month_year === mStr)
+                                            const mTotal = monthBatches.reduce((acc, b) => acc + (b.total_items || 0), 0)
+                                            const mConfirmed = monthBatches.reduce((acc, b) => acc + (b.confirmed_items || 0), 0)
+                                            const mPending = Math.max(0, mTotal - mConfirmed)
 
-                                        return (
-                                            <div key={mStr} className="group relative">
-                                                <button
-                                                    onClick={() => handleMonthSelect(mStr)}
-                                                    disabled={isPending}
-                                                    className={cn(
-                                                        "px-3 h-8 rounded-lg flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap",
-                                                        isActive 
-                                                            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
-                                                            : isCurrent
-                                                                ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
-                                                                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
-                                                    )}
-                                                >
-                                                    {loadingMonth === mStr ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                    ) : (
-                                                        <>
-                                                            <span>{name}</span>
-                                                            {mTotal > 0 && (
-                                                                <div className={cn(
-                                                                    "flex items-center gap-1 pl-1.5 border-l",
-                                                                    isActive ? "border-white/20" : "border-slate-100"
-                                                                )}>
-                                                                    <span>{mPending}</span>
-                                                                    {mPending > 0 ? (
-                                                                        <Pause className="h-2.5 w-2.5 fill-current" />
-                                                                    ) : (
-                                                                        <CheckCircle2 className="h-2.5 w-2.5" />
-                                                                    )}
-                                                                </div>
+                                            return (
+                                                <Tooltip key={mStr}>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                            onClick={() => handleMonthSelect(mStr)}
+                                                            disabled={isPending}
+                                                            className={cn(
+                                                                "px-3 h-8 rounded-lg flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap",
+                                                                isActive 
+                                                                    ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                                                    : isCurrent
+                                                                        ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
+                                                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
                                                             )}
-                                                        </>
-                                                    )}
-                                                </button>
-
-                                                {/* Tooltip Overlay */}
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100] animate-in fade-in slide-in-from-bottom-1 duration-200">
-                                                    <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-800 min-w-[160px]">
+                                                        >
+                                                            {loadingMonth === mStr ? (
+                                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                            ) : (
+                                                                <>
+                                                                    <span>{name}</span>
+                                                                    {mTotal > 0 && (
+                                                                        <div className={cn(
+                                                                            "flex items-center gap-1 pl-1.5 border-l",
+                                                                            isActive ? "border-white/20" : "border-slate-100"
+                                                                        )}>
+                                                                            <span>{mPending}</span>
+                                                                            {mPending > 0 ? (
+                                                                                <Pause className="h-2.5 w-2.5 fill-current" />
+                                                                            ) : (
+                                                                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent 
+                                                        side="bottom" 
+                                                        className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-800 min-w-[160px] z-[100]"
+                                                    >
                                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 border-b border-slate-800 pb-1">
                                                             {name} Status
                                                         </p>
@@ -363,12 +367,11 @@ export function BatchPageClientV2({
                                                             <span className="text-[10px] font-black text-indigo-400">TOTAL</span>
                                                             <span className="text-[10px] font-black">{mConfirmed}/{mTotal}</span>
                                                         </div>
-                                                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-slate-800" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )
+                                        })}
+                                    </TooltipProvider>
                                 </div>
                                 <div className="h-8 w-px bg-slate-100 mx-1 shrink-0" />
                                 <div className="w-[100px] shrink-0">

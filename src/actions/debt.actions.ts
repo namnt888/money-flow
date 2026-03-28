@@ -1,7 +1,7 @@
 "use server";
 
 import { getDebtByTags } from "@/services/debt.service";
-import type { DebtByTagAggregatedResult } from "@/services/debt-calculation";
+import type { DebtByTagAggregatedResult } from "@/services/debt.service";
 import { revalidatePath } from "next/cache";
 
 export async function getDebtByTagsAction(personId: string): Promise<DebtByTagAggregatedResult[]> {

@@ -1,0 +1,90 @@
+[
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 15,
+    "id": "2asy08p1d0iwd46",
+    "is_active": true,
+    "label": "Before 15",
+    "period_type": "before",
+    "sort_order": 0
+  },
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 15,
+    "id": "71ged91y4seybfu",
+    "is_active": true,
+    "label": "After 15",
+    "period_type": "after",
+    "sort_order": 1
+  },
+  {
+    "bank_type": "VIB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 15,
+    "id": "b7r2nbtv3y492cq",
+    "is_active": true,
+    "label": "Before 15",
+    "period_type": "before",
+    "sort_order": 0
+  },
+  {
+    "bank_type": "VIB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 15,
+    "id": "6efo5ixtsrx0jxt",
+    "is_active": true,
+    "label": "After 15",
+    "period_type": "after",
+    "sort_order": 1
+  },
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 16,
+    "id": "1fxl9yiwhxdc0pc",
+    "is_active": false,
+    "label": "A16",
+    "period_type": "before",
+    "sort_order": 2
+  },
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 20,
+    "id": "v70imodrluhof2d",
+    "is_active": false,
+    "label": "After 20",
+    "period_type": "before",
+    "sort_order": 3
+  },
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 20,
+    "id": "bqkuz7sxo9h1s5k",
+    "is_active": true,
+    "label": "After 20",
+    "period_type": "after",
+    "sort_order": 4
+  },
+  {
+    "bank_type": "MBB",
+    "collectionId": "pbc_2473216915",
+    "collectionName": "batch_phases",
+    "cutoff_day": 5,
+    "id": "de8sda7q14pk4mk",
+    "is_active": true,
+    "label": "Before 5",
+    "period_type": "before",
+    "sort_order": 5
+  }
+]

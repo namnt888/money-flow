@@ -28,7 +28,7 @@ export function DistributeAllButton() {
     const handleRunAll = async () => {
         try {
             setIsLoading(true)
-            const result = await runAllServiceDistributionsAction(date)
+            const result = await runAllServiceDistributionsAction(date, { source: 'manual-date' })
 
             if (result.failed > 0) {
                 toast.warning(`Completed with issues. Success: ${result.success}, Failed: ${result.failed}`)

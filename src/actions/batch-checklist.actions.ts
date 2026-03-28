@@ -14,6 +14,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         const masterResult = await pocketbaseList<any>('batch_master_items', {
             filter: `bank_type = '${bankType}' && is_active = true`,
             sort: 'sort_order',
+            page: 1,
             perPage: 500,
             expand: 'target_account_id,target_account_id.owner_id,target_account_id.holder_person_id',
         })
@@ -34,6 +35,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         const yearPattern = `${year}-`
         const batchesResult = await pocketbaseList<any>('batches', {
             filter: `bank_type = '${bankType}' && month_year ~ '${yearPattern}'`,
+            page: 1,
             perPage: 200, // Safe limit
             sort: 'month_year',
         })
@@ -52,7 +54,8 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
                 try {
                     const chunkResult = await pocketbaseList<any>('batch_items', {
                         filter: batchFilter,
-                        perPage: 500, // Max safe perPage
+                        page: 1,
+                        perPage: 1000, // Increased limit
                     })
                     batchItems = [...batchItems, ...(chunkResult.items || [])]
                 } catch (e) {
@@ -66,6 +69,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
         try {
             const phasesResult = await pocketbaseList<any>('batch_phases', {
                 filter: `bank_type = '${bankType}' && is_active = true`,
+                page: 1,
                 perPage: 100,
                 sort: 'sort_order',
             })
@@ -115,6 +119,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
                 // Use pvl_txn_001 directly for known explicit IDs
                 const explicitTxns = await pocketbaseList<any>('pvl_txn_001', {
                     filter: explicitFundingIds.map(id => `id='${id}'`).join(' || '),
+                    page: 1,
                     expand: 'account_id,to_account_id'
                 })
                 explicitTxns.items.forEach(txn => {

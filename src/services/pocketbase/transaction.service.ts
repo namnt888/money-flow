@@ -265,6 +265,7 @@ export async function loadPocketBaseTransactions(options: {
   try {
     const data = await pocketbaseList<PocketBaseTransaction>(PB_TXN_COLLECTION, {
       filter: filters.join(' && '),
+      page: 1,
       perPage: options.limit || 500,
       sort: '-date'
     });
@@ -339,6 +340,7 @@ export async function buildAccountIdBridge(): Promise<{
   
   try {
     const data = await pocketbaseList<any>('pvl_acc_001', {
+      page: 1,
       perPage: 500,
       fields: 'id,name,sb_account_id'
     });

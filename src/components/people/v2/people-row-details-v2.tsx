@@ -159,31 +159,46 @@ export function PeopleRowDetailsV2({
     value,
     colorClass,
     labelClass,
+    tooltip,
   }: {
     label: string;
     value: number;
     colorClass: string;
     labelClass?: string;
-  }) => (
-    <div className="flex flex-col gap-1 p-3 rounded-xl bg-slate-50/50 border border-slate-100 group transition-all hover:bg-white hover:shadow-md hover:border-slate-200">
-      <span
-        className={cn(
-          "text-[10px] uppercase font-black tracking-widest text-slate-400 group-hover:text-slate-500",
-          labelClass,
-        )}
-      >
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-xs font-black tabular-nums tracking-tight",
-          colorClass,
-        )}
-      >
-        {formatMoneyVND(value)}
-      </span>
-    </div>
-  );
+    tooltip?: string;
+  }) => {
+    const content = (
+      <div className="flex flex-col gap-1 p-3 rounded-xl bg-slate-50/50 border border-slate-100 group transition-all hover:bg-white hover:shadow-md hover:border-slate-200 cursor-default">
+        <span
+          className={cn(
+            "text-[10px] uppercase font-black tracking-widest text-slate-400 group-hover:text-slate-500",
+            labelClass,
+          )}
+        >
+          {label}
+        </span>
+        <span
+          className={cn(
+            "text-xs font-black tabular-nums tracking-tight",
+            colorClass,
+          )}
+        >
+          {formatMoneyVND(value)}
+        </span>
+      </div>
+    );
+
+    if (!tooltip) return content;
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent>{tooltip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
 
   return (
     <div className="p-5 bg-slate-50/30 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">

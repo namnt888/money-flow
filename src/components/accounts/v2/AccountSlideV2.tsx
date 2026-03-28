@@ -526,6 +526,7 @@ export function AccountSlideV2({
     const [openHolderPersonPopover, setOpenHolderPersonPopover] = useState(false);
     const [isPeopleSlideOpen, setIsPeopleSlideOpen] = useState(false);
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [performingAction, setPerformingAction] = useState(false);
 
     // Form state
     const [name, setName] = useState("");

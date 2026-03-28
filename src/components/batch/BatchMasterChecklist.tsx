@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
@@ -997,6 +997,7 @@ export function BatchMasterChecklist({
                             isStandalone={!!period}
                             isSelected
                             currentBatch={batches?.find((b: any) => b.id === (itemsByPhase[phase.id] || []).find((i: any) => i.batch_id)?.batch_id)}
+                            batches={batches}
                             selectedItemIds={selectedItemIds}
                             setSelectedItemIds={setSelectedItemIds}
                             onPhaseDirtyChange={handlePhaseDirtyChange}
@@ -1175,7 +1176,7 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
@@ -1540,6 +1541,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                         isSearchActive={!!searchQuery}
                                         isPhaseEditing={isPhaseEditing}
                                         draftAmount={draftAmounts[item.id] ?? ''}
+                                        batches={batches}
                                         onDraftAmountChange={(value: string) => updateDraftAmount(item.id, value)}
                                         isSelected={item.batch_item_id ? selectedItemIds.has(item.batch_item_id) : false}
                                         isMasterFocused={focusedMasterItemId === item.id}
@@ -1560,9 +1562,21 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     )
 }
 
-function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused }: any) {
+function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType }: any) {
     const [saving, setSaving] = useState(false)
+    const [isEditingRowAmount, setIsEditingRowAmount] = useState(false)
+    const [rowDraftAmount, setRowDraftAmount] = useState(draftAmount)
+    const [rowNote, setRowNote] = useState(item.note || '')
+    const [isEditingNote, setIsEditingNote] = useState(false)
     const rowRef = React.useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        setRowDraftAmount(draftAmount)
+    }, [draftAmount])
+
+    useEffect(() => {
+        setRowNote(item.note || '')
+    }, [item.note])
 
     useEffect(() => {
         if (!isMasterFocused || !rowRef.current) return
@@ -1585,6 +1599,89 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             }
         } catch (e) {
             toast.error('Toggle failed')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    function handleCloneFromPreviousMonth() {
+        if (!monthYear || !item.id) return
+
+        const [y, m] = monthYear.split('-').map(Number)
+        let prevY = y
+        let prevM = m - 1
+        if (prevM === 0) {
+            prevM = 12
+            prevY = y - 1
+        }
+        const prevMonthStr = `${prevY}-${String(prevM).padStart(2, '0')}`
+
+        // Find the batch item for this master_item in the previous month
+        // In this architecture, batches contain batch_items.
+        const prevMonthBatches = (batches || []).filter((b: any) => b.month_year === prevMonthStr && b.bank_type === bankType)
+        
+        let foundAmount = 0
+        let found = false
+
+        for (const b of prevMonthBatches) {
+            const bi = (b.batch_items || []).find((bi: any) => bi.master_item_id === item.id)
+            if (bi && bi.amount > 0) {
+                foundAmount = bi.amount
+                found = true
+                break
+            }
+        }
+
+        if (found) {
+            if (isEditingRowAmount || isPhaseEditing) {
+                onDraftAmountChange(String(foundAmount))
+                setRowDraftAmount(String(foundAmount))
+            } else {
+                // If not in edit mode, auto-enter row edit mode with this amount
+                setRowDraftAmount(String(foundAmount))
+                setIsEditingRowAmount(true)
+            }
+            toast.success(`Cloned ${formatShortVietnameseCurrency(foundAmount)} from ${prevMonthStr}`)
+        } else {
+            toast.error(`No previous data found for ${prevMonthStr}`)
+        }
+    }
+
+    async function handleSaveSingleAmount() {
+        setSaving(true)
+        try {
+            const nextAmount = Number((rowDraftAmount || '').replace(/\D/g, '') || 0)
+            const result = await upsertBatchItemAmountAction({
+                monthYear,
+                period: phase?.period_type || 'before',
+                bankType,
+                masterItemId: item.id,
+                amount: nextAmount,
+                receiverName: item.receiver_name,
+                bankNumber: item.bank_number,
+                bankName: item.bank_name,
+                targetAccountId: item.target_account_id,
+                accountName: item.accounts?.name || item.bank_name,
+                phaseName: phase?.label,
+                phaseId: phase?.id,
+                note: rowNote,
+                metadata: {
+                    ...(item.metadata || {}),
+                    last_updated: new Date().toISOString(),
+                    batch_id: item.batch_id
+                }
+            })
+            if (result.success) {
+                toast.success(`Saved for ${item.receiver_name}`)
+                setIsEditingRowAmount(false)
+                setIsEditingNote(false)
+                onDraftAmountChange(String(nextAmount))
+                if (onUpdate) await onUpdate()
+            } else {
+                toast.error(result.error || 'Failed to save')
+            }
+        } catch (e: any) {
+            toast.error(e.message || 'Save failed')
         } finally {
             setSaving(false)
         }
@@ -1810,6 +1907,25 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                             • {item.accounts.account_number}
                         </span>
                     )}
+                    {isEditingNote ? (
+                        <Input 
+                            value={rowNote}
+                            onChange={(e) => setRowNote(e.target.value)}
+                            onBlur={() => {
+                                if (rowNote === (item.note || '')) setIsEditingNote(false)
+                            }}
+                            placeholder="Add note..."
+                            className="h-6 text-[9px] py-0 px-2 border-indigo-100 focus:ring-indigo-500 rounded-lg w-40 bg-white ml-2"
+                            autoFocus
+                        />
+                    ) : (item.note || rowNote) ? (
+                        <span 
+                            onClick={() => setIsEditingNote(true)}
+                            className="text-[9px] text-indigo-400 font-medium italic truncate max-w-[200px] cursor-pointer hover:text-indigo-600 ml-2"
+                        >
+                            • {item.note || rowNote}
+                        </span>
+                    ) : null}
                     {item.note && (
                         <span className="ml-1 text-indigo-400 font-bold italic truncate max-w-[80px] text-[10px]">
                             • {item.note}
@@ -1820,28 +1936,36 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
 
             {/* Input Side */}
             <div className="relative shrink-0 flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 font-sans">
                     <div className="relative w-36">
-                        {isPhaseEditing ? (
+                        {(isPhaseEditing || isEditingRowAmount) ? (
                             <Input
-                                value={draftAmount === '' ? '' : formatCurrency(draftAmount)}
-                                onChange={(e) => onDraftAmountChange(e.target.value)}
+                                value={rowDraftAmount === '' ? '' : formatCurrency(rowDraftAmount)}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '')
+                                    setRowDraftAmount(val)
+                                    onDraftAmountChange(val)
+                                }}
+                                autoFocus={isEditingRowAmount && !isPhaseEditing}
                                 placeholder="0"
                                 className={cn(
-                                    "w-full h-10 text-right font-black text-slate-900 border-slate-200 focus:ring-indigo-500 rounded-xl",
-                                    draftAmount && parseInt(draftAmount || '0') > 0 ? "bg-indigo-50/30 text-indigo-700" : "",
+                                    "w-full h-10 text-right font-black text-slate-900 border-indigo-200 focus:ring-indigo-500 rounded-xl bg-indigo-50/10",
+                                    rowDraftAmount && parseInt(rowDraftAmount || '0') > 0 ? "text-indigo-700" : "",
                                     item.status === 'confirmed' ? "border-amber-300 focus:ring-amber-400" : ""
                                 )}
                             />
                         ) : (
-                            <div className={cn(
-                                "w-full h-10 flex items-center justify-end pr-3 rounded-xl font-black border",
+                            <div 
+                                onClick={() => setIsEditingRowAmount(true)}
+                                className={cn(
+                                "w-full h-10 flex items-center justify-end pr-3 rounded-xl font-black border cursor-pointer group/amount",
                                 draftAmount && parseInt(draftAmount || '0') > 0
-                                    ? "text-indigo-700 border-indigo-100 bg-indigo-50/20"
-                                    : "text-slate-300 border-slate-100 bg-slate-50/30",
+                                    ? "text-indigo-700 border-indigo-100 bg-indigo-50/20 hover:border-indigo-300"
+                                    : "text-slate-300 border-slate-100 bg-slate-50/30 hover:border-slate-300",
                                 item.status === 'confirmed' && "opacity-70"
                             )}>
                                 {draftAmount && parseInt(draftAmount || '0') > 0 ? formatCurrency(draftAmount) : <span className="text-slate-300 font-medium text-sm">—</span>}
+                                <PenLine className="h-3 w-3 ml-2 opacity-0 group-hover/amount:opacity-40 text-slate-400 absolute left-2" />
                             </div>
                         )}
                         {saving && (
@@ -1850,6 +1974,36 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                             </div>
                         )}
                     </div>
+                    {isEditingRowAmount && !isPhaseEditing && !saving && (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={handleSaveSingleAmount}
+                                className="h-8 w-8 rounded-xl flex items-center justify-center transition-all border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                title="Save amount"
+                            >
+                                <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setRowDraftAmount(draftAmount)
+                                    setIsEditingRowAmount(false)
+                                }}
+                                className="h-8 w-8 rounded-xl flex items-center justify-center transition-all border border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100"
+                                title="Cancel"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
+                    {(isPhaseEditing || isEditingRowAmount) && !saving && (
+                        <button
+                            onClick={handleCloneFromPreviousMonth}
+                            className="h-8 w-8 rounded-xl flex items-center justify-center transition-all border border-indigo-100 text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200"
+                            title="Clone amount from previous month"
+                        >
+                            <span className="text-[11px] font-black">#</span>
+                        </button>
+                    )}
                     {!saving && (
                         <button
                             onClick={handleCopyBatchItemId}
@@ -1872,6 +2026,20 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                     )}
                     {!saving && (
                         <button
+                            onClick={() => setIsEditingNote(!isEditingNote)}
+                            className={cn(
+                                "h-8 w-8 rounded-xl flex items-center justify-center transition-all border",
+                                isEditingNote || item.note
+                                    ? "text-indigo-600 bg-indigo-50 border-indigo-100"
+                                    : "text-slate-300 border-slate-100 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100"
+                            )}
+                            title="Edit Note"
+                        >
+                            <Sparkles className={cn("h-3.5 w-3.5", item.note ? "animate-pulse" : "")} />
+                        </button>
+                    )}
+                    {!saving && (
+                        <button
                             onClick={() => onEditMasterItem?.(item)}
                             className={cn(
                                 "h-8 w-8 rounded-xl flex items-center justify-center transition-all border",
@@ -1879,7 +2047,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                                     ? "text-amber-700 bg-amber-100 border-amber-300"
                                     : "text-slate-300 border-slate-100 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100"
                             )}
-                            title="Edit target/phase"
+                            title="Edit Target Metadata (Slide)"
                         >
                             <Edit2 className="h-3.5 w-3.5" />
                         </button>

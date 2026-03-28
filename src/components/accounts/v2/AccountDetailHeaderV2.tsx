@@ -2289,7 +2289,7 @@ export function AccountDetailHeaderV2({
               const { syncAccountCashbackAction } = await import("@/actions/account-actions");
               const result = await syncAccountCashbackAction(account.id);
               
-              if (result.success) {
+              if (result && (result as any).success) {
                 const stats = (result as any).stats || {};
                 const current = (stats as any).current || {};
                 toast.success(
@@ -2352,7 +2352,7 @@ export function AccountDetailHeaderV2({
                 );
                 router.refresh();
               } else {
-                toast.error(result.error || "Sync failed");
+                toast.error((result as any).error || (result as any).message || "Sync failed");
               }
             } catch (err) {
               console.error("Sync Error:", err);

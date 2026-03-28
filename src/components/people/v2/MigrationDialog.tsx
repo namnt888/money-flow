@@ -69,7 +69,7 @@ export function MigrationDialog({ people, trigger }: MigrationDialogProps) {
     });
 
     const toggleSelectAll = (checked: boolean) => {
-        const filteredIds = new Set(filteredList.map(p => p.id));
+        const filteredIds = new Set<string>(filteredList.map(p => p.id));
         setStatusList(prev => prev.map(p => ({
             ...p,
             isSelected: filteredIds.has(p.id) ? checked : p.isSelected

@@ -159,9 +159,12 @@ export function PeopleDirectoryV2({
         } else if (sortConfig.key === "base_lend") {
           valA = a.current_cycle_base_lend ?? a.total_base_debt ?? 0;
           valB = b.current_cycle_base_lend ?? b.total_base_debt ?? 0;
-        } else if (sortConfig.key === "cashback") {
-          valA = a.current_cycle_repaid ?? a.total_repaid ?? 0;
-          valB = b.current_cycle_repaid ?? b.total_repaid ?? 0;
+        } else if (sortConfig.key === "cashback_total") {
+          valA = a.total_cashback ?? 0;
+          valB = b.total_cashback ?? 0;
+        } else if (sortConfig.key === "repayment") {
+          valA = a.total_repaid ?? 0;
+          valB = b.total_repaid ?? 0;
         } else if (sortConfig.key === "net_lend") {
           valA = a.outstanding_debt ?? 0;
           valB = b.outstanding_debt ?? 0;
@@ -328,13 +331,13 @@ export function PeopleDirectoryV2({
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         availableYears={availableYears}
-        onAddPerson={() => {
+        onAdd={() => {
           setSelectedPerson(null);
           setIsSlideOpen(true);
         }}
         stats={stats}
         showArchived={showArchived}
-        onToggleArchived={() => setShowArchived(!showArchived)}
+        onToggleArchived={setShowArchived}
         onRefreshAll={handleRefreshAll}
         isSyncingAll={isSyncingAll}
         onRealignAll={handleRealignAll}
