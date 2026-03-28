@@ -2853,7 +2853,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$account
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$accounts$2f$v2$2f$forms$2f$CashbackConfigForm$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/accounts/v2/forms/CashbackConfigForm.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$transaction$2f$slide$2d$v2$2f$unsaved$2d$changes$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/transaction/slide-v2/unsaved-changes-dialog.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$people$2d$slide$2d$v2$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/v2/people-slide-v2.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f0831d__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:f0831d [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c75573__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:c75573 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$b75bcb__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:b75bcb [app-ssr] (ecmascript) <text/javascript>");
 "use client";
 ;
@@ -3771,7 +3771,7 @@ function AccountSlideV2({ open, onOpenChange, account, allAccounts = [], categor
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         if (open) {
             console.log('[AccountSlideV2] Fetching initial people & services...');
-            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f0831d__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPeopleAction"])().then((res)=>{
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c75573__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPeopleAction"])().then((res)=>{
                 console.log(`[AccountSlideV2] Fetched ${res?.length || 0} people`);
                 setPeople(res || []);
             }).catch((err)=>{
@@ -3785,7 +3785,7 @@ function AccountSlideV2({ open, onOpenChange, account, allAccounts = [], categor
     const refreshPeople = async ()=>{
         setPerformingAction(true);
         try {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f0831d__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPeopleAction"])();
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$c75573__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getPeopleAction"])();
             console.log(`[AccountSlideV2] Manual Refresh: Fetched ${res?.length || 0} people`);
             setPeople(res || []);
             __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success('People list updated');

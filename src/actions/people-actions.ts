@@ -27,6 +27,7 @@ export type CreatePersonPayload = {
   subscriptionIds?: string[]
   is_owner?: boolean
   is_archived?: boolean
+  is_favorite?: boolean
   is_group?: boolean
   group_parent_id?: string | null
   sheet_linked_bank_id?: string | null
@@ -42,6 +43,7 @@ export async function createPersonAction(payload: CreatePersonPayload) {
     {
       is_owner: payload.is_owner,
       is_archived: payload.is_archived,
+      is_favorite: payload.is_favorite,
       is_group: payload.is_group,
       group_parent_id: payload.group_parent_id,
       google_sheet_url: payload.google_sheet_url?.trim(),
@@ -80,6 +82,7 @@ export type UpdatePersonPayload = {
   subscriptionIds?: string[]
   is_owner?: boolean
   is_archived?: boolean
+  is_favorite?: boolean
   is_group?: boolean
   group_parent_id?: string | null
   is_master_sheet_enabled?: boolean | null

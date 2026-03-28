@@ -220,8 +220,12 @@ export function PeopleHeader({
     const cashbackGoalPercent = (cashbackStatus && hasFilter) ? (
         cashbackStatus.needToSpend > 0 
             ? Math.min(100, Math.round(((cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1)) * 100))
-            : Math.min(100, Math.round(((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : 0)) * 100))
-    ) : (allCashbackStatuses.length > 0 ? Math.round(allCashbackStatuses.reduce((acc, curr) => acc + (curr.earned || 0), 0) / allCashbackStatuses.reduce((acc, curr) => acc + (curr.cap || 1), 0) * 100) : 0)
+            : Math.min(100, Math.round(((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : (cashbackStatus.earned > 0 ? 1 : 0))) * 100))
+    ) : (allCashbackStatuses.length > 0 ? (() => {
+        const totalEarned = allCashbackStatuses.reduce((acc, curr) => acc + (curr.earned || 0), 0);
+        const totalCap = allCashbackStatuses.reduce((acc, curr) => acc + (curr.cap > 0 ? curr.cap : 0), 0);
+        return totalCap > 0 ? Math.min(100, Math.round((totalEarned / totalCap) * 100)) : (totalEarned > 0 ? 100 : 0);
+    })() : 0)
 
     return (
         <div className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -271,10 +275,10 @@ export function PeopleHeader({
                             <CircularProgress percent={currentCycleRepayPercent} label="Repaid" colorClass="text-emerald-500" />
                         </div>
                         
-                        <div className="flex items-center border-l border-slate-100">
-                            <MetricItem label="Initial" value={stats.originalLend} colorClass="text-slate-900" className="w-[100px] pl-6 border-r border-slate-50" />
-                            <MetricItem label="Back" value={stats.cashback} colorClass="text-amber-600" className="w-[100px] px-6 border-r border-slate-50" />
-                            <MetricItem label="Repaid" value={stats.repay} colorClass="text-emerald-600" className="w-[100px] px-6 border-r border-slate-50" />
+                        <div className="flex items-center border-l border-slate-200 ml-4 pl-6 gap-6">
+                            <MetricItem label="Initial" value={stats.originalLend} colorClass="text-slate-900" className="pr-6 border-r border-slate-200" />
+                            <MetricItem label="Back" value={stats.cashback} colorClass="text-amber-600" className="pr-6 border-r border-slate-200" />
+                            <MetricItem label="Repaid" value={stats.repay} colorClass="text-emerald-600" className="pr-6 border-r border-slate-200" />
                             
                             <StatsPopover
                                 personId={person.id}
@@ -287,7 +291,7 @@ export function PeopleHeader({
                                 paidRollover={stats.paidRollover}
                                 receiveRollover={stats.receiveRollover}
                             >
-                                <button className="text-left hover:opacity-80 transition-opacity w-[100px] pl-6">
+                                <button className="text-left hover:opacity-80 transition-opacity">
                                     <MetricItem label="Remains" value={stats.remains} colorClass="text-rose-600" />
                                 </button>
                             </StatsPopover>

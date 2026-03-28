@@ -39,6 +39,7 @@ export function PersonSlideV2({
                 is_archived: values.is_archived,
                 is_group: values.is_group,
                 is_owner: values.is_owner,
+                is_favorite: values.is_favorite,
             })
 
             if (ok) {
@@ -76,6 +77,7 @@ export function PersonSlideV2({
                             subscriptionIds: person.subscription_ids ?? [],
                             is_owner: person.is_owner ?? false,
                             is_archived: person.is_archived ?? false,
+                            is_favorite: person.is_favorite ?? false,
                             is_group: person.is_group ?? false,
                         }}
                         onCancel={() => onOpenChange(false)}

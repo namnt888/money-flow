@@ -166,7 +166,7 @@ export async function getPeople(options?: {
     // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
     const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
       filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
-      perPage: 1500, // Safe limit for recent data
+      perPage: 5000, 
       sort: "-date",
     });
     const recentTxns = txnsResponse.items;
@@ -531,6 +531,8 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
       sheet_bank_info: personRecord.sheet_bank_info ?? null,
       sheet_linked_bank_id: personRecord.sheet_linked_bank_id ?? null,
       sheet_show_qr_image: personRecord.sheet_show_qr_image ?? false,
+      is_master_sheet_enabled: personRecord.is_master_sheet_enabled ?? false,
+      is_favorite: personRecord.is_favorite ?? false,
       is_owner: personRecord.is_owner ?? false,
       is_archived: personRecord.is_archived ?? false,
       subscription_ids,
@@ -615,6 +617,8 @@ export async function updatePerson(id: string, data: any) {
       sheet_show_qr_image: data.sheet_show_qr_image,
       is_owner: data.is_owner,
       is_archived: data.is_archived,
+      is_favorite: data.is_favorite,
+      is_master_sheet_enabled: data.is_master_sheet_enabled,
     });
 
     revalidatePersonPaths(pbId);

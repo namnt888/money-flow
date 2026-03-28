@@ -802,6 +802,7 @@ const schema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e
     subscriptionIds: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string()),
     is_owner: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     is_archived: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
+    is_favorite: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     is_group: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     sheet_linked_bank_id: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().optional()
 });
@@ -835,6 +836,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
             subscriptionIds: initialValues?.subscriptionIds ?? [],
             is_owner: initialValues?.is_owner ?? false,
             is_archived: initialValues?.is_archived ?? false,
+            is_favorite: initialValues?.is_favorite ?? false,
             is_group: initialValues?.is_group ?? false,
             sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? ''
         }
@@ -859,6 +861,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                 subscriptionIds: initialValues?.subscriptionIds ?? [],
                 is_owner: initialValues?.is_owner ?? false,
                 is_archived: initialValues?.is_archived ?? false,
+                is_favorite: initialValues?.is_favorite ?? false,
                 is_group: initialValues?.is_group ?? false,
                 sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? ''
             };
@@ -874,6 +877,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
     const watchedSubs = watch('subscriptionIds');
     const watchedIsOwner = watch('is_owner');
     const watchedIsArchived = watch('is_archived');
+    const watchedIsFavorite = watch('is_favorite');
     const watchedIsGroup = watch('is_group');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "PersonForm.useEffect": ()=>{
@@ -930,7 +934,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                         children: "A debt account is created automatically after saving this person."
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 161,
+                        lineNumber: 166,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -946,7 +950,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 168,
+                                                lineNumber: 173,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -954,13 +958,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Basic info and sheet connection."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 169,
+                                                lineNumber: 174,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 167,
+                                        lineNumber: 172,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -973,25 +977,25 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             onError: ()=>setImagePreview(null)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 174,
+                                            lineNumber: 179,
                                             columnNumber: 17
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-xs text-slate-400",
                                             children: "No"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 181,
+                                            lineNumber: 186,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 171,
+                                        lineNumber: 176,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 166,
+                                lineNumber: 171,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1005,7 +1009,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Full name"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 188,
+                                                lineNumber: 193,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1014,7 +1018,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "e.g. Jamie Lee"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 194,
                                                 columnNumber: 15
                                             }, this),
                                             errors.name && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1022,13 +1026,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.name.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 194,
+                                                lineNumber: 199,
                                                 columnNumber: 31
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 187,
+                                        lineNumber: 192,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1039,7 +1043,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Image URL"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 200,
+                                                lineNumber: 205,
                                                 columnNumber: 15
                                             }, this),
                                             " ",
@@ -1049,7 +1053,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://example.com/image.jpg"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 201,
+                                                lineNumber: 206,
                                                 columnNumber: 15
                                             }, this),
                                             errors.image_url && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1057,13 +1061,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.image_url.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 207,
+                                                lineNumber: 212,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 204,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1074,7 +1078,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Google Sheet Link"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 212,
+                                                lineNumber: 217,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1083,7 +1087,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://docs.google.com/spreadsheets/d/..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 213,
+                                                lineNumber: 218,
                                                 columnNumber: 15
                                             }, this),
                                             errors.google_sheet_url && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1091,7 +1095,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.google_sheet_url.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 219,
+                                                lineNumber: 224,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1099,13 +1103,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Direct link to the Google Sheet (English)."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 221,
+                                                lineNumber: 226,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 211,
+                                        lineNumber: 216,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1116,7 +1120,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Script Link (Webhook)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 225,
+                                                lineNumber: 230,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1125,7 +1129,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://script.google.com/macros/s/..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 231,
                                                 columnNumber: 15
                                             }, this),
                                             errors.sheet_link && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1133,7 +1137,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.sheet_link.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 232,
+                                                lineNumber: 237,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1141,13 +1145,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Used for Manage Sheet sync."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 234,
+                                                lineNumber: 239,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 224,
+                                        lineNumber: 229,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1158,7 +1162,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Default Bank Account"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 238,
+                                                lineNumber: 243,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1170,7 +1174,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: "None / Not Linked"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 248,
                                                         columnNumber: 17
                                                     }, this),
                                                     accounts.filter((a)=>a.type === 'bank' || a.type === 'credit_card').map((acc)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1178,13 +1182,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                             children: acc.name
                                                         }, acc.id, false, {
                                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                                            lineNumber: 245,
+                                                            lineNumber: 250,
                                                             columnNumber: 19
                                                         }, this))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 239,
+                                                lineNumber: 244,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1192,25 +1196,25 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Auto-fill source for repayment transactions."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 248,
+                                                lineNumber: 253,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 237,
+                                        lineNumber: 242,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 186,
+                                lineNumber: 191,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 165,
+                        lineNumber: 170,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1223,10 +1227,55 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-sm font-semibold text-slate-800",
+                                                children: "Favorite profile"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/people/person-form.tsx",
+                                                lineNumber: 261,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-xs text-slate-500",
+                                                children: "Pin to top of the list."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/people/person-form.tsx",
+                                                lineNumber: 262,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/people/person-form.tsx",
+                                        lineNumber: 260,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                        type: "checkbox",
+                                        className: "h-4 w-4 accent-amber-500",
+                                        checked: watchedIsFavorite ?? false,
+                                        onChange: (e)=>setValue('is_favorite', e.target.checked, {
+                                                shouldValidate: true
+                                            })
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/people/person-form.tsx",
+                                        lineNumber: 264,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/people/person-form.tsx",
+                                lineNumber: 259,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm font-semibold text-slate-800",
                                                 children: "Owner profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 256,
+                                                lineNumber: 274,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1234,13 +1283,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Mark if this person is you."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 257,
+                                                lineNumber: 275,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 255,
+                                        lineNumber: 273,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1252,13 +1301,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 259,
+                                        lineNumber: 277,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 254,
+                                lineNumber: 272,
                                 columnNumber: 11
                             }, this),
                             mode === 'edit' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1271,7 +1320,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Archive member"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 270,
+                                                lineNumber: 288,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1279,13 +1328,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Hide from lists and transaction pickers."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 271,
+                                                lineNumber: 289,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 287,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1297,13 +1346,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 273,
+                                        lineNumber: 291,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 268,
+                                lineNumber: 286,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1316,7 +1365,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Group profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 284,
+                                                lineNumber: 302,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1324,13 +1373,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Show in Split Bill group picker."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 285,
+                                                lineNumber: 303,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 283,
+                                        lineNumber: 301,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1342,19 +1391,19 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 287,
+                                        lineNumber: 305,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 282,
+                                lineNumber: 300,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 253,
+                        lineNumber: 258,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1368,7 +1417,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         children: "Subscriptions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 298,
+                                        lineNumber: 316,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1379,13 +1428,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 299,
+                                        lineNumber: 317,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 297,
+                                lineNumber: 315,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1395,7 +1444,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                     children: "No services available yet."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 303,
+                                    lineNumber: 321,
                                     columnNumber: 15
                                 }, this) : subscriptionOptions.map((item)=>{
                                     const checked = watchedSubs?.includes(item.id) ?? false;
@@ -1413,7 +1462,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: brand.icon
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 313,
+                                                lineNumber: 331,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1424,7 +1473,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: item.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 319,
+                                                        lineNumber: 337,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1432,13 +1481,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: formatMoney(item.price ?? null) || 'No price'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 320,
+                                                        lineNumber: 338,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 318,
+                                                lineNumber: 336,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1456,31 +1505,31 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 324,
+                                                lineNumber: 342,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, item.id, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 309,
+                                        lineNumber: 327,
                                         columnNumber: 19
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 301,
+                                lineNumber: 319,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 296,
+                        lineNumber: 314,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/person-form.tsx",
-                lineNumber: 160,
+                lineNumber: 165,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1493,7 +1542,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                             children: status.text
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/person-form.tsx",
-                            lineNumber: 346,
+                            lineNumber: 364,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1506,7 +1555,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 352,
+                                    lineNumber: 370,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1518,37 +1567,37 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             className: "mr-2 inline-block h-4 w-4 animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 365,
+                                            lineNumber: 383,
                                             columnNumber: 32
                                         }, this),
                                         isSubmitting ? 'Saving...' : submitLabel ?? (mode === 'create' ? 'Create member' : 'Save changes')
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 360,
+                                    lineNumber: 378,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/person-form.tsx",
-                            lineNumber: 350,
+                            lineNumber: 368,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/person-form.tsx",
-                    lineNumber: 344,
+                    lineNumber: 362,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/person-form.tsx",
-                lineNumber: 343,
+                lineNumber: 361,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/person-form.tsx",
-        lineNumber: 159,
+        lineNumber: 164,
         columnNumber: 5
     }, this);
 }
@@ -1576,7 +1625,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/x.js [app-client] (ecmascript) <export default as X>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$person$2d$form$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/person-form.tsx [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:7e5677 [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:17e6ac [app-client] (ecmascript) <text/javascript>");
 ;
 var _s = __turbopack_context__.k.signature();
 'use client';
@@ -1693,7 +1742,7 @@ function CreatePersonDialog({ subscriptions, accounts, trigger, open: controlled
                             accounts: accounts,
                             onCancel: closeDialog,
                             onSubmit: async (values)=>{
-                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
+                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
                                     name: values.name,
                                     image_url: values.image_url,
                                     sheet_link: values.sheet_link,
@@ -2138,7 +2187,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$i
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/label.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-client] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-client] (ecmascript) <export default as RefreshCw>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:0affe4 [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$6dd547__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:6dd547 [app-client] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/select.tsx [app-client] (ecmascript)");
@@ -2223,7 +2272,7 @@ function RolloverDebtDialog({ personId, currentCycle, allCycles = [], remains, t
         if (setLoadingMessage) setLoadingMessage('Creating rollover transactions...');
         setIsProcessing(true);
         try {
-            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
+            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$6dd547__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
             if (result.success) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(result.message || 'Debt rolled over successfully');
             } else {

@@ -1371,6 +1371,7 @@ function mapPerson(record) {
         is_master_sheet_enabled: record.is_master_sheet_enabled ?? null,
         is_owner: record.is_owner ?? null,
         is_archived: record.is_archived ?? null,
+        is_favorite: record.is_favorite ?? null,
         is_group: record.is_group ?? null,
         group_parent_id: record.group_parent_id ?? null
     };
@@ -1411,7 +1412,7 @@ async function getPocketBasePeople() {
     }, async ()=>{
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$pocketbase$2f$fallback$2d$helpers$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logSource"])('SB', 'people.list fallback');
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').order('name', {
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').order('name', {
             ascending: true
         });
         if (error) throw error;
@@ -1425,6 +1426,7 @@ async function getPocketBasePeople() {
                 google_sheet_url: item.google_sheet_url,
                 is_owner: item.is_owner,
                 is_archived: item.is_archived,
+                is_favorite: item.is_favorite,
                 is_group: item.is_group,
                 group_parent_id: item.group_parent_id,
                 sheet_full_img: item.sheet_full_img,
@@ -1510,7 +1512,7 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             sourceOrPocketBaseId
         });
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').eq('id', sourceOrPocketBaseId).maybeSingle();
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').eq('id', sourceOrPocketBaseId).maybeSingle();
         if (error) throw error;
         if (!data) return null;
         const row = data;
@@ -1523,6 +1525,7 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             google_sheet_url: row.google_sheet_url,
             is_owner: row.is_owner,
             is_archived: row.is_archived,
+            is_favorite: row.is_favorite,
             is_group: row.is_group,
             group_parent_id: row.group_parent_id,
             sheet_full_img: row.sheet_full_img,
@@ -7660,7 +7663,7 @@ async function getPeople(options) {
         // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
         const txnsResponse = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("pvl_txn_001", {
             filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
-            perPage: 1500,
+            perPage: 5000,
             sort: "-date"
         });
         const recentTxns = txnsResponse.items;
@@ -7982,6 +7985,8 @@ async function getPersonWithSubs(id) {
             sheet_bank_info: personRecord.sheet_bank_info ?? null,
             sheet_linked_bank_id: personRecord.sheet_linked_bank_id ?? null,
             sheet_show_qr_image: personRecord.sheet_show_qr_image ?? false,
+            is_master_sheet_enabled: personRecord.is_master_sheet_enabled ?? false,
+            is_favorite: personRecord.is_favorite ?? false,
             is_owner: personRecord.is_owner ?? false,
             is_archived: personRecord.is_archived ?? false,
             subscription_ids,
@@ -8061,7 +8066,9 @@ async function updatePerson(id, data) {
             sheet_linked_bank_id: data.sheet_linked_bank_id,
             sheet_show_qr_image: data.sheet_show_qr_image,
             is_owner: data.is_owner,
-            is_archived: data.is_archived
+            is_archived: data.is_archived,
+            is_favorite: data.is_favorite,
+            is_master_sheet_enabled: data.is_master_sheet_enabled
         });
         revalidatePersonPaths(pbId);
         return {
@@ -8236,7 +8243,8 @@ async function getPersonDebt(personId) {
     try {
         const response = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
             filter: `person_id = "${pbPersonId}" && status != "void"`,
-            fields: 'amount,type,person_id,status,cashback_share_percent,cashback_share_fixed,final_price'
+            fields: 'amount,type,person_id,status,cashback_share_percent,cashback_share_fixed,final_price',
+            perPage: 5000
         });
         return await computeDebtFromTransactions(response.items, pbPersonId);
     } catch (err) {
@@ -8249,7 +8257,7 @@ async function getDebtAccounts() {
         const txns = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
             filter: 'person_id != ""',
             fields: 'person_id',
-            perPage: 500
+            perPage: 5000
         });
         const personIds = Array.from(new Set(txns.items.map((t)=>t.person_id).filter(Boolean)));
         if (personIds.length === 0) return [];
@@ -8304,7 +8312,7 @@ async function getDebtByTags(personId, options) {
             (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
                 filter: `person_id = "${pbPersonId}" && status != "void"`,
                 sort: 'date',
-                perPage: 500
+                perPage: 5000
             }),
             (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('people_debt_cycles', {
                 filter: `person_id = "${pbPersonId}"`
@@ -8595,7 +8603,7 @@ async function getOutstandingDebts(personId, excludeTransactionId) {
         const response = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
             filter: `person_id = "${pbPersonId}" && status != "void"`,
             sort: 'date',
-            perPage: 500
+            perPage: 5000
         });
         const data = response.items;
         if (!data) return [];
@@ -10042,6 +10050,7 @@ async function createPersonAction(payload) {
     const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPerson"])(payload.name, payload.image_url?.trim(), payload.sheet_link?.trim(), payload.subscriptionIds, {
         is_owner: payload.is_owner,
         is_archived: payload.is_archived,
+        is_favorite: payload.is_favorite,
         is_group: payload.is_group,
         group_parent_id: payload.group_parent_id,
         google_sheet_url: payload.google_sheet_url?.trim(),

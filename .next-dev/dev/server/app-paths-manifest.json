@@ -1,5 +1,7 @@
 {
-  "/api/sheets/manage/route": "app/api/sheets/manage/route.js",
+  "/accounts/[id]/page": "app/accounts/[id]/page.js",
+  "/api/batch/pending-items/route": "app/api/batch/pending-items/route.js",
+  "/api/refunds/pending/route": "app/api/refunds/pending/route.js",
   "/api/sidebar/search/route": "app/api/sidebar/search/route.js",
   "/batch/page": "app/batch/page.js",
   "/people/[id]/page": "app/people/[id]/page.js",

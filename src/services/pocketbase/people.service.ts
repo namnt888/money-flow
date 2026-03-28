@@ -21,6 +21,7 @@ type PocketBasePersonWrite = {
   google_sheet_url?: string | null
   is_owner?: boolean | null
   is_archived?: boolean | null
+  is_favorite?: boolean | null
   is_group?: boolean | null
   group_parent_id?: string | null
   sheet_full_img?: string | null
@@ -48,6 +49,7 @@ function mapPerson(record: PocketBaseRecord): Person {
     is_master_sheet_enabled: (record.is_master_sheet_enabled as boolean | null | undefined) ?? null,
     is_owner: (record.is_owner as boolean | null | undefined) ?? null,
     is_archived: (record.is_archived as boolean | null | undefined) ?? null,
+    is_favorite: (record.is_favorite as boolean | null | undefined) ?? null,
     is_group: (record.is_group as boolean | null | undefined) ?? null,
     group_parent_id: (record.group_parent_id as string | null | undefined) ?? null,
   }
@@ -97,7 +99,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
       const supabase = createClient()
       const { data, error } = await supabase
         .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
+        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
         .order('name', { ascending: true })
 
       if (error) throw error
@@ -113,6 +115,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
         google_sheet_url: item.google_sheet_url,
         is_owner: item.is_owner,
         is_archived: item.is_archived,
+        is_favorite: item.is_favorite,
         is_group: item.is_group,
         group_parent_id: item.group_parent_id,
         sheet_full_img: item.sheet_full_img,
@@ -211,7 +214,7 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
       const supabase = createClient()
       const { data, error } = await supabase
         .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
+        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
         .eq('id', sourceOrPocketBaseId)
         .maybeSingle()
 
@@ -229,6 +232,7 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
         google_sheet_url: row.google_sheet_url,
         is_owner: row.is_owner,
         is_archived: row.is_archived,
+        is_favorite: row.is_favorite,
         is_group: row.is_group,
         group_parent_id: row.group_parent_id,
         sheet_full_img: row.sheet_full_img,

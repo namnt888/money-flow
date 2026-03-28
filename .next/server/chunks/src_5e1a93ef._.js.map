@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../src/lib/tag.ts"],"sourcesContent":["import { toYYYYMMFromDate } from './month-tag'\n\nexport function generateTag(date: Date) {\n  return toYYYYMMFromDate(date)\n}\n"],"names":[],"mappings":"wCAAA,IAAA,EAAA,EAAA,CAAA,CAAA,QAEO,SAAS,EAAY,CAAU,EACpC,MAAO,CAAA,EAAA,EAAA,gBAAA,AAAgB,EAAC,EAC1B"}

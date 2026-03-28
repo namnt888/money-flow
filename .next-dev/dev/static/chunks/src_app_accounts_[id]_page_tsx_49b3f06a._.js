@@ -1,0 +1,32 @@
+(globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
+    script: typeof document === "object" ? document.currentScript : undefined,
+    chunks: [
+  "static/chunks/src_56e64a5e._.js",
+  "static/chunks/src_components_ui_92a60519._.js",
+  "static/chunks/src_components_transaction_slide-v2_4e2c9474._.js",
+  "static/chunks/src_components_accounts_v2_forms_CashbackConfigForm_tsx_94780e1f._.js",
+  "static/chunks/src_components_accounts_v2_AccountSlideV2_tsx_fcf474fd._.js",
+  "static/chunks/src_components_accounts_v2_AccountDetailHeaderV2_tsx_1392282f._.js",
+  "static/chunks/src_components_accounts_v2_184e5e92._.js",
+  "static/chunks/src_components_people_2bd2a1d6._.js",
+  "static/chunks/src_components_moneyflow_unified-transaction-table_tsx_05e87207._.js",
+  "static/chunks/src_components_moneyflow_4874a83c._.js",
+  "static/chunks/src_components_transactions-v2_a0544e00._.js",
+  "static/chunks/src_components_29798de0._.js",
+  "static/chunks/src_services_532cdcd2._.js",
+  "static/chunks/src_actions_89d6d15a._.js",
+  "static/chunks/src_1fb306e7._.js",
+  "static/chunks/6e028_lucide-react_dist_esm_icons_bc6b33d2._.js",
+  "static/chunks/6b8b8_next_7a430b48._.js",
+  "static/chunks/d2856_react-hook-form_dist_index_esm_mjs_c6c31c0d._.js",
+  "static/chunks/518ff_zod_v3_da0efcd2._.js",
+  "static/chunks/50d1e_date-fns_2d7ab2fe._.js",
+  "static/chunks/2012f_@dnd-kit_core_dist_core_esm_63281db9.js",
+  "static/chunks/b11ed_@supabase_auth-js_dist_module_822869c2._.js",
+  "static/chunks/44636_react-day-picker_dist_esm_797c2380._.js",
+  "static/chunks/35311_motion-dom_dist_es_9fdc1774._.js",
+  "static/chunks/876ae_framer-motion_dist_es_5276dd44._.js",
+  "static/chunks/node_modules__pnpm_8567c7d7._.js"
+],
+    source: "dynamic"
+});

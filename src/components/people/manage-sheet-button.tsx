@@ -476,7 +476,7 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200"
+                    className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-none"
                     disabled={!currentSheetUrl || !isValidLink(currentSheetUrl)}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -497,7 +497,7 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
+                    className="rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-none"
                     disabled={isDisabled || isSaving}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -539,7 +539,7 @@ export function ManageSheetButton({
                         <span className="font-bold text-slate-800 tabular-nums truncate text-[11px]">{cycleTag || 'History'}</span>
 
                         {allCycles.length > 0 && (
-                          <div className="flex items-center gap-1.5 ml-auto border-l border-slate-100 pl-2 shrink-0">
+                          <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
                             {selectedYear === null ? (
                               <span className="text-amber-700 font-bold text-[10px] uppercase">All</span>
                             ) : isSettled ? (

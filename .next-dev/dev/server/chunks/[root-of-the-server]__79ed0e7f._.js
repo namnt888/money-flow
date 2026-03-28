@@ -1410,8 +1410,10 @@ function mapPerson(record) {
         sheet_bank_info: record.sheet_bank_info ?? null,
         sheet_linked_bank_id: record.sheet_linked_bank_id ?? null,
         sheet_show_qr_image: record.sheet_show_qr_image ?? null,
+        is_master_sheet_enabled: record.is_master_sheet_enabled ?? null,
         is_owner: record.is_owner ?? null,
         is_archived: record.is_archived ?? null,
+        is_favorite: record.is_favorite ?? null,
         is_group: record.is_group ?? null,
         group_parent_id: record.group_parent_id ?? null
     };
@@ -1452,7 +1454,7 @@ async function getPocketBasePeople() {
     }, async ()=>{
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$pocketbase$2f$fallback$2d$helpers$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["logSource"])('SB', 'people.list fallback');
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image').order('name', {
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').order('name', {
             ascending: true
         });
         if (error) throw error;
@@ -1466,13 +1468,15 @@ async function getPocketBasePeople() {
                 google_sheet_url: item.google_sheet_url,
                 is_owner: item.is_owner,
                 is_archived: item.is_archived,
+                is_favorite: item.is_favorite,
                 is_group: item.is_group,
                 group_parent_id: item.group_parent_id,
                 sheet_full_img: item.sheet_full_img,
                 sheet_show_bank_account: item.sheet_show_bank_account,
                 sheet_bank_info: item.sheet_bank_info,
                 sheet_linked_bank_id: item.sheet_linked_bank_id,
-                sheet_show_qr_image: item.sheet_show_qr_image
+                sheet_show_qr_image: item.sheet_show_qr_image,
+                is_master_sheet_enabled: item.is_master_sheet_enabled
             }));
     }, 'people.list');
 }
@@ -1550,7 +1554,7 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             sourceOrPocketBaseId
         });
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image').eq('id', sourceOrPocketBaseId).maybeSingle();
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').eq('id', sourceOrPocketBaseId).maybeSingle();
         if (error) throw error;
         if (!data) return null;
         const row = data;
@@ -1563,13 +1567,15 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             google_sheet_url: row.google_sheet_url,
             is_owner: row.is_owner,
             is_archived: row.is_archived,
+            is_favorite: row.is_favorite,
             is_group: row.is_group,
             group_parent_id: row.group_parent_id,
             sheet_full_img: row.sheet_full_img,
             sheet_show_bank_account: row.sheet_show_bank_account,
             sheet_bank_info: row.sheet_bank_info,
             sheet_linked_bank_id: row.sheet_linked_bank_id,
-            sheet_show_qr_image: row.sheet_show_qr_image
+            sheet_show_qr_image: row.sheet_show_qr_image,
+            is_master_sheet_enabled: row.is_master_sheet_enabled
         };
     }, 'people.get');
 }

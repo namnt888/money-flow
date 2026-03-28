@@ -373,6 +373,7 @@ function getCycleTag(date) {
 function resolveCycleTagForSheet(tag, occurredAt) {
     const rawTag = typeof tag === 'string' ? tag.trim() : '';
     if ((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["isYYYYMM"])(rawTag)) return rawTag;
+    if (/^\d{4}$/.test(rawTag)) return rawTag;
     const parsedDate = occurredAt ? new Date(occurredAt) : new Date();
     if (Number.isNaN(parsedDate.getTime())) {
         return getCycleTag(new Date());
@@ -994,15 +995,19 @@ async function createCycleSheet(personId, cycleTag) {
 async function syncCycleTransactions(personId, cycleTag, sheetId) {
     try {
         const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["toPocketBaseId"])(personId, 'people');
-        const legacyTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["yyyyMMToLegacyMMMYY"])(cycleTag);
-        const tags = legacyTag ? [
-            cycleTag,
-            legacyTag
-        ] : [
-            cycleTag
-        ];
-        // Construct filter for tags
-        const tagFilter = tags.map((t)=>`tag = "${t}"`).join(' || ');
+        let tagFilter = '';
+        if (/^\d{4}$/.test(cycleTag)) {
+            tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || tag = "${cycleTag}"`;
+        } else {
+            const legacyTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["yyyyMMToLegacyMMMYY"])(cycleTag);
+            const tags = legacyTag ? [
+                cycleTag,
+                legacyTag
+            ] : [
+                cycleTag
+            ];
+            tagFilter = tags.map((t)=>`tag = "${t}"`).join(' || ');
+        }
         const data = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
             filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
             expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
@@ -1316,8 +1321,20 @@ async function POST(request) {
             });
             return errorResponse(requestId, 'validate_payload', 'Missing cycleTag', 400);
         }
-        const normalizedCycle = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(rawCycle);
-        if (!normalizedCycle || !(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["isYYYYMM"])(normalizedCycle)) {
+        // Check if person exists in PocketBase if not UUID
+        const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["toPocketBaseId"])(personId, 'people');
+        let isMasterSheet = false;
+        try {
+            const personData = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('people', pbId);
+            isMasterSheet = personData?.is_master_sheet_enabled === true;
+        } catch  {
+        // ignore
+        }
+        let normalizedCycle = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(rawCycle);
+        if (isMasterSheet && normalizedCycle) {
+            normalizedCycle = normalizedCycle.split('-')[0]; // '2026-03' -> '2026'
+        }
+        if (!normalizedCycle || !(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["isYYYYMM"])(normalizedCycle) && !/^\d{4}$/.test(normalizedCycle)) {
             console.warn('[ManageSheet API] validation failed: invalid cycleTag', {
                 requestId,
                 personId,
@@ -1329,10 +1346,9 @@ async function POST(request) {
         console.info('[ManageSheet API] request', {
             requestId,
             personId,
-            cycleTag: normalizedCycle
+            cycleTag: normalizedCycle,
+            isMasterSheet
         });
-        // Check if person exists in PocketBase if not UUID
-        const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["toPocketBaseId"])(personId, 'people');
         console.info('[ManageSheet API] target', {
             requestId,
             personId,

@@ -15,6 +15,7 @@ type PersonFormValues = {
   subscriptionIds: string[]
   is_owner?: boolean
   is_archived?: boolean
+  is_favorite?: boolean
   is_group?: boolean
   sheet_linked_bank_id?: string
 }
@@ -38,6 +39,7 @@ const schema = z.object({
   subscriptionIds: z.array(z.string()),
   is_owner: z.boolean().optional(),
   is_archived: z.boolean().optional(),
+  is_favorite: z.boolean().optional(),
   is_group: z.boolean().optional(),
   sheet_linked_bank_id: z.string().optional(),
 })
@@ -91,6 +93,7 @@ export function PersonForm({
       subscriptionIds: initialValues?.subscriptionIds ?? [],
       is_owner: initialValues?.is_owner ?? false,
       is_archived: initialValues?.is_archived ?? false,
+      is_favorite: initialValues?.is_favorite ?? false,
       is_group: initialValues?.is_group ?? false,
       sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? '',
     },
@@ -111,6 +114,7 @@ export function PersonForm({
       subscriptionIds: initialValues?.subscriptionIds ?? [],
       is_owner: initialValues?.is_owner ?? false,
       is_archived: initialValues?.is_archived ?? false,
+      is_favorite: initialValues?.is_favorite ?? false,
       is_group: initialValues?.is_group ?? false,
       sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? '',
     }
@@ -122,6 +126,7 @@ export function PersonForm({
   const watchedSubs = watch('subscriptionIds')
   const watchedIsOwner = watch('is_owner')
   const watchedIsArchived = watch('is_archived')
+  const watchedIsFavorite = watch('is_favorite')
   const watchedIsGroup = watch('is_group')
 
   useEffect(() => {
@@ -251,6 +256,19 @@ export function PersonForm({
         </div >
 
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Favorite profile</p>
+              <p className="text-xs text-slate-500">Pin to top of the list.</p>
+            </div>
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-amber-500"
+              checked={watchedIsFavorite ?? false}
+              onChange={e => setValue('is_favorite', e.target.checked, { shouldValidate: true })}
+            />
+          </div>
+
           <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <div>
               <p className="text-sm font-semibold text-slate-800">Owner profile</p>

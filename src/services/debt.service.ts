@@ -125,7 +125,8 @@ export async function getPersonDebt(personId: string): Promise<number> {
   try {
     const response = await pocketbaseList<any>('pvl_txn_001', {
       filter: `person_id = "${pbPersonId}" && status != "void"`,
-      fields: 'amount,type,person_id,status,cashback_share_percent,cashback_share_fixed,final_price'
+      fields: 'amount,type,person_id,status,cashback_share_percent,cashback_share_fixed,final_price',
+      perPage: 5000
     });
 
     return await computeDebtFromTransactions(response.items as unknown as DebtTransactionRow[], pbPersonId)
@@ -140,7 +141,7 @@ export async function getDebtAccounts(): Promise<DebtAccount[]> {
     const txns = await pocketbaseList<any>('pvl_txn_001', {
       filter: 'person_id != ""',
       fields: 'person_id',
-      perPage: 500
+      perPage: 5000
     });
 
     const personIds = Array.from(new Set(txns.items.map(t => t.person_id).filter(Boolean))) as string[];
@@ -214,7 +215,7 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
       pocketbaseList<any>('pvl_txn_001', {
         filter: `person_id = "${pbPersonId}" && status != "void"`,
         sort: 'date',
-        perPage: 500
+        perPage: 5000
       }),
       pocketbaseList<any>('people_debt_cycles', {
         filter: `person_id = "${pbPersonId}"`,
@@ -558,7 +559,7 @@ export async function getOutstandingDebts(personId: string, excludeTransactionId
     const response = await pocketbaseList<any>('pvl_txn_001', {
       filter: `person_id = "${pbPersonId}" && status != "void"`,
       sort: 'date',
-      perPage: 500
+      perPage: 5000
     })
 
     const data = response.items

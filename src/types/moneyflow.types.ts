@@ -187,6 +187,7 @@ export type Person = {
   balance?: number | null;
   is_owner?: boolean | null;
   is_archived?: boolean | null;
+  is_favorite?: boolean | null;
   is_group?: boolean | null;
   group_parent_id?: string | null;
   subscription_ids?: string[];

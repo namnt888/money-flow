@@ -2218,6 +2218,7 @@ const schema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e
     subscriptionIds: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string()),
     is_owner: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     is_archived: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
+    is_favorite: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     is_group: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].boolean().optional(),
     sheet_linked_bank_id: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$zod$40$3$2e$25$2e$76$2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().optional()
 });
@@ -2250,6 +2251,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
             subscriptionIds: initialValues?.subscriptionIds ?? [],
             is_owner: initialValues?.is_owner ?? false,
             is_archived: initialValues?.is_archived ?? false,
+            is_favorite: initialValues?.is_favorite ?? false,
             is_group: initialValues?.is_group ?? false,
             sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? ''
         }
@@ -2271,6 +2273,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
             subscriptionIds: initialValues?.subscriptionIds ?? [],
             is_owner: initialValues?.is_owner ?? false,
             is_archived: initialValues?.is_archived ?? false,
+            is_favorite: initialValues?.is_favorite ?? false,
             is_group: initialValues?.is_group ?? false,
             sheet_linked_bank_id: initialValues?.sheet_linked_bank_id ?? ''
         };
@@ -2285,6 +2288,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
     const watchedSubs = watch('subscriptionIds');
     const watchedIsOwner = watch('is_owner');
     const watchedIsArchived = watch('is_archived');
+    const watchedIsFavorite = watch('is_favorite');
     const watchedIsGroup = watch('is_group');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         setImagePreview(watchedImage || null); // Changed from setAvatarPreview and watchedAvatar
@@ -2333,7 +2337,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                         children: "A debt account is created automatically after saving this person."
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 161,
+                        lineNumber: 166,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2349,7 +2353,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 168,
+                                                lineNumber: 173,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2357,13 +2361,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Basic info and sheet connection."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 169,
+                                                lineNumber: 174,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 167,
+                                        lineNumber: 172,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2376,25 +2380,25 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             onError: ()=>setImagePreview(null)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 174,
+                                            lineNumber: 179,
                                             columnNumber: 17
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-xs text-slate-400",
                                             children: "No"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 181,
+                                            lineNumber: 186,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 171,
+                                        lineNumber: 176,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 166,
+                                lineNumber: 171,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2408,7 +2412,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Full name"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 188,
+                                                lineNumber: 193,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2417,7 +2421,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "e.g. Jamie Lee"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 194,
                                                 columnNumber: 15
                                             }, this),
                                             errors.name && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2425,13 +2429,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.name.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 194,
+                                                lineNumber: 199,
                                                 columnNumber: 31
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 187,
+                                        lineNumber: 192,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2442,7 +2446,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Image URL"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 200,
+                                                lineNumber: 205,
                                                 columnNumber: 15
                                             }, this),
                                             " ",
@@ -2452,7 +2456,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://example.com/image.jpg"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 201,
+                                                lineNumber: 206,
                                                 columnNumber: 15
                                             }, this),
                                             errors.image_url && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2460,13 +2464,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.image_url.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 207,
+                                                lineNumber: 212,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 204,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2477,7 +2481,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Google Sheet Link"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 212,
+                                                lineNumber: 217,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2486,7 +2490,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://docs.google.com/spreadsheets/d/..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 213,
+                                                lineNumber: 218,
                                                 columnNumber: 15
                                             }, this),
                                             errors.google_sheet_url && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2494,7 +2498,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.google_sheet_url.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 219,
+                                                lineNumber: 224,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2502,13 +2506,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Direct link to the Google Sheet (English)."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 221,
+                                                lineNumber: 226,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 211,
+                                        lineNumber: 216,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2519,7 +2523,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Script Link (Webhook)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 225,
+                                                lineNumber: 230,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2528,7 +2532,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 placeholder: "https://script.google.com/macros/s/..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 231,
                                                 columnNumber: 15
                                             }, this),
                                             errors.sheet_link && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2536,7 +2540,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: errors.sheet_link.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 232,
+                                                lineNumber: 237,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2544,13 +2548,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Used for Manage Sheet sync."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 234,
+                                                lineNumber: 239,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 224,
+                                        lineNumber: 229,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2561,7 +2565,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Default Bank Account"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 238,
+                                                lineNumber: 243,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2573,7 +2577,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: "None / Not Linked"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 248,
                                                         columnNumber: 17
                                                     }, this),
                                                     accounts.filter((a)=>a.type === 'bank' || a.type === 'credit_card').map((acc)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2581,13 +2585,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                             children: acc.name
                                                         }, acc.id, false, {
                                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                                            lineNumber: 245,
+                                                            lineNumber: 250,
                                                             columnNumber: 19
                                                         }, this))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 239,
+                                                lineNumber: 244,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2595,25 +2599,25 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Auto-fill source for repayment transactions."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 248,
+                                                lineNumber: 253,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 237,
+                                        lineNumber: 242,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 186,
+                                lineNumber: 191,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 165,
+                        lineNumber: 170,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2626,10 +2630,55 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-sm font-semibold text-slate-800",
+                                                children: "Favorite profile"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/people/person-form.tsx",
+                                                lineNumber: 261,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-xs text-slate-500",
+                                                children: "Pin to top of the list."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/people/person-form.tsx",
+                                                lineNumber: 262,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/people/person-form.tsx",
+                                        lineNumber: 260,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                        type: "checkbox",
+                                        className: "h-4 w-4 accent-amber-500",
+                                        checked: watchedIsFavorite ?? false,
+                                        onChange: (e)=>setValue('is_favorite', e.target.checked, {
+                                                shouldValidate: true
+                                            })
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/people/person-form.tsx",
+                                        lineNumber: 264,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/people/person-form.tsx",
+                                lineNumber: 259,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm font-semibold text-slate-800",
                                                 children: "Owner profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 256,
+                                                lineNumber: 274,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2637,13 +2686,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Mark if this person is you."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 257,
+                                                lineNumber: 275,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 255,
+                                        lineNumber: 273,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2655,13 +2704,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 259,
+                                        lineNumber: 277,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 254,
+                                lineNumber: 272,
                                 columnNumber: 11
                             }, this),
                             mode === 'edit' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2674,7 +2723,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Archive member"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 270,
+                                                lineNumber: 288,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2682,13 +2731,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Hide from lists and transaction pickers."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 271,
+                                                lineNumber: 289,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 287,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2700,13 +2749,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 273,
+                                        lineNumber: 291,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 268,
+                                lineNumber: 286,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2719,7 +2768,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Group profile"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 284,
+                                                lineNumber: 302,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2727,13 +2776,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: "Show in Split Bill group picker."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 285,
+                                                lineNumber: 303,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 283,
+                                        lineNumber: 301,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2745,19 +2794,19 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 287,
+                                        lineNumber: 305,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 282,
+                                lineNumber: 300,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 253,
+                        lineNumber: 258,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2771,7 +2820,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         children: "Subscriptions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 298,
+                                        lineNumber: 316,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2782,13 +2831,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 299,
+                                        lineNumber: 317,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 297,
+                                lineNumber: 315,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2798,7 +2847,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                     children: "No services available yet."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 303,
+                                    lineNumber: 321,
                                     columnNumber: 15
                                 }, this) : subscriptionOptions.map((item)=>{
                                     const checked = watchedSubs?.includes(item.id) ?? false;
@@ -2816,7 +2865,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 children: brand.icon
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 313,
+                                                lineNumber: 331,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2827,7 +2876,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: item.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 319,
+                                                        lineNumber: 337,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2835,13 +2884,13 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                         children: formatMoney(item.price ?? null) || 'No price'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                                        lineNumber: 320,
+                                                        lineNumber: 338,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 318,
+                                                lineNumber: 336,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2859,31 +2908,31 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                                lineNumber: 324,
+                                                lineNumber: 342,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, item.id, true, {
                                         fileName: "[project]/src/components/people/person-form.tsx",
-                                        lineNumber: 309,
+                                        lineNumber: 327,
                                         columnNumber: 19
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/person-form.tsx",
-                                lineNumber: 301,
+                                lineNumber: 319,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/person-form.tsx",
-                        lineNumber: 296,
+                        lineNumber: 314,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/person-form.tsx",
-                lineNumber: 160,
+                lineNumber: 165,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2896,7 +2945,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                             children: status.text
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/person-form.tsx",
-                            lineNumber: 346,
+                            lineNumber: 364,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2909,7 +2958,7 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 352,
+                                    lineNumber: 370,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2921,37 +2970,37 @@ function PersonForm({ mode, onSubmit, submitLabel, initialValues, subscriptions,
                                             className: "mr-2 inline-block h-4 w-4 animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/person-form.tsx",
-                                            lineNumber: 365,
+                                            lineNumber: 383,
                                             columnNumber: 32
                                         }, this),
                                         isSubmitting ? 'Saving...' : submitLabel ?? (mode === 'create' ? 'Create member' : 'Save changes')
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/person-form.tsx",
-                                    lineNumber: 360,
+                                    lineNumber: 378,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/person-form.tsx",
-                            lineNumber: 350,
+                            lineNumber: 368,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/person-form.tsx",
-                    lineNumber: 344,
+                    lineNumber: 362,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/person-form.tsx",
-                lineNumber: 343,
+                lineNumber: 361,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/person-form.tsx",
-        lineNumber: 159,
+        lineNumber: 164,
         columnNumber: 5
     }, this);
 }
@@ -2967,8 +3016,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/sheet.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$person$2d$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/person-form.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:7e5677 [app-ssr] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:923069 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:17e6ac [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$15b507__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:15b507 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/users.js [app-ssr] (ecmascript) <export default as Users>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/info.js [app-ssr] (ecmascript) <export default as Info>");
@@ -3025,7 +3074,7 @@ function PeopleSlideV2({ open, onOpenChange, person, subscriptions, accounts, on
     const handleApply = async (values)=>{
         let result;
         if (isEdit && person) {
-            result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(person.id, {
+            result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$15b507__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(person.id, {
                 name: values.name,
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
@@ -3040,7 +3089,7 @@ function PeopleSlideV2({ open, onOpenChange, person, subscriptions, accounts, on
                 success: !!result
             });
         } else {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
                 name: values.name,
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
@@ -3267,7 +3316,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$person$2d$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/person-form.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:7e5677 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:17e6ac [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -3382,7 +3431,7 @@ function CreatePersonDialog({ subscriptions, accounts, trigger, open: controlled
                             accounts: accounts,
                             onCancel: closeDialog,
                             onSubmit: async (values)=>{
-                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$7e5677__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
+                                await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$17e6ac__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["createPersonAction"])({
                                     name: values.name,
                                     image_url: values.image_url,
                                     sheet_link: values.sheet_link,
@@ -3971,7 +4020,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$p
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/arrow-right.js [app-ssr] (ecmascript) <export default as ArrowRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:231ba9 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$347701__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:347701 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7.29.0_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
@@ -4003,7 +4052,7 @@ function StatsPopover({ personId, tag, originalLend, cashback, netLend, repay, r
         if (!personId || !tag || isSyncing) return;
         setIsSyncing(true);
         try {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(personId, tag);
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$347701__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(personId, tag);
             if (res.success) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success('Debt cycle synced successfully');
             } else {
@@ -4680,7 +4729,11 @@ function MetricItem({ label, value, colorClass = "text-slate-900", icon: Icon, p
 function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, stats, selectedYear, availableYears, onYearChange, activeTab, onTabChange, onEdit, onCycleChange, cashbackStatus, allCashbackStatuses = [], isSyncing = false, syncingText, hasFilter = false, onSyncCycle }) {
     const isSettled = Math.abs(stats.remains) < 100;
     const currentCycleRepayPercent = stats.netLend > 0 ? Math.min(100, Math.round(Math.abs(stats.repay) / Math.abs(stats.netLend) * 100)) : 0;
-    const cashbackGoalPercent = cashbackStatus && hasFilter ? cashbackStatus.needToSpend > 0 ? Math.min(100, Math.round((cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1) * 100)) : Math.min(100, Math.round((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : 0) * 100)) : allCashbackStatuses.length > 0 ? Math.round(allCashbackStatuses.reduce((acc, curr)=>acc + (curr.earned || 0), 0) / allCashbackStatuses.reduce((acc, curr)=>acc + (curr.cap || 1), 0) * 100) : 0;
+    const cashbackGoalPercent = cashbackStatus && hasFilter ? cashbackStatus.needToSpend > 0 ? Math.min(100, Math.round((cashbackStatus.minSpend > 0 ? (cashbackStatus.minSpend - cashbackStatus.needToSpend) / cashbackStatus.minSpend : 1) * 100)) : Math.min(100, Math.round((cashbackStatus.cap > 0 ? cashbackStatus.earned / cashbackStatus.cap : cashbackStatus.earned > 0 ? 1 : 0) * 100)) : allCashbackStatuses.length > 0 ? (()=>{
+        const totalEarned = allCashbackStatuses.reduce((acc, curr)=>acc + (curr.earned || 0), 0);
+        const totalCap = allCashbackStatuses.reduce((acc, curr)=>acc + (curr.cap > 0 ? curr.cap : 0), 0);
+        return totalCap > 0 ? Math.min(100, Math.round(totalEarned / totalCap * 100)) : totalEarned > 0 ? 100 : 0;
+    })() : 0;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "bg-white border-b border-slate-200 sticky top-0 z-50",
         children: [
@@ -4698,19 +4751,19 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                     className: "h-full w-full object-contain rounded-none bg-white"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                    lineNumber: 235,
+                                    lineNumber: 239,
                                     columnNumber: 29
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     className: "text-xl font-bold text-emerald-600",
                                     children: person.name.charAt(0).toUpperCase()
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                    lineNumber: 237,
+                                    lineNumber: 241,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 233,
+                                lineNumber: 237,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4724,7 +4777,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                 children: person.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 242,
+                                                lineNumber: 246,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4732,13 +4785,13 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                 children: isSettled ? 'SETTLED' : 'ACTIVE'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 243,
+                                                lineNumber: 247,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 241,
+                                        lineNumber: 245,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4748,7 +4801,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                 className: "h-2.5 w-2.5 text-orange-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 251,
+                                                lineNumber: 255,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4756,25 +4809,25 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                 children: activeCycle?.tag || 'All Time'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 252,
+                                                lineNumber: 256,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 250,
+                                        lineNumber: 254,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 240,
+                                lineNumber: 244,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                        lineNumber: 232,
+                        lineNumber: 236,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4786,12 +4839,12 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                     className: "h-5 w-5 animate-spin text-indigo-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                    lineNumber: 264,
+                                    lineNumber: 268,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 263,
+                                lineNumber: 267,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4805,45 +4858,45 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                             colorClass: "text-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                            lineNumber: 271,
+                                            lineNumber: 275,
                                             columnNumber: 29
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 270,
+                                        lineNumber: 274,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center border-l border-slate-100",
+                                        className: "flex items-center border-l border-slate-200 ml-4 pl-6 gap-6",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
                                                 label: "Initial",
                                                 value: stats.originalLend,
                                                 colorClass: "text-slate-900",
-                                                className: "w-[100px] pl-6 border-r border-slate-50"
+                                                className: "pr-6 border-r border-slate-200"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 275,
+                                                lineNumber: 279,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
                                                 label: "Back",
                                                 value: stats.cashback,
                                                 colorClass: "text-amber-600",
-                                                className: "w-[100px] px-6 border-r border-slate-50"
+                                                className: "pr-6 border-r border-slate-200"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 276,
+                                                lineNumber: 280,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
                                                 label: "Repaid",
                                                 value: stats.repay,
                                                 colorClass: "text-emerald-600",
-                                                className: "w-[100px] px-6 border-r border-slate-50"
+                                                className: "pr-6 border-r border-slate-200"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 277,
+                                                lineNumber: 281,
                                                 columnNumber: 29
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$v2$2f$StatsPopover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["StatsPopover"], {
@@ -4857,43 +4910,43 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                 paidRollover: stats.paidRollover,
                                                 receiveRollover: stats.receiveRollover,
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                    className: "text-left hover:opacity-80 transition-opacity w-[100px] pl-6",
+                                                    className: "text-left hover:opacity-80 transition-opacity",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
                                                         label: "Remains",
                                                         value: stats.remains,
                                                         colorClass: "text-rose-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 291,
+                                                        lineNumber: 295,
                                                         columnNumber: 37
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 290,
+                                                    lineNumber: 294,
                                                     columnNumber: 33
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 279,
+                                                lineNumber: 283,
                                                 columnNumber: 29
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 274,
+                                        lineNumber: 278,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 269,
+                                lineNumber: 273,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "w-px bg-slate-100 my-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 298,
+                                lineNumber: 302,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4905,7 +4958,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                         colorClass: "text-blue-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 302,
+                                        lineNumber: 306,
                                         columnNumber: 25
                                     }, this),
                                     cashbackStatus && hasFilter ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4922,7 +4975,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                         prefix: "+"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 307,
+                                                        lineNumber: 311,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
@@ -4932,7 +4985,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                         icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$gift$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Gift$3e$__["Gift"]
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 314,
+                                                        lineNumber: 318,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MetricItem, {
@@ -4942,13 +4995,13 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                         icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__["Users"]
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 315,
+                                                        lineNumber: 319,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 306,
+                                                lineNumber: 310,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4961,7 +5014,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                     prefix: "-"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 321,
+                                                    lineNumber: 325,
                                                     columnNumber: 41
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex flex-col items-end gap-0.5",
@@ -4971,7 +5024,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                             children: "STATUS"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 330,
+                                                            lineNumber: 334,
                                                             columnNumber: 45
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4981,7 +5034,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                     className: "h-3 w-3 fill-emerald-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 332,
+                                                                    lineNumber: 336,
                                                                     columnNumber: 49
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4989,30 +5042,30 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                     children: "QUALIFIED"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 333,
+                                                                    lineNumber: 337,
                                                                     columnNumber: 49
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 331,
+                                                            lineNumber: 335,
                                                             columnNumber: 45
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 329,
+                                                    lineNumber: 333,
                                                     columnNumber: 41
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 319,
+                                                lineNumber: 323,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 305,
+                                        lineNumber: 309,
                                         columnNumber: 29
                                     }, this) : allCashbackStatuses.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "flex-1 flex items-center gap-4 overflow-hidden min-w-0",
@@ -5031,18 +5084,18 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                         className: "h-full w-full object-contain rounded-none bg-white p-0.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                        lineNumber: 356,
+                                                                        lineNumber: 360,
                                                                         columnNumber: 53
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wallet$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Wallet$3e$__["Wallet"], {
                                                                         className: "h-3.5 w-3.5 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                        lineNumber: 358,
+                                                                        lineNumber: 362,
                                                                         columnNumber: 53
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 354,
+                                                                    lineNumber: 358,
                                                                     columnNumber: 45
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5053,7 +5106,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                             children: status.accountName
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                            lineNumber: 362,
+                                                                            lineNumber: 366,
                                                                             columnNumber: 49
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5065,7 +5118,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                         children: "MISSING"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                        lineNumber: 368,
+                                                                                        lineNumber: 372,
                                                                                         columnNumber: 61
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5073,7 +5126,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                         children: Math.round(status.needToSpend).toLocaleString()
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                        lineNumber: 369,
+                                                                                        lineNumber: 373,
                                                                                         columnNumber: 61
                                                                                     }, this)
                                                                                 ]
@@ -5084,7 +5137,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                         children: "OK"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                        lineNumber: 375,
+                                                                                        lineNumber: 379,
                                                                                         columnNumber: 61
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5095,26 +5148,26 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                        lineNumber: 376,
+                                                                                        lineNumber: 380,
                                                                                         columnNumber: 61
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                            lineNumber: 365,
+                                                                            lineNumber: 369,
                                                                             columnNumber: 49
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 361,
+                                                                    lineNumber: 365,
                                                                     columnNumber: 45
                                                                 }, this)
                                                             ]
                                                         }, status.account_id, true, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 346,
+                                                            lineNumber: 350,
                                                             columnNumber: 41
                                                         }, this)),
                                                     allCashbackStatuses.length > 4 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipProvider"], {
@@ -5131,12 +5184,12 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                        lineNumber: 390,
+                                                                        lineNumber: 394,
                                                                         columnNumber: 53
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 389,
+                                                                    lineNumber: 393,
                                                                     columnNumber: 49
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5153,12 +5206,12 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                     children: "Other Reward Cards"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                    lineNumber: 397,
+                                                                                    lineNumber: 401,
                                                                                     columnNumber: 61
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                lineNumber: 396,
+                                                                                lineNumber: 400,
                                                                                 columnNumber: 57
                                                                             }, this),
                                                                             allCashbackStatuses.slice(4).map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5171,12 +5224,12 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                                 className: "h-full w-full object-contain rounded-none bg-white"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                                lineNumber: 402,
+                                                                                                lineNumber: 406,
                                                                                                 columnNumber: 69
                                                                                             }, this)
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                            lineNumber: 401,
+                                                                                            lineNumber: 405,
                                                                                             columnNumber: 65
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5187,7 +5240,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                                     children: s.accountName
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                                    lineNumber: 405,
+                                                                                                    lineNumber: 409,
                                                                                                     columnNumber: 69
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5195,47 +5248,47 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                                                     children: s.needToSpend > 0 ? `Missing ${Math.round(s.needToSpend).toLocaleString()}` : `Profit +${Math.round(s.profit || 0).toLocaleString()}`
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                                    lineNumber: 406,
+                                                                                                    lineNumber: 410,
                                                                                                     columnNumber: 69
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                            lineNumber: 404,
+                                                                                            lineNumber: 408,
                                                                                             columnNumber: 65
                                                                                         }, this)
                                                                                     ]
                                                                                 }, s.account_id, true, {
                                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                                    lineNumber: 400,
+                                                                                    lineNumber: 404,
                                                                                     columnNumber: 61
                                                                                 }, this))
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                        lineNumber: 395,
+                                                                        lineNumber: 399,
                                                                         columnNumber: 53
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                    lineNumber: 394,
+                                                                    lineNumber: 398,
                                                                     columnNumber: 49
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 388,
+                                                            lineNumber: 392,
                                                             columnNumber: 45
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 387,
+                                                        lineNumber: 391,
                                                         columnNumber: 41
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 341,
+                                                lineNumber: 345,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5249,13 +5302,13 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                 className: "h-2.5 w-2.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                lineNumber: 424,
+                                                                lineNumber: 428,
                                                                 columnNumber: 57
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 423,
+                                                        lineNumber: 427,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5265,7 +5318,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                 className: "h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                lineNumber: 427,
+                                                                lineNumber: 431,
                                                                 columnNumber: 41
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5276,25 +5329,25 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                                lineNumber: 428,
+                                                                lineNumber: 432,
                                                                 columnNumber: 41
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                        lineNumber: 426,
+                                                        lineNumber: 430,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                lineNumber: 422,
+                                                lineNumber: 426,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 340,
+                                        lineNumber: 344,
                                         columnNumber: 29
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "flex-1 flex items-center justify-center h-full",
@@ -5305,19 +5358,19 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                     className: "h-3 w-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 437,
+                                                    lineNumber: 441,
                                                     columnNumber: 37
                                                 }, this),
                                                 " No Rewards Data"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                            lineNumber: 436,
+                                            lineNumber: 440,
                                             columnNumber: 33
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 435,
+                                        lineNumber: 439,
                                         columnNumber: 29
                                     }, this),
                                     cashbackStatus?.account_id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5327,24 +5380,24 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                            lineNumber: 448,
+                                            lineNumber: 452,
                                             columnNumber: 33
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 444,
+                                        lineNumber: 448,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 301,
+                                lineNumber: 305,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                        lineNumber: 260,
+                        lineNumber: 264,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5358,7 +5411,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                         className: "h-4 w-4 text-slate-400 group-hover:text-indigo-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 460,
+                                        lineNumber: 464,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5366,13 +5419,13 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                         children: "SPLIT"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 461,
+                                        lineNumber: 465,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 456,
+                                lineNumber: 460,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Popover"], {
@@ -5386,7 +5439,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                     className: "h-4 w-4 text-slate-400 group-hover:text-slate-600"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 467,
+                                                    lineNumber: 471,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5394,18 +5447,18 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                     children: "MORE"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 468,
+                                                    lineNumber: 472,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                            lineNumber: 466,
+                                            lineNumber: 470,
                                             columnNumber: 29
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 465,
+                                        lineNumber: 469,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PopoverContent"], {
@@ -5422,14 +5475,14 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                             className: "h-4 w-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 477,
+                                                            lineNumber: 481,
                                                             columnNumber: 37
                                                         }, this),
                                                         " Edit Person"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 473,
+                                                    lineNumber: 477,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5449,14 +5502,14 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                             className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-4 w-4", isSyncing && "animate-spin")
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 492,
+                                                            lineNumber: 496,
                                                             columnNumber: 37
                                                         }, this),
                                                         " Fix All Cycles (Global)"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 479,
+                                                    lineNumber: 483,
                                                     columnNumber: 33
                                                 }, this),
                                                 activeCycle?.tag && activeCycle.tag !== 'all' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5468,7 +5521,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                             className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("h-4 w-4", isSyncing && "animate-spin")
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 500,
+                                                            lineNumber: 504,
                                                             columnNumber: 41
                                                         }, this),
                                                         " Sync Cycle ",
@@ -5476,7 +5529,7 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 495,
+                                                    lineNumber: 499,
                                                     columnNumber: 37
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5487,43 +5540,43 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                                             className: "h-4 w-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                            lineNumber: 507,
+                                                            lineNumber: 511,
                                                             columnNumber: 37
                                                         }, this),
                                                         " Manage Sheet"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                                    lineNumber: 503,
+                                                    lineNumber: 507,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                            lineNumber: 472,
+                                            lineNumber: 476,
                                             columnNumber: 29
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 471,
+                                        lineNumber: 475,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 464,
+                                lineNumber: 468,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                        lineNumber: 455,
+                        lineNumber: 459,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                lineNumber: 229,
+                lineNumber: 233,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5544,18 +5597,18 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                         className: "absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                        lineNumber: 531,
+                                        lineNumber: 535,
                                         columnNumber: 33
                                     }, this)
                                 ]
                             }, tab, true, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 519,
+                                lineNumber: 523,
                                 columnNumber: 25
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                        lineNumber: 517,
+                        lineNumber: 521,
                         columnNumber: 17
                     }, this),
                     isSyncing && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5565,26 +5618,26 @@ function PeopleHeader({ person, balanceLabel, activeCycle, allCycles, accounts, 
                                 className: "h-3 w-3 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                                lineNumber: 539,
+                                lineNumber: 543,
                                 columnNumber: 25
                             }, this),
                             syncingText || 'Syncing...'
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                        lineNumber: 538,
+                        lineNumber: 542,
                         columnNumber: 21
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-                lineNumber: 516,
+                lineNumber: 520,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/people/v2/PeopleHeader.tsx",
-        lineNumber: 227,
+        lineNumber: 231,
         columnNumber: 9
     }, this);
 }
@@ -5604,7 +5657,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$i
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/label.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:0affe4 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$6dd547__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:6dd547 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/select.tsx [app-ssr] (ecmascript)");
@@ -5685,7 +5738,7 @@ function RolloverDebtDialog({ personId, currentCycle, allCycles = [], remains, t
         if (setLoadingMessage) setLoadingMessage('Creating rollover transactions...');
         setIsProcessing(true);
         try {
-            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$0affe4__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
+            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$6dd547__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["rolloverDebtAction"])(initialState, formData);
             if (result.success) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(result.message || 'Debt rolled over successfully');
             } else {
@@ -6276,7 +6329,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lu
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.554.0_react@19.2.4/node_modules/lucide-react/dist/esm/icons/check.js [app-ssr] (ecmascript) <export default as Check>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:923069 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$15b507__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:15b507 [app-ssr] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$people$2f$sync$2d$report$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/people/sync-report-dialog.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/tooltip.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/tabs.tsx [app-ssr] (ecmascript)");
@@ -6520,7 +6573,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                 description: 'Updating person profile details'
             });
             try {
-                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$923069__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(personId, {
+                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$15b507__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["updatePersonAction"])(personId, {
                     sheet_link: currentScriptLink.trim() || null,
                     google_sheet_url: currentSheetUrl.trim() || null,
                     sheet_full_img: currentSheetImg.trim() || null,
@@ -6673,7 +6726,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                                                 variant: "ghost",
                                                 size: "sm",
-                                                className: "rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-200",
+                                                className: "rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-none",
                                                 disabled: !currentSheetUrl || !isValidLink(currentSheetUrl),
                                                 onClick: (e)=>{
                                                     e.stopPropagation();
@@ -6725,7 +6778,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                                                 variant: "ghost",
                                                 size: "sm",
-                                                className: "rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100",
+                                                className: "rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-none",
                                                 disabled: isDisabled || isSaving,
                                                 onClick: (e)=>{
                                                     e.stopPropagation();
@@ -6803,7 +6856,7 @@ function ManageSheetButton({ personId, cycleTag, initialSheetUrl = null, scriptL
                                                                 columnNumber: 25
                                                             }, this),
                                                             allCycles.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "flex items-center gap-1.5 ml-auto border-l border-slate-100 pl-2 shrink-0",
+                                                                className: "flex items-center gap-1.5 ml-auto pl-2 shrink-0",
                                                                 children: [
                                                                     selectedYear === null ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "text-amber-700 font-bold text-[10px] uppercase",
@@ -8957,7 +9010,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$app$2
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$cashback$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/cashback.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$person$2d$route$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/person-route.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$data$3a$31d92c__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/pocketbase/data:31d92c [app-ssr] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:231ba9 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$347701__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:347701 [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -9030,7 +9083,7 @@ function MemberDetailView({ person, balance, balanceLabel, transactions, debtTag
         setIsGlobalLoading(true);
         setLoadingMessage(tag === 'all' ? 'Syncing ALL cycles...' : `Syncing ${tag}...`);
         try {
-            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$231ba9__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(person.id, tag);
+            const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$347701__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["syncPeopleDebtAction"])(person.id, tag);
             if (!res.success) {
                 throw new Error(res.error || res.message || 'Failed to sync');
             }
