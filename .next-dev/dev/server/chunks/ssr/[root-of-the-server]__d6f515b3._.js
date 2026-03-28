@@ -1368,6 +1368,7 @@ function mapPerson(record) {
         sheet_bank_info: record.sheet_bank_info ?? null,
         sheet_linked_bank_id: record.sheet_linked_bank_id ?? null,
         sheet_show_qr_image: record.sheet_show_qr_image ?? null,
+        is_master_sheet_enabled: record.is_master_sheet_enabled ?? null,
         is_owner: record.is_owner ?? null,
         is_archived: record.is_archived ?? null,
         is_group: record.is_group ?? null,
@@ -1410,7 +1411,7 @@ async function getPocketBasePeople() {
     }, async ()=>{
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$pocketbase$2f$fallback$2d$helpers$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logSource"])('SB', 'people.list fallback');
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image').order('name', {
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').order('name', {
             ascending: true
         });
         if (error) throw error;
@@ -1430,7 +1431,8 @@ async function getPocketBasePeople() {
                 sheet_show_bank_account: item.sheet_show_bank_account,
                 sheet_bank_info: item.sheet_bank_info,
                 sheet_linked_bank_id: item.sheet_linked_bank_id,
-                sheet_show_qr_image: item.sheet_show_qr_image
+                sheet_show_qr_image: item.sheet_show_qr_image,
+                is_master_sheet_enabled: item.is_master_sheet_enabled
             }));
     }, 'people.list');
 }
@@ -1508,7 +1510,7 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             sourceOrPocketBaseId
         });
         const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createClient"])();
-        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image').eq('id', sourceOrPocketBaseId).maybeSingle();
+        const { data, error } = await supabase.from('people').select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled').eq('id', sourceOrPocketBaseId).maybeSingle();
         if (error) throw error;
         if (!data) return null;
         const row = data;
@@ -1527,7 +1529,8 @@ async function getPocketBasePersonDetails(sourceOrPocketBaseId) {
             sheet_show_bank_account: row.sheet_show_bank_account,
             sheet_bank_info: row.sheet_bank_info,
             sheet_linked_bank_id: row.sheet_linked_bank_id,
-            sheet_show_qr_image: row.sheet_show_qr_image
+            sheet_show_qr_image: row.sheet_show_qr_image,
+            is_master_sheet_enabled: row.is_master_sheet_enabled
         };
     }, 'people.get');
 }
@@ -4570,6 +4573,7 @@ function getCycleTag(date) {
 function resolveCycleTagForSheet(tag, occurredAt) {
     const rawTag = typeof tag === 'string' ? tag.trim() : '';
     if ((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["isYYYYMM"])(rawTag)) return rawTag;
+    if (/^\d{4}$/.test(rawTag)) return rawTag;
     const parsedDate = occurredAt ? new Date(occurredAt) : new Date();
     if (Number.isNaN(parsedDate.getTime())) {
         return getCycleTag(new Date());
@@ -5191,15 +5195,19 @@ async function createCycleSheet(personId, cycleTag) {
 async function syncCycleTransactions(personId, cycleTag, sheetId) {
     try {
         const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(personId, 'people');
-        const legacyTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["yyyyMMToLegacyMMMYY"])(cycleTag);
-        const tags = legacyTag ? [
-            cycleTag,
-            legacyTag
-        ] : [
-            cycleTag
-        ];
-        // Construct filter for tags
-        const tagFilter = tags.map((t)=>`tag = "${t}"`).join(' || ');
+        let tagFilter = '';
+        if (/^\d{4}$/.test(cycleTag)) {
+            tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || tag = "${cycleTag}"`;
+        } else {
+            const legacyTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["yyyyMMToLegacyMMMYY"])(cycleTag);
+            const tags = legacyTag ? [
+                cycleTag,
+                legacyTag
+            ] : [
+                cycleTag
+            ];
+            tagFilter = tags.map((t)=>`tag = "${t}"`).join(' || ');
+        }
         const data = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_txn_001', {
             filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
             expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',

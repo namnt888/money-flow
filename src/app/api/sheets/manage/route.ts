@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
 import { createCycleSheet, syncCycleTransactions, createTestSheet } from '@/services/sheet.service'
 import type { ManageCycleSheetRequest, ManageCycleSheetResponse } from '@/types/sheet.types'
-import { toPocketBaseId, pocketbaseList, pocketbaseCreate, pocketbaseUpdate } from '@/services/pocketbase/server'
+import { toPocketBaseId, pocketbaseList, pocketbaseCreate, pocketbaseUpdate, pocketbaseGetById } from '@/services/pocketbase/server'
 
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
@@ -83,16 +83,28 @@ export async function POST(request: Request) {
       return errorResponse(requestId, 'validate_payload', 'Missing cycleTag', 400)
     }
 
-    const normalizedCycle = normalizeMonthTag(rawCycle)
-    if (!normalizedCycle || !isYYYYMM(normalizedCycle)) {
+    // Check if person exists in PocketBase if not UUID
+    const pbId = toPocketBaseId(personId, 'people')
+    let isMasterSheet = false
+    try {
+      const personData = await pocketbaseGetById<any>('people', pbId)
+      isMasterSheet = personData?.is_master_sheet_enabled === true
+    } catch {
+      // ignore
+    }
+
+    let normalizedCycle = normalizeMonthTag(rawCycle)
+    if (isMasterSheet && normalizedCycle) {
+      normalizedCycle = normalizedCycle.split('-')[0] // '2026-03' -> '2026'
+    }
+
+    if (!normalizedCycle || (!isYYYYMM(normalizedCycle) && !/^\d{4}$/.test(normalizedCycle))) {
       console.warn('[ManageSheet API] validation failed: invalid cycleTag', { requestId, personId, rawCycle, normalizedCycle })
       return errorResponse(requestId, 'validate_payload', 'Invalid cycleTag format', 400)
     }
 
-    console.info('[ManageSheet API] request', { requestId, personId, cycleTag: normalizedCycle })
+    console.info('[ManageSheet API] request', { requestId, personId, cycleTag: normalizedCycle, isMasterSheet })
 
-    // Check if person exists in PocketBase if not UUID
-    const pbId = toPocketBaseId(personId, 'people')
     console.info('[ManageSheet API] target', { requestId, personId, pbId, cycleTag: normalizedCycle })
 
     const supabase = createClient()

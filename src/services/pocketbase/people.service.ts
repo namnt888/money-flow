@@ -28,6 +28,7 @@ type PocketBasePersonWrite = {
   sheet_bank_info?: string | null
   sheet_linked_bank_id?: string | null
   sheet_show_qr_image?: boolean
+  is_master_sheet_enabled?: boolean | null
 }
 
 function mapPerson(record: PocketBaseRecord): Person {
@@ -44,6 +45,7 @@ function mapPerson(record: PocketBaseRecord): Person {
     sheet_bank_info: (record.sheet_bank_info as string | null | undefined) ?? null,
     sheet_linked_bank_id: (record.sheet_linked_bank_id as string | null | undefined) ?? null,
     sheet_show_qr_image: (record.sheet_show_qr_image as boolean | null | undefined) ?? null,
+    is_master_sheet_enabled: (record.is_master_sheet_enabled as boolean | null | undefined) ?? null,
     is_owner: (record.is_owner as boolean | null | undefined) ?? null,
     is_archived: (record.is_archived as boolean | null | undefined) ?? null,
     is_group: (record.is_group as boolean | null | undefined) ?? null,
@@ -95,7 +97,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
       const supabase = createClient()
       const { data, error } = await supabase
         .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image')
+        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
         .order('name', { ascending: true })
 
       if (error) throw error
@@ -118,6 +120,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
         sheet_bank_info: item.sheet_bank_info,
         sheet_linked_bank_id: item.sheet_linked_bank_id,
         sheet_show_qr_image: item.sheet_show_qr_image,
+        is_master_sheet_enabled: item.is_master_sheet_enabled,
       }))
     },
     'people.list'
@@ -208,7 +211,7 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
       const supabase = createClient()
       const { data, error } = await supabase
         .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image')
+        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
         .eq('id', sourceOrPocketBaseId)
         .maybeSingle()
 
@@ -233,6 +236,7 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
         sheet_bank_info: row.sheet_bank_info,
         sheet_linked_bank_id: row.sheet_linked_bank_id,
         sheet_show_qr_image: row.sheet_show_qr_image,
+        is_master_sheet_enabled: row.is_master_sheet_enabled,
       }
     },
     'people.get'

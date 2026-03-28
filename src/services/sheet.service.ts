@@ -36,6 +36,7 @@ function getCycleTag(date: Date): string {
 function resolveCycleTagForSheet(tag: unknown, occurredAt?: string | null): string {
   const rawTag = typeof tag === 'string' ? tag.trim() : ''
   if (isYYYYMM(rawTag)) return rawTag
+  if (/^\d{4}$/.test(rawTag)) return rawTag
 
   const parsedDate = occurredAt ? new Date(occurredAt) : new Date()
   if (Number.isNaN(parsedDate.getTime())) {
@@ -732,11 +733,14 @@ export async function syncCycleTransactions(
 ) {
   try {
     const pbId = toPocketBaseId(personId, 'people')
-    const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
-    const tags = legacyTag ? [cycleTag, legacyTag] : [cycleTag]
-
-    // Construct filter for tags
-    const tagFilter = tags.map(t => `tag = "${t}"`).join(' || ')
+    let tagFilter = ''
+    if (/^\d{4}$/.test(cycleTag)) {
+        tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || tag = "${cycleTag}"`
+    } else {
+        const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
+        const tags = legacyTag ? [cycleTag, legacyTag] : [cycleTag]
+        tagFilter = tags.map(t => `tag = "${t}"`).join(' || ')
+    }
     const data = await pocketbaseList('pvl_txn_001', {
       filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
       expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',

@@ -1,7 +1,7 @@
 /**
  * MoneyFlow 3 - Google Apps Script
- * @version 7.9 (Robust Payload Parsing + Sync Diagnostics)
- * @date 2026-03-14 22:40
+ * @version 8.0 (Master Sheet Support)
+ * @date 2026-03-28
  *
  * LAYOUT v7.6 (Explicit Columns):
  * A: ID (Hidden) | B: Type | C: Date | D: Shop | E: Notes

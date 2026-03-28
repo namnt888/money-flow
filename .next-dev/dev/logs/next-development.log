@@ -383,3 +383,335 @@ Import traces:
 [03:44:30.835] Server  LOG     [DB:PB] accounts.getAll
 [03:47:22.035] Server  LOG      ✓ Compiled in 891ms
 [03:49:57.660] Server  LOG      ✓ Compiled in 292ms
+[06:36:30.622] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:36:31.160] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[06:36:32.673] Server  LOG     [DB:PB] accounts.getAll
+[06:36:39.045] Browser LOG     🎨 defaultFormValues computed:
+[06:36:39.045] Browser LOG        initialData: undefined
+[06:36:39.045] Browser LOG        operationMode: add
+[06:36:39.045] Browser LOG        ℹ️ No initialData - using defaults
+[06:36:39.045] Browser LOG     🎨 defaultFormValues computed:
+[06:36:39.045] Browser LOG        initialData: undefined
+[06:36:39.045] Browser LOG        operationMode: add
+[06:36:39.045] Browser LOG        ℹ️ No initialData - using defaults
+[06:37:00.149] Browser LOG     🎨 defaultFormValues computed:
+[06:37:00.149] Browser LOG        initialData: null
+[06:37:00.149] Browser LOG        operationMode: add
+[06:37:00.149] Browser LOG        ℹ️ No initialData - using defaults
+[06:37:00.149] Browser LOG     🎨 defaultFormValues computed:
+[06:37:00.149] Browser LOG        initialData: null
+[06:37:00.149] Browser LOG        operationMode: add
+[06:37:00.149] Browser LOG        ℹ️ No initialData - using defaults
+[06:37:00.341] Server  LOG     [DB:PB] accounts.getAll
+[06:39:11.585] Browser LOG     Action settings for My
+[06:40:07.688] Server  LOG     [DB:PB] people.update {}
+[06:40:08.619] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/pvl_people_001/records/79ef4v6kot33kjq
+[06:40:08.619] Server  LOG     [DB:PB] body: "{\"sheet_link\":\"https://script.google.com/macros/s/AKfycbzzp_guXvz4SWqW7yX2fdOa2aSib5x2lTpujaLRoW1LRT8X6vFvm_1h6d8HPw9dM70Otg/exec\",\"google_sheet_url\":\"https://docs.google.com/spreadsheets/d/1-56IPBtp_DPiThKZYv026uQAKx5X4hAX5rB9zPyR1z4/edit\",\"sheet_full_img\":null,\"sheet_show_bank_account\":false,\"sheet_bank_info\":null,\"sheet_linked_bank_id\":null,\"sheet_show_qr_image\":false}"
+[06:40:08.935] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:40:10.569] Server  INFO    [ManageSheet API] request:start {}
+[06:40:10.571] Server  INFO    [ManageSheet API] request {}
+[06:40:10.571] Server  INFO    [ManageSheet API] target {}
+[06:40:10.881] Server  INFO    [ManageSheet API] person_cycle_sheets (PocketBase) lookup: {}
+[06:40:10.881] Server  INFO    [ManageSheet API] existing {}
+[06:40:10.881] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/person_cycle_sheets/records/day6ob5zxkf260h
+[06:40:10.881] Server  LOG     [DB:PB] body: "{\"updated_at\":\"2026-03-28T10:17:12.917Z\"}"
+[06:40:11.798] Server  LOG     [Sheet] Profile lookup result {}
+[06:40:11.800] Server  LOG     [syncCycleTransactions] Mapped rows diagnostics: {}
+[06:40:11.801] Server  LOG     [Sheet Sync] Sending 1 mapped transactions to 79ef4v6kot33kjq for cycle 2026-03
+[06:40:12.097] Server  LOG     [syncCycleTransactions] Person sheet preferences: {}
+[06:40:12.097] Server  LOG     [syncCycleTransactions] Final payload: {}
+[06:40:12.489] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:40:23.341] Server  INFO    [ManageSheet API] sync result {}
+[06:40:23.718] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:40:27.156] Browser LOG     🎨 defaultFormValues computed:
+[06:40:27.156] Browser LOG        initialData: undefined
+[06:40:27.156] Browser LOG        operationMode: add
+[06:40:27.156] Browser LOG        ℹ️ No initialData - using defaults
+[06:40:27.156] Browser LOG     🎨 defaultFormValues computed:
+[06:40:27.156] Browser LOG        initialData: undefined
+[06:40:27.156] Browser LOG        operationMode: add
+[06:40:27.156] Browser LOG        ℹ️ No initialData - using defaults
+[06:42:37.068] Server  INFO    [ManageSheet API] request:start {}
+[06:42:37.069] Server  INFO    [ManageSheet API] request {}
+[06:42:37.070] Server  INFO    [ManageSheet API] target {}
+[06:42:38.041] Server  INFO    [ManageSheet API] person_cycle_sheets (PocketBase) lookup: {}
+[06:42:38.041] Server  INFO    [ManageSheet API] existing {}
+[06:42:38.043] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/person_cycle_sheets/records/day6ob5zxkf260h
+[06:42:38.043] Server  LOG     [DB:PB] body: "{\"updated_at\":\"2026-03-28T10:19:40.076Z\"}"
+[06:42:39.049] Server  LOG     [Sheet] Profile lookup result {}
+[06:42:39.050] Server  LOG     [syncCycleTransactions] Mapped rows diagnostics: {}
+[06:42:39.050] Server  LOG     [Sheet Sync] Sending 1 mapped transactions to 79ef4v6kot33kjq for cycle 2026-03
+[06:42:39.361] Server  LOG     [syncCycleTransactions] Person sheet preferences: {}
+[06:42:39.361] Server  LOG     [syncCycleTransactions] Final payload: {}
+[06:42:50.135] Server  INFO    [ManageSheet API] sync result {}
+[06:42:50.736] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:42:53.725] Browser LOG     🎨 defaultFormValues computed:
+[06:42:53.726] Browser LOG        initialData: undefined
+[06:42:53.726] Browser LOG        operationMode: add
+[06:42:53.726] Browser LOG        ℹ️ No initialData - using defaults
+[06:42:53.726] Browser LOG     🎨 defaultFormValues computed:
+[06:42:53.726] Browser LOG        initialData: undefined
+[06:42:53.726] Browser LOG        operationMode: add
+[06:42:53.726] Browser LOG        ℹ️ No initialData - using defaults
+[06:49:52.575] Server  LOG      ✓ Compiled in 904ms
+[06:49:54.910] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:49:55.681] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:55.718] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:55.728] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:55.916] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:49:55.986] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:56.002] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:56.208] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:56.679] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:56.692] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:57.084] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:49:57.205] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:57.216] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:57.520] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:57.551] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:49:58.081] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:49:58.151] Browser LOG     🎨 defaultFormValues computed:
+[06:49:58.151] Browser LOG        initialData: undefined
+[06:49:58.151] Browser LOG        operationMode: add
+[06:49:58.151] Browser LOG        ℹ️ No initialData - using defaults
+[06:49:58.151] Browser LOG     🎨 defaultFormValues computed:
+[06:49:58.151] Browser LOG        initialData: undefined
+[06:49:58.151] Browser LOG        operationMode: add
+[06:49:58.151] Browser LOG        ℹ️ No initialData - using defaults
+[06:49:58.233] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:49:58.296] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:49:58.346] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:49:58.515] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:49:58.957] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     🎨 defaultFormValues computed:
+[06:50:01.153] Browser LOG        initialData: undefined
+[06:50:01.153] Browser LOG        operationMode: add
+[06:50:01.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:50:01.153] Browser LOG     🎨 defaultFormValues computed:
+[06:50:01.153] Browser LOG        initialData: undefined
+[06:50:01.153] Browser LOG        operationMode: add
+[06:50:01.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:01.613] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:01.917] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:50:02.152] Browser LOG     🎨 defaultFormValues computed:
+[06:50:02.152] Browser LOG        initialData: undefined
+[06:50:02.152] Browser LOG        operationMode: add
+[06:50:02.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:50:02.153] Browser LOG     🎨 defaultFormValues computed:
+[06:50:02.153] Browser LOG        initialData: undefined
+[06:50:02.153] Browser LOG        operationMode: add
+[06:50:02.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:50:02.225] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:50:02.377] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:02.688] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:50:03.002] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:50:03.018] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:03.371] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:50:03.866] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:50:03.876] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:04.361] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:04.652] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:04.668] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:50:04.990] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:50:05.464] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.149] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:50:06.163] Server  LOG     [Stats:PB] resolve account: {}
+[06:50:06.539] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:50:06.950] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:50:07.758] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:42.230] Server  LOG      ✓ Compiled in 245ms
+[06:52:43.204] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:52:43.637] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:43.658] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:43.675] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:43.685] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:52:43.712] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:43.719] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:52:44.035] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:52:44.198] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.210] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.215] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:52:44.253] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.264] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.268] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:52:44.488] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:52:44.608] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.641] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.647] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:52:44.667] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.679] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:52:44.684] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.153] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.153] Browser LOG        initialData: undefined
+[06:52:45.153] Browser LOG        operationMode: add
+[06:52:45.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:45.153] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.153] Browser LOG        initialData: undefined
+[06:52:45.153] Browser LOG        operationMode: add
+[06:52:45.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:45.155] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.155] Browser LOG        initialData: undefined
+[06:52:45.155] Browser LOG        operationMode: add
+[06:52:45.155] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:45.155] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.155] Browser LOG        initialData: undefined
+[06:52:45.155] Browser LOG        operationMode: add
+[06:52:45.155] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:45.164] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.164] Browser LOG        initialData: undefined
+[06:52:45.164] Browser LOG        operationMode: add
+[06:52:45.164] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:45.164] Browser LOG     🎨 defaultFormValues computed:
+[06:52:45.164] Browser LOG        initialData: undefined
+[06:52:45.164] Browser LOG        operationMode: add
+[06:52:45.164] Browser LOG        ℹ️ No initialData - using defaults
+[06:52:46.291] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:46.293] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:46.696] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:52:46.697] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:52:47.016] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:52:47.018] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:52:47.932] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:47.935] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:48.254] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:52:48.787] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:52:48.885] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:49.191] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:52:49.526] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:52:49.600] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:50.086] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:50.383] Server  LOG     [Stats:PB] resolve account: {}
+[06:52:50.690] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:52:51.100] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:51.150] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:52:52.033] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:04.986] Server  LOG      ✓ Compiled in 223ms
+[06:53:06.230] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:53:06.544] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:06.632] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:06.662] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:53:06.719] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:06.791] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:06.807] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:53:07.361] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:53:07.425] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.436] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.440] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:53:07.541] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.554] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.560] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:53:07.685] Server  LOG     [DB:PB] people.getBatch (Optimized)
+[06:53:07.827] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.839] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.844] Server  LOG     [DB:PB] person-cycle-sheets.get person=79ef4v6kot33kjq
+[06:53:07.888] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.902] Server  LOG     [DB:PB] people.getWithSubs {}
+[06:53:07.906] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[06:53:09.153] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.153] Browser LOG        initialData: undefined
+[06:53:09.153] Browser LOG        operationMode: add
+[06:53:09.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.153] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.153] Browser LOG        initialData: undefined
+[06:53:09.153] Browser LOG        operationMode: add
+[06:53:09.153] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.154] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.155] Browser LOG        initialData: undefined
+[06:53:09.155] Browser LOG        operationMode: add
+[06:53:09.155] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.155] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.155] Browser LOG        initialData: undefined
+[06:53:09.155] Browser LOG        operationMode: add
+[06:53:09.155] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.155] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:09.159] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.159] Browser LOG        initialData: undefined
+[06:53:09.159] Browser LOG        operationMode: add
+[06:53:09.159] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.159] Browser LOG     🎨 defaultFormValues computed:
+[06:53:09.159] Browser LOG        initialData: undefined
+[06:53:09.159] Browser LOG        operationMode: add
+[06:53:09.159] Browser LOG        ℹ️ No initialData - using defaults
+[06:53:09.520] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:09.523] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:09.839] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:53:09.840] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:53:10.252] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:53:10.253] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:53:11.274] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:11.277] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:11.582] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:53:11.779] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:12.062] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:53:12.078] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:53:12.394] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:53:12.854] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:13.187] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:13.357] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:13.487] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[06:53:13.792] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.151] Browser LOG     [parseMetadata] Found parent_transaction_id: f9f64fef-60dd-408a-a528-a8039dc80e3c
+[06:53:14.931] Server  LOG     [Stats:PB] resolve account: {}
+[06:53:33.920] Server  LOG      ✓ Compiled in 431ms

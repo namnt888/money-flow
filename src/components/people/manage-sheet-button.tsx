@@ -1033,29 +1033,29 @@ export function ManageSheetButton({
 
                   {/* 3. Actions */}
                   <div className="pt-2 flex flex-col gap-2">
-                    {hasUnsavedChanges && (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="w-full h-8 bg-slate-900 hover:bg-slate-800"
-                        onClick={handleSaveSettings}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                    )}
-
                     <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="flex-1 h-8"
-                        onClick={handleManageCycle}
-                        disabled={isManaging || !hasValidScriptLink || isSaving}
-                      >
-                        <RefreshCcw className={cn("h-3.5 w-3.5 mr-2", isManaging && "animate-spin")} />
-                        {isManaging ? 'Syncing...' : 'Sync Sheet Now'}
-                      </Button>
+                      {hasUnsavedChanges ? (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="flex-1 h-8 bg-slate-900 hover:bg-slate-800"
+                          onClick={handleSaveSettings}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="flex-1 h-8 bg-slate-900 hover:bg-slate-800"
+                          onClick={handleManageCycle}
+                          disabled={isManaging || !hasValidScriptLink}
+                        >
+                          <RefreshCcw className={cn("h-3.5 w-3.5 mr-2", isManaging && "animate-spin")} />
+                          {isManaging ? 'Syncing...' : 'Sync Sheet Now'}
+                        </Button>
+                      )}
 
                       {currentSheetUrl && isValidLink(currentSheetUrl) && (
                         <Button
