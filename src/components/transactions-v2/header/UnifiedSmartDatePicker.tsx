@@ -194,7 +194,7 @@ export function UnifiedSmartDatePicker({
 
   const filteredCycles = useMemo(() => {
     const keyword = cycleSearch.trim().toLowerCase()
-    return cyclesWithAll.filter((cycle) => {
+    return cyclesWithAll.filter((cycle: any) => {
       if (cycle.value !== 'all' && cycleYearFilter !== 'all') {
         const year = cycle.value.match(/^(\d{4})-/)?.[1]
         if (year !== cycleYearFilter) return false
@@ -224,7 +224,7 @@ export function UnifiedSmartDatePicker({
     setLocalAllYear(selectedYearValue || String(new Date().getFullYear()))
   }
 
-  const selectedCycleLabel = cyclesWithAll.find((cycle) => cycle.value === (selectedCycleValue || 'all'))?.label
+  const selectedCycleLabel = cyclesWithAll.find((cycle: any) => cycle.value === (selectedCycleValue || 'all'))?.label
   const displayText = (() => {
     if (mode === 'cycle') return selectedCycleLabel || 'All cycles'
     if (mode === 'all') {
@@ -381,7 +381,7 @@ export function UnifiedSmartDatePicker({
               placeholder="Search cycle..." 
               className="pl-11 h-12 bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-indigo-500/10 rounded-xl font-medium transition-all"
               value={cycleSearch}
-              onChange={(e) => setCycleSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCycleSearch(e.target.value)}
             />
           </div>
           <Popover open={yearOpen} onOpenChange={setYearOpen}>
@@ -400,7 +400,7 @@ export function UnifiedSmartDatePicker({
                     <span>All Years</span>
                     {cycleYearFilter === 'all' && <Check className="w-3.5 h-3.5" />}
                   </CommandItem>
-                  {cycleYears.map(year => (
+                  {cycleYears.map((year: string) => (
                     <CommandItem 
                       key={year} 
                       onSelect={() => { 
@@ -434,7 +434,7 @@ export function UnifiedSmartDatePicker({
           ) : (
             <div className="space-y-4 pt-2">
               <AnimatePresence mode="popLayout">
-                {filteredCycles.map((cycle, idx) => {
+                {filteredCycles.map((cycle: any, idx: number) => {
                   const isSelected = localCycle === cycle.value
                   const isSettled = cycle.stats?.isSettled || false
                   const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
@@ -618,7 +618,7 @@ export function UnifiedSmartDatePicker({
             <div>
               <Input
                 value={typedInput}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setTypedInput(formatSmartInputMask(e.target.value))
                   if (inputWarning) setInputWarning(null)
                 }}
@@ -635,7 +635,7 @@ export function UnifiedSmartDatePicker({
             <Calendar
               mode="single"
               selected={localDate}
-              onSelect={(d) => {
+              onSelect={(d: Date | undefined) => {
                 if (!d) return
                 setLocalDate(d)
                 setTypedInput(format(d, 'dd-MM-yyyy'))
@@ -698,7 +698,7 @@ export function UnifiedSmartDatePicker({
               <Calendar
                 mode="range"
                 selected={localRange}
-                onSelect={(range) => {
+                onSelect={(range: DateRange | undefined) => {
                   setLocalRange(range)
                   if (range?.from && range?.to) {
                     setTypedInput(`${format(range.from, 'dd-MM-yyyy')} - ${format(range.to, 'dd-MM-yyyy')}`)
@@ -719,7 +719,7 @@ export function UnifiedSmartDatePicker({
 
           {localMode === 'year' && (
             <div className="grid grid-cols-3 gap-2">
-              {availableYears.map((year) => (
+              {availableYears.map((year: number) => (
                 <Button
                   key={year}
                   size="sm"
@@ -758,7 +758,7 @@ export function UnifiedSmartDatePicker({
                         <span>All years</span>
                         {localAllYear === 'all' && <Check className="w-3.5 h-3.5" />}
                       </CommandItem>
-                      {availableYears.map((year) => (
+                      {availableYears.map((year: number) => (
                         <CommandItem
                           key={year}
                           value={String(year)}
