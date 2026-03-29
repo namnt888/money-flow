@@ -18,6 +18,7 @@ interface PeopleTableProps {
     onLend: (person: Person) => void;
     onRepay: (person: Person) => void;
     onSync: (personId: string) => Promise<void>;
+    onOpenSettings?: (person: Person) => void;
     sortConfig?: { key: PeopleColumnKey; direction: 'asc' | 'desc' } | null;
     onSort?: (key: PeopleColumnKey) => void;
 }
@@ -29,6 +30,7 @@ export function PeopleTableV2({
     onLend,
     onRepay,
     onSync,
+    onOpenSettings,
     sortConfig: propSortConfig,
     onSort,
 }: PeopleTableProps) {
@@ -276,6 +278,7 @@ export function PeopleTableV2({
                                                 onLend={onLend}
                                                 onRepay={onRepay}
                                                 onSync={onSync}
+                                                onOpenSettings={onOpenSettings}
                                                 accounts={accounts}
                                             />
                                         ))}

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RotateCw, AlertTriangle, CheckCircle2, User, Search, Play, Loader2 } from "lucide-react";
 import { syncPeopleDebtAction } from "@/actions/people-actions";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ interface MigrationDialogProps {
 }
 
 export function MigrationDialog({ people, trigger }: MigrationDialogProps) {
+    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [statusList, setStatusList] = useState<MigrationPerson[]>([]);
     const [isChecking, setIsChecking] = useState(false);
@@ -55,9 +57,9 @@ export function MigrationDialog({ people, trigger }: MigrationDialogProps) {
                     balance,
                     isSelected: false
                 };
-            }).filter(p => !p.hasCycles || Math.abs(p.balance) > 100); // Relaxed filter from 1000 to 100 to catch smaller debts
+            });
             
-            // By default, select only those who definitely have NO cycles
+            // Initial state: ALL people in statusList, but selected ONLY if unmigrated
             setStatusList(list.map(p => ({ ...p, isSelected: !p.hasCycles })));
         }
     }, [open, people]);
@@ -111,6 +113,7 @@ export function MigrationDialog({ people, trigger }: MigrationDialogProps) {
         }
 
         toast.success(`Migration completed: ${successCount} success, ${failCount} failed.`);
+        router.refresh();
         setIsMigrating(false);
         setProgress(0);
     };

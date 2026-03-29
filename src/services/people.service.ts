@@ -164,9 +164,10 @@ export async function getPeople(options?: {
     });
 
     // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
+    // Increase limit to 10000 to ensure we don't miss history for un-synced members
     const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
-      filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
-      perPage: 5000, 
+      filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer')`,
+      perPage: 10000, 
       sort: "-date",
     });
     const recentTxns = txnsResponse.items;
@@ -583,9 +584,27 @@ export async function createPerson(
       is_owner: options.is_owner || false,
       is_archived: options.is_archived || false,
       is_group: options.is_group || false,
+      is_favorite: options.is_favorite || false,
       group_parent_id: options.group_parent_id,
       sheet_linked_bank_id: options.sheet_linked_bank_id,
+      is_master_sheet_enabled: options.is_master_sheet_enabled || false,
+      sheet_show_bank_account: options.sheet_show_bank_account || false,
+      sheet_bank_info: options.sheet_bank_info,
+      sheet_show_qr_image: options.sheet_show_qr_image || false,
+      sheet_full_img: options.sheet_full_img,
     });
+
+    // Handle initial subscriptions if any
+    if (subscriptionIds && subscriptionIds.length > 0) {
+      const { updateServiceMembers } = await import("./service-manager");
+      const memberPayload = subscriptionIds.map((sid) => ({
+        service_id: sid,
+        person_id: person.id,
+        slots: 1,
+        is_owner: false,
+      }));
+      await updateServiceMembersForPerson(person.id as string, subscriptionIds);
+    }
 
     // Ensure debt account exists
     await ensureDebtAccount(person.id as string, name);
@@ -595,6 +614,42 @@ export async function createPerson(
   } catch (error) {
     console.error("[DB:PB] createPerson failed:", error);
     return { success: false, error: (error as any).message };
+  }
+}
+
+/**
+ * Helper to update service members for a specific person
+ */
+async function updateServiceMembersForPerson(personId: string, subscriptionIds: string[]) {
+  const { pocketbaseList, pocketbaseDelete, pocketbaseCreate, toPocketBaseId } = await import("./pocketbase/server");
+  
+  // 1. Get current memberships for this person
+  const existing = await pocketbaseList<any>("service_members", {
+    filter: `person_id="${personId}"`,
+    perPage: 100
+  });
+
+  // 2. Delete memberships not in the new list
+  for (const m of existing.items) {
+    if (!subscriptionIds.includes(m.service_id)) {
+      await pocketbaseDelete("service_members", m.id);
+    }
+  }
+
+  // 3. Add new memberships
+  const currentSids = existing.items.map(m => m.service_id);
+  for (const sid of subscriptionIds) {
+    if (!currentSids.includes(sid)) {
+      const pbPersonId = toPocketBaseId(personId, "people");
+      const pbServiceId = toPocketBaseId(sid, "services");
+      await pocketbaseCreate("service_members", {
+        id: toPocketBaseId(`${pbServiceId}-${pbPersonId}`, "service_members"),
+        service_id: pbServiceId,
+        person_id: pbPersonId,
+        slots: 1,
+        is_owner: false
+      });
+    }
   }
 }
 
@@ -620,6 +675,11 @@ export async function updatePerson(id: string, data: any) {
       is_favorite: data.is_favorite,
       is_master_sheet_enabled: data.is_master_sheet_enabled,
     });
+
+    // Handle subscriptions if provided
+    if (data.subscriptionIds !== undefined) {
+      await updateServiceMembersForPerson(pbId, data.subscriptionIds);
+    }
 
     revalidatePersonPaths(pbId);
     return { success: true };

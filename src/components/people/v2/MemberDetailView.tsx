@@ -63,7 +63,7 @@ export function MemberDetailView({
     const dateTo = searchParams.get('dateTo') || ''
     const currentMonthTag = toYYYYMMFromDate(new Date())
 
-    const [activeTab, setActiveTab] = useState<'timeline' | 'history' | 'split-bill'>('timeline')
+    const [activeTab, setActiveTab] = useState<'timeline' | 'split-bill'>('timeline')
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
@@ -75,6 +75,10 @@ export function MemberDetailView({
     const [showPaidModal, setShowPaidModal] = useState(false)
     const [dateRangeFilter, setDateRangeFilter] = useState<{ from: Date; to: Date } | undefined>()
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Global loading for table actions (e.g. Voiding, Rollover, Sync)
+    const [isPersonSlideOpen, setIsPersonSlideOpen] = useState(false)
+    const [personSlideTab, setPersonSlideTab] = useState<string>('general')
 
     // Global loading for table actions (e.g. Voiding, Rollover, Sync)
     const [isGlobalLoading, setIsGlobalLoading] = useState(false)
@@ -156,7 +160,7 @@ export function MemberDetailView({
             return null
         }
         if (person.is_master_sheet_enabled && !urlTag) {
-            return new Date().getFullYear().toString()
+            return null
         }
         if (urlTag && urlTag.includes('-')) {
             return urlTag.split('-')[0]
@@ -198,12 +202,12 @@ export function MemberDetailView({
     const [slideOverrideType, setSlideOverrideType] = useState<string | undefined>(undefined)
 
     // Person Slide State
-    const [isPersonSlideOpen, setIsPersonSlideOpen] = useState(false)
+    // REMOVED from here, moved to main state section
 
     const { setCustomName } = useBreadcrumbs()
 
     useEffect(() => {
-        const tabLabel = activeTab === 'history' ? 'History' : activeTab === 'split-bill' ? 'Split Bill' : 'Transactions'
+        const tabLabel = activeTab === 'split-bill' ? 'Split Bill' : 'Transactions'
         document.title = `${person.name} ${tabLabel}`
 
         const path = `/people/${getPersonRouteId(person)}`
@@ -981,6 +985,10 @@ export function MemberDetailView({
                         onSyncCycle={onSyncPeopleDebt}
                         setIsGlobalLoading={setIsGlobalLoading}
                         setLoadingMessage={setLoadingMessage}
+                        onOpenSettings={() => {
+                            setPersonSlideTab('sheet')
+                            setIsPersonSlideOpen(true)
+                        }}
                     />
                     <div className="flex-1 overflow-y-auto px-4 py-3 relative">
                         {(isSubmitting || isGlobalLoading) && (
@@ -1008,6 +1016,7 @@ export function MemberDetailView({
                                 searchTerm={searchTerm}
                                 context="person"
                                 contextId={person.id}
+                                showTag={activeCycleTag === 'all' || (person.is_master_sheet_enabled ?? false)}
                                 onEdit={handleEditTransaction}
                                 onDuplicate={handleDuplicateTransaction}
                                 setIsGlobalLoading={setIsGlobalLoading}
@@ -1018,22 +1027,6 @@ export function MemberDetailView({
                 </>
             )}
 
-            {activeTab === 'history' && (
-                <div className="flex-1 overflow-y-auto px-4 py-3">
-                    <SimpleTransactionTable
-                        transactions={historyTransactions}
-                        accounts={accounts}
-                        categories={categories}
-                        people={people}
-                        shops={shops}
-                        searchTerm={searchTerm}
-                        context="person"
-                        contextId={person.id}
-                        setIsGlobalLoading={setIsGlobalLoading}
-                        setLoadingMessage={setLoadingMessage}
-                    />
-                </div>
-            )}
 
             {activeTab === 'split-bill' && (
                 <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -1062,10 +1055,14 @@ export function MemberDetailView({
 
             <PeopleSlideV2
                 open={isPersonSlideOpen}
-                onOpenChange={setIsPersonSlideOpen}
+                onOpenChange={(val) => {
+                    setIsPersonSlideOpen(val)
+                    if (!val) setPersonSlideTab('general')
+                }}
                 person={person}
                 subscriptions={subscriptions}
                 accounts={accounts}
+                defaultTab={personSlideTab}
             />
             {/* Transaction Slide V2 */}
             <TransactionSlideV2

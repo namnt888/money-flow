@@ -87,7 +87,7 @@ export function PersonDetailHeaderV2({
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6">
                     <StatCard
-                        label="Outstanding Balance"
+                        label="Total Balance"
                         value={totalDebt}
                         icon={<Wallet className="h-4 w-4" />}
                         variant={totalDebt > 0 ? "danger" : totalDebt < 0 ? "success" : "neutral"}

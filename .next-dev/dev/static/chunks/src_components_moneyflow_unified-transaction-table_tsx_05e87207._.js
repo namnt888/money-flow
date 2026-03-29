@@ -61,10 +61,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$t
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/sheet.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/popover.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$transaction$2d$form$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/moneyflow/transaction-form.tsx [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$e6c2b1__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:e6c2b1 [app-client] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$24a7e2__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:24a7e2 [app-client] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$3909ca__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:3909ca [app-client] (ecmascript) <text/javascript>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$513b0f__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:513b0f [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$6477b3__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:6477b3 [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$3ff045__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:3ff045 [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f3af3d__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:f3af3d [app-client] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$ec1c63__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/actions/data:ec1c63 [app-client] (ecmascript) <text/javascript>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$constants$2f$refunds$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/constants/refunds.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$cycle$2d$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/cycle-utils.ts [app-client] (ecmascript)");
@@ -325,6 +325,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
             minWidth: 110
         },
         {
+            key: "cycle",
+            label: "Debt Cycle",
+            defaultWidth: 120,
+            minWidth: 100
+        },
+        {
             key: "people",
             label: "People",
             defaultWidth: 150
@@ -397,7 +403,8 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                 est_share: false,
                 net_profit: false,
                 back_info: false,
-                people: false
+                people: false,
+                cycle: false
             };
             if (hiddenColumns.length > 0) {
                 hiddenColumns.forEach({
@@ -424,6 +431,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
         }
     }["UnifiedTransactionTable.useState"]);
     // --- Persistence Logic ---
+    const hiddenColsStr = JSON.stringify(hiddenColumns);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "UnifiedTransactionTable.useEffect": ()=>{
             // Load saved settings
@@ -432,13 +440,36 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                 const savedVis = localStorage.getItem("mf_v3_col_vis");
                 const savedWidths = localStorage.getItem("mf_v3_col_width");
                 if (savedOrder) {
-                    setCustomColumnOrder(JSON.parse(savedOrder));
+                    const parsed = JSON.parse(savedOrder);
+                    // Append any missing default columns (new features)
+                    const missing = defaultColumns.filter({
+                        "UnifiedTransactionTable.useEffect.missing": (c)=>!parsed.includes(c.key)
+                    }["UnifiedTransactionTable.useEffect.missing"]).map({
+                        "UnifiedTransactionTable.useEffect.missing": (c)=>c.key
+                    }["UnifiedTransactionTable.useEffect.missing"]);
+                    setCustomColumnOrder([
+                        ...parsed,
+                        ...missing
+                    ]);
                 }
                 if (savedVis) {
+                    const parsedVis = JSON.parse(savedVis);
+                    // Apply hiddenColumns prop override
+                    if (hiddenColumns && hiddenColumns.length > 0) {
+                        hiddenColumns.forEach({
+                            "UnifiedTransactionTable.useEffect": (col)=>{
+                                parsedVis[col] = false;
+                            }
+                        }["UnifiedTransactionTable.useEffect"]);
+                    }
+                    // AUTO-SHOW Cycle Column in Person/Account context if not explicitly hidden
+                    if ((context === "person" || context === "account") && !hiddenColumns?.includes("cycle")) {
+                        parsedVis["cycle"] = true;
+                    }
                     setVisibleColumns({
                         "UnifiedTransactionTable.useEffect": (prev)=>({
                                 ...prev,
-                                ...JSON.parse(savedVis)
+                                ...parsedVis
                             })
                     }["UnifiedTransactionTable.useEffect"]);
                 }
@@ -454,7 +485,10 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                 console.error("Failed to load column settings", e);
             }
         }
-    }["UnifiedTransactionTable.useEffect"], []);
+    }["UnifiedTransactionTable.useEffect"], [
+        hiddenColsStr,
+        context
+    ]); // Stable dependency
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "UnifiedTransactionTable.useEffect": ()=>{
             if (customColumnOrder.length > 0) localStorage.setItem("mf_v3_col_order", JSON.stringify(customColumnOrder));
@@ -879,7 +913,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
     const handleRestore = async (txn)=>{
         setIsRestoring(true);
         try {
-            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$513b0f__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["restoreTransaction"])(txn.id);
+            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$ec1c63__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["restoreTransaction"])(txn.id);
             if (!ok) {
                 setVoidError("Unable to restore transaction. Please try again.");
                 return;
@@ -989,7 +1023,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
         setConfirmVoidTarget(null);
         setUpdatingTxnIds((prev)=>new Set(prev).add(targetId));
         try {
-            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$3909ca__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["voidTransactionAction"])(targetId);
+            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f3af3d__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["voidTransactionAction"])(targetId);
             if (!ok) {
                 setVoidError("Unable to void transaction. Please try again.");
                 return;
@@ -1012,7 +1046,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             children: "Giao dịch Bot Batch"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1140,
+                            lineNumber: 1161,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1020,7 +1054,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             children: "Không được xóa tại đây để tránh lệch Data."
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1141,
+                            lineNumber: 1162,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0)),
                         batchId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -1031,13 +1065,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             children: "Mở trang Batch để Unconfirm"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1145,
+                            lineNumber: 1166,
                             columnNumber: 17
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1139,
+                    lineNumber: 1160,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)), {
                     duration: 8000
@@ -1194,7 +1228,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
         setLoadingMessage?.("Deleting transaction...");
         setIsGlobalLoading?.(true);
         try {
-            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$e6c2b1__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteTransaction"])(confirmDeletingTarget.id);
+            const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$6477b3__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteTransaction"])(confirmDeletingTarget.id);
             if (ok) {
                 setConfirmDeletingTarget(null);
                 if (onSuccess) await onSuccess();
@@ -1213,7 +1247,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
     const handleOpenLinkedDebt = async (id, e)=>{
         e.stopPropagation();
         try {
-            const txn = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$24a7e2__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getTransactionById"])(id);
+            const txn = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$3ff045__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["getTransactionById"])(id);
             if (txn) {
                 setEditingTxn(txn);
             } else {
@@ -1240,7 +1274,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     break;
                 }
                 try {
-                    const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$3909ca__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["voidTransactionAction"])(id);
+                    const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$f3af3d__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["voidTransactionAction"])(id);
                     if (ok) {
                         setStatusOverrides((prev)=>({
                                 ...prev,
@@ -1276,7 +1310,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(`Process stopped. ${processedCount} items processed.`);
                     break;
                 }
-                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$513b0f__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["restoreTransaction"])(id);
+                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$data$3a$ec1c63__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["restoreTransaction"])(id);
                 if (ok) {
                     setStatusOverrides((prev)=>({
                             ...prev,
@@ -1308,7 +1342,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(`Process stopped. ${processedCount} items processed.`);
                     break;
                 }
-                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$e6c2b1__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteTransaction"])(id);
+                const ok = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$6477b3__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["deleteTransaction"])(id);
                 if (!ok) {
                     errorCount++;
                 }
@@ -1625,13 +1659,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
             className: "h-px bg-slate-100"
         }, void 0, false, {
             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-            lineNumber: 1827,
+            lineNumber: 1848,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("hr", {
             className: "my-1 border-slate-200"
         }, void 0, false, {
             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-            lineNumber: 1829,
+            lineNumber: 1850,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0));
         if (currentTab === "void" || isVoided) {
@@ -1649,20 +1683,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1844,
+                            lineNumber: 1865,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: isRestoring ? "Restoring..." : "Restore"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1845,
+                            lineNumber: 1866,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1835,
+                    lineNumber: 1856,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false);
@@ -1681,20 +1715,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1861,
+                            lineNumber: 1882,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: "Edit"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1862,
+                            lineNumber: 1883,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1853,
+                    lineNumber: 1874,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1709,20 +1743,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1872,
+                            lineNumber: 1893,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: "Duplicate"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1873,
+                            lineNumber: 1894,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1864,
+                    lineNumber: 1885,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1737,20 +1771,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1883,
+                            lineNumber: 1904,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: "Void"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1884,
+                            lineNumber: 1905,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1875,
+                    lineNumber: 1896,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 canShowCancelActions && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1770,20 +1804,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 1901,
+                                    lineNumber: 1922,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: hasRefundRequest ? "Refund Requested" : "Request Refund"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 1902,
+                                    lineNumber: 1923,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1890,
+                            lineNumber: 1911,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1805,20 +1839,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 1921,
+                                    lineNumber: 1942,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: hasRefundRequest ? "Order Cancelled" : "Cancel Order (100%)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 1922,
+                                    lineNumber: 1943,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1906,
+                            lineNumber: 1927,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
@@ -1836,20 +1870,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1938,
+                            lineNumber: 1959,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: "Delete (Forever)"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1939,
+                            lineNumber: 1960,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 1930,
+                    lineNumber: 1951,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0))
             ]
@@ -1878,17 +1912,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 className: "h-4 w-4 pointer-events-none"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 1970,
+                                lineNumber: 1991,
                                 columnNumber: 17
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 1959,
+                            lineNumber: 1980,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 1958,
+                        lineNumber: 1979,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SheetContent"], {
@@ -1907,7 +1941,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "Quick actions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 1982,
+                                        lineNumber: 2003,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SheetClose"], {
@@ -1920,23 +1954,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 1991,
+                                                lineNumber: 2012,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 1986,
+                                            lineNumber: 2007,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 1985,
+                                        lineNumber: 2006,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 1981,
+                                lineNumber: 2002,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1944,19 +1978,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: renderActionMenuItems(txn, isVoided, "sheet")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 1995,
+                                lineNumber: 2016,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 1973,
+                        lineNumber: 1994,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                lineNumber: 1954,
+                lineNumber: 1975,
                 columnNumber: 11
             }, ("TURBOPACK compile-time value", void 0));
         }
@@ -1977,17 +2011,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-3.5 w-3.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2018,
+                            lineNumber: 2039,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 2011,
+                        lineNumber: 2032,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 2010,
+                    lineNumber: 2031,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2002,17 +2036,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             className: "h-3.5 w-3.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2030,
+                            lineNumber: 2051,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 2023,
+                        lineNumber: 2044,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 2022,
+                    lineNumber: 2043,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Popover"], {
@@ -2034,17 +2068,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                     className: "h-3.5 w-3.5 pointer-events-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 2053,
+                                    lineNumber: 2074,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 2040,
+                                lineNumber: 2061,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2039,
+                            lineNumber: 2060,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PopoverContent"], {
@@ -2058,24 +2092,24 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: renderActionMenuItems(txn, isVoided, "popover")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 2063,
+                                lineNumber: 2084,
                                 columnNumber: 15
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2056,
+                            lineNumber: 2077,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 2035,
+                    lineNumber: 2056,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-            lineNumber: 2004,
+            lineNumber: 2025,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0));
     };
@@ -2113,7 +2147,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
             description: "Add your first transaction to get started"
         }, void 0, false, {
             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-            lineNumber: 2100,
+            lineNumber: 2121,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -2146,12 +2180,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                         }
                     }, void 0, false, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 2122,
+                        lineNumber: 2143,
                         columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 2121,
+                    lineNumber: 2142,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 !isMobile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2172,20 +2206,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-12 w-12 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2160,
+                                                lineNumber: 2181,
                                                 columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
                                                 className: "absolute inset-0 m-auto h-5 w-5 text-indigo-600 animate-pulse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2161,
+                                                lineNumber: 2182,
                                                 columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 2159,
+                                        lineNumber: 2180,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2196,7 +2230,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: isRestoring ? "Restoring Transaction..." : "Deleting Permanently..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2164,
+                                                lineNumber: 2185,
                                                 columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2204,24 +2238,24 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: "Processing Database"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2169,
+                                                lineNumber: 2190,
                                                 columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 2163,
+                                        lineNumber: 2184,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 2158,
+                                lineNumber: 2179,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2157,
+                            lineNumber: 2178,
                             columnNumber: 17
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -2248,7 +2282,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: columnLabel
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 2208,
+                                                    lineNumber: 2229,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0)) : col.key === "date" || isMobileCategoryDate ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex items-center gap-2",
@@ -2261,7 +2295,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             disabled: isExcelMode
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2211,
+                                                            lineNumber: 2232,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2282,30 +2316,30 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-3 w-3 text-blue-600"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2245,
+                                                                        lineNumber: 2266,
                                                                         columnNumber: 39
                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDown$3e$__["ArrowDown"], {
                                                                         className: "h-3 w-3 text-blue-600"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2247,
+                                                                        lineNumber: 2268,
                                                                         columnNumber: 39
                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$up$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowUpDown$3e$__["ArrowUpDown"], {
                                                                         className: "h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2250,
+                                                                        lineNumber: 2271,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2230,
+                                                                lineNumber: 2251,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2220,
+                                                            lineNumber: 2241,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         isSorted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2325,23 +2359,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-3 w-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2271,
+                                                                    lineNumber: 2292,
                                                                     columnNumber: 37
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2260,
+                                                                lineNumber: 2281,
                                                                 columnNumber: 35
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2256,
+                                                            lineNumber: 2277,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 2210,
+                                                    lineNumber: 2231,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0)) : col.key === "amount" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
                                                     content: sortState.key === "amount" ? sortState.dir === "asc" ? "Sorted: Low to High" : "Sorted: High to Low" : "Click to sort",
@@ -2361,36 +2395,36 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 className: "h-3 w-3 text-blue-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2302,
+                                                                lineNumber: 2323,
                                                                 columnNumber: 37
                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDown$3e$__["ArrowDown"], {
                                                                 className: "h-3 w-3 text-blue-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2304,
+                                                                lineNumber: 2325,
                                                                 columnNumber: 37
                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$up$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowUpDown$3e$__["ArrowUpDown"], {
                                                                 className: "h-3 w-3 text-slate-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2307,
+                                                                lineNumber: 2328,
                                                                 columnNumber: 35
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                        lineNumber: 2287,
+                                                        lineNumber: 2308,
                                                         columnNumber: 31
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 2277,
+                                                    lineNumber: 2298,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0)) : col.key === "final_price" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: columnLabel
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 2312,
+                                                    lineNumber: 2333,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0)) : col.key === "actions" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex items-center justify-center w-full relative group",
@@ -2399,7 +2433,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: columnLabel
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2315,
+                                                            lineNumber: 2336,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2415,39 +2449,39 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-3.5 w-3.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2327,
+                                                                    lineNumber: 2348,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2320,
+                                                                lineNumber: 2341,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2316,
+                                                            lineNumber: 2337,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 2314,
+                                                    lineNumber: 2335,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0)) : columnLabel
                                             }, col.key, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2199,
+                                                lineNumber: 2220,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0));
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 2182,
+                                        lineNumber: 2203,
                                         columnNumber: 19
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 2181,
+                                    lineNumber: 2202,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TableBody"], {
@@ -2460,17 +2494,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 description: "Try adjusting your filters or search criteria"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 2346,
+                                                lineNumber: 2367,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 2342,
+                                            lineNumber: 2363,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 2341,
+                                        lineNumber: 2362,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)) : paginatedTransactions.map((txn, rowIndex)=>{
                                         const isRepayment = txn.type === "repayment";
@@ -2545,7 +2579,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     disabled: isExcelMode
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2465,
+                                                                    lineNumber: 2486,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2558,7 +2592,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 children: sequenceNumber
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2486,
+                                                                                lineNumber: 2507,
                                                                                 columnNumber: 37
                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2573,7 +2607,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 2490,
+                                                                                        lineNumber: 2511,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2581,30 +2615,51 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         children: timeStr
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 2493,
+                                                                                        lineNumber: 2514,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2489,
+                                                                                lineNumber: 2510,
                                                                                 columnNumber: 37
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2485,
+                                                                        lineNumber: 2506,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2484,
+                                                                    lineNumber: 2505,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2464,
+                                                            lineNumber: 2485,
+                                                            columnNumber: 31
+                                                        }, ("TURBOPACK compile-time value", void 0));
+                                                    }
+                                                case "cycle":
+                                                    {
+                                                        const txnAccount = accounts.find((a)=>a.id === txn.account_id);
+                                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "flex items-center justify-center w-full",
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$transactions$2d$v2$2f$badge$2f$CycleBadge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CycleBadge"], {
+                                                                account: txnAccount,
+                                                                cycleTag: txn.tag,
+                                                                txnDate: txn.occurred_at || txn.created_at || new Date(),
+                                                                personContext: !!txn.person_id || context === 'person'
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
+                                                                lineNumber: 2527,
+                                                                columnNumber: 33
+                                                            }, ("TURBOPACK compile-time value", void 0))
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
+                                                            lineNumber: 2526,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -2620,7 +2675,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-3 w-3 animate-spin text-slate-500"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2510,
+                                                                        lineNumber: 2544,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2628,18 +2683,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Updating"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2511,
+                                                                        lineNumber: 2545,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2509,
+                                                                lineNumber: 2543,
                                                                 columnNumber: 35
                                                             }, ("TURBOPACK compile-time value", void 0)) : renderRowActions(txn, isVoided)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2507,
+                                                            lineNumber: 2541,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -2653,7 +2708,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2529,
+                                                            lineNumber: 2563,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const isIncome = txn.type === "income";
@@ -2667,7 +2722,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: "-"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2547,
+                                                                lineNumber: 2581,
                                                                 columnNumber: 38
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -2680,7 +2735,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2556,
+                                                            lineNumber: 2590,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const effectiveRate = amountAbs > 0 ? val / amountAbs : 0;
@@ -2694,7 +2749,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Est. Cashback (Calculated)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2569,
+                                                                        lineNumber: 2603,
                                                                         columnNumber: 37
                                                                     }, void 0),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2709,7 +2764,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2572,
+                                                                        lineNumber: 2606,
                                                                         columnNumber: 37
                                                                     }, void 0),
                                                                     isCapped && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2721,7 +2776,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2580,
+                                                                        lineNumber: 2614,
                                                                         columnNumber: 39
                                                                     }, void 0),
                                                                     estimate.isFallback && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2729,7 +2784,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Rule fallback: mapped by category name"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2588,
+                                                                        lineNumber: 2622,
                                                                         columnNumber: 39
                                                                     }, void 0),
                                                                     !estimate.isFallback && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2737,13 +2792,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Rule: policy-based category match"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2593,
+                                                                        lineNumber: 2627,
                                                                         columnNumber: 39
                                                                     }, void 0)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2568,
+                                                                lineNumber: 2602,
                                                                 columnNumber: 35
                                                             }, void 0),
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2751,12 +2806,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: numberFormatter.format(val)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2600,
+                                                                lineNumber: 2634,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2566,
+                                                            lineNumber: 2600,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -2769,7 +2824,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2619,
+                                                            lineNumber: 2653,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const isIncome = txn.type === "income";
@@ -2782,7 +2837,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: "-"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2631,
+                                                                lineNumber: 2665,
                                                                 columnNumber: 38
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -2796,7 +2851,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2644,
+                                                            lineNumber: 2678,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const formulaLabelParts = [];
@@ -2815,7 +2870,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Cashback Shared"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2666,
+                                                                        lineNumber: 2700,
                                                                         columnNumber: 37
                                                                     }, void 0),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2831,14 +2886,14 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2671,
+                                                                                lineNumber: 2705,
                                                                                 columnNumber: 41
                                                                             }, void 0),
                                                                             shareRate > 0 && fixedRaw > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                 children: " + "
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2680,
+                                                                                lineNumber: 2714,
                                                                                 columnNumber: 41
                                                                             }, void 0),
                                                                             fixedRaw > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2849,7 +2904,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2683,
+                                                                                lineNumber: 2717,
                                                                                 columnNumber: 41
                                                                             }, void 0),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2860,19 +2915,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2688,
+                                                                                lineNumber: 2722,
                                                                                 columnNumber: 39
                                                                             }, void 0)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2669,
+                                                                        lineNumber: 2703,
                                                                         columnNumber: 37
                                                                     }, void 0)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2665,
+                                                                lineNumber: 2699,
                                                                 columnNumber: 35
                                                             }, void 0),
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2880,12 +2935,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: formulaLabel
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2696,
+                                                                lineNumber: 2730,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2663,
+                                                            lineNumber: 2697,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -2898,7 +2953,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2708,
+                                                            lineNumber: 2742,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const isIncome = txn.type === "income";
@@ -2912,7 +2967,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: "-"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2726,
+                                                                lineNumber: 2760,
                                                                 columnNumber: 38
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -2929,7 +2984,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2755,
+                                                            lineNumber: 2789,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -2941,7 +2996,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Profit Calculation"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2761,
+                                                                        lineNumber: 2795,
                                                                         columnNumber: 37
                                                                     }, void 0),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2959,19 +3014,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 children: numberFormatter.format(profit)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 2768,
+                                                                                lineNumber: 2802,
                                                                                 columnNumber: 39
                                                                             }, void 0)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 2764,
+                                                                        lineNumber: 2798,
                                                                         columnNumber: 37
                                                                     }, void 0)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2760,
+                                                                lineNumber: 2794,
                                                                 columnNumber: 35
                                                             }, void 0),
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2979,12 +3034,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 children: numberFormatter.format(profit)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2781,
+                                                                lineNumber: 2815,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2758,
+                                                            lineNumber: 2792,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -3037,17 +3092,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2883,
+                                                                    lineNumber: 2917,
                                                                     columnNumber: 37
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2878,
+                                                                lineNumber: 2912,
                                                                 columnNumber: 35
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 2877,
+                                                            lineNumber: 2911,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0)) : null;
                                                         const refundAccount = accounts.find((a)=>a.id === txn.account_id);
@@ -3088,25 +3143,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2962,
+                                                                            lineNumber: 2996,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "WAIT"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2963,
+                                                                            lineNumber: 2997,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2956,
+                                                                    lineNumber: 2990,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2955,
+                                                                lineNumber: 2989,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (showReversed) {
@@ -3119,25 +3174,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2976,
+                                                                            lineNumber: 3010,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "REFUNDED"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2977,
+                                                                            lineNumber: 3011,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2970,
+                                                                    lineNumber: 3004,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2969,
+                                                                lineNumber: 3003,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (showCheck) {
@@ -3150,25 +3205,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2990,
+                                                                            lineNumber: 3024,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "DONE"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 2991,
+                                                                            lineNumber: 3025,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2984,
+                                                                    lineNumber: 3018,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2983,
+                                                                lineNumber: 3017,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (showOK) {
@@ -3181,25 +3236,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3004,
+                                                                            lineNumber: 3038,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "OK"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3005,
+                                                                            lineNumber: 3039,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 2998,
+                                                                    lineNumber: 3032,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 2997,
+                                                                lineNumber: 3031,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -3217,7 +3272,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-3 w-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3021,
+                                                                        lineNumber: 3055,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3225,18 +3280,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: "Confirm"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3022,
+                                                                        lineNumber: 3056,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3013,
+                                                                lineNumber: 3047,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3012,
+                                                            lineNumber: 3046,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0)) : null;
                                                         // Transaction ID display - No prefix, just truncated ID
@@ -3252,7 +3307,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-8 w-8 object-contain shrink-0 rounded-none border-none ring-0 outline-none"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3037,
+                                                                        lineNumber: 3071,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3261,18 +3316,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-4 w-4 text-orange-600"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3046,
+                                                                        lineNumber: 3080,
                                                                         columnNumber: 39
                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shopping$2d$basket$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ShoppingBasket$3e$__["ShoppingBasket"], {
                                                                         className: "h-4 w-4 text-slate-500"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3048,
+                                                                        lineNumber: 3082,
                                                                         columnNumber: 39
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3044,
+                                                                    lineNumber: 3078,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3298,23 +3353,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             className: "h-3 w-3"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3079,
+                                                                                            lineNumber: 3113,
                                                                                             columnNumber: 43
                                                                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                                             className: "h-3 w-3"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3081,
+                                                                                            lineNumber: 3115,
                                                                                             columnNumber: 43
                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3059,
+                                                                                        lineNumber: 3093,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3056,
+                                                                                    lineNumber: 3090,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -3330,17 +3385,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             className: "h-3 w-3"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3099,
+                                                                                            lineNumber: 3133,
                                                                                             columnNumber: 41
                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3087,
+                                                                                        lineNumber: 3121,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3086,
+                                                                                    lineNumber: 3120,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -3357,17 +3412,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             className: "h-3 w-3"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3117,
+                                                                                            lineNumber: 3151,
                                                                                             columnNumber: 41
                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3104,
+                                                                                        lineNumber: 3138,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3103,
+                                                                                    lineNumber: 3137,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 (()=>{
@@ -3380,7 +3435,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             children: "No note"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3131,
+                                                                                            lineNumber: 3165,
                                                                                             columnNumber: 43
                                                                                         }, ("TURBOPACK compile-time value", void 0));
                                                                                     }
@@ -3394,19 +3449,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             children: displayNote
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3139,
+                                                                                            lineNumber: 3173,
                                                                                             columnNumber: 43
                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3138,
+                                                                                        lineNumber: 3172,
                                                                                         columnNumber: 41
                                                                                     }, ("TURBOPACK compile-time value", void 0));
                                                                                 })()
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3055,
+                                                                            lineNumber: 3089,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         (()=>{
@@ -3430,12 +3485,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3184,
+                                                                                        lineNumber: 3218,
                                                                                         columnNumber: 43
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3183,
+                                                                                    lineNumber: 3217,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                             }
@@ -3451,7 +3506,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                 className: "h-3 w-3"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3206,
+                                                                                                lineNumber: 3240,
                                                                                                 columnNumber: 45
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             "CLONE",
@@ -3460,12 +3515,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3205,
+                                                                                        lineNumber: 3239,
                                                                                         columnNumber: 43
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3202,
+                                                                                    lineNumber: 3236,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                             }
@@ -3481,19 +3536,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             className: "h-3 w-3"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 3231,
+                                                                                            lineNumber: 3265,
                                                                                             columnNumber: 45
                                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                                         "PLAN"
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3226,
+                                                                                    lineNumber: 3260,
                                                                                     columnNumber: 43
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3225,
+                                                                                lineNumber: 3259,
                                                                                 columnNumber: 41
                                                                             }, ("TURBOPACK compile-time value", void 0)) : null;
                                                                             const batchId = metadata?.batch_id;
@@ -3513,19 +3568,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                 className: "h-3 w-3"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3259,
+                                                                                                lineNumber: 3293,
                                                                                                 columnNumber: 45
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             isBatchStep3 ? "BATCH S3" : "BATCH S1"
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3250,
+                                                                                        lineNumber: 3284,
                                                                                         columnNumber: 43
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3247,
+                                                                                    lineNumber: 3281,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                             }
@@ -3541,19 +3596,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                 className: "h-3 w-3"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3273,
+                                                                                                lineNumber: 3307,
                                                                                                 columnNumber: 45
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             "CONFIRMED"
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3272,
+                                                                                        lineNumber: 3306,
                                                                                         columnNumber: 43
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3271,
+                                                                                    lineNumber: 3305,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                             }
@@ -3579,19 +3634,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                 className: "h-3 w-3"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3320,
+                                                                                                lineNumber: 3354,
                                                                                                 columnNumber: 45
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             "EDITED"
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3312,
+                                                                                        lineNumber: 3346,
                                                                                         columnNumber: 43
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3311,
+                                                                                    lineNumber: 3345,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                             }
@@ -3628,7 +3683,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                             ]
                                                                                                         }, void 0, true, {
                                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                            lineNumber: 3374,
+                                                                                                            lineNumber: 3408,
                                                                                                             columnNumber: 55
                                                                                                         }, void 0),
                                                                                                         debts.map((d, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3641,7 +3696,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                                         ]
                                                                                                                     }, void 0, true, {
                                                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                                        lineNumber: 3383,
+                                                                                                                        lineNumber: 3417,
                                                                                                                         columnNumber: 59
                                                                                                                     }, void 0),
                                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3649,19 +3704,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                                         children: numberFormatter.format(d.amount)
                                                                                                                     }, void 0, false, {
                                                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                                        lineNumber: 3388,
+                                                                                                                        lineNumber: 3422,
                                                                                                                         columnNumber: 59
                                                                                                                     }, void 0)
                                                                                                                 ]
                                                                                                             }, i, true, {
                                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                                lineNumber: 3379,
+                                                                                                                lineNumber: 3413,
                                                                                                                 columnNumber: 57
                                                                                                             }, void 0))
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                    lineNumber: 3373,
+                                                                                                    lineNumber: 3407,
                                                                                                     columnNumber: 53
                                                                                                 }, void 0),
                                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3680,17 +3735,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                        lineNumber: 3406,
+                                                                                                        lineNumber: 3440,
                                                                                                         columnNumber: 53
                                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                    lineNumber: 3398,
+                                                                                                    lineNumber: 3432,
                                                                                                     columnNumber: 51
                                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3371,
+                                                                                                lineNumber: 3405,
                                                                                                 columnNumber: 49
                                                                                             }, ("TURBOPACK compile-time value", void 0));
                                                                                         }
@@ -3699,20 +3754,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3341,
+                                                                                lineNumber: 3375,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0));
                                                                         })()
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3053,
+                                                                    lineNumber: 3087,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3032,
+                                                            lineNumber: 3066,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -3740,18 +3795,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 className: "h-3 w-3"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3455,
+                                                                                lineNumber: 3489,
                                                                                 columnNumber: 43
                                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$link$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Link2$3e$__["Link2"], {
                                                                                 className: "h-3 w-3"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3457,
+                                                                                lineNumber: 3491,
                                                                                 columnNumber: 43
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3433,
+                                                                            lineNumber: 3467,
                                                                             columnNumber: 39
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3762,7 +3817,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: txn.note?.startsWith("[C] ") ? txn.note.substring(4) : txn.note
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3462,
+                                                                            lineNumber: 3496,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         txn.note && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -3771,25 +3826,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 children: txn.note
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3474,
+                                                                                lineNumber: 3508,
                                                                                 columnNumber: 41
                                                                             }, void 0),
                                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__["Info"], {
                                                                                 className: "h-3 w-3 text-slate-400 flex-shrink-0"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3479,
+                                                                                lineNumber: 3513,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3472,
+                                                                            lineNumber: 3506,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3430,
+                                                                    lineNumber: 3464,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3810,18 +3865,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 className: "h-3.5 w-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3506,
+                                                                                lineNumber: 3540,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                                 className: "h-3.5 w-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3508,
+                                                                                lineNumber: 3542,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3487,
+                                                                            lineNumber: 3521,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -3837,29 +3892,29 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     className: "h-3.5 w-3.5"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3525,
+                                                                                    lineNumber: 3559,
                                                                                     columnNumber: 39
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3513,
+                                                                                lineNumber: 3547,
                                                                                 columnNumber: 37
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3512,
+                                                                            lineNumber: 3546,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3485,
+                                                                    lineNumber: 3519,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3428,
+                                                            lineNumber: 3462,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -3884,25 +3939,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-full w-full object-contain"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3565,
+                                                                        lineNumber: 3599,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0)) : categoryIcon ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "text-sm",
                                                                         children: categoryIcon
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3571,
+                                                                        lineNumber: 3605,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$book$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Book$3e$__["Book"], {
                                                                         className: "h-4 w-4 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3575,
+                                                                        lineNumber: 3609,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3563,
+                                                                    lineNumber: 3597,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3914,7 +3969,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: displayCategory
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3580,
+                                                                            lineNumber: 3614,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3924,32 +3979,32 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     className: "h-2.5 w-2.5"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3594,
+                                                                                    lineNumber: 3628,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                     children: kindLabel
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3595,
+                                                                                    lineNumber: 3629,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3586,
+                                                                            lineNumber: 3620,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3579,
+                                                                    lineNumber: 3613,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3561,
+                                                            lineNumber: 3595,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -3989,12 +4044,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4 text-red-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3681,
+                                                                    lineNumber: 3715,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3680,
+                                                                lineNumber: 3714,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (txn.type === "income") {
@@ -4004,12 +4059,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4 text-emerald-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3687,
+                                                                    lineNumber: 3721,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3686,
+                                                                lineNumber: 3720,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (txn.type === "transfer") {
@@ -4019,12 +4074,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4 text-blue-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3693,
+                                                                    lineNumber: 3727,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3692,
+                                                                lineNumber: 3726,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (txn.type === "debt" || txn.type === "loan") {
@@ -4034,12 +4089,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4 text-amber-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3702,
+                                                                    lineNumber: 3736,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3701,
+                                                                lineNumber: 3735,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         } else if (txn.type === "repayment") {
@@ -4049,12 +4104,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     className: "h-4 w-4 text-purple-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3708,
+                                                                    lineNumber: 3742,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3707,
+                                                                lineNumber: 3741,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -4064,7 +4119,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: typeIcon
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3715,
+                                                            lineNumber: 3749,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         // Cycle badge for source (only credit_card with cashback_config)
@@ -4077,7 +4132,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             entityName: sourceName
                                                         }, `cycle-source-${txn.id}`, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3725,
+                                                            lineNumber: 3759,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0)) : null;
                                                         // People debt tag badge with click/hover logic
@@ -4105,7 +4160,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3764,
+                                                                                lineNumber: 3798,
                                                                                 columnNumber: 43
                                                                             }, void 0),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4119,13 +4174,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 children: "Sync"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 3767,
+                                                                                lineNumber: 3801,
                                                                                 columnNumber: 43
                                                                             }, void 0)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3763,
+                                                                        lineNumber: 3797,
                                                                         columnNumber: 41
                                                                     }, void 0),
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4138,17 +4193,17 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             className: "h-3 w-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3795,
+                                                                            lineNumber: 3829,
                                                                             columnNumber: 41
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3784,
+                                                                        lineNumber: 3818,
                                                                         columnNumber: 39
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3761,
+                                                                    lineNumber: 3795,
                                                                     columnNumber: 37
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
@@ -4163,18 +4218,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: debtTag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3802,
+                                                                        lineNumber: 3836,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3799,
+                                                                    lineNumber: 3833,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, `debt-tag-${txn.id}`, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 3756,
+                                                            lineNumber: 3790,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0)) : null;
                                                         // CONTEXT HIDING LOGIC
@@ -4220,7 +4275,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     children: peopleDebtTag
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 3883,
+                                                                    lineNumber: 3917,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0));
                                                                 isCycleBadge = false;
@@ -4283,7 +4338,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                     className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-full w-full object-contain", displayIsAccount ? "rounded-sm" : "rounded-none")
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                    lineNumber: 3967,
+                                                                                                    lineNumber: 4001,
                                                                                                     columnNumber: 47
                                                                                                 }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                                     className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-full w-full flex items-center justify-center border border-slate-100 bg-white", displayIsAccount ? "rounded-sm" : "rounded-none"),
@@ -4291,23 +4346,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                         className: "h-4 w-4 text-slate-400"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                        lineNumber: 3987,
+                                                                                                        lineNumber: 4021,
                                                                                                         columnNumber: 51
                                                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__["User"], {
                                                                                                         className: "h-4 w-4 text-slate-400"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                        lineNumber: 3989,
+                                                                                                        lineNumber: 4023,
                                                                                                         columnNumber: 51
                                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                    lineNumber: 3978,
+                                                                                                    lineNumber: 4012,
                                                                                                     columnNumber: 47
                                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3965,
+                                                                                                lineNumber: 3999,
                                                                                                 columnNumber: 43
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4320,7 +4375,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                             children: roleLabel
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                            lineNumber: 3996,
+                                                                                                            lineNumber: 4030,
                                                                                                             columnNumber: 47
                                                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4328,29 +4383,29 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                             children: displayName
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                            lineNumber: 4006,
+                                                                                                            lineNumber: 4040,
                                                                                                             columnNumber: 47
                                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                    lineNumber: 3995,
+                                                                                                    lineNumber: 4029,
                                                                                                     columnNumber: 45
                                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 3994,
+                                                                                                lineNumber: 4028,
                                                                                                 columnNumber: 43
                                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 3952,
+                                                                                        lineNumber: 3986,
                                                                                         columnNumber: 41
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 3949,
+                                                                                    lineNumber: 3983,
                                                                                     columnNumber: 39
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 badgeToDisplay && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4360,30 +4415,30 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         children: badgeToDisplay
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 4018,
+                                                                                        lineNumber: 4052,
                                                                                         columnNumber: 45
                                                                                     }, ("TURBOPACK compile-time value", void 0)) : // If debt tag (it manages its own tooltip inside the component)
                                                                                     badgeToDisplay
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4016,
+                                                                                    lineNumber: 4050,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 3947,
+                                                                            lineNumber: 3981,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 3946,
+                                                                        lineNumber: 3980,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 3943,
+                                                                lineNumber: 3977,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -4453,7 +4508,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-full w-full object-contain", entity.isAccount ? "rounded-sm" : "rounded-none")
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 4108,
+                                                                                        lineNumber: 4142,
                                                                                         columnNumber: 41
                                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-full w-full flex items-center justify-center border border-slate-100 bg-white", entity.isAccount ? "rounded-sm" : "rounded-none"),
@@ -4461,23 +4516,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                             className: "h-4 w-4 text-slate-400"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 4128,
+                                                                                            lineNumber: 4162,
                                                                                             columnNumber: 45
                                                                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__["User"], {
                                                                                             className: "h-4 w-4 text-slate-400"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                            lineNumber: 4130,
+                                                                                            lineNumber: 4164,
                                                                                             columnNumber: 45
                                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 4119,
+                                                                                        lineNumber: 4153,
                                                                                         columnNumber: 41
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4106,
+                                                                                    lineNumber: 4140,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4486,11 +4541,11 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                         className: "flex min-w-0 items-center",
                                                                                         children: [
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("inline-flex items-center rounded-md border px-1.5 h-4 text-[9px] font-black tracking-wide mr-1.5 shrink-0", roleLabel === "FROM" ? "border-indigo-200 bg-indigo-50 text-indigo-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"),
+                                                                                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("inline-flex items-center rounded-md border px-1.5 h-4.5 text-[9px] font-black tracking-wide mr-1.5 shrink-0 shadow-sm", roleLabel === "FROM" ? "border-indigo-700 bg-indigo-600 text-white" : "border-emerald-700 bg-emerald-600 text-white"),
                                                                                                 children: roleLabel
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 4137,
+                                                                                                lineNumber: 4171,
                                                                                                 columnNumber: 41
                                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4498,29 +4553,29 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                                 children: entity.name
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                                lineNumber: 4147,
+                                                                                                lineNumber: 4181,
                                                                                                 columnNumber: 41
                                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                        lineNumber: 4136,
+                                                                                        lineNumber: 4170,
                                                                                         columnNumber: 39
                                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4135,
+                                                                                    lineNumber: 4169,
                                                                                     columnNumber: 37
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4093,
+                                                                            lineNumber: 4127,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4090,
+                                                                        lineNumber: 4124,
                                                                         columnNumber: 33
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     badges.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4529,18 +4584,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 children: badge
                                                                             }, idx, false, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 4159,
+                                                                                lineNumber: 4193,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0)))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4157,
+                                                                        lineNumber: 4191,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4088,
+                                                                lineNumber: 4122,
                                                                 columnNumber: 31
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4548,19 +4603,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: [
                                                                 borderedTypeIconWide,
                                                                 renderFlowEntity(displayLeft, leftBadges, leftRole),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "text-slate-300 font-light shrink-0",
-                                                                    children: "|"
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                    className: "flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200 shadow-sm mx-0.5",
+                                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
+                                                                        className: "h-2.5 w-2.5 text-slate-400"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
+                                                                        lineNumber: 4211,
+                                                                        columnNumber: 35
+                                                                    }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4176,
+                                                                    lineNumber: 4210,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 renderFlowEntity(displayRight, rightBadges, rightRole)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4169,
+                                                            lineNumber: 4203,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -4576,7 +4637,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4213,
+                                                            lineNumber: 4247,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4590,18 +4651,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-full w-full object-contain"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4222,
+                                                                        lineNumber: 4256,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__["User"], {
                                                                         className: "h-3 w-3 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4228,
+                                                                        lineNumber: 4262,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4220,
+                                                                    lineNumber: 4254,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4609,13 +4670,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     children: personName
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4231,
+                                                                    lineNumber: 4265,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4219,
+                                                            lineNumber: 4253,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -4631,16 +4692,16 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 displayTag && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$custom$2d$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomTooltip"], {
                                                                     content: dateRangeTooltip || displayTag,
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 cursor-help whitespace-nowrap",
+                                                                        className: "inline-flex items-center rounded-md bg-amber-400 px-2.5 py-1 text-xs font-semibold text-black border border-amber-500 shadow-sm cursor-help whitespace-nowrap",
                                                                         children: displayTag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4254,
+                                                                        lineNumber: 4288,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4251,
+                                                                    lineNumber: 4285,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 (txn.is_installment || txn.installment_plan_id) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4652,12 +4713,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         className: "h-4 w-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4268,
+                                                                        lineNumber: 4302,
                                                                         columnNumber: 37
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4262,
+                                                                    lineNumber: 4296,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 !txn.tag && !txn.is_installment && !txn.installment_plan_id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4665,13 +4726,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     children: "-"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4274,
+                                                                    lineNumber: 4308,
                                                                     columnNumber: 37
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4249,
+                                                            lineNumber: 4283,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -4702,7 +4763,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     children: "💰 Price Breakdown"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4328,
+                                                                    lineNumber: 4362,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4712,7 +4773,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "Original Amount:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4332,
+                                                                            lineNumber: 4366,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4720,13 +4781,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: numberFormatter.format(Math.abs(originalAmount))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4333,
+                                                                            lineNumber: 4367,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4331,
+                                                                    lineNumber: 4365,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 percentDisp > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4740,7 +4801,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4341,
+                                                                            lineNumber: 4375,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4751,13 +4812,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4348,
+                                                                            lineNumber: 4382,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4340,
+                                                                    lineNumber: 4374,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 fixedDisp > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4767,7 +4828,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "Fixed Discount:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4358,
+                                                                            lineNumber: 4392,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4778,13 +4839,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4359,
+                                                                            lineNumber: 4393,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4357,
+                                                                    lineNumber: 4391,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4794,7 +4855,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "Final Price:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4365,
+                                                                            lineNumber: 4399,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4802,19 +4863,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: numberFormatter.format(finalDisp)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4366,
+                                                                            lineNumber: 4400,
                                                                             columnNumber: 35
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4364,
+                                                                    lineNumber: 4398,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4327,
+                                                            lineNumber: 4361,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0)) : null;
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4837,7 +4898,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 4379,
+                                                                                lineNumber: 4413,
                                                                                 columnNumber: 41
                                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                                             fixedDisp > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4848,13 +4909,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                lineNumber: 4394,
+                                                                                lineNumber: 4428,
                                                                                 columnNumber: 39
                                                                             }, ("TURBOPACK compile-time value", void 0))
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4376,
+                                                                        lineNumber: 4410,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4865,18 +4926,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                         children: numberFormatter.format(Math.abs(amount))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                        lineNumber: 4399,
+                                                                        lineNumber: 4433,
                                                                         columnNumber: 35
                                                                     }, ("TURBOPACK compile-time value", void 0))
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4375,
+                                                                lineNumber: 4409,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4374,
+                                                            lineNumber: 4408,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -4908,12 +4969,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     children: numberFormatter.format(Math.abs(finalDisp))
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4472,
+                                                                    lineNumber: 4506,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4471,
+                                                                lineNumber: 4505,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0));
                                                         }
@@ -4928,7 +4989,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "💰 Net Value Formula"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4490,
+                                                                            lineNumber: 4524,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4938,7 +4999,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: "Base Amount:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4494,
+                                                                                    lineNumber: 4528,
                                                                                     columnNumber: 41
                                                                                 }, void 0),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4946,13 +5007,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: numberFormatter.format(baseAmount)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4495,
+                                                                                    lineNumber: 4529,
                                                                                     columnNumber: 41
                                                                                 }, void 0)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4493,
+                                                                            lineNumber: 4527,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4962,7 +5023,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: "Est. Refund/Bank Reward:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4500,
+                                                                                    lineNumber: 4534,
                                                                                     columnNumber: 41
                                                                                 }, void 0),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4970,13 +5031,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: numberFormatter.format(estimatedRewardDisplay)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4501,
+                                                                                    lineNumber: 4535,
                                                                                     columnNumber: 41
                                                                                 }, void 0)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4499,
+                                                                            lineNumber: 4533,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4986,7 +5047,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: "Back Amount:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4508,
+                                                                                    lineNumber: 4542,
                                                                                     columnNumber: 41
                                                                                 }, void 0),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4994,13 +5055,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: numberFormatter.format(netBackAmount)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4509,
+                                                                                    lineNumber: 4543,
                                                                                     columnNumber: 41
                                                                                 }, void 0)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4507,
+                                                                            lineNumber: 4541,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5008,13 +5069,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "Formula: Base Amount - Final Amount"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4513,
+                                                                            lineNumber: 4547,
                                                                             columnNumber: 39
                                                                         }, void 0)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4489,
+                                                                    lineNumber: 4523,
                                                                     columnNumber: 37
                                                                 }, void 0),
                                                                 side: "bottom",
@@ -5029,7 +5090,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4521,
+                                                                            lineNumber: 4555,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5040,23 +5101,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: numberFormatter.format(Math.abs(finalDisp))
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4524,
+                                                                            lineNumber: 4558,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4520,
+                                                                    lineNumber: 4554,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4487,
+                                                                lineNumber: 4521,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4486,
+                                                            lineNumber: 4520,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -5074,7 +5135,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4565,
+                                                            lineNumber: 4599,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         const effectivePercent = baseAmount > 0 ? cashbackAmount / baseAmount * 100 : 0;
@@ -5089,7 +5150,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: "💰 Total Back Details"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4577,
+                                                                            lineNumber: 4611,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5099,7 +5160,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: "Base:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4581,
+                                                                                    lineNumber: 4615,
                                                                                     columnNumber: 41
                                                                                 }, void 0),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5107,13 +5168,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: numberFormatter.format(baseAmount)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4582,
+                                                                                    lineNumber: 4616,
                                                                                     columnNumber: 41
                                                                                 }, void 0)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4580,
+                                                                            lineNumber: 4614,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5123,7 +5184,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: "Back:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4587,
+                                                                                    lineNumber: 4621,
                                                                                     columnNumber: 41
                                                                                 }, void 0),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5131,13 +5192,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: numberFormatter.format(cashbackAmount)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4588,
+                                                                                    lineNumber: 4622,
                                                                                     columnNumber: 41
                                                                                 }, void 0)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4586,
+                                                                            lineNumber: 4620,
                                                                             columnNumber: 39
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5149,13 +5210,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4594,
+                                                                            lineNumber: 4628,
                                                                             columnNumber: 39
                                                                         }, void 0)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4576,
+                                                                    lineNumber: 4610,
                                                                     columnNumber: 37
                                                                 }, void 0),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5170,7 +5231,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4601,
+                                                                            lineNumber: 4635,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5178,23 +5239,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                             children: numberFormatter.format(cashbackAmount)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4608,
+                                                                            lineNumber: 4642,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0))
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4600,
+                                                                    lineNumber: 4634,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4574,
+                                                                lineNumber: 4608,
                                                                 columnNumber: 33
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4573,
+                                                            lineNumber: 4607,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -5209,7 +5270,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4631,
+                                                            lineNumber: 4665,
                                                             columnNumber: 38
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5224,7 +5285,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4635,
+                                                                    lineNumber: 4669,
                                                                     columnNumber: 35
                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5237,14 +5298,14 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     className: "h-3 w-3"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4651,
+                                                                                    lineNumber: 4685,
                                                                                     columnNumber: 39
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 numberFormatter.format(cashbackAmount)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                            lineNumber: 4650,
+                                                                            lineNumber: 4684,
                                                                             columnNumber: 37
                                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                                         typeof txn.profit === "number" && txn.profit !== 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -5254,7 +5315,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     children: ";"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4659,
+                                                                                    lineNumber: 4693,
                                                                                     columnNumber: 43
                                                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5266,7 +5327,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                                    lineNumber: 4663,
+                                                                                    lineNumber: 4697,
                                                                                     columnNumber: 41
                                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                                             ]
@@ -5274,13 +5335,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                    lineNumber: 4648,
+                                                                    lineNumber: 4682,
                                                                     columnNumber: 33
                                                                 }, ("TURBOPACK compile-time value", void 0))
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4633,
+                                                            lineNumber: 4667,
                                                             columnNumber: 31
                                                         }, ("TURBOPACK compile-time value", void 0));
                                                     }
@@ -5303,23 +5364,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                                 className: "h-4 w-4 text-emerald-500"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4694,
+                                                                lineNumber: 4728,
                                                                 columnNumber: 37
                                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                 className: "h-4 w-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                                lineNumber: 4696,
+                                                                lineNumber: 4730,
                                                                 columnNumber: 37
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                            lineNumber: 4681,
+                                                            lineNumber: 4715,
                                                             columnNumber: 33
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                        lineNumber: 4678,
+                                                        lineNumber: 4712,
                                                         columnNumber: 31
                                                     }, ("TURBOPACK compile-time value", void 0));
                                                 default:
@@ -5344,19 +5405,19 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: renderCell(col.key)
                                                 }, `${txn.id}-${col.key}`, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4731,
+                                                    lineNumber: 4765,
                                                     columnNumber: 31
                                                 }, ("TURBOPACK compile-time value", void 0));
                                             })
                                         }, txn.id, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4707,
+                                            lineNumber: 4741,
                                             columnNumber: 25
                                         }, ("TURBOPACK compile-time value", void 0));
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 2339,
+                                    lineNumber: 2360,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 selection.size > 0 && paginatedTransactions.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tfoot", {
@@ -5373,7 +5434,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: "Total Rows"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4778,
+                                                    lineNumber: 4812,
                                                     columnNumber: 29
                                                 }, ("TURBOPACK compile-time value", void 0));
                                             } else if (col.key === "amount") {
@@ -5398,30 +5459,30 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: content
                                             }, `total-${col.key}`, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 4797,
+                                                lineNumber: 4831,
                                                 columnNumber: 27
                                             }, ("TURBOPACK compile-time value", void 0));
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 4770,
+                                        lineNumber: 4804,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4769,
+                                    lineNumber: 4803,
                                     columnNumber: 19
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 2176,
+                            lineNumber: 2197,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 2151,
+                    lineNumber: 2172,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 !isExcelMode && showPagination && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -5437,7 +5498,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: "Rows"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4828,
+                                            lineNumber: 4862,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5456,18 +5517,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: size
                                                 }, size, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4837,
+                                                    lineNumber: 4871,
                                                     columnNumber: 27
                                                 }, ("TURBOPACK compile-time value", void 0)))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4831,
+                                            lineNumber: 4865,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4827,
+                                    lineNumber: 4861,
                                     columnNumber: 21
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5481,12 +5542,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 4852,
+                                                lineNumber: 4886,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4845,
+                                            lineNumber: 4879,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5502,13 +5563,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4856,
+                                                    lineNumber: 4890,
                                                     columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4854,
+                                            lineNumber: 4888,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5519,24 +5580,24 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 4869,
+                                                lineNumber: 4903,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4860,
+                                            lineNumber: 4894,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4844,
+                                    lineNumber: 4878,
                                     columnNumber: 21
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 4826,
+                            lineNumber: 4860,
                             columnNumber: 19
                         }, ("TURBOPACK compile-time value", void 0)), document.body),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5550,7 +5611,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: "Rows"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4879,
+                                            lineNumber: 4913,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5569,18 +5630,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: size
                                                 }, size, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4888,
+                                                    lineNumber: 4922,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4882,
+                                            lineNumber: 4916,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4878,
+                                    lineNumber: 4912,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5594,12 +5655,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 4902,
+                                                lineNumber: 4936,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4897,
+                                            lineNumber: 4931,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5610,7 +5671,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: "Page "
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4905,
+                                                    lineNumber: 4939,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 currentPage,
@@ -5623,13 +5684,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4907,
+                                                    lineNumber: 4941,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4904,
+                                            lineNumber: 4938,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5640,18 +5701,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 4920,
+                                                lineNumber: 4954,
                                                 columnNumber: 21
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4911,
+                                            lineNumber: 4945,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4896,
+                                    lineNumber: 4930,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5668,12 +5729,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                         className: "h-3 w-3 text-slate-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                        lineNumber: 4932,
+                                                        lineNumber: 4966,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4927,
+                                                    lineNumber: 4961,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5681,7 +5742,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: fontSize
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4934,
+                                                    lineNumber: 4968,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5692,18 +5753,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                         className: "h-3 w-3 text-slate-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                        lineNumber: 4942,
+                                                        lineNumber: 4976,
                                                         columnNumber: 23
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4937,
+                                                    lineNumber: 4971,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4926,
+                                            lineNumber: 4960,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5723,7 +5784,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     className: "h-3 w-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4956,
+                                                    lineNumber: 4990,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5731,25 +5792,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: "Reset"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 4957,
+                                                    lineNumber: 4991,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 4946,
+                                            lineNumber: 4980,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 4925,
+                                    lineNumber: 4959,
                                     columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 4876,
+                            lineNumber: 4910,
                             columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
@@ -5808,7 +5869,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     }
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 4965,
+                    lineNumber: 4999,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 confirmVoidTarget && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2d$dom$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createPortal"])(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5823,7 +5884,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: "Void transaction?"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5033,
+                                lineNumber: 5067,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5836,14 +5897,14 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "VOID"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5038,
+                                        lineNumber: 5072,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     ". It will not be deleted, but it will be hidden from default views and excluded from calculations."
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5036,
+                                lineNumber: 5070,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             (confirmVoidTarget.note?.includes("[C]") || typeof confirmVoidTarget.metadata === "string" && confirmVoidTarget.metadata?.includes("batch_id") || confirmVoidTarget.metadata?.batch_id) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5853,7 +5914,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         className: "h-4 w-4 text-amber-600 shrink-0 mt-0.5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5049,
+                                        lineNumber: 5083,
                                         columnNumber: 23
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5864,20 +5925,20 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: "Confirmed Transaction Detected"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5051,
+                                                lineNumber: 5085,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             "This transaction is part of a BATCH. Voiding it here will automatically UNCHECK (revert) the corresponding item in the Batch Checklist."
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5050,
+                                        lineNumber: 5084,
                                         columnNumber: 23
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5048,
+                                lineNumber: 5082,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             voidError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5885,7 +5946,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: voidError
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5061,
+                                lineNumber: 5095,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5898,7 +5959,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "Keep"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5064,
+                                        lineNumber: 5098,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5910,31 +5971,31 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "mr-2 h-4 w-4 animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5077,
+                                                lineNumber: 5111,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             "Void Transaction"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5071,
+                                        lineNumber: 5105,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5063,
+                                lineNumber: 5097,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 5029,
+                        lineNumber: 5063,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5025,
+                    lineNumber: 5059,
                     columnNumber: 15
                 }, ("TURBOPACK compile-time value", void 0)), document.body),
                 confirmCancelTarget && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2d$dom$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createPortal"])(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5949,7 +6010,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: "Cancel Order (Full Refund)?"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5097,
+                                lineNumber: 5131,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5963,7 +6024,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5100,
+                                lineNumber: 5134,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5971,7 +6032,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: 'Money will stay in "Pending" account until you confirm receipt.'
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5111,
+                                lineNumber: 5145,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             voidError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5979,7 +6040,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: voidError
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5116,
+                                lineNumber: 5150,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5992,7 +6053,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5121,
+                                        lineNumber: 5155,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6002,7 +6063,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: isVoiding ? "Processing..." : "Pending (Wait)"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5128,
+                                        lineNumber: 5162,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6012,24 +6073,24 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: isVoiding ? "Processing..." : "Received (Instant)"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5135,
+                                        lineNumber: 5169,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5120,
+                                lineNumber: 5154,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 5093,
+                        lineNumber: 5127,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5089,
+                    lineNumber: 5123,
                     columnNumber: 15
                 }, ("TURBOPACK compile-time value", void 0)), document.body),
                 confirmDeletingTarget && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2d$dom$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createPortal"])(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6044,7 +6105,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: "Delete Forever?"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5158,
+                                lineNumber: 5192,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6057,7 +6118,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "PERMANENTLY remove"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5163,
+                                        lineNumber: 5197,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     " ",
@@ -6068,7 +6129,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "CANNOT be undone"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5167,
+                                        lineNumber: 5201,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     " ",
@@ -6076,7 +6137,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5161,
+                                lineNumber: 5195,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             voidError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6084,7 +6145,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: voidError
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5171,
+                                lineNumber: 5205,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6097,7 +6158,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5174,
+                                        lineNumber: 5208,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6109,31 +6170,31 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "mr-2 h-4 w-4 animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5187,
+                                                lineNumber: 5221,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             "Delete Permanently"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5181,
+                                        lineNumber: 5215,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5173,
+                                lineNumber: 5207,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 5154,
+                        lineNumber: 5188,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5150,
+                    lineNumber: 5184,
                     columnNumber: 15
                 }, ("TURBOPACK compile-time value", void 0)), document.body),
                 refundFormTxn && (()=>{
@@ -6163,7 +6224,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: refundFormStage === "confirm" ? "Confirm Refund" : "Request Refund"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5236,
+                                            lineNumber: 5270,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6172,13 +6233,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: "X"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5241,
+                                            lineNumber: 5275,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 5235,
+                                    lineNumber: 5269,
                                     columnNumber: 21
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$transaction$2d$form$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TransactionForm"], {
@@ -6201,18 +6262,18 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                     onSuccess: handleRefundFormSuccess
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 5248,
+                                    lineNumber: 5282,
                                     columnNumber: 21
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 5231,
+                            lineNumber: 5265,
                             columnNumber: 19
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 5227,
+                        lineNumber: 5261,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)), document.body);
                 })(),
@@ -6228,7 +6289,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: bulkDialog.mode === "void" ? "Bulk Void" : bulkDialog.mode === "restore" ? "Bulk Restore" : "Permanent Delete"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5284,
+                                lineNumber: 5318,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6236,7 +6297,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                 children: bulkDialog.mode === "void" ? `Are you sure you want to void ${selection.size} transactions?` : bulkDialog.mode === "restore" ? `Are you sure you want to restore ${selection.size} transactions?` : `Are you sure you want to PERMANENTLY DELETE ${selection.size} transactions? This cannot be undone.`
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5291,
+                                lineNumber: 5325,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6254,7 +6315,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                         children: isVoiding || isRestoring || isDeleting ? "Stop" : "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5299,
+                                        lineNumber: 5333,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6266,31 +6327,31 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "mr-2 h-4 w-4 animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5323,
+                                                lineNumber: 5357,
                                                 columnNumber: 25
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             bulkDialog.mode === "void" ? "Void" : bulkDialog.mode === "restore" ? "Restore" : "Delete Forever"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5313,
+                                        lineNumber: 5347,
                                         columnNumber: 21
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5298,
+                                lineNumber: 5332,
                                 columnNumber: 19
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                        lineNumber: 5280,
+                        lineNumber: 5314,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5276,
+                    lineNumber: 5310,
                     columnNumber: 15
                 }, ("TURBOPACK compile-time value", void 0)), document.body),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$transaction$2d$history$2d$modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TransactionHistoryModal"], {
@@ -6300,7 +6361,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     onClose: ()=>setHistoryTarget(null)
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5337,
+                    lineNumber: 5371,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 confirmRefundTxn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$confirm$2d$refund$2d$dialog$2d$v2$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ConfirmRefundDialogV2"], {
@@ -6312,7 +6373,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     accounts: accounts
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5344,
+                    lineNumber: 5378,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$excel$2d$status$2d$bar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ExcelStatusBar"], {
@@ -6323,7 +6384,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     isVisible: !!isExcelMode && selectedCells.size > 0
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5353,
+                    lineNumber: 5387,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0)),
                 refundTarget && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$request$2d$refund$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["RequestRefundDialog"], {
@@ -6333,7 +6394,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     type: refundType
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5363,
+                    lineNumber: 5397,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 !isExcelMode && selection.size > 0 && typeof document !== "undefined" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2d$dom$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createPortal"])(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6382,7 +6443,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: item.label
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5420,
+                                                lineNumber: 5454,
                                                 columnNumber: 27
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6390,23 +6451,23 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 children: numberFormatter.format(item.value)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5423,
+                                                lineNumber: 5457,
                                                 columnNumber: 27
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, idx, true, {
                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                        lineNumber: 5416,
+                                        lineNumber: 5450,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0)))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                lineNumber: 5380,
+                                lineNumber: 5414,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 5379,
+                            lineNumber: 5413,
                             columnNumber: 19
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6420,7 +6481,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: selection.size
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5440,
+                                            lineNumber: 5474,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6428,13 +6489,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                             children: "Selected"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5443,
+                                            lineNumber: 5477,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 5439,
+                                    lineNumber: 5473,
                                     columnNumber: 19
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6449,14 +6510,14 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     className: "h-3.5 w-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5455,
+                                                    lineNumber: 5489,
                                                     columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 "RESTORE"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5450,
+                                            lineNumber: 5484,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: handleBulkVoid,
@@ -6467,14 +6528,14 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     className: "h-3.5 w-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5464,
+                                                    lineNumber: 5498,
                                                     columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 "VOID"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5459,
+                                            lineNumber: 5493,
                                             columnNumber: 23
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6486,21 +6547,21 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     className: "h-3.5 w-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5474,
+                                                    lineNumber: 5508,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 "DELETE"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5469,
+                                            lineNumber: 5503,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "h-8 w-px bg-slate-700 mx-2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5478,
+                                            lineNumber: 5512,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6513,12 +6574,12 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                         className: "h-2.5 w-2.5 text-white"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                        lineNumber: 5498,
+                                                        lineNumber: 5532,
                                                         columnNumber: 27
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5489,
+                                                    lineNumber: 5523,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6526,13 +6587,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: "Show Selected"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5501,
+                                                    lineNumber: 5535,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5480,
+                                            lineNumber: 5514,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6543,7 +6604,7 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     className: "h-3.5 w-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5515,
+                                                    lineNumber: 5549,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6551,13 +6612,13 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                     children: "Totals"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                    lineNumber: 5516,
+                                                    lineNumber: 5550,
                                                     columnNumber: 23
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5506,
+                                            lineNumber: 5540,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6568,30 +6629,30 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                                lineNumber: 5526,
+                                                lineNumber: 5560,
                                                 columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                            lineNumber: 5521,
+                                            lineNumber: 5555,
                                             columnNumber: 21
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                                    lineNumber: 5448,
+                                    lineNumber: 5482,
                                     columnNumber: 19
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                            lineNumber: 5438,
+                            lineNumber: 5472,
                             columnNumber: 17
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5376,
+                    lineNumber: 5410,
                     columnNumber: 15
                 }, ("TURBOPACK compile-time value", void 0)), document.body),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$moneyflow$2f$column$2d$customizer$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ColumnCustomizer"], {
@@ -6643,7 +6704,8 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                             est_share: false,
                             net_profit: false,
                             back_info: false,
-                            people: true
+                            people: true,
+                            cycle: false
                         };
                         setVisibleColumns(defaultVis);
                         localStorage.removeItem("mf_v3_col_vis");
@@ -6665,25 +6727,25 @@ const UnifiedTransactionTable = /*#__PURE__*/ _s(__TURBOPACK__imported__module__
                     }
                 }, void 0, false, {
                     fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-                    lineNumber: 5535,
+                    lineNumber: 5569,
                     columnNumber: 11
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-            lineNumber: 2113,
+            lineNumber: 2134,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/components/moneyflow/unified-transaction-table.tsx",
-        lineNumber: 2112,
+        lineNumber: 2133,
         columnNumber: 7
     }, ("TURBOPACK compile-time value", void 0));
-}, "kW1RZxq57Tkr9cTUzcO4ORL78dY=", false, function() {
+}, "skubosQOExzGs7Dyp6Zf3rca/0Q=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
     ];
-})), "kW1RZxq57Tkr9cTUzcO4ORL78dY=", false, function() {
+})), "skubosQOExzGs7Dyp6Zf3rca/0Q=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$29$2e$0_react$2d$dom$40$19$2e$2$2e$4_react$40$19$2e$2$2e$4_$5f$react$40$19$2e$2$2e$4$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
     ];

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -300,6 +300,7 @@ export function PersonDetailTabs({
                                     sheetLinkedBankId={sheetLinkedBankId}
                                     showQrImage={showQrImage}
                                     accounts={accounts}
+                                    allCycles={debtTags}
                                     buttonClassName="h-9 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-300"
                                     size="sm"
                                     showCycleAction={true}
@@ -371,13 +372,13 @@ export function PersonDetailTabs({
                         <span className="font-semibold text-slate-600">Flow Legend:</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="h-5 px-2 flex items-center justify-center bg-orange-50 text-orange-700 border border-orange-200 rounded text-[10px] font-bold">
+                        <div className="h-5 px-1.5 flex items-center justify-center bg-indigo-600 text-white border border-indigo-700 rounded text-[9px] font-black uppercase shadow-sm">
                             FROM
                         </div>
                         <span className="text-slate-500">= Money received (incoming)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="h-5 px-2 flex items-center justify-center bg-sky-50 text-sky-700 border border-sky-200 rounded text-[10px] font-bold">
+                        <div className="h-5 px-1.5 flex items-center justify-center bg-emerald-600 text-white border border-emerald-700 rounded text-[9px] font-black uppercase shadow-sm">
                             TO
                         </div>
                         <span className="text-slate-500">= Money sent (outgoing)</span>

@@ -51,6 +51,7 @@ export function PeopleDirectoryV2({
   const [showArchived, setShowArchived] = useState(false);
   const [isSlideOpen, setIsSlideOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [personSlideTab, setPersonSlideTab] = useState<'profile' | 'services' | 'sheet' | 'debt_history'>('profile');
 
   const [sortConfig, setSortConfig] = useState<{
     key: PeopleColumnKey;
@@ -100,7 +101,7 @@ export function PeopleDirectoryV2({
   // Statistics
   const stats = useMemo(() => {
     return {
-      outstandingCount: people.filter(
+      activeCount: people.filter(
         (p) =>
           (p.current_cycle_debt || 0) + (p.outstanding_debt || 0) > 0 &&
           !p.is_archived,
@@ -238,9 +239,10 @@ export function PeopleDirectoryV2({
     return result;
   }, [people, activeFilter, searchQuery, showArchived, sortConfig]);
 
-  const handleAction = (person: Person, action: string) => {
+  const handleAction = (person: Person, action: string, tab?: 'profile' | 'services' | 'sheet' | 'debt_history') => {
     if (action === "settings") {
       setSelectedPerson(person);
+      setPersonSlideTab(tab || 'profile');
       setIsSlideOpen(true);
     } else if (action === "lend") {
       setTxnInitialData({
@@ -357,6 +359,7 @@ export function PeopleDirectoryV2({
             onLend={(p) => handleAction(p, "lend")}
             onRepay={(p) => handleAction(p, "repay")}
             onSync={handleSyncPerson}
+            onOpenSettings={(p) => handleAction(p, "settings", "sheet")}
             sortConfig={sortConfig}
             onSort={handleSort}
           />
@@ -369,6 +372,7 @@ export function PeopleDirectoryV2({
         person={selectedPerson}
         subscriptions={subscriptions}
         accounts={accounts}
+        defaultTab={personSlideTab}
       />
 
       <TransactionSlideV2

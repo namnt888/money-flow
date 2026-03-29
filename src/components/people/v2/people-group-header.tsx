@@ -59,12 +59,7 @@ export function PeopleGroupHeader({
                             • {memberCount} member{memberCount !== 1 ? 's' : ''}
                         </span>
 
-                        {/* Status label instead of just account name if requested */}
-                        {hasDebt && (
-                            <Badge variant="destructive" className="ml-2 font-normal text-[10px] h-4 px-1.5 bg-red-100 text-red-600 hover:bg-red-200 border-none tracking-tighter">
-                                Outstanding
-                            </Badge>
-                        )}
+                        {/* Status indicators if any */}
                     </div>
 
                     <div className="pr-4 flex items-center gap-4">

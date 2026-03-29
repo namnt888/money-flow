@@ -32,6 +32,10 @@ export type CreatePersonPayload = {
   group_parent_id?: string | null
   sheet_linked_bank_id?: string | null
   is_master_sheet_enabled?: boolean | null
+  sheet_show_bank_account?: boolean | null
+  sheet_bank_info?: string | null
+  sheet_show_qr_image?: boolean | null
+  sheet_full_img?: string | null
 }
 
 export async function createPersonAction(payload: CreatePersonPayload) {
@@ -48,7 +52,11 @@ export async function createPersonAction(payload: CreatePersonPayload) {
       group_parent_id: payload.group_parent_id,
       google_sheet_url: payload.google_sheet_url?.trim(),
       sheet_linked_bank_id: payload.sheet_linked_bank_id,
-      is_master_sheet_enabled: payload.is_master_sheet_enabled
+      is_master_sheet_enabled: payload.is_master_sheet_enabled,
+      sheet_show_bank_account: payload.sheet_show_bank_account,
+      sheet_bank_info: payload.sheet_bank_info?.trim(),
+      sheet_show_qr_image: payload.sheet_show_qr_image,
+      sheet_full_img: payload.sheet_full_img?.trim()
     }
   )
 

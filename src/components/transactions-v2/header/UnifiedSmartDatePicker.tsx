@@ -578,13 +578,16 @@ export function UnifiedSmartDatePicker({
           variant="outline"
           size="sm"
           disabled={disabled}
-          className={cn('gap-2 justify-between font-medium', fullWidth ? 'w-full h-10' : 'w-[200px] h-9')}
+          className={cn(
+            'gap-2 justify-between font-bold text-slate-700 rounded-xl shadow-sm hover:bg-slate-50 transition-all',
+            fullWidth ? 'w-full h-10' : 'w-[145px] h-9'
+          )}
         >
           <span className="flex items-center gap-1.5 truncate">
-            <CalendarIcon className="w-3.5 h-3.5 shrink-0 text-slate-500" />
-            <span className="truncate">{displayText}</span>
+            <History className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+            <span className="truncate tabular-nums text-[11px]">{displayText}</span>
           </span>
-          <ChevronDown className="w-3 h-3 opacity-50" />
+          <ChevronDown className="w-3 h-3 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
 

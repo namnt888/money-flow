@@ -499,7 +499,7 @@ const Toaster = ({ ...props })=>{
             "--normal-text": "var(--popover-foreground)",
             "--normal-border": "var(--border)",
             "--border-radius": "var(--radius)",
-            "--toast-width": "420px",
+            "--toast-width": "500px",
             zIndex: 9999
         },
         position: "top-right",

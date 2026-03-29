@@ -414,14 +414,12 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
 
     const current = tagMap.get(tag)!
 
-    // 1. INITIAL (Gross) = amount
+    // INITIAL (Gross) = amount
     const rawAmount = Math.abs(Number(row.amount ?? 0))
     
-    // 2. BACK (Shared Cashback)
-    const percentVal = Number(row.cashback_share_percent ?? 0)
-    const fixedVal = Number(row.cashback_share_fixed ?? 0)
-    const normalizedPercent = percentVal > 1 ? percentVal / 100 : percentVal
-    const cashbackShared = (rawAmount * normalizedPercent) + fixedVal
+    // Use the central helper which respects DB's finalPrice if present
+    const finalPrice = calculateFinalPrice(row)
+    const cashbackShared = Math.max(0, rawAmount - finalPrice)
 
     if (baseType === 'expense') {
       if (!isNaN(rawAmount)) {
@@ -431,8 +429,8 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
         current.cashback += cashbackShared
       }
       
-      // 3. LEND (Net Principal) = INITIAL - BACK
-      current.lend += (rawAmount - cashbackShared)
+      // LEND (Net Principal) = finalPrice
+      current.lend += finalPrice
 
       // Add remaining principal from our FIFO simulation
       const fifoEntry = debtsMap.get(row.id)
@@ -448,8 +446,8 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
         });
       }
     } else if (baseType === 'income') {
-      if (!isNaN(rawAmount)) {
-        current.repay += rawAmount
+      if (!isNaN(finalPrice)) {
+        current.repay += finalPrice
       }
     }
 
@@ -670,14 +668,24 @@ export async function syncAllPersonDebtCycles(personId: string) {
   const pbPersonId = await resolvePersonPocketBaseId(personId);
   const rawStats = await getDebtByTags(personId, { ignoreSynced: true });
   
+  // 1. Fetch ALL existing cycles for this person in DB
+  const existingRecords = await pocketbaseList<any>('people_debt_cycles', {
+      filter: `person_id = "${pbPersonId}"`,
+      perPage: 500
+  });
+  const existingMap = new Map(existingRecords.items.map(r => [r.cycle_tag, r]));
+
   let successCount = 0;
   let errorCount = 0;
 
+  // 2. Process cycles found in current transactions
+  const processedTags = new Set<string>();
+
   for (const cycleStat of rawStats) {
     const tag = cycleStat.tag;
-    const cycleId = toPocketBaseId(`${pbPersonId}-${tag}`);
+    processedTags.add(tag);
+
     const payload = {
-      id: cycleId,
       person_id: pbPersonId,
       cycle_tag: tag,
       initial_amount: cycleStat.initial,
@@ -691,20 +699,39 @@ export async function syncAllPersonDebtCycles(personId: string) {
     };
 
     try {
-      const existing = await pocketbaseList<any>('people_debt_cycles', {
-        filter: `person_id = "${pbPersonId}" && cycle_tag = "${tag}"`,
-      });
-
-      if (existing.items.length > 0) {
-        await pocketbaseUpdate('people_debt_cycles', existing.items[0].id, payload);
+      const existing = existingMap.get(tag);
+      if (existing) {
+        await pocketbaseUpdate('people_debt_cycles', existing.id, payload);
       } else {
-        await pocketbaseCreate('people_debt_cycles', payload);
+        const cycleId = toPocketBaseId(`${pbPersonId}-${tag}`);
+        await pocketbaseCreate('people_debt_cycles', { ...payload, id: cycleId });
       }
       successCount++;
     } catch (err) {
       console.error(`[DebtService] Failed to sync cycle ${tag}:`, err);
       errorCount++;
     }
+  }
+
+  // 3. Process records that exist in DB but NO LONGER in transactions
+  for (const [tag, record] of existingMap.entries()) {
+      if (!processedTags.has(tag)) {
+          try {
+              await pocketbaseUpdate('people_debt_cycles', record.id, {
+                  initial_amount: 0,
+                  back_amount: 0,
+                  lend_net: 0,
+                  repay_net: 0,
+                  remains_amount: 0,
+                  status: 'settled',
+                  is_synced: true,
+                  last_synced_at: new Date().toISOString()
+              });
+              successCount++;
+          } catch (err) {
+              console.error(`[DebtService] Failed to clean up orphaned cycle ${tag}:`, err);
+          }
+      }
   }
 
   return { 

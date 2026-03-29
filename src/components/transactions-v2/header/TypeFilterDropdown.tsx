@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -43,30 +43,8 @@ export function TypeFilterDropdown({ value, onChange, fullWidth, allowedTypes }:
 
   const currentOption = TYPE_OPTIONS.find(opt => opt.value === value) || TYPE_OPTIONS[0]
 
-  // Get recent items from localStorage
-  const getRecentTypes = (): FilterType[] => {
-    try {
-      const recent = localStorage.getItem('mf_recent_filter_types')
-      return recent ? JSON.parse(recent) : []
-    } catch {
-      return []
-    }
-  }
-
-  const saveRecentType = (type: FilterType) => {
-    try {
-      const recent = getRecentTypes()
-      const filtered = recent.filter(t => t !== type)
-      const newRecent = [type, ...filtered].slice(0, 3) // Keep last 3
-      localStorage.setItem('mf_recent_filter_types', JSON.stringify(newRecent))
-    } catch (e) {
-      console.error('Failed to save recent type', e)
-    }
-  }
-
   const handleSelect = (type: FilterType) => {
     onChange(type)
-    saveRecentType(type)
     setOpen(false)
   }
 
@@ -83,15 +61,6 @@ export function TypeFilterDropdown({ value, onChange, fullWidth, allowedTypes }:
     ? TYPE_OPTIONS.filter(opt => allowedTypes.includes(opt.value))
     : TYPE_OPTIONS
 
-  const recentTypes = getRecentTypes()
-  const recentOptions = recentTypes
-    .map(t => availableOptions.find(opt => opt.value === t))
-    .filter(Boolean) as TypeOption[]
-
-  const allOptions = availableOptions.filter(
-    opt => !recentTypes.includes(opt.value)
-  )
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -99,7 +68,7 @@ export function TypeFilterDropdown({ value, onChange, fullWidth, allowedTypes }:
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 justify-between font-medium",
+            "gap-2 justify-between font-medium rounded-xl border-slate-200",
             fullWidth ? 'w-full h-10' : 'w-[120px] h-9',
             currentOption.color
           )}
@@ -127,50 +96,19 @@ export function TypeFilterDropdown({ value, onChange, fullWidth, allowedTypes }:
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[180px] p-1"
+        className="w-[180px] p-2 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-sm border-slate-200"
         align="end"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div className="space-y-0.5">
-          {/* Recent Section */}
-          {recentOptions.length > 0 && (
-            <>
-              <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Recent
-              </div>
-              {recentOptions.map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => handleSelect(option.value)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-sm transition-colors",
-                    option.bgColor,
-                    option.color,
-                    value === option.value && "bg-accent"
-                  )}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    {option.icon}
-                    <span className="truncate">{option.label}</span>
-                  </div>
-                  {value === option.value && (
-                    <Check className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              ))}
-              <div className="h-px bg-border my-1" />
-            </>
-          )}
-
-          {/* All Options */}
-          {allOptions.map(option => (
+          {availableOptions.map(option => (
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
               className={cn(
-                "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-sm transition-colors",
+                "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-lg transition-colors",
                 option.bgColor,
                 option.color,
                 value === option.value && "bg-accent"

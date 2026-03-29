@@ -3,6 +3,7 @@
 import React from 'react'
 import {
   LayoutDashboard,
+  LayoutGrid,
   Landmark,
   ArrowRightLeft,
   Hourglass,
@@ -124,7 +125,7 @@ export const coloredNavItems: NavItemConfig[] = [
   {
     title: "Transactions",
     href: "/transactions",
-    icon: ArrowRightLeft,
+    icon: LayoutGrid,
     color: 'green',
     description: 'Income & expenses'
   },

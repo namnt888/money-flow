@@ -62,6 +62,7 @@ interface TransactionControlBarProps {
     setIsGlobalLoading?: (val: boolean) => void
     setLoadingMessage?: (val: string | null) => void
     onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
+    onOpenSettings?: () => void
 }
 
 import { useRouter } from 'next/navigation'
@@ -137,6 +138,7 @@ export function TransactionControlBar({
     setIsGlobalLoading,
     setLoadingMessage,
     onSyncCycle,
+    onOpenSettings,
 }: TransactionControlBarProps) {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const isSettled = Math.abs(activeCycle.remains) < 100
@@ -377,32 +379,31 @@ export function TransactionControlBar({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="flex items-center h-9 w-[280px] rounded-lg border border-slate-200 bg-white shadow-sm">
-                        <ManageSheetButton 
-                            personId={person.id}
-                            cycleTag={activeCycle.tag}
-                            scriptLink={person.sheet_link}
-                            initialSheetUrl={initialSheetUrl}
-                            googleSheetUrl={person.google_sheet_url}
-                            sheetFullImg={person.sheet_full_img}
-                            sheetBankInfo={person.sheet_bank_info}
-                            sheetLinkedBankId={person.sheet_linked_bank_id}
-                            showBankAccount={person.sheet_show_bank_account ?? false}
-                            showQrImage={person.sheet_show_qr_image ?? false}
-                            availableYears={availableYears}
-                            allCycles={allCycles}
-                            selectedYear={selectedYear}
-                            onCycleChange={onCycleChange}
-                            onYearChange={onYearChange}
-                            activeCycleRemains={activeCycle.remains}
-                            isSettled={isSettled}
-                            accounts={accounts}
-                            splitMode={true}
-                            linkedLabel="Sheet"
-                            unlinkedLabel="Sheet"
-                            onSyncCycle={onSyncCycle}
-                        />
-                    </div>
+                    <ManageSheetButton 
+                        personId={person.id}
+                        cycleTag={activeCycle.tag}
+                        scriptLink={person.sheet_link}
+                        initialSheetUrl={initialSheetUrl}
+                        googleSheetUrl={person.google_sheet_url}
+                        sheetFullImg={person.sheet_full_img}
+                        sheetBankInfo={person.sheet_bank_info}
+                        sheetLinkedBankId={person.sheet_linked_bank_id}
+                        showBankAccount={person.sheet_show_bank_account ?? false}
+                        showQrImage={person.sheet_show_qr_image ?? false}
+                        availableYears={availableYears}
+                        allCycles={allCycles}
+                        selectedYear={selectedYear}
+                        onCycleChange={onCycleChange}
+                        onYearChange={onYearChange}
+                        activeCycleRemains={activeCycle.remains}
+                        isSettled={isSettled}
+                        accounts={accounts}
+                        splitMode={true}
+                        linkedLabel="Sheet"
+                        unlinkedLabel="Sheet"
+                        onSyncCycle={onSyncCycle}
+                        onOpenSettings={onOpenSettings}
+                    />
                 </div>
 
                 <div className="h-6 w-px bg-slate-200" />

@@ -97,7 +97,7 @@ export function PeopleGrid({ people, subscriptions, accounts, categories, shops 
   const tabs: { id: FilterTab; label: string; icon: React.ReactNode; count: number; color: string }[] = [
     {
       id: 'debt',
-      label: 'Outstanding Debt',
+      label: 'Active',
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
       count: activePeople.length,
       color: 'text-rose-600 bg-rose-50 border-rose-200'

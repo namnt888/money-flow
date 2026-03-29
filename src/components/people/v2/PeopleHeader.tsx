@@ -20,7 +20,8 @@ import {
     CircleDollarSign,
     ArrowUpRight,
     RefreshCw,
-    Users
+    Users,
+    LayoutGrid
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -85,8 +86,8 @@ interface PeopleHeaderProps {
     selectedYear: string | null
     availableYears: string[]
     onYearChange: (year: string | null) => void
-    activeTab: 'timeline' | 'history' | 'split-bill'
-    onTabChange: (tab: 'timeline' | 'history' | 'split-bill') => void
+    activeTab: 'timeline' | 'split-bill'
+    onTabChange: (tab: 'timeline' | 'split-bill') => void
     onEdit: () => void
     onCycleChange?: (cycle: string) => void
     cashbackStatus?: {
@@ -275,10 +276,10 @@ export function PeopleHeader({
                             <CircularProgress percent={currentCycleRepayPercent} label="Repaid" colorClass="text-emerald-500" />
                         </div>
                         
-                        <div className="flex items-center border-l border-slate-200 ml-4 pl-6 gap-6">
-                            <MetricItem label="Initial" value={stats.originalLend} colorClass="text-slate-900" className="pr-6 border-r border-slate-200" />
-                            <MetricItem label="Back" value={stats.cashback} colorClass="text-amber-600" className="pr-6 border-r border-slate-200" />
-                            <MetricItem label="Repaid" value={stats.repay} colorClass="text-emerald-600" className="pr-6 border-r border-slate-200" />
+                        <div className="flex items-center border-l border-slate-200 ml-4 pl-10 gap-10">
+                            <MetricItem label="Initial" value={stats.originalLend} colorClass="text-slate-900" className="pr-10 border-r border-slate-200" />
+                            <MetricItem label="Back" value={stats.cashback} colorClass="text-amber-600" className="pr-10 border-r border-slate-200" />
+                            <MetricItem label="Repaid" value={stats.repay} colorClass="text-emerald-600" className="pr-10 border-r border-slate-200" />
                             
                             <StatsPopover
                                 personId={person.id}
@@ -458,84 +459,41 @@ export function PeopleHeader({
                 {/* 3. ACTIONS CARD */}
                 <div className="flex items-center gap-2 bg-white border border-slate-100 p-2 rounded-2xl shadow-sm h-[92px] shrink-0">
                     <button 
-                        onClick={() => onTabChange('split-bill')}
-                        className="flex flex-col items-center justify-center gap-1 h-full w-[64px] rounded-xl border border-slate-100 hover:bg-slate-50 transition-all hover:border-indigo-100 group"
+                        onClick={() => onEdit()}
+                        className="flex flex-col items-center justify-center gap-1 h-full w-[64px] rounded-xl border border-slate-100 hover:bg-slate-50 transition-all hover:border-indigo-100 group shadow-sm bg-white"
+                        title="Edit Profile"
                     >
-                        <Split className="h-4 w-4 text-slate-400 group-hover:text-indigo-500" />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SPLIT</span>
+                        <Edit className="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">EDIT</span>
                     </button>
-                    
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button className="flex flex-col items-center justify-center gap-1 h-full w-[64px] rounded-xl border border-slate-100 hover:bg-slate-50 transition-all group">
-                                <MoreHorizontal className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">MORE</span>
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-48 p-2">
-                            <div className="flex flex-col gap-1">
-                                <button 
-                                    onClick={() => onEdit()}
-                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
-                                >
-                                    <Edit className="h-4 w-4" /> Edit Person
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        if (onSyncCycle) {
-                                            toast.promise(onSyncCycle('all'), {
-                                                loading: 'Fixing all debt cycles in database...',
-                                                success: 'All debt cycles synced successfully!',
-                                                error: (err: any) => err?.message || 'Failed to sync all cycles'
-                                            });
-                                        }
-                                    }}
-                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-100/80 rounded-lg text-sm font-bold text-indigo-600 transition-colors"
-                                    disabled={isSyncing}
-                                >
-                                    <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} /> Fix All Cycles (Global)
-                                </button>
-                                {activeCycle?.tag && activeCycle.tag !== 'all' && (
-                                    <button 
-                                        onClick={() => onSyncCycle?.(activeCycle.tag)}
-                                        className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
-                                        disabled={isSyncing}
-                                    >
-                                        <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} /> Sync Cycle {activeCycle.tag}
-                                    </button>
-                                )}
-                                <button 
-                                    onClick={() => window.open(person.sheet_link || '', '_blank')}
-                                    className="flex items-center gap-2 w-full p-2 hover:bg-slate-50 rounded-lg text-sm font-bold text-slate-700 transition-colors"
-                                >
-                                    <CircleDollarSign className="h-4 w-4" /> Manage Sheet
-                                </button>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
                 </div>
             </div>
             
             {/* TABS BAR (Consistent height) */}
             <div className="px-6 py-0 bg-white flex items-center justify-between border-t border-slate-100 h-9">
                 <div className="flex items-center gap-2 h-full">
-                    {(['timeline', 'history', 'split-bill'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => onTabChange(tab)}
-                            className={cn(
-                                "px-4 h-full text-[10px] font-black uppercase tracking-[0.1em] relative transition-all flex items-center",
-                                activeTab === tab 
-                                    ? "text-indigo-600" 
-                                    : "text-slate-400 hover:text-slate-600"
-                            )}
-                        >
-                            {tab === 'split-bill' ? 'Split Bill' : tab}
-                            {activeTab === tab && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full" />
-                            )}
-                        </button>
-                    ))}
+                    {(['timeline', 'split-bill'] as const).map((tab) => {
+                        const Icon = tab === 'split-bill' ? Split : LayoutGrid;
+                        const label = tab === 'split-bill' ? 'Split Bill' : 'Transactions';
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => onTabChange(tab)}
+                                className={cn(
+                                    "px-4 h-full text-[10px] font-black uppercase tracking-[0.1em] relative transition-all flex items-center gap-2",
+                                    activeTab === tab 
+                                        ? "text-indigo-600 bg-indigo-50/30" 
+                                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                                )}
+                            >
+                                <Icon className={cn("h-3.5 w-3.5", activeTab === tab ? "text-indigo-600" : "text-slate-300")} />
+                                <span>{label}</span>
+                                {activeTab === tab && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full shadow-[0_-2px_4px_rgba(79,70,229,0.3)]" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {isSyncing && (

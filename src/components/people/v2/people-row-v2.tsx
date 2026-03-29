@@ -47,6 +47,7 @@ interface PeopleRowProps {
   onLend: (person: Person) => void;
   onRepay: (person: Person) => void;
   onSync: (personId: string) => Promise<void>;
+  onOpenSettings?: (person: Person) => void;
   accounts?: Account[];
 }
 
@@ -135,6 +136,7 @@ export function PeopleRowV2({
   onLend,
   onRepay,
   onSync,
+  onOpenSettings,
   accounts = [],
 }: PeopleRowProps) {
   const [copied, setCopied] = useState(false);
@@ -186,6 +188,7 @@ export function PeopleRowV2({
               { copied, setCopied },
               onSync,
               accounts,
+              onOpenSettings,
             )}
           </td>
         ))}
@@ -211,6 +214,7 @@ function renderCell(
   copyState: { copied: boolean; setCopied: (v: boolean) => void },
   onSync?: (pid: string) => void,
   accounts?: Account[],
+  onOpenSettings?: (p: Person) => void,
 ) {
   const totalBalance = person.balance ?? 0;
   const currentCycleDebt = person.current_cycle_debt ?? 0;
@@ -405,14 +409,21 @@ function renderCell(
                   size="sm"
                   showCycleAction={true}
                   splitMode={true}
+                  onOpenSettings={() => onOpenSettings?.(person)}
                 />
               ) : (
-                <div className="flex items-center justify-center gap-2 h-8 w-full border border-slate-200 bg-slate-50/50 rounded-lg px-3">
-                  <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight">
-                    <Calendar className="h-3 w-3 opacity-50" />
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenSettings?.(person);
+                  }}
+                  className="flex items-center justify-center gap-2 h-8 w-full border border-slate-200 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-300 rounded-lg px-3 transition-all group"
+                >
+                  <span className="text-[10px] font-black text-slate-500 flex items-center gap-1.5 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">
+                    <Calendar className="h-3 w-3 opacity-50 group-hover:opacity-100" />
                     {person.current_cycle_label || "NO TAG"}
                   </span>
-                </div>
+                </button>
               )}
             </div>
 

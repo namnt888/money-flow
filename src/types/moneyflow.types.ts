@@ -238,6 +238,7 @@ export type Subscription = {
   note_template?: string | null;
   members?: SubscriptionMember[];
   shop_id?: string | null;
+  image_url?: string | null;
 };
 
 // TransactionLine type removed as it is no longer supported by the schema.

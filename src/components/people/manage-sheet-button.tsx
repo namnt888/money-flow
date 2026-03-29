@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useTransition } from 'react'
 import type { MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileSpreadsheet, RefreshCcw, ExternalLink, Settings2, Save, Link2, FileJson, Landmark, QrCode, X, History, Calculator, ChevronUp, RotateCcw, RefreshCw, Lock, LockOpen } from 'lucide-react'
+import { FileSpreadsheet, RefreshCcw, ExternalLink, Settings2, Save, Link2, FileJson, Landmark, QrCode, X, History, Calculator, ChevronUp, RotateCcw, RefreshCw, Lock, LockOpen, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { ManageCycleSheetResponse } from '@/types/sheet.types'
@@ -13,13 +13,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Combobox, ComboboxItem } from '@/components/ui/combobox'
-import { Search, ChevronDown, Check, ChevronsUpDown } from 'lucide-react'
+import { Search, ChevronDown, Check, ChevronsUpDown, Calendar } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { isYYYYMM } from '@/lib/month-tag'
 import { updatePersonAction } from '@/actions/people-actions'
 import { SyncReportDialog } from './sync-report-dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Account } from '@/types/moneyflow.types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+} from "@/components/ui/select"
 
 interface DebtCycle {
   tag: string
@@ -91,11 +95,13 @@ export interface ManageSheetButtonProps {
   onYearChange?: (year: string | null) => void
   currentCycleTag?: string
   isSettled?: boolean
+  activeCycle?: DebtCycle
   activeCycleRemains?: number
   isPending?: boolean
   setIsGlobalLoading?: (loading: boolean) => void
   setLoadingMessage?: (msg: string | null) => void
   onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
+  onOpenSettings?: () => void
 }
 
 const numberFormatter = new Intl.NumberFormat('en-US', {
@@ -137,21 +143,31 @@ export function ManageSheetButton({
   onYearChange,
   currentCycleTag,
   isSettled = false,
+  activeCycle,
   activeCycleRemains = 0,
   isPending = false,
   isMasterSheetEnabled = false,
   setIsGlobalLoading,
   setLoadingMessage,
   onSyncCycle,
+  onOpenSettings,
 }: ManageSheetButtonProps) {
-  const [activeTab, setActiveTab] = useState<'history' | 'settings'>('history')
   const [historySearch, setHistorySearch] = useState('')
-  const [historyYear, setHistoryYear] = useState<string>('all')
   const [sheetUrl, setSheetUrl] = useState<string | null>(initialSheetUrl ?? null)
   const [isManaging, startManageTransition] = useTransition()
   const [isSaving, startSaveTransition] = useTransition()
   const [showPopover, setShowPopover] = useState(false)
   const [pendingCycleTag, setPendingCycleTag] = useState<string>(cycleTag)
+
+  // Memoize resolved active cycle for stability
+  const activeCycleResolved = React.useMemo(() => {
+    return activeCycle ?? allCycles.find(c => c.tag === cycleTag)
+  }, [activeCycle, allCycles, cycleTag])
+
+  const handleTriggerClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowPopover(!showPopover)
+  }
 
   // Sync pending when cycleTag changes from outside
   useEffect(() => {
@@ -168,103 +184,21 @@ export function ManageSheetButton({
   // Sync Report State
   const [showReport, setShowReport] = useState(false)
   const [syncStats, setSyncStats] = useState<any>(null)
-
-  // State for all settings
-  const [currentScriptLink, setCurrentScriptLink] = useState(scriptLink ?? '')
-  const [currentSheetUrl, setCurrentSheetUrl] = useState(googleSheetUrl ?? initialSheetUrl ?? '')
-  const [currentSheetImg, setCurrentSheetImg] = useState(sheetFullImg ?? '')
-  const [currentShowBankAccount, setCurrentShowBankAccount] = useState(showBankAccount)
-  const [currentBankInfo, setCurrentBankInfo] = useState(sheetBankInfo ?? '')
-  const [currentLinkedBankId, setCurrentLinkedBankId] = useState<string | null>(sheetLinkedBankId ?? null)
-  const [currentShowQrImage, setCurrentShowQrImage] = useState(showQrImage)
-  const [currentIsMasterSheet, setCurrentIsMasterSheet] = useState(!!isMasterSheetEnabled)
-  const [accountSearch, setAccountSearch] = useState('')
-  const [lastAutoDetectedCycle, setLastAutoDetectedCycle] = useState<string | null>(null)
-
+  
   const router = useRouter()
 
   useEffect(() => {
     setSheetUrl(initialSheetUrl ?? null)
   }, [initialSheetUrl])
 
-  // Reset state when popover opens
-  useEffect(() => {
-    if (!showPopover) return
-    setCurrentScriptLink(scriptLink ?? '')
-    setCurrentSheetUrl(googleSheetUrl ?? initialSheetUrl ?? '')
-    setCurrentSheetImg(sheetFullImg ?? '')
-    setCurrentShowBankAccount(showBankAccount)
-    setCurrentBankInfo(sheetBankInfo ?? '')
-    setCurrentLinkedBankId(sheetLinkedBankId ?? null)
-    setCurrentShowQrImage(showQrImage)
-    setCurrentIsMasterSheet(!!isMasterSheetEnabled)
-  }, [scriptLink, googleSheetUrl, initialSheetUrl, sheetFullImg, showBankAccount, sheetBankInfo, sheetLinkedBankId, showQrImage, isMasterSheetEnabled, showPopover])
-
-  useEffect(() => {
-    setHistoryYear(selectedYear ?? 'all')
-  }, [selectedYear, showPopover])
-
-  // AUTO-FILL Bank Info if missing
-  useEffect(() => {
-    if (!currentBankInfo && currentLinkedBankId && accounts.length > 0) {
-      const acc = accounts.find(a => a.id === currentLinkedBankId)
-      if (acc) {
-        const info = [acc.name, acc.account_number, acc.receiver_name].filter(Boolean).join(' ')
-        if (info) setCurrentBankInfo(info)
-      }
-    }
-  }, [currentLinkedBankId, accounts, currentBankInfo])
-
-  useEffect(() => {
-    if (!showPopover) return
-    if (currentLinkedBankId) return
-
-    const bankAccounts = (accounts || []).filter((acc) => acc.type === 'bank')
-    if (bankAccounts.length === 0) return
-
-    const normalizedInfo = (currentBankInfo || '').toLowerCase()
-    if (normalizedInfo) {
-      const matched = bankAccounts.find((acc) => {
-        const name = (acc.name || '').toLowerCase()
-        const accountNumber = (acc.account_number || '').toLowerCase()
-        const receiver = (acc.receiver_name || '').toLowerCase()
-        return [name, accountNumber, receiver].some((item) => item && normalizedInfo.includes(item))
-      })
-      if (matched) {
-        setCurrentLinkedBankId(matched.id)
-        return
-      }
-    }
-
-    if (bankAccounts.length === 1) {
-      setCurrentLinkedBankId(bankAccounts[0].id)
-    }
-  }, [showPopover, currentLinkedBankId, accounts, currentBankInfo])
-
-  useEffect(() => {
-    if (!showPopover) return
-
-    const detectedFromSheet = extractCycleTagFromUrl(currentSheetUrl)
-    const detectedFromScript = extractCycleTagFromUrl(currentScriptLink)
-    const detectedTag = detectedFromSheet || detectedFromScript
-    if (!detectedTag) return
-    if (lastAutoDetectedCycle === detectedTag) return
-
-    const existsInCycles = allCycles.some((cycle) => cycle.tag === detectedTag)
-    if (!existsInCycles) return
-
-    setLastAutoDetectedCycle(detectedTag)
-    onYearChange?.(detectedTag.split('-')[0])
-    onCycleChange?.(detectedTag)
-  }, [showPopover, currentSheetUrl, currentScriptLink, allCycles, lastAutoDetectedCycle, onCycleChange, onYearChange])
-
   const label = sheetUrl ? linkedLabel : unlinkedLabel
   const icon = sheetUrl ? RefreshCcw : FileSpreadsheet
   const Icon = icon
   const isDisabled = disabled || !personId || isManaging || isSaving
   const hasValidCycle = isYYYYMM(cycleTag)
-  const hasValidScriptLink = isValidLink(currentScriptLink)
+  const hasValidScriptLink = scriptLink && scriptLink.trim().length > 0 && (scriptLink.startsWith('http') || scriptLink.startsWith('https'))
 
+  // Get most recent year as default year
   const cycleYears = React.useMemo(() => {
     const sourceYears = availableYears.length > 0
       ? availableYears
@@ -273,18 +207,41 @@ export function ManageSheetButton({
     return sourceYears.filter(Boolean)
   }, [allCycles, availableYears])
 
+  const [historyYear, setHistoryYear] = useState<string>(() => {
+    const currentYear = new Date().getFullYear().toString()
+    return cycleYears.includes(currentYear) ? currentYear : (cycleYears[0] || 'all')
+  })
+
+  useEffect(() => {
+    setHistoryYear(historyYear)
+  }, [cycleYears])
+
   const filteredCycles = React.useMemo(() => {
-    const normalizedSearch = historySearch.trim().toLowerCase()
+    let searchStr = historySearch.trim().toLowerCase()
+    
+    // Normalize patterns like "-2" or " 2" to "-02"
+    if (/^-\d$/.test(searchStr)) {
+      searchStr = searchStr.replace('-', '-0')
+    }
 
     return allCycles.filter((cycle) => {
-      const matchesYear = historyYear === 'all' || cycle.tag.startsWith(`${historyYear}-`)
-      if (!matchesYear) return false
-      if (!normalizedSearch) return true
+      const tag = cycle.tag.toLowerCase()
+      
+      // Basic text matching
+      const matchesSearch = !searchStr || 
+                          tag.includes(searchStr) || 
+                          getMonthDisplayName(cycle.tag).toLowerCase().includes(searchStr) ||
+                          numberFormatter.format(cycle.remains).includes(searchStr)
 
-      return [cycle.tag, getMonthDisplayName(cycle.tag), numberFormatter.format(cycle.remains)]
-        .join(' ')
-        .toLowerCase()
-        .includes(normalizedSearch)
+      if (!matchesSearch) return false
+
+      // If user is searching specifically (e.g., "-02" or "2026"), it should override the year filter
+      const isGlobalPattern = searchStr.startsWith('-') || /^(20\d{2})/.test(searchStr)
+      if (isGlobalPattern) return matchesSearch
+
+      // Otherwise respect the year filter
+      const matchesYear = historyYear === 'all' || tag.startsWith(`${historyYear}-`)
+      return matchesYear
     })
   }, [allCycles, historySearch, historyYear])
 
@@ -292,64 +249,11 @@ export function ManageSheetButton({
     return cycleYears
       .map((year) => ({
         year,
-        cycles: filteredCycles.filter((cycle) => cycle.tag.startsWith(`${year}-`)),
+        cycles: filteredCycles.filter((cycle) => cycle.tag.startsWith(`${year}-`) && cycle.tag !== pendingCycleTag),
       }))
       .filter((group) => group.cycles.length > 0)
-  }, [cycleYears, filteredCycles])
+  }, [cycleYears, filteredCycles, pendingCycleTag])
 
-  const hasUnsavedChanges =
-    currentScriptLink !== (scriptLink ?? '') ||
-    currentSheetUrl !== (googleSheetUrl ?? initialSheetUrl ?? '') ||
-    currentSheetImg !== (sheetFullImg ?? '') ||
-    currentShowBankAccount !== showBankAccount ||
-    currentBankInfo !== (sheetBankInfo ?? '') ||
-    currentLinkedBankId !== (sheetLinkedBankId ?? null) ||
-    currentShowQrImage !== showQrImage ||
-    currentIsMasterSheet !== !!isMasterSheetEnabled
-
-  const handleTriggerClick = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-  }
-
-  const handleSaveSettings = () => {
-    if (!personId) {
-      toast.error('Missing person profile.')
-      return
-    }
-
-    setShowPopover(false)
-    startSaveTransition(async () => {
-      const toastId = toast.loading('Saving settings...', {
-        description: 'Updating person profile details',
-      })
-      try {
-        const ok = await updatePersonAction(personId, {
-          sheet_link: currentScriptLink.trim() || null,
-          google_sheet_url: currentSheetUrl.trim() || null,
-          sheet_full_img: currentSheetImg.trim() || null,
-          sheet_show_bank_account: currentShowBankAccount,
-          sheet_bank_info: currentBankInfo.trim() || null,
-          sheet_linked_bank_id: currentLinkedBankId || null,
-          sheet_show_qr_image: currentShowQrImage,
-          is_master_sheet_enabled: currentIsMasterSheet,
-        })
-        if (!ok) {
-          toast.dismiss(toastId)
-          toast.error('Unable to save settings.')
-          return
-        }
-        toast.dismiss(toastId)
-        toast.success('Settings saved. Syncing sheet...')
-        router.refresh()
-
-        // Trigger sync automatically
-        handleManageCycle()
-      } catch (error) {
-        toast.dismiss(toastId)
-        toast.error('Saving settings failed.')
-      }
-    })
-  }
 
   const handleManageCycle = () => {
     if (!hasValidCycle) {
@@ -455,7 +359,7 @@ export function ManageSheetButton({
   return (
     <div className={cn(
       splitMode
-        ? 'flex items-center rounded-lg border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm'
+        ? 'flex items-center rounded-xl border border-slate-200 hover:border-slate-300 overflow-hidden transition-all bg-white shadow-sm h-9'
         : 'inline-flex items-center gap-2',
       className
     )}>
@@ -476,18 +380,18 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-none"
-                    disabled={!currentSheetUrl || !isValidLink(currentSheetUrl)}
+                    className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-100"
+                    disabled={!googleSheetUrl || !isValidLink(googleSheetUrl)}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (currentSheetUrl) window.open(currentSheetUrl, '_blank', 'noopener,noreferrer');
+                      if (googleSheetUrl) window.open(googleSheetUrl, '_blank', 'noopener,noreferrer');
                     }}
                   >
                     <FileSpreadsheet className="h-4.5 w-4.5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="start" className="z-[100]">
-                  <p>Open Sheet in New Tab</p>
+                  <p>Open Sheet</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -497,26 +401,23 @@ export function ManageSheetButton({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-none w-8 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-none"
+                    className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
                     disabled={isDisabled || isSaving}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleManageCycle();
-                    }}
-                    onMouseEnter={(e) => {
-                      e.stopPropagation();
                     }}
                   >
                     <RefreshCcw className={cn("h-4 w-4", (isManaging || isSaving || isPending) && "animate-spin")} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="center" className="z-[100]">
-                  <p>Quick Sync to Sheet</p>
+                  <p>Sync Now</p>
                 </TooltipContent>
               </Tooltip>
 
               {/* 3. History Trigger (Middle Info Part) */}
-              <div className="flex-1 h-full min-w-0">
+              <div className="flex-1 h-full min-w-[120px]">
                 <Tooltip>
                   <PopoverTrigger asChild>
                     <TooltipTrigger asChild>
@@ -524,19 +425,16 @@ export function ManageSheetButton({
                         variant="ghost"
                         size="sm"
                         className={cn(
-                          "rounded-none px-2.5 hover:bg-slate-50 h-full w-full flex items-center justify-between border-none overflow-hidden",
+                          "rounded-none px-3 hover:bg-slate-50 h-full w-full flex items-center justify-between border-none overflow-hidden group",
                           buttonClassName
                         )}
                         disabled={isDisabled}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (allCycles.length > 0) {
-                            setActiveTab('history')
-                            setShowPopover(true)
-                          }
+                          setShowPopover(true)
                         }}
                       >
-                        <span className="font-bold text-slate-800 tabular-nums truncate text-[11px]">{cycleTag || 'History'}</span>
+                        <span className="font-bold text-slate-800 tabular-nums truncate text-[11px] min-w-[80px]">{cycleTag || 'History'}</span>
 
                         {allCycles.length > 0 && (
                           <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
@@ -549,36 +447,35 @@ export function ManageSheetButton({
                                 {numberFormatter.format(activeCycleRemains)}
                               </span>
                             )}
-                            <ChevronDown className="h-3 w-3 text-slate-400 group-hover:text-slate-600" />
+                            <ChevronDown className="h-3 w-3 text-slate-300 group-hover:text-slate-500" />
                           </div>
                         )}
                       </Button>
                     </TooltipTrigger>
                   </PopoverTrigger>
                   <TooltipContent side="bottom" align="center" className="z-[100]">
-                    <p>View Cycle History</p>
+                    <p>Debt History</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
 
-              {/* 4. Settings Trigger Icon (Now on the Right) */}
+              {/* 4. Settings Trigger Icon (Now calls prop) */}
               <Tooltip>
-                <PopoverTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-none w-8 px-0 hover:bg-slate-50 h-full text-slate-500 shrink-0 flex items-center justify-center border-none"
-                      disabled={isDisabled}
-                      onClick={(e) => {
-                        handleTriggerClick(e)
-                        setActiveTab('settings')
-                      }}
-                    >
-                      <Settings2 className="h-4.5 w-4.5" />
-                    </Button>
-                  </TooltipTrigger>
-                </PopoverTrigger>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-400 hover:text-indigo-600 shrink-0 flex items-center justify-center border-l border-slate-100"
+                    disabled={!onOpenSettings}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowPopover(false)
+                      onOpenSettings?.()
+                    }}
+                  >
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
                 <TooltipContent side="bottom" align="end" className="z-[100]">
                   <p>Sheet Configurations</p>
                 </TooltipContent>
@@ -590,7 +487,7 @@ export function ManageSheetButton({
             <Button
               variant="outline"
               size={size === 'md' ? 'default' : size}
-              className={cn(buttonClassName)}
+              className={cn("h-9 border-slate-200 rounded-xl", buttonClassName)}
               disabled={isDisabled}
               onClick={handleTriggerClick}
             >
@@ -600,479 +497,317 @@ export function ManageSheetButton({
           </PopoverTrigger>
         )}
 
-        <PopoverContent className="w-[640px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl" align={splitMode ? 'start' : 'end'} side="bottom" sideOffset={8}>
-          <div className="p-2.5 bg-slate-50 border-b border-slate-100">
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) => setActiveTab(val as any)}
-              className="w-full"
-            >
-              <TabsList className="bg-slate-200/50 h-9 p-1 rounded-lg">
-                <TabsTrigger value="history" className="rounded-md flex-1 text-[11px] font-bold h-7 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">
-                  <History className="h-3.5 w-3.5 mr-2" />
-                  Debt History
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="rounded-md flex-1 text-[11px] font-bold h-7 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">
-                  <Settings2 className="h-3.5 w-3.5 mr-2" />
-                  Configurations
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+        <PopoverContent className="w-[600px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white" align={splitMode ? 'start' : 'end'} sideOffset={8}>
+          <div className="flex flex-col max-h-[600px] bg-slate-50/10">
+            {/* Header with Tabs */}
+            <div className="px-8 pt-6 pb-6 bg-slate-50 border-b border-slate-200/60">
+              <div className="flex bg-slate-200/50 p-1.5 rounded-2xl w-fit">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all bg-white text-indigo-600 shadow-sm ring-1 ring-black/[0.03]"
+                >
+                  <History className="h-4 w-4" /> Debt History
+                </button>
+              </div>
+            </div>
 
-          <div className="mt-0">
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) => setActiveTab(val as any)}
-              className="w-full"
-            >
-              <TabsContent value="history" className="mt-0">
-                <div className="p-1 max-h-[400px] overflow-y-auto">
-                  <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-slate-100/50 bg-slate-50/50">
-                    <div className="flex flex-col">
-                        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider leading-none">Controller</h4>
-                        {pendingCycleTag !== cycleTag && (
-                            <span className="text-[8px] font-bold text-amber-500 animate-pulse mt-0.5 uppercase tracking-tighter">Applied View pending...</span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                              "h-7 px-2.5 text-[10px] font-black uppercase tracking-wider transition-all",
-                              pendingCycleTag !== cycleTag 
-                                ? "bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-100 border-none"
-                                : "text-slate-300 bg-slate-100/50 cursor-not-allowed border-transparent"
-                          )}
-                          onClick={handleApply}
-                          disabled={pendingCycleTag === cycleTag || isManaging || isSaving}
-                        >
-                          <Check className="h-3 w-3 mr-1.5" />
-                          Apply View
-                        </Button>
+            {/* Filter Bar */}
+            <div className="px-8 py-5 flex items-center gap-4 bg-white sticky top-0 z-30 border-b border-slate-100 flex-nowrap overflow-x-auto scrollbar-hide">
+              <div className="relative flex-1 min-w-[200px] group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search dates (YYYY-MM)..."
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-11 pr-4 h-12 text-[13px] font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all placeholder:text-slate-400"
+                />
+              </div>
+              <Select 
+                value={historyYear} 
+                onValueChange={(val) => setHistoryYear(val || 'all')}
+                items={[
+                  { value: 'all', label: 'All Years' },
+                  ...cycleYears.map(y => ({ value: y, label: y }))
+                ]}
+                className="h-12 w-32 bg-slate-50 border-slate-100 rounded-2xl font-bold text-slate-700 text-[11px] uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm border shrink-0"
+                placeholder="Year"
+              />
+            </div>
 
-                        <div className="h-4 w-px bg-slate-200 mx-0.5" />
+            {/* Filter Summary Indicator */}
+            <div className="px-8 py-2.5 bg-slate-50/50 border-y border-slate-100 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                    {historySearch ? `Results for "${historySearch}"` : historyYear === 'all' ? 'All History Trace' : `${historyYear} History`}
+                </span>
+            </div>
 
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border border-indigo-100 bg-white"
-                          onClick={handleManageCycle}
-                          disabled={isManaging || isSaving}
-                        >
-                          <FileSpreadsheet className={cn("h-3 w-3 mr-1.5", isManaging && "animate-spin")} />
-                          Sync
-                        </Button>
-
-                        {onSyncCycle && (
-                          <Button 
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border border-emerald-100 bg-white"
-                            onClick={() => {
-                                toast.promise(onSyncCycle('all'), {
-                                    loading: 'Locking all history to DB...',
-                                    success: 'Technical history synced!',
-                                    error: (err: any) => err?.message || 'Sync failed'
-                                });
-                            }}
-                            disabled={isManaging || isSaving}
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                        )}
-                    </div>
-                  </div>
-
-                  <div className="px-3 pb-2 flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        value={historySearch}
-                        onChange={(e) => setHistorySearch(e.target.value)}
-                        placeholder="Search cycle..."
-                        className="h-8 pl-8 text-xs"
-                      />
-                    </div>
-
-                    <div className="relative w-[110px]">
-                      <select
-                        value={historyYear}
-                        onChange={(e) => setHistoryYear(e.target.value)}
-                        className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 pr-7 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                      >
-                        <option value="all">All years</option>
-                        {cycleYears.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                    </div>
-                  </div>
-
-                  <div className="px-2 pb-2">
-                    {/* All History Option */}
-                    <button
-                      onClick={() => {
-                        setPendingCycleTag('all')
-                        if (historyYear === 'all') {
-                          onYearChange?.(selectedYear || String(new Date().getFullYear()))
-                        } else {
-                          onYearChange?.(null)
-                        }
-                      }}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-xs mb-1",
-                        (selectedYear === null || cycleTag === 'all') && historyYear === 'all' ? "bg-amber-50 text-amber-700" : "hover:bg-slate-50"
-                      )}
-                    >
-                      <span className={cn("font-bold flex items-center gap-2", (selectedYear === null || cycleTag === 'all') && historyYear === 'all' ? "text-amber-900" : "text-slate-600")}>
-                        <RotateCcw className="w-3 h-3" />
-                        {selectedYear ? `All ${selectedYear}` : 'All History'}
-                      </span>
-                    </button>
-
-                    {currentCycleTag && pendingCycleTag !== currentCycleTag && (
-                      <button
-                        onClick={() => {
-                          setPendingCycleTag(currentCycleTag)
-                        }}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-xs mb-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                      >
-                        <span className="font-bold flex items-center gap-2">
-                          <RotateCcw className="w-3 h-3" />
-                          Jump to Current ({getMonthDisplayName(currentCycleTag)})
-                        </span>
-                      </button>
-                    )}
-
-                    {groupedFilteredCycles.map(({ year, cycles }) => (
-                      <div key={year} className="mt-2 mb-1">
-                        <div className="px-3 py-1 text-[10px] font-bold text-slate-500 bg-slate-100/50 rounded-sm mb-1">{year}</div>
-                        {cycles.map(cycle => {
-                            const cycleSettled = cycle.isSettled || (Math.abs(cycle.remains) < 1000)
-                            const totalInitial = cycle.stats?.originalLend || 1
-                            const totalPaid = (cycle.stats?.cashback || 0) + (cycle.stats?.repay || 0)
-                            const paidPercent = Math.min(100, Math.max(0, (totalPaid / totalInitial) * 100))
-                            const remainsPercent = 100 - paidPercent
-
-                            return (
-                                <div
-                                  key={cycle.tag}
-                                  onClick={() => setPendingCycleTag(cycle.tag)}
-                                  className={cn(
-                                    "w-full group relative flex items-center gap-3 p-3 bg-white border rounded-xl hover:border-slate-300 hover:shadow-md transition-all duration-200 mb-2 cursor-pointer",
-                                    pendingCycleTag === cycle.tag 
-                                        ? "border-amber-400 bg-amber-50/5 ring-1 ring-amber-100 shadow-sm" 
-                                        : (cycleTag === cycle.tag ? "border-indigo-200 bg-indigo-50/10" : "border-slate-100")
-                                  )}
-                                >
-                                  {/* Column 1: Cycle Tag */}
-                                  <div className="w-[110px] flex items-center gap-2 shrink-0">
-                                      <span className="text-[13px] font-black text-slate-800 tracking-tight tabular-nums">
-                                          {cycle.tag}
-                                      </span>
-                                      {cycle.isSynced ? (
-                                        <div className="w-5 h-5 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                                            <Lock className="h-3 w-3 text-emerald-500" />
-                                        </div>
-                                      ) : (
-                                        <div className="w-5 h-5 rounded-md bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                            <LockOpen className="h-3 w-3 text-slate-300" />
-                                        </div>
-                                      )}
-                                  </div>
-
-                                  {/* Right Data Sections */}
-                                  <div className="flex-1 flex items-center gap-0">
-                                      {/* Column 2: Initial */}
-                                      <div className="flex-1 min-w-[75px] flex flex-col items-end justify-center px-1.5 border-r border-slate-50">
-                                          <span className="text-[8px] font-black text-slate-400 tracking-widest leading-none mb-1 whitespace-nowrap">Initial</span>
-                                          <span className="text-[11px] font-black text-slate-700 tabular-nums leading-none truncate w-full text-right">
-                                              {numberFormatter.format(cycle.stats?.originalLend || 0)}
-                                          </span>
-                                      </div>
-
-                                      {/* Column 3: Total Back */}
-                                      <div className="flex-1 min-w-[75px] flex flex-col items-end justify-center px-1.5 border-r border-slate-50">
-                                          <span className="text-[8px] font-black text-orange-400 tracking-widest leading-none mb-1 whitespace-nowrap">Total Back</span>
-                                          <span className="text-[11px] font-black text-orange-500 tabular-nums leading-none truncate w-full text-right">
-                                              -{numberFormatter.format(cycle.stats?.cashback || 0)}
-                                          </span>
-                                      </div>
-
-                                      {/* Column 4: Repaid */}
-                                      <div className="flex-1 min-w-[75px] flex flex-col items-end justify-center px-1.5 border-r border-slate-50 border-transparent">
-                                          <span className="text-[8px] font-black text-emerald-400 tracking-widest leading-none mb-1 whitespace-nowrap">Repaid</span>
-                                          <span className="text-[11px] font-black text-emerald-500 tabular-nums leading-none truncate w-full text-right">
-                                              {numberFormatter.format(cycle.stats?.repay || 0)}
-                                          </span>
-                                      </div>
-
-                                      {/* Column 5: Status Badge */}
-                                      <div className="w-[140px] ml-4 flex items-center justify-center shrink-0">
-                                          <div className={cn(
-                                              "w-full flex flex-col items-center justify-center gap-1 py-1.5 px-3 rounded-2xl border shadow-sm transition-all",
-                                              cycleSettled 
-                                                ? "bg-emerald-50/40 border-emerald-100/60" 
-                                                : "bg-rose-50/40 border-rose-100/60"
-                                          )}>
-                                              <div className="flex items-center justify-center w-full">
-                                                  <span className={cn(
-                                                      "text-[9px] font-bold",
-                                                      cycleSettled ? "text-emerald-500/70" : "text-rose-400"
-                                                  )}>
-                                                      {cycleSettled ? "Status:" : "Remain:"}
-                                                  </span>
-                                              </div>
-                                              <div className="flex flex-col items-center leading-none gap-0.5">
-                                                  <span className={cn(
-                                                      "text-[13px] font-black tabular-nums tracking-tight",
-                                                      cycleSettled ? "text-emerald-600" : "text-rose-600"
-                                                  )}>
-                                                      {cycleSettled 
-                                                        ? "Settled" 
-                                                        : numberFormatter.format(Math.max(0, Math.round(cycle.remains || 0)))
-                                                      }
-                                                  </span>
-                                                  <span className={cn(
-                                                      "text-[10px] font-bold",
-                                                      cycleSettled ? "text-emerald-400/80" : "text-rose-400/80"
-                                                  )}>
-                                                      {cycleSettled ? "Paid" : `· ${Math.round(remainsPercent)}%`}
-                                                  </span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                </div>
-                            )
-                          })}
-                      </div>
-                    ))}
-
-                    {groupedFilteredCycles.length === 0 && (
-                      <div className="px-3 py-6 text-center text-xs text-slate-500">
-                        No cycles match the current filters.
-                      </div>
-                    )}
-                  </div>
+            {/* Cycles List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              {/* CURRENT SELECTION AT TOP */}
+              <div className="space-y-4">
+                <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-1 z-10 flex items-center gap-4">
+                  <span className="text-[10px] font-black text-indigo-500 tracking-[0.3em] uppercase">Selection</span>
+                  <div className="h-px flex-1 bg-indigo-100/50" />
                 </div>
-              </TabsContent>
-
-              <TabsContent value="settings" className="mt-0">
-
-                <div className="p-4 space-y-4">
-                  {/* 1. Scripts & Links */}
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <FileJson className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                      <Input
-                        value={currentScriptLink}
-                        onChange={(e) => setCurrentScriptLink(e.target.value)}
-                        placeholder="https://script.google.com/.../exec"
-                        className="h-8 pl-8 text-xs font-mono"
-                      />
-                    </div>
-
-                    <div className="relative">
-                      <Link2 className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                      <Input
-                        value={currentSheetUrl}
-                        onChange={(e) => setCurrentSheetUrl(e.target.value)}
-                        placeholder="Google Sheet URL"
-                        className="h-8 pl-8 text-xs font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 2. Bank & Sync Configuration */}
-                  <div className="space-y-4">
-                    {/* always visible Linked Bank for Quick Repay */}
-                    <div className="flex flex-col p-3 rounded-xl border border-slate-200 bg-white shadow-sm space-y-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                          <Landmark className="h-4 w-4 text-indigo-600" />
+                
+                {pendingCycleTag === 'all' ? (
+                  <div className={cn(
+                    "group flex items-center p-0 rounded-[1.5rem] transition-all border text-left relative overflow-hidden h-[60px] bg-white border-blue-400 shadow-[0_10px_30px_rgba(59,130,246,0.1)] ring-1 ring-blue-50",
+                    activeCycleResolved?.tag === '' && "border-emerald-400 ring-emerald-50 shadow-emerald-500/10"
+                  )}>
+                    <div className="flex-1 h-full flex items-center px-6 gap-4">
+                        <div className={cn(
+                          "h-10 w-10 rounded-xl flex items-center justify-center shadow-md",
+                          activeCycleResolved?.tag === '' ? "bg-emerald-600 text-white" : "bg-blue-600 text-white"
+                        )}>
+                          <History className="h-5 w-5" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-900">Default Bank Account</span>
-                          <span className="text-[10px] text-slate-500 font-medium tracking-tight">Auto-filled for repayment transactions</span>
+                          <span className="text-sm font-black tracking-tight text-slate-900 uppercase">
+                             All Time History
+                          </span>
+                          {activeCycleResolved?.tag === '' && <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Active View</span>}
                         </div>
-                      </div>
-
-                      <Combobox
-                        items={(accounts || [])
-                          .filter(a => a.type === 'bank' || a.type === 'credit_card')
-                          .map(acc => ({
-                            value: acc.id,
-                            label: acc.name,
-                            description: acc.account_number || undefined,
-                            icon: acc.image_url ? (
-                              <img src={acc.image_url} className="w-4 h-4 rounded-none object-contain bg-white" />
-                            ) : undefined
-                          }))
-                        }
-                        value={currentLinkedBankId || undefined}
-                        onValueChange={(val) => {
-                          setCurrentLinkedBankId(val || null)
-                          if (val) {
-                            const acc = (accounts || []).find(a => a.id === val)
-                            if (acc) {
-                              const info = [acc.name, acc.account_number, acc.receiver_name].filter(Boolean).join(' ')
-                              setCurrentBankInfo(info)
-                            }
-                          }
-                        }}
-                        placeholder="Link a bank account..."
-                        className="h-9 text-xs"
-                      />
                     </div>
-
-                    {/* Sync Controls Grid */}
-                    <div className="grid grid-cols-1 gap-3">
-                      {/* Sync Bank Toggle */}
-                      <div className={cn(
-                        "flex flex-col p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 transition-all",
-                        currentShowBankAccount && "border-emerald-200 bg-emerald-50/30"
-                      )}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <FileJson className={cn("h-3.5 w-3.5", currentShowBankAccount ? "text-emerald-500" : "text-slate-500")} />
-                            <div className="flex flex-col">
-                              <span className={cn("text-[11px] font-bold", currentShowBankAccount ? "text-emerald-900" : "text-slate-700")}>Sync Bank Info to Sheet</span>
-                              {currentShowBankAccount && <span className="text-[9px] text-emerald-600 font-medium">Auto-populates bank details on sheet</span>}
-                            </div>
-                          </div>
-                          <Switch
-                            checked={currentShowBankAccount}
-                            onCheckedChange={setCurrentShowBankAccount}
-                            disabled={isSaving}
-                            className="scale-75 origin-right"
-                          />
-                        </div>
-
-                        {currentShowBankAccount && (
-                          <div className="mt-2 pt-2 border-t border-emerald-100 animate-in fade-in slide-in-from-top-1 space-y-2">
-                            <Label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Manual Override / Bank Text</Label>
-                            <Input
-                              value={currentBankInfo}
-                              onChange={(e) => setCurrentBankInfo(e.target.value)}
-                              placeholder="Bank Name - Account Number - Receiver"
-                              className="h-8 text-xs bg-white/50 border-emerald-200/50 focus:bg-white transition-colors"
-                            />
-                          </div>
-                        )}
+                    
+                    {activeCycleResolved?.tag !== '' ? (
+                      <div className="w-[120px] h-full border-l border-slate-100 bg-blue-50/20 flex items-stretch">
+                        <button
+                          onClick={() => onCycleChange?.('')}
+                          className="flex-1 flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-slate-900 text-white transition-all shadow-md active:scale-95 group/btn"
+                        >
+                          <Zap className="h-4 w-4 transition-transform group-hover/btn:scale-125" />
+                          <span className="text-[10px] font-black uppercase tracking-widest leading-none">Switch</span>
+                        </button>
                       </div>
-
-                      {/* QR Sync Toggle */}
-                      <div className={cn(
-                        "flex flex-col p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 transition-all",
-                        currentShowQrImage && "border-indigo-200 bg-indigo-50/30"
-                      )}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <QrCode className={cn("h-3.5 w-3.5", currentShowQrImage ? "text-indigo-500" : "text-slate-500")} />
-                            <div className="flex flex-col">
-                              <span className={cn("text-[11px] font-bold", currentShowQrImage ? "text-indigo-900" : "text-slate-700")}>Show QR Code on Sheet</span>
-                            </div>
-                          </div>
-                          <Switch
-                            checked={currentShowQrImage}
-                            onCheckedChange={setCurrentShowQrImage}
-                            disabled={isSaving}
-                            className="scale-75 origin-right"
-                          />
+                    ) : (
+                      <div className="w-[80px] h-full border-l border-slate-100 bg-emerald-50/20 flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-500">
+                          <Check className="h-5 w-5" strokeWidth={3} />
                         </div>
-
-                        {currentShowQrImage && (
-                          <div className="mt-2 pt-2 border-t border-indigo-100 animate-in fade-in slide-in-from-top-1 px-1">
-                            <div className="relative">
-                              <Link2 className="absolute left-2 top-2 h-3 w-3 text-slate-400" />
-                              <Input
-                                value={currentSheetImg}
-                                onChange={(e) => setCurrentSheetImg(e.target.value)}
-                                placeholder="Public Image URL (Direct link)"
-                                className="h-7 pl-7 text-[10px] font-mono bg-white/50 border-indigo-200/50"
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
-
-                      {/* Master Year Sheet Toggle */}
-                      <div className={cn(
-                        "flex flex-col p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 transition-all",
-                        currentIsMasterSheet && "border-amber-200 bg-amber-50/30"
-                      )}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <FileJson className={cn("h-3.5 w-3.5", currentIsMasterSheet ? "text-amber-500" : "text-slate-500")} />
-                            <div className="flex flex-col">
-                              <span className={cn("text-[11px] font-bold", currentIsMasterSheet ? "text-amber-900" : "text-slate-700")}>Create Master Year Sheet</span>
-                            </div>
-                          </div>
-                          <Switch
-                            checked={currentIsMasterSheet}
-                            onCheckedChange={setCurrentIsMasterSheet}
-                            disabled={isSaving}
-                            className="scale-75 origin-right"
-                          />
-                        </div>
-
-                        {currentIsMasterSheet && (
-                          <div className="mt-2 pt-2 border-t border-amber-100 animate-in fade-in slide-in-from-top-1 px-1">
-                            <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
-                              Khi tính năng này được bật, quá trình Sync sẽ tạo hoặc cập nhật vào 1 Master Sheet của năm thay vì tạo lẻ từng tháng.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
+                ) : (() => {
+                  const selectedCycle = allCycles.find(c => c.tag === pendingCycleTag)
+                  if (!selectedCycle) return null
+                  
+                  const settled = selectedCycle.remains <= 0
+                  const stats = selectedCycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
+                  const initial = stats.originalLend || 0
+                  const cashback = stats.cashback || 0
+                  const repaid = stats.repay || 0
+                  const remains = selectedCycle.remains
 
-                  {/* 3. Actions */}
-                  <div className="pt-2 flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      {hasUnsavedChanges ? (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="flex-1 h-8 bg-slate-900 hover:bg-slate-800"
-                          onClick={handleSaveSettings}
-                          disabled={isSaving}
-                        >
-                          {isSaving ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="flex-1 h-8 bg-slate-900 hover:bg-slate-800"
-                          onClick={handleManageCycle}
-                          disabled={isManaging || !hasValidScriptLink}
-                        >
-                          <RefreshCcw className={cn("h-3.5 w-3.5 mr-2", isManaging && "animate-spin")} />
-                          {isManaging ? 'Syncing...' : 'Sync Sheet Now'}
-                        </Button>
-                      )}
+                  const isCurrentlyActive = activeCycleResolved?.tag === pendingCycleTag
 
-                      {currentSheetUrl && isValidLink(currentSheetUrl) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2.5"
-                          onClick={() => window.open(currentSheetUrl, '_blank', 'noopener,noreferrer')}
-                          title="Open Sheet"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
+                  return (
+                    <div className={cn(
+                      "group flex items-center p-0 rounded-[1.5rem] transition-all border text-left relative overflow-hidden h-[80px] bg-white ring-1",
+                      isCurrentlyActive ? "border-emerald-400 ring-emerald-50 shadow-emerald-500/10" : "border-indigo-400 ring-indigo-50 shadow-[0_15px_40px_rgba(79,70,229,0.12)]"
+                    )}>
+                      {/* Left: Cycle Section */}
+                      <div className={cn(
+                        "min-w-[100px] h-full flex flex-col items-center justify-center border-r border-slate-100/80 transition-colors",
+                        isCurrentlyActive ? "bg-emerald-50/50" : "bg-indigo-50/50"
+                      )}>
+                        <span className={cn(
+                          "text-lg font-bold tracking-tight tabular-nums",
+                          isCurrentlyActive ? "text-emerald-600" : "text-indigo-600"
+                        )}>
+                          {selectedCycle.tag}
+                        </span>
+                        {isCurrentlyActive && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">Active</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Data: 4 Column Grid */}
+                      <div className="flex-1 h-full flex items-stretch">
+                        <div className="flex-1 grid grid-cols-4 px-2">
+                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 pr-3">
+                            <span className="text-[9px] font-bold text-slate-400 tracking-tight leading-none mb-1 uppercase">Initial</span>
+                            <span className="text-[13px] font-bold text-slate-700 tabular-nums">
+                              {numberFormatter.format(initial)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
+                            <span className="text-[9px] font-bold text-orange-400 tracking-tight leading-none mb-1 uppercase">Back</span>
+                            <span className="text-[12px] font-black text-orange-500 tabular-nums">
+                              -{numberFormatter.format(cashback)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
+                            <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1 uppercase">Repaid</span>
+                            <span className="text-[12px] font-black text-emerald-600 tabular-nums">
+                              {numberFormatter.format(repaid)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center items-end text-right px-3">
+                            <span className={cn("text-[9px] font-bold tracking-tight leading-none mb-1 uppercase", remains > 0 ? "text-rose-400" : "text-emerald-400")}>Remains</span>
+                            <span className={cn("text-[13px] font-black tabular-nums transition-colors", remains > 0 ? "text-rose-600" : "text-emerald-600")}>
+                              {numberFormatter.format(remains)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Column */}
+                        <div className={cn(
+                          "w-[100px] border-l border-slate-100 flex items-stretch",
+                          isCurrentlyActive ? "bg-emerald-50/20" : "bg-indigo-50/20"
+                        )}>
+                          {!isCurrentlyActive ? (
+                             <button
+                               onClick={() => onCycleChange?.(pendingCycleTag)}
+                               className="flex-1 flex flex-col items-center justify-center gap-1 bg-indigo-600 hover:bg-slate-900 text-white transition-all shadow-md active:scale-95 group/btn"
+                             >
+                                <Zap className="h-4 w-4 transition-transform group-hover/btn:scale-125" />
+                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Switch</span>
+                             </button>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className={cn(
+                                "h-10 w-10 rounded-full text-white flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-500",
+                                settled ? "bg-emerald-500" : "bg-emerald-400"
+                              )}>
+                                <Check className="h-5 w-5" strokeWidth={3} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                  )
+                })()}
+              </div>
+
+              {pendingCycleTag !== 'all' && (
+                <div className="space-y-4">
+                   <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-1 z-10 flex items-center gap-4">
+                    <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">Actions</span>
+                    <div className="h-px flex-1 bg-slate-100/80" />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setPendingCycleTag('all')}
+                    className="group flex flex-col px-6 rounded-3xl transition-all border text-left relative overflow-hidden bg-white border-slate-100 hover:border-slate-300 shadow-sm h-14 justify-center"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                          <History className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight text-slate-500 group-hover:text-slate-900 transition-colors">
+                          SWITCH TO ALL TIME VIEW
+                        </span>
+                      </div>
+                    </div>
+                  </button>
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
+
+              {groupedFilteredCycles.length === 0 ? (
+                <div className="py-24 text-center flex flex-col items-center">
+                  <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                    <Search className="h-10 w-10 text-slate-200" />
+                  </div>
+                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">No other cycles found</p>
+                </div>
+              ) : (
+                groupedFilteredCycles.map((group) => (
+                  <div key={group.year} className="space-y-4">
+                    <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-2.5 z-10 flex items-center gap-4">
+                      <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">{group.year}</span>
+                      <div className="h-px flex-1 bg-slate-100/80" />
+                    </div>
+                    <div className="grid gap-6">
+                      {group.cycles.map((cycle) => {
+                        const settled = cycle.remains <= 0
+                        const stats = cycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
+                        const initial = stats.originalLend || 0
+                        const cashback = stats.cashback || 0
+                        const repaid = stats.repay || 0
+                        const remains = cycle.remains
+
+                        return (
+                          <button
+                            key={cycle.tag}
+                            type="button"
+                            onClick={() => setPendingCycleTag(cycle.tag)}
+                            className="group flex items-center p-0 rounded-[1.5rem] transition-all border border-slate-100 hover:border-slate-200 hover:shadow-md text-left relative overflow-hidden h-[80px] bg-white"
+                          >
+                            {/* Left: Cycle Section */}
+                            <div className="min-w-[100px] h-full flex items-center justify-center border-r border-slate-100/80 bg-slate-50/30">
+                              <span className="text-lg font-bold tracking-tight tabular-nums text-slate-800">
+                                {cycle.tag}
+                              </span>
+                            </div>
+
+                            {/* Right: Data Sections */}
+                            <div className="flex-1 h-full grid grid-cols-4 px-2">
+                              <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 pr-3">
+                                <span className="text-[9px] font-bold text-slate-400 tracking-tight leading-none mb-1">Initial</span>
+                                <span className="text-[13px] font-bold text-slate-700 tabular-nums">
+                                  {numberFormatter.format(initial)}
+                                </span>
+                              </div>
+                              <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
+                                <span className="text-[9px] font-bold text-orange-400 tracking-tight leading-none mb-1">Total Back</span>
+                                <span className="text-[13px] font-bold text-orange-500 tabular-nums">
+                                  -{numberFormatter.format(cashback)}
+                                </span>
+                              </div>
+                              <div className={cn("flex flex-col justify-center items-end text-right px-3", !settled && "border-r border-slate-100")}>
+                                <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1">Repaid</span>
+                                <span className="text-[13px] font-bold text-emerald-600 tabular-nums">
+                                  {numberFormatter.format(repaid)}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-end pl-3">
+                                {settled ? (
+                                  <div className="h-full w-full py-2 flex items-center justify-center">
+                                    <div className="bg-emerald-500 text-white rounded-xl w-full h-[80%] flex flex-col items-center justify-center shadow-lg">
+                                      <span className="text-[9px] font-bold tracking-widest leading-none mb-0.5">Status</span>
+                                      <span className="text-[11px] font-bold leading-none">Settled</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col justify-center items-end text-right w-full">
+                                    <span className="text-[9px] font-bold text-rose-400 tracking-tight leading-none mb-1">Remains</span>
+                                    <div className="bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
+                                      <span className="text-[13px] font-bold text-rose-600 tabular-nums">
+                                        {numberFormatter.format(remains)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
+              <Button
+                size="lg"
+                className="flex-1 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-[0.98] shadow-2xl shadow-slate-200 disabled:opacity-30"
+                disabled={!pendingCycleTag || pendingCycleTag === cycleTag}
+                onClick={handleApply}
+              >
+                Switch to {pendingCycleTag?.toUpperCase() || 'Cycle'}
+              </Button>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

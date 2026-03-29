@@ -119,13 +119,16 @@ export function FilterableTransactions({
     const [dateTo, setDateTo] = useState<string>('')
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
     const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
+        const isPerson = context === 'person';
+        const isAccount = context === 'account';
+
         const initial: Record<ColumnKey, boolean> = {
             date: true,
             shop: true,
             note: false,
             category: true,
             tag: false,
-            account: true,
+            account: !isAccount,
             amount: true,
             back_info: false,
             final_price: true,
@@ -136,6 +139,7 @@ export function FilterableTransactions({
             actual_cashback: false,
             est_share: false,
             net_profit: false,
+            cycle: isPerson,
         }
         return initial
     })
