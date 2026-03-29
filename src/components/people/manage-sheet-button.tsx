@@ -176,7 +176,11 @@ export function ManageSheetButton({
 
   const handleApply = () => {
     if (onCycleChange && pendingCycleTag !== cycleTag) {
-      onCycleChange(pendingCycleTag)
+      if (pendingCycleTag === 'all' && historyYear !== 'all' && onYearChange) {
+        onYearChange(historyYear)
+      } else {
+        onCycleChange(pendingCycleTag)
+      }
       setShowPopover(false)
     }
   }
@@ -497,7 +501,7 @@ export function ManageSheetButton({
           </PopoverTrigger>
         )}
 
-        <PopoverContent className="w-[600px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white" align={splitMode ? 'start' : 'end'} sideOffset={8}>
+        <PopoverContent className="w-[700px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white" align={splitMode ? 'start' : 'end'} sideOffset={8}>
           <div className="flex flex-col max-h-[600px] bg-slate-50/10">
             {/* Header with Tabs */}
             <div className="px-8 pt-6 pb-6 bg-slate-50 border-b border-slate-200/60">
@@ -566,7 +570,7 @@ export function ManageSheetButton({
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-black tracking-tight text-slate-900 uppercase">
-                             All Time History
+                             {historyYear === 'all' ? 'All Time History' : `All History ${historyYear}`}
                           </span>
                           {activeCycleResolved?.tag === '' && <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Active View</span>}
                         </div>
@@ -575,7 +579,16 @@ export function ManageSheetButton({
                     {activeCycleResolved?.tag !== '' ? (
                       <div className="w-[120px] h-full border-l border-slate-100 bg-blue-50/20 flex items-stretch">
                         <button
-                          onClick={() => onCycleChange?.('')}
+                          onClick={() => {
+                            if (historyYear === 'all') {
+                                onCycleChange?.('all')
+                            } else {
+                                // If a specific year is chosen, we switch to All of that year
+                                if (onYearChange) onYearChange(historyYear)
+                                else onCycleChange?.('all')
+                            }
+                            setShowPopover(false)
+                          }}
                           className="flex-1 flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-slate-900 text-white transition-all shadow-md active:scale-95 group/btn"
                         >
                           <Zap className="h-4 w-4 transition-transform group-hover/btn:scale-125" />
@@ -594,7 +607,7 @@ export function ManageSheetButton({
                   const selectedCycle = allCycles.find(c => c.tag === pendingCycleTag)
                   if (!selectedCycle) return null
                   
-                  const settled = selectedCycle.remains <= 0
+                  const settled = selectedCycle.remains <= 100 // Threshold for settled
                   const stats = selectedCycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
                   const initial = stats.originalLend || 0
                   const cashback = stats.cashback || 0
@@ -610,11 +623,11 @@ export function ManageSheetButton({
                     )}>
                       {/* Left: Cycle Section */}
                       <div className={cn(
-                        "min-w-[100px] h-full flex flex-col items-center justify-center border-r border-slate-100/80 transition-colors",
+                        "w-[100px] h-full flex flex-col items-center justify-center border-r border-slate-100/80 transition-colors shrink-0",
                         isCurrentlyActive ? "bg-emerald-50/50" : "bg-indigo-50/50"
                       )}>
                         <span className={cn(
-                          "text-lg font-bold tracking-tight tabular-nums",
+                          "text-lg font-black tracking-tight tabular-nums",
                           isCurrentlyActive ? "text-emerald-600" : "text-indigo-600"
                         )}>
                           {selectedCycle.tag}
@@ -628,8 +641,8 @@ export function ManageSheetButton({
                       </div>
 
                       {/* Right Data: 4 Column Grid */}
-                      <div className="flex-1 h-full flex items-stretch">
-                        <div className="flex-1 grid grid-cols-4 px-2">
+                      <div className="flex-1 h-full flex items-stretch overflow-hidden">
+                        <div className="flex-1 grid grid-cols-4 px-2 min-w-0">
                           <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 pr-3">
                             <span className="text-[9px] font-bold text-slate-400 tracking-tight leading-none mb-1 uppercase">Initial</span>
                             <span className="text-[13px] font-bold text-slate-700 tabular-nums">
@@ -642,23 +655,32 @@ export function ManageSheetButton({
                               -{numberFormatter.format(cashback)}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
+                          <div className={cn("flex flex-col justify-center items-end text-right border-r border-slate-100 px-3", settled && "border-r-0")}>
                             <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1 uppercase">Repaid</span>
                             <span className="text-[12px] font-black text-emerald-600 tabular-nums">
                               {numberFormatter.format(repaid)}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center items-end text-right px-3">
-                            <span className={cn("text-[9px] font-bold tracking-tight leading-none mb-1 uppercase", remains > 0 ? "text-rose-400" : "text-emerald-400")}>Remains</span>
-                            <span className={cn("text-[13px] font-black tabular-nums transition-colors", remains > 0 ? "text-rose-600" : "text-emerald-600")}>
-                              {numberFormatter.format(remains)}
-                            </span>
+                          <div className="flex items-center justify-end pl-3">
+                            {settled ? (
+                              <div className="flex flex-col justify-center items-end text-right w-full">
+                                  <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1 uppercase">Status</span>
+                                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none font-black text-[10px] uppercase tracking-wider py-0.5">Settled</Badge>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col justify-center items-end text-right w-full">
+                                <span className="text-[9px] font-bold text-rose-400 tracking-tight leading-none mb-1 uppercase">Remains</span>
+                                <span className={cn("text-[13px] font-black tabular-nums transition-colors text-rose-600")}>
+                                  {numberFormatter.format(remains)}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Action Column */}
                         <div className={cn(
-                          "w-[100px] border-l border-slate-100 flex items-stretch",
+                          "w-[100px] border-l border-slate-100 flex items-stretch shrink-0",
                           isCurrentlyActive ? "bg-emerald-50/20" : "bg-indigo-50/20"
                         )}>
                           {!isCurrentlyActive ? (
@@ -673,7 +695,7 @@ export function ManageSheetButton({
                             <div className="flex-1 flex items-center justify-center">
                               <div className={cn(
                                 "h-10 w-10 rounded-full text-white flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-500",
-                                settled ? "bg-emerald-500" : "bg-emerald-400"
+                                settled ? "bg-emerald-500 shadow-emerald-500/20" : "bg-emerald-400 shadow-emerald-400/20"
                               )}>
                                 <Check className="h-5 w-5" strokeWidth={3} />
                               </div>
@@ -727,7 +749,7 @@ export function ManageSheetButton({
                     </div>
                     <div className="grid gap-6">
                       {group.cycles.map((cycle) => {
-                        const settled = cycle.remains <= 0
+                        const settled = Math.abs(cycle.remains) <= 100
                         const stats = cycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
                         const initial = stats.originalLend || 0
                         const cashback = stats.cashback || 0
@@ -802,10 +824,12 @@ export function ManageSheetButton({
               <Button
                 size="lg"
                 className="flex-1 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-[0.98] shadow-2xl shadow-slate-200 disabled:opacity-30"
-                disabled={!pendingCycleTag || pendingCycleTag === cycleTag}
+                disabled={!pendingCycleTag || (pendingCycleTag === cycleTag && (pendingCycleTag !== 'all' || historyYear === selectedYear))}
                 onClick={handleApply}
               >
-                Switch to {pendingCycleTag?.toUpperCase() || 'Cycle'}
+                Switch to {pendingCycleTag === 'all' 
+                  ? (historyYear === 'all' ? 'All History' : `History ${historyYear}`)
+                  : (pendingCycleTag?.toUpperCase() || 'Cycle')}
               </Button>
             </div>
           </div>

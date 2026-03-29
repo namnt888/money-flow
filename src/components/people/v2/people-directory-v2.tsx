@@ -22,7 +22,6 @@ import {
   syncAllPeopleSheetsAction,
   syncPeopleDebtAction,
 } from "@/actions/people-actions";
-import { MigrationDialog } from "./MigrationDialog";
 import { PeopleColumnKey } from "@/hooks/usePeopleColumnPreferences";
 
 interface PeopleDirectoryV2Props {
@@ -346,7 +345,6 @@ export function PeopleDirectoryV2({
         isRealigningAll={isRealigningAll}
         canResetSort={!!sortConfig}
         onResetSort={handleResetSort}
-        migrationDialog={<MigrationDialog people={people} />}
       />
 
       {/* Main Content Area */}

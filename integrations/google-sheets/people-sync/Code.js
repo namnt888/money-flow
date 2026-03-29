@@ -749,28 +749,34 @@ function setupNewSheet(sheet, summaryOptions) {
         sheet.setColumnWidth(15, 230); // Value O
     } catch (e) { }
 
-    // Conditional Formatting for Type (Column B only - not full row)
-    // Always re-apply so existing full-row rules get replaced on next sync.
-    var typeRange = sheet.getRange('B2:B1000');
+    // Conditional Formatting for Type
+    // Repayments (In): Highlight entire row A:J
+    // Expenses (Out): Highlight only Type column B (keep it subtle)
+    var fullRowRange = sheet.getRange("A2:J1000");
+    var typeColumnRange = sheet.getRange("B2:B1000");
 
     var ruleIn = SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=$B2="In"')
         .setBackground('#DCFCE7')
         .setFontColor('#166534')
-        .setRanges([typeRange])
+        .setRanges([fullRowRange])
         .build();
 
     var ruleOutRed = SpreadsheetApp.newConditionalFormatRule()
         .whenFormulaSatisfied('=$B2="Out"')
         .setBackground('#FFF1F1')
         .setFontColor('#991B1B')
-        .setRanges([typeRange])
+        .setRanges([typeColumnRange])
         .build();
 
-    // Remove stale full-row type rules, then push the column-B-only replacements
-    var keptRules = sheet.getConditionalFormatRules().filter(function (r) {
+    // Remove stale type rules, then push replacements
+    var currentRules = sheet.getConditionalFormatRules();
+    var keptRules = currentRules.filter(function (r) {
         var ranges = r.getRanges();
-        return ranges.length === 0 || ranges[0].getColumn() !== 2;
+        if (ranges.length === 0) return true;
+        var col = ranges[0].getColumn();
+        // Remove rules that target A:J or B if they use $B2 formula
+        return col > 10; 
     });
     keptRules.push(ruleIn);
     keptRules.push(ruleOutRed);

@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tooltip"
 import { ManageSheetButton } from '@/components/people/manage-sheet-button'
 import { EditPersonButton } from '@/components/people/edit-person-button'
+import { Button } from '@/components/ui/button'
 import { StatsPopover } from './StatsPopover'
 import { Person, Account } from '@/types/moneyflow.types'
 
@@ -120,6 +121,7 @@ interface PeopleHeaderProps {
     syncingText?: string
     hasFilter?: boolean
     onSyncCycle?: (tag: string) => Promise<any>
+    onOpenAudit?: () => void
 }
 
 function CircularProgress({ percent, size = 44, label, colorClass = "text-blue-500" }: { percent: number, size?: number, label?: string, colorClass?: string }) {
@@ -213,7 +215,8 @@ export function PeopleHeader({
     isSyncing = false,
     syncingText,
     hasFilter = false,
-    onSyncCycle
+    onSyncCycle,
+    onOpenAudit
 }: PeopleHeaderProps) {
     const isSettled = Math.abs(stats.remains) < 100
     const currentCycleRepayPercent = stats.netLend > 0 ? Math.min(100, Math.round((Math.abs(stats.repay) / Math.abs(stats.netLend)) * 100)) : 0
@@ -297,6 +300,28 @@ export function PeopleHeader({
                                 </button>
                             </StatsPopover>
                         </div>
+                        
+                        {onOpenAudit && (
+                             <div className="flex items-center ml-4 pl-4 border-l border-slate-100">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                onClick={onOpenAudit}
+                                                className="h-10 w-10 rounded-xl border-slate-100 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 transition-all flex-shrink-0"
+                                            >
+                                                <RefreshCw className="h-5 w-5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" className="bg-slate-900 border-none text-white z-[200]">
+                                            <p className="text-[10px] font-bold">Re-Align & Audit Ledger</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
                     </div>
 
                     {/* VERTICAL DIVIDER */}

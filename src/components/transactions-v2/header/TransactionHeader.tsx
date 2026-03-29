@@ -7,7 +7,7 @@ import { QuickFilterDropdown } from '@/components/transactions-v2/header/QuickFi
 import { TypeFilterDropdown } from '@/components/transactions-v2/header/TypeFilterDropdown'
 import { StatusDropdown } from '@/components/transactions-v2/header/StatusDropdown'
 import { AddTransactionDropdown } from '@/components/transactions-v2/header/AddTransactionDropdown'
-import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, Clipboard, RefreshCw } from 'lucide-react'
+import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, Clipboard, RefreshCw, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DateRange } from 'react-day-picker'
@@ -97,14 +97,18 @@ interface TransactionHeaderProps {
 
   // Categories
   categories?: { id: string; name: string; image?: string | null; icon?: string | null }[]
+  
+  // Loading State
+  isPending?: boolean
 }
 
 interface ClearDropdownButtonProps {
   onClearFilters?: () => void
   setConfirmClearOpen: (open: boolean) => void
+  isPending?: boolean
 }
 
-function ClearDropdownButton({ onClearFilters, setConfirmClearOpen }: ClearDropdownButtonProps) {
+function ClearDropdownButton({ onClearFilters, setConfirmClearOpen, isPending }: ClearDropdownButtonProps) {
   const [open, setOpen] = useState(false)
   const closeTimeout = useRef<NodeJS.Timeout | null>(null)
 
@@ -127,7 +131,7 @@ function ClearDropdownButton({ onClearFilters, setConfirmClearOpen }: ClearDropd
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <FilterX className="w-4 h-4" />
+          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilterX className="w-4 h-4" />}
           <span className="hidden sm:inline text-xs">Clear</span>
           <ChevronDown className="w-3 h-3 opacity-70" />
         </Button>
@@ -154,7 +158,7 @@ function ClearDropdownButton({ onClearFilters, setConfirmClearOpen }: ClearDropd
               <div className="text-xs text-muted-foreground">Keep search</div>
             </div>
           </button>
-
+ 
           {/* Clear All */}
           <button
             onClick={() => {
@@ -212,6 +216,7 @@ export function TransactionHeader({
   availablePersonIds,
   availableCategoryIds,
   categories = [],
+  isPending = false,
 }: TransactionHeaderProps) {
   // Local State Buffer
   const [localAccountId, setLocalAccountId] = useState(accountId)
@@ -251,6 +256,8 @@ export function TransactionHeader({
     accountId, personId, categoryId, searchTerm, filterType, statusFilter,
     selectedCycle, date, dateRange, dateMode
   ])
+
+  const selectedYear = useMemo(() => localDate.getFullYear().toString(), [localDate])
 
   // Account-first cycle UX: when an account is selected, switch to Cycle tab immediately
   // and auto-select current cycle if available, else default to All.
@@ -462,10 +469,19 @@ export function TransactionHeader({
         availableMonths={availableMonths}
         availableDateRange={availableDateRange}
         cycles={cycles}
+        statType={localPersonId ? 'debt' : (isCreditCard ? 'cashback' : undefined)}
         selectedCycleValue={localCycle}
         onCycleSelect={handleCycleChange}
         isCycleLoading={isCycleLoading}
         locked={isCreditCard ? !!localCycle : false}
+        selectedYearValue={selectedYear}
+        isPending={isPending}
+        onYearSelect={(year) => {
+          if (!year) return
+          const nextDate = new Date(localDate)
+          nextDate.setFullYear(Number(year))
+          handleDateUpdate({ date: nextDate, mode: 'year' })
+        }}
       />
 
       {/* Filter Action Button */}

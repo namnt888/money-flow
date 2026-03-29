@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { Person } from "@/types/moneyflow.types";
+import { Person, Account } from "@/types/moneyflow.types";
 import { PeopleColumnConfig } from "@/hooks/usePeopleColumnPreferences";
 import { ExpandIcon } from "@/components/transaction/ui/ExpandIcon";
 import { PeopleRowDetailsV2 } from "./people-row-details-v2";
@@ -25,18 +25,19 @@ import {
   Copy,
   Database,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import { cn, formatMoneyVND, formatVNLongAmount } from "@/lib/utils";
 import { getPersonRouteId } from "@/lib/person-route";
 import { SubscriptionBadges } from "./subscription-badges";
 import { ManageSheetButton } from "@/components/people/manage-sheet-button";
-import { Account } from "@/types/moneyflow.types";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ReAlignAuditDialog } from "./ReAlignAuditDialog";
 
 interface PeopleRowProps {
   person: Person;
@@ -63,13 +64,13 @@ const VNLongAmount = ({
   const parts = text.split(/(\d+)/g);
   return (
     <span className={cn("inline-flex items-center gap-0.5", className)}>
-      {parts.map((part, i) =>
+      {parts.map((part, k) =>
         /^\d+$/.test(part) ? (
-          <strong key={i} className="font-black text-rose-600/90">
+          <strong key={k} className="font-black text-rose-600/90">
             {part}
           </strong>
         ) : (
-          <span key={i} className="text-slate-400 font-medium">
+          <span key={k} className="text-slate-400 font-medium">
             {part}
           </span>
         ),
@@ -140,8 +141,9 @@ export function PeopleRowV2({
   accounts = [],
 }: PeopleRowProps) {
   const [copied, setCopied] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+
   const handleRowClick = (e: React.MouseEvent) => {
-    // Only expand on row click if not clicking action buttons
     const target = e.target as HTMLElement;
     if (!target.closest(".action-cell")) {
       onToggleExpand(person.id);
@@ -162,12 +164,10 @@ export function PeopleRowV2({
         )}
         onClick={handleRowClick}
       >
-        {/* Expand Column (always first) */}
         <td className="sticky left-0 z-20 bg-inherit w-10 px-2 py-3 text-center border-r border-slate-200">
           <ExpandIcon isExpanded={isExpanded} onClick={handleExpandToggle} />
         </td>
 
-        {/* Dynamic Columns */}
         {visibleColumns.map((col, idx) => (
           <td
             key={`${person.id}-${col.key}`}
@@ -189,12 +189,12 @@ export function PeopleRowV2({
               onSync,
               accounts,
               onOpenSettings,
+              () => setIsAuditOpen(true),
             )}
           </td>
         ))}
       </tr>
 
-      {/* Expanded Details Row */}
       {isExpanded && (
         <tr className="bg-muted/30">
           <td colSpan={visibleColumns.length + 1} className="p-0 border-b">
@@ -202,9 +202,21 @@ export function PeopleRowV2({
           </td>
         </tr>
       )}
+
+      <ReAlignAuditDialog
+        open={isAuditOpen}
+        onOpenChange={setIsAuditOpen}
+        person={person}
+        initialYear={person.current_cycle_label?.split("-")[0] || new Date().getFullYear().toString()}
+        availableYears={Array.from(new Set([
+            ... (person.cycle_stats || []).map(c => c.tag?.split("-")[0]),
+            new Date().getFullYear().toString()
+        ])).filter(Boolean).sort((a, b) => b!.localeCompare(a!)) as string[]}
+      />
     </>
   );
 }
+
 function renderCell(
   person: Person,
   key: string,
@@ -215,9 +227,35 @@ function renderCell(
   onSync?: (pid: string) => void,
   accounts?: Account[],
   onOpenSettings?: (p: Person) => void,
+  onAudit?: () => void,
 ) {
-  const totalBalance = person.balance ?? 0;
-  const currentCycleDebt = person.current_cycle_debt ?? 0;
+  const { totalBalance, currentCycleDebt } = useMemo(() => {
+    const stats = person.cycle_stats || [];
+    const currentTag = person.current_cycle_label || "";
+    
+    // Calculate total balance from all cycles (Fresh Net)
+    // FIX: Match Detail View logic - ignore negative "phantom" remains from previous years
+    const calculatedTotal = stats.reduce((sum, c) => {
+        // Only consider cycles from 2026 onwards for the main balance display
+        const cycleYear = parseInt(c.tag?.split('-')[0] || '0');
+        if (cycleYear < 2026) return sum;
+
+        const net = (c.baseLend || 0) - (c.repaid || 0) - (c.cashback || 0);
+        // If net is negative, it's a surplus/phantom repayment, treat as 0 for remains calculation
+        return sum + (net > 0 ? net : 0);
+    }, 0);
+
+    // Calculate current cycle debt (Fresh Net)
+    const currentCycle = stats.find(c => c.tag === currentTag);
+    const calculatedCurrent = currentCycle 
+        ? (currentCycle.baseLend || 0) - (currentCycle.repaid || 0) - (currentCycle.cashback || 0)
+        : 0;
+
+    return { 
+        totalBalance: calculatedTotal,
+        currentCycleDebt: calculatedCurrent
+    };
+  }, [person.cycle_stats, person.balance, person.current_cycle_label]);
   const { copied, setCopied } = copyState;
 
   switch (key) {
@@ -293,10 +331,8 @@ function renderCell(
                 className="font-semibold text-sm leading-none hover:underline hover:text-blue-600 transition-colors truncate text-left"
               >
                 {person.name}
-              </button>
-
-              <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                <TooltipProvider>
+              </button>              <div className="ml-auto flex items-center gap-1 shrink-0">
+                <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -308,21 +344,19 @@ function renderCell(
                             "noopener,noreferrer",
                           );
                         }}
-                        className="h-5 w-5 text-slate-300 hover:text-blue-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                        className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-all inline-flex items-center justify-center rounded-lg border border-transparent hover:border-blue-200 active:scale-90"
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-4 w-4 stroke-[2.5px]" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900 border-none text-white">
-                      <p className="text-[10px] font-bold">
-                        Open details in new tab
-                      </p>
+                    <TooltipContent className="bg-blue-900 border-none text-white font-bold text-[10px]">
+                      Detail Page (New Tab)
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
+ 
                 {(person.google_sheet_url || person.sheet_link) && (
-                  <TooltipProvider>
+                  <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
@@ -331,22 +365,20 @@ function renderCell(
                           }
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-5 w-5 text-slate-300 hover:text-emerald-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                          className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all inline-flex items-center justify-center rounded-lg border border-transparent hover:border-emerald-200 active:scale-90"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <FileSpreadsheet className="h-3 w-3" />
+                          <FileSpreadsheet className="h-4 w-4 stroke-[2.5px]" />
                         </a>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-slate-900 border-none text-white">
-                        <p className="text-[10px] font-bold">
-                          Open Google Sheet
-                        </p>
+                      <TooltipContent className="bg-emerald-900 border-none text-white font-bold text-[10px]">
+                        Google Sheet
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
-
-                <TooltipProvider>
+ 
+                <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -355,15 +387,13 @@ function renderCell(
                           const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_people_001&filter=${encodeURIComponent(person.id)}&sort=-%40rowid`;
                           window.open(url, "_blank", "noopener,noreferrer");
                         }}
-                        className="h-5 w-5 text-slate-300 hover:text-indigo-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
+                        className="h-7 w-7 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 transition-all inline-flex items-center justify-center rounded-lg border border-transparent hover:border-indigo-200 active:scale-90"
                       >
-                        <Database className="h-3 w-3" />
+                        <Database className="h-4 w-4 stroke-[2.5px]" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900 border-none text-white">
-                      <p className="text-[10px] font-bold">
-                        Open People DB (new tab)
-                      </p>
+                    <TooltipContent className="bg-indigo-900 border-none text-white font-bold text-[10px]">
+                      Database View
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -388,7 +418,8 @@ function renderCell(
       const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const cycleSheet = person.cycle_sheets?.find(
         (s) => s.cycle_tag === currentTag,
-      );      return (
+      );
+      return (
           <div className="flex items-center justify-start gap-3 h-full mx-auto w-[320px] pl-[5px]">
             <div className="w-[175px] shrink-0">
               {person.sheet_link ? (
@@ -453,14 +484,7 @@ function renderCell(
           </div>
       );
     }
-    case "current_debt": // Outstanding (including historical)
-      return (
-        <AmountCellV2
-          amount={totalBalance}
-          className="text-amber-600 font-bold"
-        />
-      );
-    case "base_lend": // All Debt Remains (Renamed)
+    case "current_debt": case "base_lend":
       if (totalBalance === 0) {
         return (
           <div className="flex items-center gap-1 p-1 px-2 rounded-full bg-emerald-50 border border-emerald-100 w-fit">
@@ -475,31 +499,43 @@ function renderCell(
           className="text-amber-600 font-bold"
         />
       );
-    case "repayment": // Current Month Repaid
+    case "repayment":
       return (
         <AmountCellV2
           amount={person.current_cycle_repaid || 0}
           className="text-emerald-600 font-bold"
         />
       );
-    case "cashback_total": // Current Month Cashback
+    case "cashback_total":
       return (
         <AmountCellV2
           amount={person.current_cycle_cashback || 0}
           className="text-amber-500 font-bold"
         />
       );
-    case "net_lend": // Prev Debt (Historical only)
-      const historicalBalance = totalBalance - currentCycleDebt;
-      return (
-        <AmountCellV2 amount={historicalBalance} className="text-sky-600 font-bold" />
-      );
-    case "balance": // Redundant (Hidden by default)
-      return null;
     case "action":
       return (
         <TooltipProvider>
           <div className="action-cell flex items-center gap-1">
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAudit?.();
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-indigo-900 text-white border-indigo-800">
+                <p>Re-Align Audit</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <Button

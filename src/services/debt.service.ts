@@ -76,14 +76,8 @@ function canonicalDebtTag(value: unknown): string | null {
  * Cashback = (amount * percent/100) + fixed
  */
 function calculateFinalPrice(row: DebtTransactionRow): number {
-  // Safe parsing for final_price
-  if (row.final_price !== undefined && row.final_price !== null) {
-    const parsed = Number(row.final_price)
-    if (!isNaN(parsed)) {
-      return Math.abs(parsed)
-    }
-  }
-
+  // IGNORE row.final_price for personal debt as it may include total card cashback
+  // which belongs to the owner, not the debt-person.
   const rawAmount = Math.abs(Number(row.amount ?? 0))
 
   // Parse cashback values
@@ -242,7 +236,35 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
   };
   const repaymentList: RepaymentItem[] = [];
 
-  data.forEach((txn: any) => {
+  const isPersonalDebt = (txn: any) => {
+    const rawTag = txn.tag || txn.debt_cycle_tag || '';
+    const normalized = normalizeMonthTag(rawTag) || '';
+    
+    // Fallback: If no tag, use occurred_at date to check year
+    let finalTag = normalized;
+    if (!finalTag) {
+        const d = new Date(txn.occurred_at || txn.date);
+        if (!isNaN(d.getTime())) {
+            finalTag = toYYYYMMFromDate(d);
+        }
+    }
+
+    const note = (txn.note || '').toLowerCase();
+    
+    if (note.startsWith('bank ')) {
+      // Strictly exclude shared bank transactions unless they are explicit debt/repayment
+      if (txn.type === "repayment" || txn.type === "debt") return true;
+
+      const isPersonal = note.includes('điện') || note.includes('nước') || note.includes('s26') || note.includes('đơn') || note.includes('wifi') || note.includes('rác');
+      if (isPersonal) return true;
+
+      // Otherwise, everything starting with 'bank ' is excluded from individual debt history
+      return false;
+    }
+    return true;
+  }
+
+  data.filter(isPersonalDebt).forEach((txn: any) => {
     const type = txn.type
     if (type === 'debt' || type === 'expense') {
       const amount = Math.abs(txn.amount)
@@ -353,16 +375,27 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
 
   for (const debt of debtsList) {
     const entry = debtsMap.get(debt.id)!
+    const debtYear = new Date(debt.date || debt.occurred_at).getFullYear();
 
     // While debt has remaining amount AND we have general money available
-    while (entry.remaining > 0.01 && generalQueue.length > 0) {
-      const currentRepayment = generalQueue[0]; // Peek
+    // FIX: Only apply untagged repayments to debts of the SAME YEAR to prevent phantom carry-overs
+    // unless the repayment is explicitly tagged (handled in Phase 1.5)
+    let queueIdx = 0;
+    while (entry.remaining > 0.01 && queueIdx < generalQueue.length) {
+      const currentRepayment = generalQueue[queueIdx];
+      const repayYear = new Date(currentRepayment.date).getFullYear();
+
+      // Skip if year mismatch for untagged general pool
+      if (repayYear !== debtYear) {
+        queueIdx++;
+        continue;
+      }
 
       // Strict FIFO: Apply whatever is available to this debt
       const payAmount = Math.min(currentRepayment.amount, entry.remaining);
 
       if (payAmount <= 0) {
-        generalQueue.shift();
+        generalQueue.splice(queueIdx, 1);
         continue;
       }
 
@@ -377,11 +410,15 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
       currentRepayment.amount -= payAmount;
       if (entry.remaining < 0) entry.remaining = 0;
 
-      // console.log(`[DebtFIFO-GENERAL] Pay ${payAmount} for ${debt.tag} (Rem: ${entry.remaining})`);
-
       // If Repayment exhausted, remove from queue
       if (currentRepayment.amount < 0.01) {
-        generalQueue.shift();
+        generalQueue.splice(queueIdx, 1);
+      } else {
+        // Only increment if we didn't remove the item
+        // But since we are reducing its amount, we stay at same index to potentially pay more of this debt?
+        // Actually, if we're here, we still have repayment left but debt is paid (or vice versa).
+        // Let's stay at same index if debt still has remains, or increment if not.
+        if (entry.remaining <= 0.01) break; 
       }
     }
   }
@@ -400,7 +437,7 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
     }
   >();
 
-  ;(data as unknown as (DebtTransactionRow & { id: string })[]).forEach(row => {
+  ;(data as unknown as (DebtTransactionRow & { id: string })[]).filter(isPersonalDebt).forEach(row => {
     // Prioritize debt_cycle_tag for grouping, fall back to row.tag
     const preferredTag = (row as any).debt_cycle_tag || row.tag;
     const normalizedTag = normalizeMonthTag(preferredTag)

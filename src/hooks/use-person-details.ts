@@ -6,7 +6,7 @@ import {
   Person,
   PersonCycleSheet,
 } from "@/types/moneyflow.types";
-import { isYYYYMM, normalizeMonthTag } from "@/lib/month-tag";
+import { isYYYYMM, normalizeMonthTag, toYYYYMMFromDate } from "@/lib/month-tag";
 import { normalizeRate } from "@/lib/cashback";
 
 export interface DebtCycle {
@@ -82,8 +82,38 @@ export function usePersonDetails({
     return m;
   }, [debtTags]);
 
+
+
   const activeTransactions = useMemo(
-    () => transactions.filter((txn) => txn.status !== "void"),
+    () => transactions.filter((txn) => {
+        if (txn.status === "void") return false;
+        
+        // --- STRICT 2026 PERSONAL DEBT FILTER (Resilient Version) ---
+        const rawTag = (txn as any).tag || (txn as any).debt_cycle_tag || '';
+        const normalized = normalizeMonthTag(rawTag) || '';
+        
+        let finalTag = normalized;
+        if (!finalTag) {
+            const d = new Date(txn.occurred_at);
+            if (!isNaN(d.getTime())) {
+                finalTag = toYYYYMMFromDate(d);
+            }
+        }
+
+        const note = (txn.note || "").toLowerCase();
+        
+        if (note.startsWith("bank ")) {
+            // Strictly exclude shared bank transactions unless they are explicit debt/repayment
+            if (txn.type === "repayment" || txn.type === "debt") return true;
+
+            const isPersonal = note.includes("điện") || note.includes("nước") || note.includes("s26") || note.includes("đơn") || note.includes('wifi') || note.includes('rác');
+            if (isPersonal) return true;
+
+            // Otherwise, everything starting with 'bank ' is excluded from individual debt history
+            return false;
+        }
+        return true;
+    }),
     [transactions],
   );
 
@@ -94,25 +124,20 @@ export function usePersonDetails({
         const absAmount = Math.abs(Number(txn.amount) || 0);
         const metadata = (txn.metadata as any) || {};
 
-        // --- UNIFIED CLASSIFICATION LOGIC (GLOSSARY COMPLIANT) ---
         const note = (txn.note || "").toLowerCase();
         const type_lower = (txn.type || "").toLowerCase();
         
         const isRollover = note.includes("rollover");
-        const isCashback = type_lower === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
         const rawAmount = Number(txn.amount) || 0;
         
         // "trả" or "repay" - MUST BE POSITIVE to be a repayment
         const isRepayment = (["repayment", "repay"].includes(type_lower) || 
-                           (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0 && !isCashback;
+                           (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0;
         
-        // IS SPEND if:
-        // 1. Explicit expense/debt type
-        // 2. OR is an INCOME with a negative amount (e.g. negative balance adjustment which reflects spending)
         const isSpend = ((type_lower === "expense" || type_lower === "debt") || (type_lower === "income" && rawAmount < 0)) && 
-                        !isRollover && !isCashback && !isRepayment;
+                        !isRollover && !isRepayment;
 
-        // Cashback calculation - Strictly Shared
+        // Cashback calculation - Strictly Shared ONLY
         const sharePercent = Number(txn.cashback_share_percent ?? metadata.cashback_share_percent ?? 0);
         const shareFixed = Number(txn.cashback_share_fixed ?? metadata.cashback_share_fixed ?? 0);
         
@@ -127,16 +152,12 @@ export function usePersonDetails({
           acc.lend += net;
           acc.originalLend += absAmount;
           acc.cashback += cb;
-        } else if (isCashback) {
-          acc.cashback += absAmount;
-          acc.lend -= absAmount;
         } else if (isRepayment) {
           acc.repay += absAmount;
           if (isRollover) {
             acc.paidRollover += absAmount;
           }
         } else if (isRollover) {
-          // Outbound/Neutral Rollover
           acc.lend += absAmount;
           acc.receiveRollover += absAmount;
         }
@@ -337,7 +358,7 @@ export function usePersonDetails({
     debtCycles,
     availableYears,
     currentCycle,
-    balance: person.balance ?? 0,
+    balance: metrics.lend - metrics.repay,
     cycleSheets,
   };
 }

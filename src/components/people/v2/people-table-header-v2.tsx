@@ -37,7 +37,6 @@ interface PeopleTableHeaderV2Props {
     isRealigningAll?: boolean;
     canResetSort?: boolean;
     onResetSort?: () => void;
-    migrationDialog?: React.ReactNode;
 }
 
 export function PeopleTableHeaderV2({
@@ -58,7 +57,6 @@ export function PeopleTableHeaderV2({
     isRealigningAll,
     canResetSort,
     onResetSort,
-    migrationDialog,
 }: PeopleTableHeaderV2Props) {
     const years = availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
     const filters: { id: FilterStatus; label: string; icon: React.ReactNode; count?: number; color: string }[] = [
@@ -237,9 +235,6 @@ export function PeopleTableHeaderV2({
                 <RefreshCw className={cn("h-4 w-4", isRealigningAll && "animate-spin")} />
                 <span className="hidden lg:inline">Re-align</span>
             </Button>
-
-            {/* Migration Dialog */}
-            {migrationDialog}
 
             {/* Reset Sort Button */}
             {canResetSort && (

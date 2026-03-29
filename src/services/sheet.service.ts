@@ -735,11 +735,11 @@ export async function syncCycleTransactions(
     const pbId = toPocketBaseId(personId, 'people')
     let tagFilter = ''
     if (/^\d{4}$/.test(cycleTag)) {
-        tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || tag = "${cycleTag}"`
+        tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || (debt_cycle_tag >= "${cycleTag}-01" && debt_cycle_tag <= "${cycleTag}-12") || tag = "${cycleTag}" || debt_cycle_tag = "${cycleTag}"`
     } else {
         const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
         const tags = legacyTag ? [cycleTag, legacyTag] : [cycleTag]
-        tagFilter = tags.map(t => `tag = "${t}"`).join(' || ')
+        tagFilter = tags.map(t => `tag = "${t}" || debt_cycle_tag = "${t}"`).join(' || ')
     }
     const data = await pocketbaseList('pvl_txn_001', {
       filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,

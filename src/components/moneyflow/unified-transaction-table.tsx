@@ -3900,7 +3900,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                               let badgeToDisplay = sourceCycleBadge;
                               let isCycleBadge = true;
                               const isRepaymentFlowWithPerson =
-                                txn.type === "repayment" && hasPerson;
+                                (txn.type === "repayment" || txn.type === "income") && hasPerson;
                               let roleLabel: "FROM" | "TO" = "FROM";
 
                               if (entityToShow === "person") {
@@ -4077,8 +4077,8 @@ export const UnifiedTransactionTable = React.forwardRef<
                               ? [peopleDebtTag].filter(Boolean)
                               : [];
 
-                            // Repayment swap logic: if repayment + person, swap display
-                            const isRepayment = txn.type === "repayment";
+                            // Repayment swap logic: if repayment/income + person, swap display
+                            const isRepayment = txn.type === "repayment" || txn.type === "income";
                             const shouldSwap = isRepayment && hasPerson;
 
                             // Build entity objects

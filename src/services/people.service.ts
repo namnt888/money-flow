@@ -174,8 +174,6 @@ export async function getPeople(options?: {
 
 
     recentTxns.forEach((txn: any) => {
-      if (txn.status === "void" || txn.metadata?.status === "void") return;
-
       let personId: string | null = null;
       if (txn.person_id && personIds.includes(txn.person_id)) {
         personId = txn.person_id;
@@ -194,7 +192,7 @@ export async function getPeople(options?: {
       if (personSyncedMonths.get(personId)?.has(normalizedTag)) return;
 
       if (!personStats.has(personId)) {
-        personStats.set(personId, { baseLend: 0, cashback: 0, repaid: 0, outstandingDebt: 0, currentCycleDebt: 0, totalBalance: 0, syncedCycleCount: 0 });
+        personStats.set(personId, { baseLend: 0, cashback: 0, repaid: 0, totalBalance: 0, currentCycleDebt: 0, currentCycleRepaid: 0, currentCycleCashback: 0, syncedCycleCount: 0 });
         personCycleStats.set(personId, new Map());
       }
       
@@ -202,24 +200,27 @@ export async function getPeople(options?: {
       const cycleStatsMap = personCycleStats.get(personId)!;
       const amount = Math.abs(Number(txn.amount || 0));
 
-      // Classification
+      // CLASSIFICATION (Type-based)
       const type = String(txn.type || "").toLowerCase();
       const note = (txn.note || "").toLowerCase();
+      
       const isRollover = note.includes("rollover");
-      const isCashback = type === "cashback" || note.includes("cashback") || note.includes("refund");
-      const isRepayment = ["repayment", "repay"].includes(type) || (type === "income" && (note.includes("tr\u1ea3") || note.includes("repay")));
+      // Use standard classification matches debt.service.ts
+      const isRepayment = type === "repayment" || type === "income";
+      const isCashback = type === "cashback" || (type === "expense" && (note.includes("cashback") || note.includes("refund")));
       const isSpend = (type === "expense" || type === "debt") && !isRollover && !isCashback && !isRepayment;
 
       const isCurrentCycle = normalizedTag === currentMonthTag || (txn.date && new Date(txn.date) >= currentMonthStart);
       
+      const finalPrice = calculateFinalPrice(txn);
+      const cbValue = amount - finalPrice;
+
       if (isSpend || isRollover) {
         stats.baseLend += amount;
-        if (isSpend) {
-          const cb = (amount - calculateFinalPrice(txn));
-          stats.cashback += cb;
-          if (isCurrentCycle) {
-            stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cb;
-          }
+        stats.cashback += cbValue;
+        if (isCurrentCycle) {
+          stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cbValue;
+          stats.currentCycleDebt += finalPrice;
         }
       } else if (isCashback) {
         stats.cashback += amount;
@@ -233,24 +234,16 @@ export async function getPeople(options?: {
         }
       }
       
-      const effectiveLend = isSpend ? calculateFinalPrice(txn) : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
+      // DEBT - CASHBACK - REPAY = BALANCE (Nam is owed this amount)
+      const effectiveLend = isSpend ? finalPrice : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
       stats.totalBalance += effectiveLend;
-      if (isCurrentCycle) {
-        stats.currentCycleDebt += effectiveLend;
-      } else {
-        stats.outstandingDebt += effectiveLend;
-      }
 
       if (normalizedTag) {
         const cs = cycleStatsMap.get(normalizedTag) || { balance: 0, baseLend: 0, cashback: 0, repaid: 0, netLend: 0 };
         if (isSpend || isRollover) { 
           cs.baseLend += amount; 
-          if (isSpend) {
-            cs.cashback += (amount - calculateFinalPrice(txn)); 
-            cs.netLend += calculateFinalPrice(txn); 
-          } else if (isRollover) {
-            cs.netLend += amount;
-          }
+          cs.cashback += cbValue; 
+          cs.netLend += isSpend ? finalPrice : amount; 
         }
         else if (isCashback) cs.cashback += amount;
         else if (isRepayment) cs.repaid += amount;
@@ -267,7 +260,7 @@ export async function getPeople(options?: {
       let pastDueCount = 0;
       if (cycleStatsMap) {
         cycleStatsMap.forEach((cs, tag) => {
-          if (tag < currentMonthTag && cs.balance > 50) pastDueCount++;
+          if (tag < currentMonthTag && cs.balance > 500) pastDueCount++;
         });
       }
 
@@ -282,9 +275,9 @@ export async function getPeople(options?: {
         }))
         .sort((a, b) => (b.tag || '').localeCompare(a.tag || ''));
 
-      // ALL DEBT REMAINS = totalLend - totalCashback - totalRepaid
+      // Life-time Balance Calculation
       const totalBalance = Math.round((stats?.baseLend ?? 0) - (stats?.cashback ?? 0) - (stats?.repaid ?? 0));
-      // In-month stats
+      
       const currentMonthNet = Math.round(stats?.currentCycleDebt ?? 0);
       const currentMonthRepaid = Math.round(stats?.currentCycleRepaid ?? 0);
       const currentMonthCashback = Math.round(stats?.currentCycleCashback ?? 0);
@@ -297,11 +290,11 @@ export async function getPeople(options?: {
         current_debt_balance: totalBalance,
         balance: totalBalance,
         current_cycle_debt: currentMonthNet,
-        outstanding_debt: totalBalance, // User wants All Debt Remains = Total Balance
+        outstanding_debt: totalBalance,
         all_debt_remains: totalBalance,
-        total_base_debt: totalBalance,
-        total_cashback: currentMonthCashback, 
-        total_repaid: currentMonthRepaid, 
+        total_base_debt: Math.round(stats?.baseLend ?? 0),
+        total_cashback: Math.round(stats?.cashback ?? 0), 
+        total_repaid: Math.round(stats?.repaid ?? 0), 
         current_cycle_base_lend: Math.round(currentCycleStats?.baseLend ?? 0),
         current_cycle_cashback: currentMonthCashback,
         current_cycle_repaid: currentMonthRepaid,

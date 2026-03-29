@@ -422,13 +422,12 @@ export function CategoryShopSection({
 
   // Auto-select defaults logic
   useEffect(() => {
-    if (isEditingMode) return;
     const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
     const isCurrentCategoryCompatible =
       !!currentCategoryId &&
       filteredCategories.some((c) => c.id === currentCategoryId);
 
-    if (isEditingMode && currentCategoryId) return;
+    if (isEditingMode && isCurrentCategoryCompatible) return;
     if (isCurrentCategoryCompatible) return;
 
     if (currentCategoryId && !isCurrentCategoryCompatible) {

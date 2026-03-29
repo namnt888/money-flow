@@ -114,12 +114,19 @@ export function PeopleRowDetailsV2({
 
   const yearlyStats = useMemo(() => {
     return cycleStatsForYear.reduce(
-      (acc, cycle) => ({
-        baseLend: acc.baseLend + (cycle.baseLend || 0),
-        repaid: acc.repaid + (cycle.repaid || 0),
-        cashback: acc.cashback + (cycle.cashback || 0),
-        remains: acc.remains + (cycle.remains || 0),
-      }),
+      (acc, cycle) => {
+        const cycleBaseLend = cycle.baseLend || 0;
+        const cycleRepaid = cycle.repaid || 0;
+        const cycleCashback = cycle.cashback || 0;
+        const cycleNetRemains = cycleBaseLend - cycleRepaid - cycleCashback;
+        
+        return {
+          baseLend: acc.baseLend + cycleBaseLend,
+          repaid: acc.repaid + cycleRepaid,
+          cashback: acc.cashback + cycleCashback,
+          remains: acc.remains + cycleNetRemains,
+        };
+      },
       { baseLend: 0, repaid: 0, cashback: 0, remains: 0 },
     );
   }, [cycleStatsForYear]);
@@ -141,16 +148,19 @@ export function PeopleRowDetailsV2({
 
   // Prev Debt: All debts from cycles BEFORE the current selected year
   const prevDebtAmount = useMemo(() => {
-    const priorCycles = cycleStats.filter(
-      (c) => (c.tag?.split("-")[0] || "") < selectedYear,
-    );
+    const priorCycles = cycleStats.filter((c) => {
+      const yearStr = c.tag?.split("-")[0] || "";
+      return yearStr < selectedYear;
+    });
     return priorCycles.reduce((sum, c) => sum + (c.remains || 0), 0);
   }, [cycleStats, selectedYear]);
 
   const remainsAmount =
     cycleStatsForYear.length > 0
-      ? prevDebtAmount + yearlyStats.remains
-      : fallbackRemains;
+      ? (prevDebtAmount > 0 ? prevDebtAmount : 0) + yearlyStats.remains
+      : (person.cycle_stats 
+          ? person.cycle_stats.reduce((sum, c) => sum + (c.remains || 0), 0)
+          : fallbackRemains);
 
   const activeCycleRemains = activeCycleStats?.remains ?? 0;
 

@@ -65,6 +65,7 @@ interface UnifiedSmartDatePickerProps {
   selectedYearValue?: string | null
   onYearSelect?: (year: string | null) => void
   onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
+  isPending?: boolean
 }
 
 function parseStrictDate(input: string): Date | null {
@@ -148,6 +149,7 @@ export function UnifiedSmartDatePicker({
   selectedYearValue,
   onYearSelect,
   onSyncCycle,
+  isPending = false,
 }: UnifiedSmartDatePickerProps) {
   const [open, setOpen] = useState(false)
   const [yearOpen, setYearOpen] = useState(false)
@@ -184,7 +186,7 @@ export function UnifiedSmartDatePicker({
     return Array.from(years).sort((a, b) => b - a)
   }, [availableMonths])
 
-  const [localAllYear, setLocalAllYear] = useState<string>(selectedYearValue || String(new Date().getFullYear()))
+  const [localAllYear, setLocalAllYear] = useState<string>(selectedYearValue || 'all')
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
   const cyclesWithAll = useMemo(() => {
@@ -221,7 +223,7 @@ export function UnifiedSmartDatePicker({
       ? String(new Date().getFullYear())
       : cycleYears[0] || 'all'
     setCycleYearFilter(defaultCycleYear)
-    setLocalAllYear(selectedYearValue || String(new Date().getFullYear()))
+    setLocalAllYear(selectedYearValue || 'all')
   }
 
   const selectedCycleLabel = cyclesWithAll.find((cycle: any) => cycle.value === (selectedCycleValue || 'all'))?.label
@@ -438,7 +440,7 @@ export function UnifiedSmartDatePicker({
                   const isSelected = localCycle === cycle.value
                   const isSettled = cycle.stats?.isSettled || false
                   const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
-                  const reallySettled = isSettled || Math.abs(remains) < 500
+                  const reallySettled = isSettled || Math.abs(Number(remains)) < 100
 
                   return (
                     <motion.div
@@ -476,35 +478,35 @@ export function UnifiedSmartDatePicker({
                             {statType === 'debt' ? (
                               <>
                                 {/* Initial */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
-                                  <span className="text-[9px] font-bold text-slate-400 mb-1.5">Initial</span>
-                                  <span className="text-base font-bold text-slate-700 tabular-nums">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
+                                  <span className="text-[9px] font-bold text-slate-400 mb-1.5 uppercase tracking-tighter">Initial</span>
+                                  <span className="text-base font-bold text-slate-700 tabular-nums truncate w-full text-center">
                                     {new Intl.NumberFormat('en-US').format(cycle.stats?.initial || 0)}
                                   </span>
                                 </div>
                                 {/* Cashback */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
                                   <span className="text-[9px] font-bold text-orange-400 mb-1.5 uppercase tracking-tighter">Cashback</span>
-                                  <span className="text-base font-bold text-orange-500 tabular-nums">
+                                  <span className="text-base font-bold text-orange-500 tabular-nums truncate w-full text-center">
                                     {Number(cycle.stats?.cashback || 0) > 0 ? `-${new Intl.NumberFormat('en-US').format(Number(cycle.stats?.cashback))}` : '0'}
                                   </span>
                                 </div>
                                 {/* Repaid */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
-                                  <span className="text-[9px] font-bold text-emerald-500 mb-1.5">Repaid</span>
-                                  <span className="text-base font-bold text-emerald-600 tabular-nums">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
+                                  <span className="text-[9px] font-bold text-emerald-500 mb-1.5 uppercase tracking-tighter">Repaid</span>
+                                  <span className="text-base font-bold text-emerald-600 tabular-nums truncate w-full text-center">
                                     {new Intl.NumberFormat('en-US').format(cycle.stats?.repay || 0)}
                                   </span>
                                 </div>
                                 {/* Remains / Status */}
-                                <div className="h-full flex items-center justify-center px-4">
+                                <div className="h-full flex items-center justify-center px-4 min-w-[140px]">
                                   {reallySettled ? (
                                     <div className="h-9 w-full rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex flex-col items-center justify-center shrink-0">
                                       <span className="text-[8px] font-black uppercase tracking-widest leading-none mb-0.5">STATUS</span>
                                       <span className="text-[10px] font-black leading-none">SETTLED</span>
                                     </div>
                                   ) : (
-                                    <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-rose-50/50 border border-rose-100/50 shrink-0">
+                                    <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-rose-50/50 border border-rose-100/50 shrink-0 w-full">
                                       <span className="text-[8px] font-bold text-rose-400 mb-0.5">Remains</span>
                                       <span className="text-sm font-bold text-rose-600 tabular-nums">
                                         {new Intl.NumberFormat('en-US').format(remains)}
@@ -516,34 +518,34 @@ export function UnifiedSmartDatePicker({
                             ) : (
                               <>
                                 {/* Spent */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
                                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Spent</span>
-                                  <span className="text-base font-bold text-slate-700 tabular-nums">
+                                  <span className="text-base font-bold text-slate-700 tabular-nums truncate w-full text-center">
                                     {new Intl.NumberFormat('en-US').format(cycle.stats?.spent || 0)}
                                   </span>
                                 </div>
                                 {/* Earned */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
                                   <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1.5">Earned</span>
-                                  <span className="text-base font-bold text-emerald-600 tabular-nums">
+                                  <span className="text-base font-bold text-emerald-600 tabular-nums truncate w-full text-center">
                                     {new Intl.NumberFormat('en-US').format(cycle.stats?.earned || 0)}
                                   </span>
                                 </div>
                                 {/* Shared */}
-                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50">
+                                <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 overflow-hidden px-1">
                                   <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1.5">Shared</span>
-                                  <span className="text-base font-bold text-amber-600 tabular-nums">
+                                  <span className="text-base font-bold text-amber-600 tabular-nums truncate w-full text-center">
                                     {new Intl.NumberFormat('en-US').format(cycle.stats?.shared || 0)}
                                   </span>
                                 </div>
                                 {/* Profit */}
-                                <div className="h-full flex items-center justify-center px-4">
-                                    <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-indigo-50/50 border border-indigo-100/50 shrink-0">
-                                      <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Profit</span>
-                                      <span className="text-sm font-bold text-indigo-600 tabular-nums">
-                                        {new Intl.NumberFormat('en-US').format(remains)}
-                                      </span>
-                                    </div>
+                                <div className="h-full flex items-center justify-center px-4 min-w-[140px]">
+                                  <div className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg bg-indigo-50/50 border border-indigo-100/50 shrink-0 w-full">
+                                    <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Profit</span>
+                                    <span className="text-sm font-bold text-indigo-600 tabular-nums">
+                                      {new Intl.NumberFormat('en-US').format(remains)}
+                                    </span>
+                                  </div>
                                 </div>
                               </>
                             )}
@@ -584,7 +586,11 @@ export function UnifiedSmartDatePicker({
           )}
         >
           <span className="flex items-center gap-1.5 truncate">
-            <History className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+            {isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500 shrink-0" />
+            ) : (
+              <History className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+            )}
             <span className="truncate tabular-nums text-[11px]">{displayText}</span>
           </span>
           <ChevronDown className="w-3 h-3 opacity-50 shrink-0" />
@@ -594,7 +600,7 @@ export function UnifiedSmartDatePicker({
       <PopoverContent
         className={cn(
           'p-0 border-slate-200/60 shadow-2xl backdrop-blur-xl bg-white/95 rounded-2xl overflow-hidden',
-          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[750px] max-w-[95vw]' : 'w-[450px]'
+          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[850px] max-w-[95vw]' : 'w-[450px]'
         )}
         align="start"
         sideOffset={6}

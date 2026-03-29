@@ -1,4 +1,4 @@
-import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight, TrendingUp } from 'lucide-react'
+import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight, TrendingUp, History as LucideHistory } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
@@ -63,6 +63,8 @@ interface TransactionControlBarProps {
     setLoadingMessage?: (val: string | null) => void
     onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
     onOpenSettings?: () => void
+    isCycleTagVisible?: boolean
+    onToggleCycleTag?: (visible: boolean) => void
 }
 
 import { useRouter } from 'next/navigation'
@@ -139,6 +141,8 @@ export function TransactionControlBar({
     setLoadingMessage,
     onSyncCycle,
     onOpenSettings,
+    isCycleTagVisible,
+    onToggleCycleTag,
 }: TransactionControlBarProps) {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const isSettled = Math.abs(activeCycle.remains) < 100
@@ -538,6 +542,27 @@ export function TransactionControlBar({
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" align="center" className="z-[100]">
                                     <p>View recently paid transactions</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+
+                        {onToggleCycleTag && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={() => onToggleCycleTag(!isCycleTagVisible)}
+                                        className={cn(
+                                            "flex items-center justify-center h-9 w-9 border rounded-lg transition-colors flex-shrink-0 shadow-sm",
+                                            isCycleTagVisible 
+                                                ? "bg-indigo-50 border-indigo-200 text-indigo-600 shadow-inner" 
+                                                : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500"
+                                        )}
+                                    >
+                                        <LucideHistory className={cn("h-4 w-4", isCycleTagVisible && "animate-pulse")} />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" align="end" className="z-[100]">
+                                    <p>{isCycleTagVisible ? "Hide Debt Cycle column" : "Show Debt Cycle column"}</p>
                                 </TooltipContent>
                             </Tooltip>
                         )}

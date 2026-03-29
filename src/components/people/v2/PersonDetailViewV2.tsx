@@ -72,6 +72,8 @@ export function PersonDetailViewV2({
                 onTabChange={handleTabChange}
                 accounts={accounts}
                 showManageSheet={true}
+                activeCycleTag={activeCycleTag || undefined}
+                onCycleChange={setActiveCycleTag}
             />
 
             <div className="flex-1 overflow-hidden relative bg-white">
