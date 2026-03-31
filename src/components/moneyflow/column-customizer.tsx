@@ -78,6 +78,7 @@ const getColumnIcon = (key: string) => {
         case 'actual_cashback': return <Gift className="h-4 w-4" />;
         case 'est_share': return <Users2 className="h-4 w-4" />;
         case 'net_profit': return <TrendingUp className="h-4 w-4" />;
+        case 'cycle': return <Calendar className="h-4 w-4" />;
         default: return <Settings2 className="h-4 w-4" />;
     }
 }

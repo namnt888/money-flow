@@ -164,17 +164,16 @@ export async function getPeople(options?: {
     });
 
     // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
+    // Increase limit to 10000 to ensure we don't miss history for un-synced members
     const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
-      filter: `(type='debt' || type='expense' || type='repayment' || type='income')`,
-      perPage: 1500, // Safe limit for recent data
+      filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer')`,
+      perPage: 10000, 
       sort: "-date",
     });
     const recentTxns = txnsResponse.items;
 
 
     recentTxns.forEach((txn: any) => {
-      if (txn.status === "void" || txn.metadata?.status === "void") return;
-
       let personId: string | null = null;
       if (txn.person_id && personIds.includes(txn.person_id)) {
         personId = txn.person_id;
@@ -193,7 +192,7 @@ export async function getPeople(options?: {
       if (personSyncedMonths.get(personId)?.has(normalizedTag)) return;
 
       if (!personStats.has(personId)) {
-        personStats.set(personId, { baseLend: 0, cashback: 0, repaid: 0, outstandingDebt: 0, currentCycleDebt: 0, totalBalance: 0, syncedCycleCount: 0 });
+        personStats.set(personId, { baseLend: 0, cashback: 0, repaid: 0, totalBalance: 0, currentCycleDebt: 0, currentCycleRepaid: 0, currentCycleCashback: 0, syncedCycleCount: 0 });
         personCycleStats.set(personId, new Map());
       }
       
@@ -201,24 +200,27 @@ export async function getPeople(options?: {
       const cycleStatsMap = personCycleStats.get(personId)!;
       const amount = Math.abs(Number(txn.amount || 0));
 
-      // Classification
+      // CLASSIFICATION (Type-based)
       const type = String(txn.type || "").toLowerCase();
       const note = (txn.note || "").toLowerCase();
+      
       const isRollover = note.includes("rollover");
-      const isCashback = type === "cashback" || note.includes("cashback") || note.includes("refund");
-      const isRepayment = ["repayment", "repay"].includes(type) || (type === "income" && (note.includes("tr\u1ea3") || note.includes("repay")));
+      // Use standard classification matches debt.service.ts
+      const isRepayment = type === "repayment" || type === "income";
+      const isCashback = type === "cashback" || (type === "expense" && (note.includes("cashback") || note.includes("refund")));
       const isSpend = (type === "expense" || type === "debt") && !isRollover && !isCashback && !isRepayment;
 
       const isCurrentCycle = normalizedTag === currentMonthTag || (txn.date && new Date(txn.date) >= currentMonthStart);
       
+      const finalPrice = calculateFinalPrice(txn);
+      const cbValue = amount - finalPrice;
+
       if (isSpend || isRollover) {
         stats.baseLend += amount;
-        if (isSpend) {
-          const cb = (amount - calculateFinalPrice(txn));
-          stats.cashback += cb;
-          if (isCurrentCycle) {
-            stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cb;
-          }
+        stats.cashback += cbValue;
+        if (isCurrentCycle) {
+          stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cbValue;
+          stats.currentCycleDebt += finalPrice;
         }
       } else if (isCashback) {
         stats.cashback += amount;
@@ -232,24 +234,16 @@ export async function getPeople(options?: {
         }
       }
       
-      const effectiveLend = isSpend ? calculateFinalPrice(txn) : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
+      // DEBT - CASHBACK - REPAY = BALANCE (Nam is owed this amount)
+      const effectiveLend = isSpend ? finalPrice : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
       stats.totalBalance += effectiveLend;
-      if (isCurrentCycle) {
-        stats.currentCycleDebt += effectiveLend;
-      } else {
-        stats.outstandingDebt += effectiveLend;
-      }
 
       if (normalizedTag) {
         const cs = cycleStatsMap.get(normalizedTag) || { balance: 0, baseLend: 0, cashback: 0, repaid: 0, netLend: 0 };
         if (isSpend || isRollover) { 
           cs.baseLend += amount; 
-          if (isSpend) {
-            cs.cashback += (amount - calculateFinalPrice(txn)); 
-            cs.netLend += calculateFinalPrice(txn); 
-          } else if (isRollover) {
-            cs.netLend += amount;
-          }
+          cs.cashback += cbValue; 
+          cs.netLend += isSpend ? finalPrice : amount; 
         }
         else if (isCashback) cs.cashback += amount;
         else if (isRepayment) cs.repaid += amount;
@@ -266,7 +260,7 @@ export async function getPeople(options?: {
       let pastDueCount = 0;
       if (cycleStatsMap) {
         cycleStatsMap.forEach((cs, tag) => {
-          if (tag < currentMonthTag && cs.balance > 50) pastDueCount++;
+          if (tag < currentMonthTag && cs.balance > 500) pastDueCount++;
         });
       }
 
@@ -281,9 +275,9 @@ export async function getPeople(options?: {
         }))
         .sort((a, b) => (b.tag || '').localeCompare(a.tag || ''));
 
-      // ALL DEBT REMAINS = totalLend - totalCashback - totalRepaid
+      // Life-time Balance Calculation
       const totalBalance = Math.round((stats?.baseLend ?? 0) - (stats?.cashback ?? 0) - (stats?.repaid ?? 0));
-      // In-month stats
+      
       const currentMonthNet = Math.round(stats?.currentCycleDebt ?? 0);
       const currentMonthRepaid = Math.round(stats?.currentCycleRepaid ?? 0);
       const currentMonthCashback = Math.round(stats?.currentCycleCashback ?? 0);
@@ -296,11 +290,11 @@ export async function getPeople(options?: {
         current_debt_balance: totalBalance,
         balance: totalBalance,
         current_cycle_debt: currentMonthNet,
-        outstanding_debt: totalBalance, // User wants All Debt Remains = Total Balance
+        outstanding_debt: totalBalance,
         all_debt_remains: totalBalance,
-        total_base_debt: totalBalance,
-        total_cashback: currentMonthCashback, 
-        total_repaid: currentMonthRepaid, 
+        total_base_debt: Math.round(stats?.baseLend ?? 0),
+        total_cashback: Math.round(stats?.cashback ?? 0), 
+        total_repaid: Math.round(stats?.repaid ?? 0), 
         current_cycle_base_lend: Math.round(currentCycleStats?.baseLend ?? 0),
         current_cycle_cashback: currentMonthCashback,
         current_cycle_repaid: currentMonthRepaid,
@@ -531,6 +525,8 @@ export async function getPersonWithSubs(id: string): Promise<Person | null> {
       sheet_bank_info: personRecord.sheet_bank_info ?? null,
       sheet_linked_bank_id: personRecord.sheet_linked_bank_id ?? null,
       sheet_show_qr_image: personRecord.sheet_show_qr_image ?? false,
+      is_master_sheet_enabled: personRecord.is_master_sheet_enabled ?? false,
+      is_favorite: personRecord.is_favorite ?? false,
       is_owner: personRecord.is_owner ?? false,
       is_archived: personRecord.is_archived ?? false,
       subscription_ids,
@@ -581,9 +577,27 @@ export async function createPerson(
       is_owner: options.is_owner || false,
       is_archived: options.is_archived || false,
       is_group: options.is_group || false,
+      is_favorite: options.is_favorite || false,
       group_parent_id: options.group_parent_id,
       sheet_linked_bank_id: options.sheet_linked_bank_id,
+      is_master_sheet_enabled: options.is_master_sheet_enabled || false,
+      sheet_show_bank_account: options.sheet_show_bank_account || false,
+      sheet_bank_info: options.sheet_bank_info,
+      sheet_show_qr_image: options.sheet_show_qr_image || false,
+      sheet_full_img: options.sheet_full_img,
     });
+
+    // Handle initial subscriptions if any
+    if (subscriptionIds && subscriptionIds.length > 0) {
+      const { updateServiceMembers } = await import("./service-manager");
+      const memberPayload = subscriptionIds.map((sid) => ({
+        service_id: sid,
+        person_id: person.id,
+        slots: 1,
+        is_owner: false,
+      }));
+      await updateServiceMembersForPerson(person.id as string, subscriptionIds);
+    }
 
     // Ensure debt account exists
     await ensureDebtAccount(person.id as string, name);
@@ -593,6 +607,42 @@ export async function createPerson(
   } catch (error) {
     console.error("[DB:PB] createPerson failed:", error);
     return { success: false, error: (error as any).message };
+  }
+}
+
+/**
+ * Helper to update service members for a specific person
+ */
+async function updateServiceMembersForPerson(personId: string, subscriptionIds: string[]) {
+  const { pocketbaseList, pocketbaseDelete, pocketbaseCreate, toPocketBaseId } = await import("./pocketbase/server");
+  
+  // 1. Get current memberships for this person
+  const existing = await pocketbaseList<any>("service_members", {
+    filter: `person_id="${personId}"`,
+    perPage: 100
+  });
+
+  // 2. Delete memberships not in the new list
+  for (const m of existing.items) {
+    if (!subscriptionIds.includes(m.service_id)) {
+      await pocketbaseDelete("service_members", m.id);
+    }
+  }
+
+  // 3. Add new memberships
+  const currentSids = existing.items.map(m => m.service_id);
+  for (const sid of subscriptionIds) {
+    if (!currentSids.includes(sid)) {
+      const pbPersonId = toPocketBaseId(personId, "people");
+      const pbServiceId = toPocketBaseId(sid, "services");
+      await pocketbaseCreate("service_members", {
+        id: toPocketBaseId(`${pbServiceId}-${pbPersonId}`, "service_members"),
+        service_id: pbServiceId,
+        person_id: pbPersonId,
+        slots: 1,
+        is_owner: false
+      });
+    }
   }
 }
 
@@ -615,7 +665,14 @@ export async function updatePerson(id: string, data: any) {
       sheet_show_qr_image: data.sheet_show_qr_image,
       is_owner: data.is_owner,
       is_archived: data.is_archived,
+      is_favorite: data.is_favorite,
+      is_master_sheet_enabled: data.is_master_sheet_enabled,
     });
+
+    // Handle subscriptions if provided
+    if (data.subscriptionIds !== undefined) {
+      await updateServiceMembersForPerson(pbId, data.subscriptionIds);
+    }
 
     revalidatePersonPaths(pbId);
     return { success: true };

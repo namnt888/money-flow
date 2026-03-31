@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { TransactionWithDetails, Account, Category, Person, Shop } from '@/types/moneyflow.types'
 import { UnifiedTransactionTable, UnifiedTransactionTableRef } from '../moneyflow/unified-transaction-table'
 import { FilterType, StatusFilter } from './TransactionToolbar'
@@ -113,6 +113,7 @@ export function UnifiedTransactionsPage({
 }: UnifiedTransactionsPageProps) {
     const router = useRouter()
     const tableRef = useRef<UnifiedTransactionTableRef>(null)
+    const [isPending, startTransition] = useTransition()
 
     // Toolbar State
     const [search, setSearch] = useState('')
@@ -390,52 +391,60 @@ export function UnifiedTransactionsPage({
     }, [selectedAccountId])
 
     const handleReset = () => {
-        setSearch('')
-        setFilterType('all')
-        setStatusFilter('active')
-        setSelectedAccountId(undefined)
-        setSelectedPersonId(undefined)
-        setSelectedCategoryId(undefined)
-        setSelectedCycle(undefined)
-        setDate(new Date())
-        setDateMode('all') // Reset to All Time
-        setDateRange(undefined)
-        setDisabledRange(undefined)
-        selectionOrderRef.current = undefined
+        startTransition(() => {
+            setSearch('')
+            setFilterType('all')
+            setStatusFilter('active')
+            setSelectedAccountId(undefined)
+            setSelectedPersonId(undefined)
+            setSelectedCategoryId(undefined)
+            setSelectedCycle(undefined)
+            setDate(new Date())
+            setDateMode('all') // Reset to All Time
+            setDateRange(undefined)
+            setDisabledRange(undefined)
+            selectionOrderRef.current = undefined
+        })
     }
 
     const handleDateChange = (newDate: Date) => {
         isManualDateChange.current = true
-        setDate(newDate)
-        if (dateMode !== 'range') {
-            setDateRange(undefined)
-        }
+        startTransition(() => {
+            setDate(newDate)
+            if (dateMode !== 'range') {
+                setDateRange(undefined)
+            }
+        })
     }
 
     const handleRangeChange = (range: DateRange | undefined) => {
         isManualDateChange.current = true
-        setDateRange(range)
-        if (range) {
-            setSelectedCycle(undefined)
-        }
-        if (range?.from && range?.to && !selectedAccountId) {
-            selectionOrderRef.current = 'range'
-        }
+        startTransition(() => {
+            setDateRange(range)
+            if (range) {
+                setSelectedCycle(undefined)
+            }
+            if (range?.from && range?.to && !selectedAccountId) {
+                selectionOrderRef.current = 'range'
+            }
+        })
     }
 
     const handleModeChange = (mode: 'month' | 'range' | 'date' | 'all' | 'year' | 'cycle') => {
-        setDateMode(mode)
-        if (mode === 'all') {
-            setDateRange(undefined)
-            setSelectedCycle(undefined)
-        } else if (mode === 'year') {
-            setDateRange(undefined)
-            setSelectedCycle(undefined)
-        } else if (mode !== 'range') {
-            setDateRange(undefined)
-        } else {
-            setSelectedCycle(undefined)
-        }
+        startTransition(() => {
+            setDateMode(mode)
+            if (mode === 'all') {
+                setDateRange(undefined)
+                setSelectedCycle(undefined)
+            } else if (mode === 'year') {
+                setDateRange(undefined)
+                setSelectedCycle(undefined)
+            } else if (mode !== 'range') {
+                setDateRange(undefined)
+            } else {
+                setSelectedCycle(undefined)
+            }
+        })
     }
 
     const prevSearchRef = useRef(search)
@@ -450,7 +459,48 @@ export function UnifiedTransactionsPage({
     }, [search])
 
     const handleCycleChange = (cycle?: string) => {
-        setSelectedCycle(cycle === 'all' ? undefined : cycle)
+        startTransition(() => {
+            setSelectedCycle(cycle === 'all' ? undefined : cycle)
+        })
+    }
+
+    const handleSetSearch = (val: string) => {
+        // Search updating state can be immediate for responsiveness, 
+        // but the filtering useMemo will respond to the pending state if we want.
+        // For search, usually it's better to stay responsive, but the user wants a spinner.
+        startTransition(() => {
+            setSearch(val)
+        })
+    }
+
+    const handleSetFilterType = (val: FilterType) => {
+        startTransition(() => {
+            setFilterType(val)
+        })
+    }
+
+    const handleSetStatusFilter = (val: StatusFilter) => {
+        startTransition(() => {
+            setStatusFilter(val)
+        })
+    }
+
+    const handleSetAccountId = (val?: string) => {
+        startTransition(() => {
+            setSelectedAccountId(val)
+        })
+    }
+
+    const handleSetPersonId = (val?: string) => {
+        startTransition(() => {
+            setSelectedPersonId(val)
+        })
+    }
+
+    const handleSetCategoryId = (val?: string) => {
+        startTransition(() => {
+            setSelectedCategoryId(val)
+        })
     }
 
     const hasActiveFilters =
@@ -498,17 +548,19 @@ export function UnifiedTransactionsPage({
     }, [transactions, selectedAccountId, selectedPersonId])
 
     const handleClearFilters = () => {
-        setFilterType('all')
-        setStatusFilter('active')
-        setSelectedAccountId(undefined)
-        setSelectedPersonId(undefined)
-        setSelectedCategoryId(undefined)
-        setSelectedCycle(undefined)
-        setDate(new Date())
-        setDateMode('all')
-        setDateRange(undefined)
-        setDisabledRange(undefined)
-        selectionOrderRef.current = undefined
+        startTransition(() => {
+            setFilterType('all')
+            setStatusFilter('active')
+            setSelectedAccountId(undefined)
+            setSelectedPersonId(undefined)
+            setSelectedCategoryId(undefined)
+            setSelectedCycle(undefined)
+            setDate(new Date())
+            setDateMode('all')
+            setDateRange(undefined)
+            setDisabledRange(undefined)
+            selectionOrderRef.current = undefined
+        })
     }
 
     // Auto-set date range when Filter button clicked
@@ -927,22 +979,22 @@ export function UnifiedTransactionsPage({
                     onModeChange={handleModeChange}
 
                     accountId={selectedAccountId}
-                    onAccountChange={setSelectedAccountId}
+                    onAccountChange={handleSetAccountId}
 
                     personId={selectedPersonId}
-                    onPersonChange={setSelectedPersonId}
+                    onPersonChange={handleSetPersonId}
 
                     categoryId={selectedCategoryId}
-                    onCategoryChange={setSelectedCategoryId}
+                    onCategoryChange={handleSetCategoryId}
 
                     searchTerm={search}
-                    onSearchChange={setSearch}
+                    onSearchChange={handleSetSearch}
 
                     filterType={filterType}
-                    onFilterChange={setFilterType}
+                    onFilterChange={handleSetFilterType}
 
                     statusFilter={statusFilter}
-                    onStatusChange={setStatusFilter}
+                    onStatusChange={handleSetStatusFilter}
 
                     hasActiveFilters={hasActiveFilters}
                     onReset={handleReset}
@@ -968,6 +1020,7 @@ export function UnifiedTransactionsPage({
                     availableCategoryIds={availableCategoryIds}
                     availableDateRange={availableDateRange}
                     categories={categories}
+                    isPending={isPending}
                 />
             </div>
 

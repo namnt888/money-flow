@@ -69,19 +69,36 @@ export default async function VIBBatchPage(props: {
                     ? `batch_id = "${monthBatchIds[0]}"`
                     : `(${monthBatchIds.map(id => `batch_id = "${id}"`).join(' || ')})`
                 
-                // Add page: 1 to avoid PB 400 if it strictly requires pagination params
                 const latestItemRes = await pocketbaseList<any>('batch_items', {
                     filter,
-                    sort: '-updated',
                     page: 1,
-                    perPage: 1,
+                    perPage: 500, // Fetch all for the month
                 }).catch((err) => {
                     console.error(`[Smart Phase Selection] Query failed for ${bankType} / ${effectiveMonth}:`, err)
                     return null
                 })
                 
                 if (latestItemRes?.items && latestItemRes.items.length > 0) {
-                    autoSelectedPhaseId = latestItemRes.items[0]?.phase_id || null
+                    // Sort in memory using metadata.last_updated
+                    const sortedItems = [...latestItemRes.items].sort((a, b) => {
+                        const dateA = new Date(a.metadata?.last_updated || a.created || 0).getTime()
+                        const dateB = new Date(b.metadata?.last_updated || b.created || 0).getTime()
+                        return dateB - dateA
+                    })
+                    const latestBatchId = sortedItems[0]?.batch_id
+                    if (latestBatchId) {
+                        const parentBatch = monthBatches.find(b => b.id === latestBatchId)
+                        autoSelectedPhaseId = parentBatch?.phase_id || null
+                        
+                        // Fallback: If the batch has no phase_id, attempt to match the phase from the item's note
+                        if (!autoSelectedPhaseId && sortedItems[0]?.note) {
+                            const noteLower = String(sortedItems[0].note).toLowerCase()
+                            const matchingPhase = phases.find((p: any) => p.label && noteLower.includes(String(p.label).toLowerCase()))
+                            if (matchingPhase) {
+                                autoSelectedPhaseId = matchingPhase.id
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: unknown) {
@@ -116,6 +133,11 @@ export default async function VIBBatchPage(props: {
         activeBatch = await getBatchById(targetBatchId)
     }
 
+    // 6. Fetch checklist data for the specific month on the server to avoid client-side spinners
+    const { getChecklistDataAction } = await import('@/actions/batch-checklist.actions')
+    const checklistDataResult = effectiveMonth ? await getChecklistDataAction(bankType, effectiveMonth) : null
+    const checklistData = checklistDataResult?.success ? checklistDataResult.data : null
+
     return (
         <Suspense fallback={<div className="p-8 text-center text-slate-500 animate-pulse">Loading VIB Batch...</div>}>
             <BatchPageClientV2
@@ -132,6 +154,7 @@ export default async function VIBBatchPage(props: {
                 globalSheetName={settings?.display_sheet_name}
                 phases={phases}
                 selectedPhaseId={selectedPhaseId}
+                checklistData={checklistData}
             />
         </Suspense>
     )

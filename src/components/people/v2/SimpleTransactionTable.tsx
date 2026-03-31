@@ -13,6 +13,7 @@ interface SimpleTransactionTableProps {
     searchTerm?: string
     context?: 'account' | 'person' | 'general'
     contextId?: string
+    showTag?: boolean
     onEdit?: (txn: TransactionWithDetails) => void
     onDuplicate?: (txn: TransactionWithDetails) => void
     setIsGlobalLoading?: (loading: boolean) => void
@@ -32,6 +33,7 @@ export function SimpleTransactionTable({
     searchTerm = '',
     context,
     contextId,
+    showTag = false,
     onEdit,
     onDuplicate,
     setIsGlobalLoading,
@@ -52,6 +54,11 @@ export function SimpleTransactionTable({
         })
         : transactions
 
+    const hiddenColumns: any[] = ['id']
+    if (!showTag) {
+        hiddenColumns.push('cycle')
+    }
+ 
     return (
         <div className="bg-white rounded-lg border border-slate-200">
             <UnifiedTransactionTable
@@ -62,7 +69,7 @@ export function SimpleTransactionTable({
                 shops={shops}
                 context={context}
                 contextId={contextId}
-                hiddenColumns={['id', 'tag']}
+                hiddenColumns={hiddenColumns}
                 onEdit={onEdit}
                 onDuplicate={onDuplicate}
                 setIsGlobalLoading={setIsGlobalLoading}

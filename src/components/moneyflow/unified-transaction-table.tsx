@@ -452,6 +452,7 @@ export const UnifiedTransactionTable = React.forwardRef<
         minWidth: 100,
       },
       { key: "category", label: "Category", defaultWidth: 130, minWidth: 110 },
+      { key: "cycle", label: "Debt Cycle", defaultWidth: 120, minWidth: 100 },
       { key: "people", label: "People", defaultWidth: 150 },
       { key: "id", label: "ID", defaultWidth: 100 },
       {
@@ -511,6 +512,7 @@ export const UnifiedTransactionTable = React.forwardRef<
         net_profit: false,
         back_info: false,
         people: false,
+        cycle: false,
       };
 
       if (hiddenColumns.length > 0) {
@@ -535,6 +537,7 @@ export const UnifiedTransactionTable = React.forwardRef<
     );
 
     // --- Persistence Logic ---
+    const hiddenColsStr = JSON.stringify(hiddenColumns);
     useEffect(() => {
       // Load saved settings
       try {
@@ -543,10 +546,28 @@ export const UnifiedTransactionTable = React.forwardRef<
         const savedWidths = localStorage.getItem("mf_v3_col_width");
 
         if (savedOrder) {
-          setCustomColumnOrder(JSON.parse(savedOrder));
+          const parsed = JSON.parse(savedOrder) as ColumnKey[];
+          // Append any missing default columns (new features)
+          const missing = defaultColumns
+            .filter((c) => !parsed.includes(c.key))
+            .map((c) => c.key);
+          setCustomColumnOrder([...parsed, ...missing]);
         }
         if (savedVis) {
-          setVisibleColumns((prev) => ({ ...prev, ...JSON.parse(savedVis) }));
+          const parsedVis = JSON.parse(savedVis);
+          // Apply hiddenColumns prop override
+          if (hiddenColumns && hiddenColumns.length > 0) {
+            hiddenColumns.forEach((col) => {
+              parsedVis[col] = false;
+            });
+          }
+          
+          // AUTO-SHOW Cycle Column in Person/Account context if not explicitly hidden
+          if ((context === "person" || context === "account") && !hiddenColumns?.includes("cycle")) {
+            parsedVis["cycle"] = true;
+          }
+
+          setVisibleColumns((prev) => ({ ...prev, ...parsedVis }));
         }
         if (savedWidths) {
           setColumnWidths((prev) => ({ ...prev, ...JSON.parse(savedWidths) }));
@@ -554,7 +575,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       } catch (e) {
         console.error("Failed to load column settings", e);
       }
-    }, []);
+    }, [hiddenColsStr, context]); // Stable dependency
 
     useEffect(() => {
       if (customColumnOrder.length > 0)
@@ -2499,6 +2520,19 @@ export const UnifiedTransactionTable = React.forwardRef<
                               </div>
                             );
                           }
+                          case "cycle": {
+                            const txnAccount = accounts.find((a) => a.id === txn.account_id);
+                            return (
+                              <div className="flex items-center justify-center w-full">
+                                <CycleBadge
+                                  account={txnAccount}
+                                  cycleTag={txn.tag}
+                                  txnDate={txn.occurred_at || txn.created_at || new Date()}
+                                  personContext={!!txn.person_id || context === 'person'}
+                                />
+                              </div>
+                            );
+                          }
                           case "actions": {
                             const isUpdating =
                               updatingTxnIds.has(txn.id) ||
@@ -3866,7 +3900,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                               let badgeToDisplay = sourceCycleBadge;
                               let isCycleBadge = true;
                               const isRepaymentFlowWithPerson =
-                                txn.type === "repayment" && hasPerson;
+                                (txn.type === "repayment" || txn.type === "income") && hasPerson;
                               let roleLabel: "FROM" | "TO" = "FROM";
 
                               if (entityToShow === "person") {
@@ -4043,8 +4077,8 @@ export const UnifiedTransactionTable = React.forwardRef<
                               ? [peopleDebtTag].filter(Boolean)
                               : [];
 
-                            // Repayment swap logic: if repayment + person, swap display
-                            const isRepayment = txn.type === "repayment";
+                            // Repayment swap logic: if repayment/income + person, swap display
+                            const isRepayment = txn.type === "repayment" || txn.type === "income";
                             const shouldSwap = isRepayment && hasPerson;
 
                             // Build entity objects
@@ -4136,10 +4170,10 @@ export const UnifiedTransactionTable = React.forwardRef<
                                       <div className="flex min-w-0 items-center">
                                         <span
                                           className={cn(
-                                            "inline-flex items-center rounded-md border px-1.5 h-4 text-[9px] font-black tracking-wide mr-1.5 shrink-0",
+                                            "inline-flex items-center rounded-md border px-1.5 h-4.5 text-[9px] font-black tracking-wide mr-1.5 shrink-0 shadow-sm",
                                             roleLabel === "FROM"
-                                              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                                              : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                                              ? "border-indigo-700 bg-indigo-600 text-white"
+                                              : "border-emerald-700 bg-emerald-600 text-white",
                                           )}
                                         >
                                           {roleLabel}
@@ -4173,9 +4207,9 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   leftBadges,
                                   leftRole,
                                 )}
-                                <span className="text-slate-300 font-light shrink-0">
-                                  |
-                                </span>
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200 shadow-sm mx-0.5">
+                                  <ChevronRight className="h-2.5 w-2.5 text-slate-400" />
+                                </div>
                                 {renderFlowEntity(
                                   displayRight,
                                   rightBadges,
@@ -4251,7 +4285,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   <CustomTooltip
                                     content={dateRangeTooltip || displayTag}
                                   >
-                                    <span className="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 cursor-help whitespace-nowrap">
+                                    <span className="inline-flex items-center rounded-md bg-amber-400 px-2.5 py-1 text-xs font-semibold text-black border border-amber-500 shadow-sm cursor-help whitespace-nowrap">
                                       {displayTag}
                                     </span>
                                   </CustomTooltip>
@@ -5586,6 +5620,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                 net_profit: false,
                 back_info: false,
                 people: true,
+                cycle: false,
               };
               setVisibleColumns(defaultVis);
               localStorage.removeItem("mf_v3_col_vis");

@@ -66,7 +66,7 @@ export function Select({
         <PopoverPrimitive.Content
           align="start"
           sideOffset={4}
-          className="z-[999] w-[280px] rounded-xl border border-slate-200 bg-white p-0 shadow-lg"
+          className="z-[9999] w-[280px] rounded-xl border border-slate-200 bg-white p-0 shadow-lg"
         >
           <div className="max-h-72 overflow-y-auto">
             {items.map(item => {

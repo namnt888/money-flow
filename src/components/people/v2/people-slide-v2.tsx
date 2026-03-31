@@ -9,11 +9,16 @@ import {
     SheetDescription
 } from "@/components/ui/sheet";
 import { Person, Subscription, Account } from "@/types/moneyflow.types";
-import { PersonForm } from "../person-form";
+import { PersonForm, PersonFormValues } from "../person-form";
 import { createPersonAction, updatePersonAction } from "@/actions/people-actions";
 import { useRouter } from "next/navigation";
-import { Users, Info, ArrowLeft } from "lucide-react";
+import { Users, Info, ArrowLeft, ExternalLink, FileSpreadsheet, Globe, Clipboard, Check } from "lucide-react";
 import { UnsavedChangesDialog } from "@/components/transaction/slide-v2/unsaved-changes-dialog";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
+import { getPersonRouteId } from "@/lib/person-route";
+import { Badge } from "@/components/ui/badge";
 
 interface PeopleSlideV2Props {
     open: boolean;
@@ -22,6 +27,7 @@ interface PeopleSlideV2Props {
     subscriptions: Subscription[];
     accounts: Account[];
     onSuccess?: (result: { success: boolean, profileId?: string, debtAccountId?: string, person?: any }) => void;
+    defaultTab?: string;
 }
 
 export function PeopleSlideV2({
@@ -32,6 +38,7 @@ export function PeopleSlideV2({
     accounts,
     onSuccess,
     onBack,
+    defaultTab = 'general',
     zIndex = 600,
 }: PeopleSlideV2Props & { onBack?: () => void; zIndex?: number }) {
     const router = useRouter();
@@ -77,16 +84,7 @@ export function PeopleSlideV2({
         }
     };
 
-    const handleApply = async (values: {
-        name: string
-        image_url?: string
-        sheet_link?: string
-        google_sheet_url?: string
-        subscriptionIds: string[]
-        is_owner?: boolean
-        is_archived?: boolean
-        is_group?: boolean
-    }) => {
+    const handleApply = async (values: PersonFormValues) => {
         let result;
         if (isEdit && person) {
             result = await updatePersonAction(person.id, {
@@ -94,11 +92,17 @@ export function PeopleSlideV2({
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
                 google_sheet_url: values.google_sheet_url,
-                sheet_linked_bank_id: (values as any).sheet_linked_bank_id,
                 subscriptionIds: values.subscriptionIds,
                 is_owner: values.is_owner,
                 is_archived: values.is_archived,
+                is_favorite: values.is_favorite,
                 is_group: values.is_group,
+                is_master_sheet_enabled: values.is_master_sheet_enabled,
+                sheet_show_bank_account: values.sheet_show_bank_account,
+                sheet_bank_info: values.sheet_bank_info,
+                sheet_show_qr_image: values.sheet_show_qr_image,
+                sheet_full_img: values.sheet_full_img,
+                sheet_linked_bank_id: values.sheet_linked_bank_id,
             });
             handleSuccess({ success: !!result });
         } else {
@@ -107,11 +111,17 @@ export function PeopleSlideV2({
                 image_url: values.image_url,
                 sheet_link: values.sheet_link,
                 google_sheet_url: values.google_sheet_url,
-                sheet_linked_bank_id: (values as any).sheet_linked_bank_id,
+                sheet_linked_bank_id: values.sheet_linked_bank_id,
                 subscriptionIds: values.subscriptionIds,
                 is_owner: values.is_owner,
                 is_archived: values.is_archived,
+                is_favorite: values.is_favorite,
                 is_group: values.is_group,
+                is_master_sheet_enabled: values.is_master_sheet_enabled,
+                sheet_show_bank_account: values.sheet_show_bank_account,
+                sheet_bank_info: values.sheet_bank_info,
+                sheet_show_qr_image: values.sheet_show_qr_image,
+                sheet_full_img: values.sheet_full_img,
             });
             handleSuccess({ ...res, person: { id: res.profileId, name: values.name, image_url: values.image_url } });
         }
@@ -154,7 +164,7 @@ export function PeopleSlideV2({
                                 <div className="h-9 w-9 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center text-blue-600">
                                     <Users className="h-4 w-4" />
                                 </div>
-                                <div>
+                                 <div>
                                     <SheetTitle className="text-xl font-black text-slate-900 leading-tight">
                                         {isEdit ? "Edit Profile" : "New Member"}
                                     </SheetTitle>
@@ -168,6 +178,7 @@ export function PeopleSlideV2({
 
                     <div className="flex-1 overflow-hidden">
                         <PersonForm
+                            id={person?.id}
                             mode={isEdit ? "edit" : "create"}
                             subscriptions={subscriptions}
                             initialValues={person ? {
@@ -175,13 +186,20 @@ export function PeopleSlideV2({
                                 image_url: person.image_url ?? '',
                                 sheet_link: person.sheet_link ?? '',
                                 google_sheet_url: person.google_sheet_url ?? '',
-                                sheet_linked_bank_id: person.sheet_linked_bank_id ?? '',
+                                sheet_linked_bank_id: (person as any).sheet_linked_bank_id ?? '',
                                 subscriptionIds: person.subscription_ids ?? [],
                                 is_owner: person.is_owner ?? false,
                                 is_archived: person.is_archived ?? false,
+                                is_favorite: person.is_favorite ?? false,
                                 is_group: person.is_group ?? false,
+                                is_master_sheet_enabled: (person as any).is_master_sheet_enabled ?? false,
+                                sheet_show_bank_account: (person as any).sheet_show_bank_account ?? false,
+                                sheet_bank_info: (person as any).sheet_bank_info ?? '',
+                                sheet_show_qr_image: (person as any).sheet_show_qr_image ?? false,
+                                sheet_full_img: (person as any).sheet_full_img ?? '',
                             } : undefined}
                             accounts={accounts}
+                            defaultTab={defaultTab}
                             onSubmit={handleApply}
                             onChange={() => setIsDirty(true)}
                             onCancel={() => handleOpenChange(false)}

@@ -21,7 +21,7 @@ interface PeopleTableHeaderV2Props {
     onFilterChange: (filter: FilterStatus) => void;
     onAdd: () => void;
     stats: {
-        outstandingCount: number;
+        activeCount: number;
         settledCount: number;
         archivedCount: number;
         groupsCount: number;
@@ -37,7 +37,6 @@ interface PeopleTableHeaderV2Props {
     isRealigningAll?: boolean;
     canResetSort?: boolean;
     onResetSort?: () => void;
-    migrationDialog?: React.ReactNode;
 }
 
 export function PeopleTableHeaderV2({
@@ -58,12 +57,11 @@ export function PeopleTableHeaderV2({
     isRealigningAll,
     canResetSort,
     onResetSort,
-    migrationDialog,
 }: PeopleTableHeaderV2Props) {
     const years = availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
     const filters: { id: FilterStatus; label: string; icon: React.ReactNode; count?: number; color: string }[] = [
         { id: 'all', label: 'All Members', icon: <Filter className="h-4 w-4" />, color: "text-slate-600" },
-        { id: 'outstanding', label: 'Outstanding Debt', icon: <TrendingUp className="h-4 w-4" />, count: stats.outstandingCount, color: "text-rose-600" },
+        { id: 'outstanding', label: 'Active', icon: <TrendingUp className="h-4 w-4" />, count: stats.activeCount, color: "text-rose-600" },
         { id: 'settled', label: 'Settled', icon: <CheckCircle2 className="h-4 w-4" />, count: stats.settledCount, color: "text-emerald-600" },
         { id: 'groups', label: 'Groups', icon: <LayoutGrid className="h-4 w-4" />, count: stats.groupsCount, color: "text-indigo-600" },
         { id: 'archived', label: 'Archived', icon: <Archive className="h-4 w-4" />, count: stats.archivedCount, color: "text-slate-500" },
@@ -237,9 +235,6 @@ export function PeopleTableHeaderV2({
                 <RefreshCw className={cn("h-4 w-4", isRealigningAll && "animate-spin")} />
                 <span className="hidden lg:inline">Re-align</span>
             </Button>
-
-            {/* Migration Dialog */}
-            {migrationDialog}
 
             {/* Reset Sort Button */}
             {canResetSort && (

@@ -28,6 +28,7 @@ import { getPersonRouteId } from '@/lib/person-route'
 import { getPocketBaseAccountSpendingStatsSnapshot } from '@/services/pocketbase/account-details.service'
 import { AccountSpendingStats } from '@/types/cashback.types'
 import { syncPeopleDebtAction } from '@/actions/people-actions'
+import { ReAlignAuditDialog } from '@/components/people/v2/ReAlignAuditDialog'
 
 interface MemberDetailViewProps {
     person: Person
@@ -63,7 +64,7 @@ export function MemberDetailView({
     const dateTo = searchParams.get('dateTo') || ''
     const currentMonthTag = toYYYYMMFromDate(new Date())
 
-    const [activeTab, setActiveTab] = useState<'timeline' | 'history' | 'split-bill'>('timeline')
+    const [activeTab, setActiveTab] = useState<'timeline' | 'split-bill'>('timeline')
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
@@ -77,12 +78,17 @@ export function MemberDetailView({
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Global loading for table actions (e.g. Voiding, Rollover, Sync)
+    const [isPersonSlideOpen, setIsPersonSlideOpen] = useState(false)
+    const [personSlideTab, setPersonSlideTab] = useState<string>('general')
+
     const [isGlobalLoading, setIsGlobalLoading] = useState(false)
     const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
     const [accountGlobalCashbackStatus, setAccountGlobalCashbackStatus] = useState<AccountSpendingStats | null>(null)
+    const [isAuditOpen, setIsAuditOpen] = useState(false)
     const [allAccountsCashbackStats, setAllAccountsCashbackStats] = useState<Record<string, AccountSpendingStats>>({})
 
     const [isPending, startTransition] = useTransition()
+    const [isCycleTagVisible, setIsCycleTagVisible] = useState(false)
 
     // Helper function for tag extraction
     const getEffectiveTxnTag = useMemo(() => {
@@ -128,6 +134,10 @@ export function MemberDetailView({
             return urlTag
         }
 
+        if (person.is_master_sheet_enabled) {
+            return 'all'
+        }
+
         const hasCurrentData = transactions.some((txn) => {
             const normalizedTag = normalizeMonthTag(getEffectiveTxnTag(txn) || '')
             return normalizedTag === currentMonthTag
@@ -151,14 +161,20 @@ export function MemberDetailView({
         if (urlTag === 'all') {
             return null
         }
+        if (person.is_master_sheet_enabled && !urlTag) {
+            return null
+        }
         if (urlTag && urlTag.includes('-')) {
             return urlTag.split('-')[0]
         }
-        if (activeCycleTag.includes('-')) {
+        if (activeCycleTag && activeCycleTag.includes('-')) {
             return activeCycleTag.split('-')[0]
         }
+        if (activeCycleTag === 'all') {
+            return null
+        }
         return new Date().getFullYear().toString()
-    }, [urlTag, urlYear, activeCycleTag])
+    }, [urlTag, urlYear, activeCycleTag, person.is_master_sheet_enabled])
 
     // Data Hooks
     const { debtCycles, availableYears, currentCycle } = usePersonDetails({
@@ -188,12 +204,12 @@ export function MemberDetailView({
     const [slideOverrideType, setSlideOverrideType] = useState<string | undefined>(undefined)
 
     // Person Slide State
-    const [isPersonSlideOpen, setIsPersonSlideOpen] = useState(false)
+    // REMOVED from here, moved to main state section
 
     const { setCustomName } = useBreadcrumbs()
 
     useEffect(() => {
-        const tabLabel = activeTab === 'history' ? 'History' : activeTab === 'split-bill' ? 'Split Bill' : 'Transactions'
+        const tabLabel = activeTab === 'split-bill' ? 'Split Bill' : 'Transactions'
         document.title = `${person.name} ${tabLabel}`
 
         const path = `/people/${getPersonRouteId(person)}`
@@ -226,6 +242,8 @@ export function MemberDetailView({
         params.set('tag', tag)
         if (tag.includes('-')) {
             params.set('year', tag.split('-')[0])
+        } else if (tag === 'all') {
+            params.delete('year')
         }
         
         // Always include accountId if we have one in state
@@ -458,16 +476,22 @@ export function MemberDetailView({
 
         // 1. Calculate stats from local debtCycles based on selection
         if (urlTag === 'all') {
-            const targets = selectedYear && selectedYear !== 'All Time' && selectedYear !== 'Other'
-                ? debtCycles.filter(c => c.tag.startsWith(selectedYear))
-                : debtCycles;
+            // Apply 2026 cutoff as requested by user ("chỉ lấy 2026 về sau")
+            const targets = debtCycles.filter(c => {
+                if (selectedYear && selectedYear !== 'All Time' && selectedYear !== 'Other') {
+                    return c.tag.startsWith(selectedYear)
+                }
+                return true
+            });
             
             targets.forEach(c => {
                 originalLend += c.stats.originalLend || 0
                 cashback += c.stats.cashback || 0
                 netLend += c.stats.lend || 0
                 repay += c.stats.repay || 0
-                remains += c.remains || 0
+                // Calculate net remains and treat negative (surplus) as 0
+                const cycleNet = (c.stats.lend || 0) - (c.stats.repay || 0)
+                remains += (cycleNet > 0 ? cycleNet : 0)
                 paidRollover += c.stats.paidRollover || 0
                 receiveRollover += c.stats.receiveRollover || 0
             })
@@ -480,7 +504,24 @@ export function MemberDetailView({
                 cashback = cycle.stats.cashback || 0
                 netLend = cycle.stats.lend || 0
                 repay = cycle.stats.repay || 0
-                remains = cycle.remains || 0
+                
+                // Requirement: Remains is calculated for entire year (or all time)
+                // Filter only cycles from 2026 onwards for the running total
+                const cycleYear = parseInt(effectiveTag.split('-')[0])
+                
+                if (cycleYear >= 2026) {
+                    const currentYearStr = effectiveTag.split('-')[0]
+                    const yearCycles = debtCycles.filter(c => c.tag.startsWith(currentYearStr))
+                    remains = yearCycles.reduce((sum, c) => {
+                        const net = (c.stats.lend || 0) - (c.stats.repay || 0)
+                        return sum + (net > 0 ? net : 0)
+                    }, 0)
+                } else {
+                    // For legacy years, just show its own remains to avoid confusion
+                    const cycleNet = (cycle.stats.lend || 0) - (cycle.stats.repay || 0)
+                    remains = cycleNet > 0 ? cycleNet : 0
+                }
+                
                 paidRollover = cycle.stats.paidRollover || 0
                 receiveRollover = cycle.stats.receiveRollover || 0
             }
@@ -923,6 +964,7 @@ export function MemberDetailView({
                 onTabChange={setActiveTab}
                 onEdit={() => setIsPersonSlideOpen(true)}
                 onSyncCycle={onSyncPeopleDebt}
+                onOpenAudit={() => setIsAuditOpen(true)}
                 cashbackStatus={mappedGlobalStats || selectedAccountCashbackStatus || undefined}
                 allCashbackStatuses={allCashbackStatuses}
                 isSyncing={isGlobalLoading || isPending}
@@ -971,6 +1013,12 @@ export function MemberDetailView({
                         onSyncCycle={onSyncPeopleDebt}
                         setIsGlobalLoading={setIsGlobalLoading}
                         setLoadingMessage={setLoadingMessage}
+                        onOpenSettings={() => {
+                            setPersonSlideTab('sheet')
+                            setIsPersonSlideOpen(true)
+                        }}
+                        isCycleTagVisible={isCycleTagVisible}
+                        onToggleCycleTag={setIsCycleTagVisible}
                     />
                     <div className="flex-1 overflow-y-auto px-4 py-3 relative">
                         {(isSubmitting || isGlobalLoading) && (
@@ -998,6 +1046,7 @@ export function MemberDetailView({
                                 searchTerm={searchTerm}
                                 context="person"
                                 contextId={person.id}
+                                showTag={isCycleTagVisible || activeCycleTag === 'all' || (person.is_master_sheet_enabled ?? false)}
                                 onEdit={handleEditTransaction}
                                 onDuplicate={handleDuplicateTransaction}
                                 setIsGlobalLoading={setIsGlobalLoading}
@@ -1008,22 +1057,6 @@ export function MemberDetailView({
                 </>
             )}
 
-            {activeTab === 'history' && (
-                <div className="flex-1 overflow-y-auto px-4 py-3">
-                    <SimpleTransactionTable
-                        transactions={historyTransactions}
-                        accounts={accounts}
-                        categories={categories}
-                        people={people}
-                        shops={shops}
-                        searchTerm={searchTerm}
-                        context="person"
-                        contextId={person.id}
-                        setIsGlobalLoading={setIsGlobalLoading}
-                        setLoadingMessage={setLoadingMessage}
-                    />
-                </div>
-            )}
 
             {activeTab === 'split-bill' && (
                 <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -1052,10 +1085,14 @@ export function MemberDetailView({
 
             <PeopleSlideV2
                 open={isPersonSlideOpen}
-                onOpenChange={setIsPersonSlideOpen}
+                onOpenChange={(val) => {
+                    setIsPersonSlideOpen(val)
+                    if (!val) setPersonSlideTab('general')
+                }}
                 person={person}
                 subscriptions={subscriptions}
                 accounts={accounts}
+                defaultTab={personSlideTab}
             />
             {/* Transaction Slide V2 */}
             <TransactionSlideV2
@@ -1078,6 +1115,14 @@ export function MemberDetailView({
                 onSuccess={handleSlideSuccess}
                 onSubmissionStart={handleSubmissionStart}
                 onSubmissionEnd={handleSubmissionEnd}
+            />
+
+            <ReAlignAuditDialog 
+                open={isAuditOpen}
+                onOpenChange={setIsAuditOpen}
+                person={{ id: person.id, name: person.name }}
+                initialYear={selectedYear || 'All Time'}
+                availableYears={availableYears}
             />
             <FlowLegend />
         </div>

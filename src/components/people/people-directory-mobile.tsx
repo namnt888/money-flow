@@ -193,7 +193,7 @@ export function PeopleDirectoryMobile({
                           setDebtModalItem(item)
                         }}
                         className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-100"
-                        title="View outstanding cycles"
+                        title="View active cycles"
                       >
                         +{item.additionalActiveCycles}
                       </button>
@@ -280,7 +280,7 @@ export function PeopleDirectoryMobile({
         <DialogContent className="max-w-md" onClick={(event) => event.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>
-              {debtModalItem ? `${debtModalItem.name} outstanding cycles` : 'Outstanding cycles'}
+              {debtModalItem ? `${debtModalItem.name} active cycles` : 'Active cycles'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-[350px] overflow-y-auto">

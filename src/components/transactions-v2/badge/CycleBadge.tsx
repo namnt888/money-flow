@@ -16,30 +16,57 @@ interface CycleBadgeProps {
     compact?: boolean
     clickable?: boolean // New prop to enable navigation
     entityName?: string // Entity name for tooltip
+    personContext?: boolean // NEW: Show tag instead of range
 }
 
-export function CycleBadge({ account, cycleTag, txnDate, className, mini = false, compact = false, clickable = true, entityName }: CycleBadgeProps) {
+export function CycleBadge({ account, cycleTag, txnDate, className, mini = false, compact = false, clickable = true, entityName, personContext = false }: CycleBadgeProps) {
     const router = useRouter()
 
-    if (!account || !account.cashback_config) return null
+    // NEW: Priority logic for person context (Debt cycles)
+    if (personContext) {
+        if (!cycleTag) return null
+        
+        const handleClick = (e: React.MouseEvent) => {
+            if (!clickable) return
+            e.stopPropagation()
+            e.preventDefault()
+            const url = account?.id 
+                ? `/accounts/${account.id}?tag=${cycleTag}`
+                : `/transactions?tag=${cycleTag}`
+            window.open(url, '_blank', 'noopener,noreferrer')
+        }
 
-    // Try to use persisted cycle tag if available
-    // If we have a tag like "2026-01", we can try to derive the range
-    // BUT, to get the precise range (e.g. 25 Dec - 24 Jan) we need the calculation logic based on statement Day
+        const ui = (
+            <span
+                onClick={handleClick}
+                className={cn(
+                    "inline-flex items-center justify-center rounded-[4px] bg-blue-500 border border-blue-600 text-white whitespace-nowrap font-semibold shadow-sm",
+                    compact ? "px-2 h-6 text-[14px]" : (mini ? "px-1.5 h-4.5 text-[11px]" : "px-3 h-6 text-[14px]"),
+                    clickable && "cursor-pointer hover:bg-blue-600 hover:border-blue-700 transition-all active:scale-95",
+                    className
+                )}
+            >
+                {cycleTag}
+            </span>
+        )
+
+        return (
+            <CustomTooltip content={entityName ? `Open details for ${entityName} in new tab filtered by cycle ${cycleTag}` : cycleTag}>
+                {ui}
+            </CustomTooltip>
+        )
+    }
+
+    // Default Account Billing Cycle Range behavior
+    if (!account || !account.cashback_config) return null
 
     const config = parseCashbackConfig(account.cashback_config)
     if (!config.cycleType) return null
 
     let refDate = typeof txnDate === 'string' ? parseISO(txnDate) : txnDate
-
-    // If we have a stored cycle tag, use it to set the "month" context for calculation
     if (cycleTag) {
         const parsed = parseCycleTag(cycleTag)
         if (parsed) {
-            // Set reference date to mid-month of that cycle tag to ensure we hit the right range calculation
-            // Actually, getCashbackCycleRange uses referenceDate to find the cycle *containing* it.
-            // If we have "2026-01" tag, it usually means cycle ENDS in Jan 2026.
-            // So reference date should be around Jan 15, 2026.
             refDate = new Date(parsed.year, parsed.month - 1, 15)
         }
     }
@@ -57,54 +84,33 @@ export function CycleBadge({ account, cycleTag, txnDate, className, mini = false
     if (!range) return null
 
     const formatRange = (start: Date, end: Date) => {
-        // Compact format for table badges: dd.MM~dd.MM
-        return `${format(start, 'dd.MM')}~${format(end, 'dd.MM')}`
+        return `${format(start, 'dd-MM')} to ${format(end, 'dd-MM')}`
     }
 
     const formattedText = formatRange(range.start, range.end)
 
     const handleClick = (e: React.MouseEvent) => {
         if (!clickable) return
-        e.stopPropagation() // Prevent row click
-        e.preventDefault() // Prevent default navigation
+        e.stopPropagation() 
+        e.preventDefault() 
 
         if (cycleTag && account?.id) {
             const url = `/accounts/${account.id}?tag=${cycleTag}`
-            // Open in new tab
             window.open(url, '_blank', 'noopener,noreferrer')
         }
     }
 
-    if (compact) {
-        return (
-            <CustomTooltip content={entityName ? `Open details for ${entityName} in new tab filtered by cycle ${cycleTag || ''}` : formattedText}>
-                <span
-                    onClick={handleClick}
-                    className={cn(
-                        "inline-flex items-center justify-center rounded-[4px] bg-amber-100 border border-amber-300 text-amber-800 whitespace-nowrap font-bold",
-                        "px-1.5 h-5 text-[10px]",
-                        clickable && "cursor-pointer hover:bg-amber-200 hover:border-amber-400 transition-colors",
-                        !clickable && "cursor-help",
-                        className
-                    )}
-                >
-                    {formattedText}
-                </span>
-            </CustomTooltip>
-        )
-    }
+    const commonClasses = cn(
+        "inline-flex items-center justify-center rounded-[4px] bg-amber-400 border border-amber-500 text-black whitespace-nowrap font-semibold shadow-sm",
+        compact ? "px-2 h-6 text-[14px]" : (mini ? "px-1.5 h-4.5 text-[11px]" : "px-3 h-6 text-[14px]"),
+        clickable && "cursor-pointer hover:bg-amber-500/80 hover:border-amber-600 transition-colors",
+        !clickable && "cursor-help",
+        className
+    )
 
     return (
         <CustomTooltip content={entityName ? `Open details for ${entityName} in new tab filtered by cycle ${cycleTag || ''}` : formattedText}>
-            <span
-                onClick={handleClick}
-                className={cn(
-                    "inline-flex items-center justify-center rounded-[4px] bg-amber-100 border border-amber-300 text-amber-800 whitespace-nowrap font-bold",
-                    mini ? "px-1 h-4 text-[10px]" : "px-1.5 h-5 text-[10px]",
-                    clickable && "cursor-pointer hover:bg-amber-200 hover:border-amber-400 transition-colors",
-                    className
-                )}
-            >
+            <span onClick={handleClick} className={commonClasses}>
                 {formattedText}
             </span>
         </CustomTooltip>

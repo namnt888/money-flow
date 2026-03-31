@@ -18,6 +18,7 @@ interface PeopleTableProps {
     onLend: (person: Person) => void;
     onRepay: (person: Person) => void;
     onSync: (personId: string) => Promise<void>;
+    onOpenSettings?: (person: Person) => void;
     sortConfig?: { key: PeopleColumnKey; direction: 'asc' | 'desc' } | null;
     onSort?: (key: PeopleColumnKey) => void;
 }
@@ -29,6 +30,7 @@ export function PeopleTableV2({
     onLend,
     onRepay,
     onSync,
+    onOpenSettings,
     sortConfig: propSortConfig,
     onSort,
 }: PeopleTableProps) {
@@ -71,8 +73,12 @@ export function PeopleTableV2({
         }
     };
 
-    // Track expanded groups. Default true? We'll assume yes or handle init.
-    const [closedGroups, setClosedGroups] = useState<Set<string>>(new Set());
+    // Track expanded groups. 
+    const [closedGroups, setClosedGroups] = useState<Set<string>>(() => {
+        const hasFav = people.some(p => p.is_favorite);
+        if (hasFav) return new Set(['outstanding', 'settled']);
+        return new Set(['settled']); // Still keep settled collapsed by default
+    });
 
     const visibleCols = getVisibleColumns();
 
@@ -98,13 +104,16 @@ export function PeopleTableV2({
         }> = {};
 
         people.forEach(person => {
+            const isFavorite = person.is_favorite ?? false;
             const totalDebt = (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
-            const statusId = totalDebt > 0 ? 'outstanding' : 'settled';
+            
+            // Priority: Favorite first, then by debt status
+            const statusId = isFavorite ? 'favorite' : (totalDebt > 0 ? 'outstanding' : 'settled');
 
             if (!groups[statusId]) {
                 groups[statusId] = {
                     id: statusId,
-                    name: statusId === 'outstanding' ? 'Outstanding' : 'Settled',
+                    name: statusId === 'favorite' ? 'Favorites' : (statusId === 'outstanding' ? 'Outstanding' : 'Settled'),
                     image: null,
                     members: [],
                     totalDebt: 0,
@@ -159,11 +168,12 @@ export function PeopleTableV2({
             });
         });
 
-        // Sort: Outstanding first, then Settled
+        // Sort: Favorite first, then Outstanding, then Settled
         return Object.values(groups).sort((a, b) => {
-            if (a.id === 'outstanding') return -1;
-            if (b.id === 'outstanding') return 1;
-            return 0;
+            const order = { 'favorite': 0, 'outstanding': 1, 'settled': 2 };
+            const orderA = order[a.id as keyof typeof order] ?? 3;
+            const orderB = order[b.id as keyof typeof order] ?? 3;
+            return orderA - orderB;
         });
     }, [people, sortConfig]);
 
@@ -268,6 +278,7 @@ export function PeopleTableV2({
                                                 onLend={onLend}
                                                 onRepay={onRepay}
                                                 onSync={onSync}
+                                                onOpenSettings={onOpenSettings}
                                                 accounts={accounts}
                                             />
                                         ))}

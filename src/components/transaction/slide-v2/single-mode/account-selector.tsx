@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import {
   FormControl,
@@ -121,9 +122,11 @@ export function AccountSelector({
     if (personId) {
       if (sourceId && !targetId) form.setValue("type", "debt");
       else if (!sourceId && targetId) form.setValue("type", "repayment");
+      else if (!sourceId && !targetId) form.setValue("type", "debt"); // both cleared → neutral debt
     } else {
       if (sourceId && !targetId) form.setValue("type", "expense");
       else if (!sourceId && targetId) form.setValue("type", "income");
+      else if (!sourceId && !targetId) form.setValue("type", "expense"); // both cleared → neutral expense
     }
   }, [sourceId, targetId, personId, isSpecialMode, form]);
 
@@ -328,7 +331,15 @@ export function AccountSelector({
                     {field.value && !isIncomeFlow && (
                       <button
                         type="button"
-                        onClick={() => field.onChange(undefined)}
+                        onClick={() => {
+                          // Use form.setValue with full options to ensure RHF re-renders all watchers
+                          form.setValue("source_account_id", null as any, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: false,
+                          });
+                          toast.info(`Switched to ${personId ? 'REPAYMENT' : 'INCOME'} mode`);
+                        }}
                         className="flex h-11 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:text-slate-700"
                         aria-label="Clear source account"
                       >
@@ -398,7 +409,15 @@ export function AccountSelector({
                     {field.value && !isExpenseFlow && (
                       <button
                         type="button"
-                        onClick={() => field.onChange(undefined)}
+                        onClick={() => {
+                          // Use form.setValue with full options to ensure RHF re-renders all watchers
+                          form.setValue("target_account_id", null as any, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: false,
+                          });
+                          toast.info(`Switched to ${personId ? 'DEBT' : 'EXPENSE'} mode`);
+                        }}
                         className="flex h-11 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:text-slate-700"
                         aria-label="Clear target account"
                       >

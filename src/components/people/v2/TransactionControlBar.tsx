@@ -1,4 +1,4 @@
-import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight, TrendingUp } from 'lucide-react'
+import { Search, RotateCcw, UserMinus, Plus, Check, ChevronDown, RefreshCw, RefreshCcw, X, Clipboard, Info, ArrowUpRight, TrendingUp, History as LucideHistory } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
@@ -62,6 +62,9 @@ interface TransactionControlBarProps {
     setIsGlobalLoading?: (val: boolean) => void
     setLoadingMessage?: (val: string | null) => void
     onSyncCycle?: (tag: string) => Promise<{ success: boolean; error?: string }>
+    onOpenSettings?: () => void
+    isCycleTagVisible?: boolean
+    onToggleCycleTag?: (visible: boolean) => void
 }
 
 import { useRouter } from 'next/navigation'
@@ -137,6 +140,9 @@ export function TransactionControlBar({
     setIsGlobalLoading,
     setLoadingMessage,
     onSyncCycle,
+    onOpenSettings,
+    isCycleTagVisible,
+    onToggleCycleTag,
 }: TransactionControlBarProps) {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const isSettled = Math.abs(activeCycle.remains) < 100
@@ -377,32 +383,31 @@ export function TransactionControlBar({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="flex items-center h-9 w-[280px] rounded-lg border border-slate-200 bg-white shadow-sm">
-                        <ManageSheetButton 
-                            personId={person.id}
-                            cycleTag={activeCycle.tag}
-                            scriptLink={person.sheet_link}
-                            initialSheetUrl={initialSheetUrl}
-                            googleSheetUrl={person.google_sheet_url}
-                            sheetFullImg={person.sheet_full_img}
-                            sheetBankInfo={person.sheet_bank_info}
-                            sheetLinkedBankId={person.sheet_linked_bank_id}
-                            showBankAccount={person.sheet_show_bank_account ?? false}
-                            showQrImage={person.sheet_show_qr_image ?? false}
-                            availableYears={availableYears}
-                            allCycles={allCycles}
-                            selectedYear={selectedYear}
-                            onCycleChange={onCycleChange}
-                            onYearChange={onYearChange}
-                            activeCycleRemains={activeCycle.remains}
-                            isSettled={isSettled}
-                            accounts={accounts}
-                            splitMode={true}
-                            linkedLabel="Sheet"
-                            unlinkedLabel="Sheet"
-                            onSyncCycle={onSyncCycle}
-                        />
-                    </div>
+                    <ManageSheetButton 
+                        personId={person.id}
+                        cycleTag={activeCycle.tag}
+                        scriptLink={person.sheet_link}
+                        initialSheetUrl={initialSheetUrl}
+                        googleSheetUrl={person.google_sheet_url}
+                        sheetFullImg={person.sheet_full_img}
+                        sheetBankInfo={person.sheet_bank_info}
+                        sheetLinkedBankId={person.sheet_linked_bank_id}
+                        showBankAccount={person.sheet_show_bank_account ?? false}
+                        showQrImage={person.sheet_show_qr_image ?? false}
+                        availableYears={availableYears}
+                        allCycles={allCycles}
+                        selectedYear={selectedYear}
+                        onCycleChange={onCycleChange}
+                        onYearChange={onYearChange}
+                        activeCycleRemains={activeCycle.remains}
+                        isSettled={isSettled}
+                        accounts={accounts}
+                        splitMode={true}
+                        linkedLabel="Sheet"
+                        unlinkedLabel="Sheet"
+                        onSyncCycle={onSyncCycle}
+                        onOpenSettings={onOpenSettings}
+                    />
                 </div>
 
                 <div className="h-6 w-px bg-slate-200" />
@@ -537,6 +542,27 @@ export function TransactionControlBar({
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" align="center" className="z-[100]">
                                     <p>View recently paid transactions</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+
+                        {onToggleCycleTag && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        onClick={() => onToggleCycleTag(!isCycleTagVisible)}
+                                        className={cn(
+                                            "flex items-center justify-center h-9 w-9 border rounded-lg transition-colors flex-shrink-0 shadow-sm",
+                                            isCycleTagVisible 
+                                                ? "bg-indigo-50 border-indigo-200 text-indigo-600 shadow-inner" 
+                                                : "bg-white border-slate-200 hover:bg-slate-50 text-slate-500"
+                                        )}
+                                    >
+                                        <LucideHistory className={cn("h-4 w-4", isCycleTagVisible && "animate-pulse")} />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" align="end" className="z-[100]">
+                                    <p>{isCycleTagVisible ? "Hide Debt Cycle column" : "Show Debt Cycle column"}</p>
                                 </TooltipContent>
                             </Tooltip>
                         )}

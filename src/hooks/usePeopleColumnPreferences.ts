@@ -15,7 +15,7 @@ const defaultPeopleColumns: PeopleColumnConfig[] = [
     { key: 'base_lend', label: 'All Debt Remains', defaultWidth: 140, minWidth: 120 },
     { key: 'repayment', label: 'Repayment', defaultWidth: 140, minWidth: 120 },
     { key: 'cashback_total', label: 'Cashback Total', defaultWidth: 130, minWidth: 110 },
-    { key: 'current_tag', label: 'Current Tag', defaultWidth: 320, minWidth: 300 },
+    { key: 'current_tag', label: 'Current Tag & Amount', defaultWidth: 320, minWidth: 300 },
     { key: 'balance', label: 'Remaining Amount', defaultWidth: 140, minWidth: 120 },
     { key: 'current_debt', label: 'Outstanding Debt', defaultWidth: 140, minWidth: 120 },
     { key: 'net_lend', label: 'Previous Debt', defaultWidth: 130, minWidth: 110 },

@@ -415,7 +415,7 @@ export function MemberDetailView({
                                 showQrImage={person.sheet_show_qr_image ?? false}
                                 accounts={accounts}
                                 size="sm"
-                                buttonClassName="h-8 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                buttonClassName="h-8 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
                                 linkedLabel="Google Sheet"
                                 unlinkedLabel="Link Sheet"
                             />

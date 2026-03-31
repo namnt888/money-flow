@@ -20,6 +20,8 @@ interface PersonDetailHeaderV2Props {
     // Manage Sheet Props
     accounts?: Account[];
     showManageSheet?: boolean;
+    activeCycleTag?: string; // NEW: support dynamic cycle
+    onCycleChange?: (tag: string) => void; // NEW: support cycle change
 }
 
 export function PersonDetailHeaderV2({
@@ -28,8 +30,20 @@ export function PersonDetailHeaderV2({
     onTabChange,
     accounts = [],
     showManageSheet = false,
+    activeCycleTag,
+    onCycleChange,
 }: PersonDetailHeaderV2Props) {
-    const totalDebt = (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
+    const totalDebt = React.useMemo(() => {
+        const stats = person.cycle_stats || [];
+        return stats.reduce((sum, c) => {
+            // Only consider cycles from 2026 onwards
+            const cycleYear = parseInt(c.tag?.split('-')[0] || '0');
+            if (cycleYear < 2026) return sum;
+
+            const net = (c.baseLend || 0) - (c.repaid || 0) - (c.cashback || 0);
+            return sum + (net > 0 ? net : 0);
+        }, 0);
+    }, [person.cycle_stats]);
 
     return (
         <div className="bg-white border-b border-slate-200">
@@ -63,7 +77,8 @@ export function PersonDetailHeaderV2({
                         {showManageSheet && (
                             <ManageSheetButton
                                 personId={person.id}
-                                cycleTag={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`}
+                                cycleTag={activeCycleTag || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`}
+                                onCycleChange={onCycleChange}
                                 scriptLink={person.sheet_link}
                                 googleSheetUrl={person.google_sheet_url}
                                 sheetFullImg={person.sheet_full_img}
@@ -87,7 +102,7 @@ export function PersonDetailHeaderV2({
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6">
                     <StatCard
-                        label="Outstanding Balance"
+                        label="Total Balance"
                         value={totalDebt}
                         icon={<Wallet className="h-4 w-4" />}
                         variant={totalDebt > 0 ? "danger" : totalDebt < 0 ? "success" : "neutral"}

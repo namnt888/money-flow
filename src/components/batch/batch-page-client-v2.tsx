@@ -30,6 +30,7 @@ interface BatchPageClientV2Props {
     globalSheetName?: string | null
     phases?: any[]
     selectedPhaseId?: string | null
+    checklistData?: any
 }
 
 export function BatchPageClientV2({
@@ -46,6 +47,7 @@ export function BatchPageClientV2({
     globalSheetName,
     phases = [],
     selectedPhaseId = null,
+    checklistData,
 }: BatchPageClientV2Props) {
     const router = useRouter()
     const [settingsOpen, setSettingsOpen] = useState(false)
@@ -438,6 +440,7 @@ export function BatchPageClientV2({
                                     monthYear={currentMonth || ''}
                                     initialPhaseId={currentPhaseId}
                                     refreshNonce={checklistRefreshNonce}
+                                    serverChecklistData={checklistData}
                                     onManagePhases={() => setTemplateOpen(true)}
                                     onPhaseChange={(phaseId) => {
                                         const nextPhase = effectivePhases.find((phase: any) => phase.id === phaseId)

@@ -4,11 +4,11 @@ import { pocketbaseList, toPocketBaseId } from '@/services/pocketbase/server'
 import { loadPocketBaseTransactions } from '@/services/pocketbase/transaction.service'
 
 /**
- * Fetch all data needed for the 12-month recurring checklist
+ * Fetch all data needed for the checklist for a specific month
  */
-export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: number = new Date().getFullYear()) {
+export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear: string = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`) {
     try {
-        console.log(`[BatchAction] Fetching checklist data for ${bankType} / ${year}`);
+        console.log(`[BatchAction] Fetching checklist data for ${bankType} / ${monthYear}`);
         
         // 1. Fetch Master Items
         const masterResult = await pocketbaseList<any>('batch_master_items', {
@@ -31,10 +31,9 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
             };
         })
 
-        // 2. Fetch Batches for the given year
-        const yearPattern = `${year}-`
+        // 2. Fetch Batches for the given month
         const batchesResult = await pocketbaseList<any>('batches', {
-            filter: `bank_type = '${bankType}' && month_year ~ '${yearPattern}'`,
+            filter: `bank_type = '${bankType}' && month_year = '${monthYear}'`,
             page: 1,
             perPage: 200, // Safe limit
             sort: 'month_year',
@@ -78,9 +77,16 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', year: numb
             console.warn('batch_phases fetch failed:', phaseErr?.message)
         }
 
-        // 5. Optimized Funding Lookup (Single request for whole year)
-        const yearStart = `${year}-01-01 00:00:00`
-        const yearEnd = `${year}-12-31 23:59:59`
+        // 5. Optimized Funding Lookup (Single request for whole month)
+        // Ensure month boundary is correct for funding query
+        const yearValue = monthYear.split('-')[0]
+        const monthValue = monthYear.split('-')[1]
+        
+        // This calculates the last day of the month by rolling over day 0 of the NEXT month
+        const lastDay = new Date(parseInt(yearValue), parseInt(monthValue), 0).getDate()
+        
+        const monthStart = `${monthYear}-01 00:00:00`
+        const monthEnd = `${monthYear}-${String(lastDay).padStart(2, '0')} 23:59:59`
         const fallbackFundingByBatchMap = new Map<string, any>()
         try {
             // Use standardized loader for transactions

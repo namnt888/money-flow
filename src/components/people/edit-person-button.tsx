@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Pencil, Edit } from 'lucide-react'
-import { PersonSlideV2 } from '@/components/people/slide-v2/person-slide-v2'
+import { PeopleSlideV2 } from '@/components/people/v2/people-slide-v2'
 import { Person, Subscription, Account } from '@/types/moneyflow.types'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +31,7 @@ export function EditPersonButton({ person, subscriptions, accounts, className }:
             </button>
 
             {showDialog && (
-                <PersonSlideV2
+                <PeopleSlideV2
                     person={person}
                     subscriptions={subscriptions}
                     open={showDialog}

@@ -72,7 +72,7 @@ export function QuickFilterDropdown({
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 justify-between font-medium",
+            "gap-2 justify-between font-medium rounded-xl border-slate-200",
             fullWidth ? 'w-full h-10' : 'w-[140px] h-9',
             !value && "text-muted-foreground"
           )}
@@ -115,7 +115,7 @@ export function QuickFilterDropdown({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[240px] p-0"
+        className="w-[240px] p-0 border border-slate-200 shadow-xl rounded-xl"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onMouseEnter={handleMouseEnter}
@@ -155,33 +155,33 @@ export function QuickFilterDropdown({
                   key={item.id}
                   onClick={() => handleSelect(item.id)}
                   className={cn(
-                    "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-sm hover:bg-accent transition-colors",
-                    value === item.id && "bg-accent"
+                    "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-lg transition-colors hover:bg-slate-50",
+                    value === item.id && "bg-slate-50 font-medium"
                   )}
                 >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className={cn(
-                            "w-5 h-5 object-contain bg-white",
-                            item.type === 'person' ? 'rounded-full' : 'rounded-none'
-                          )}
-                        />
-                      ) : item.icon ? (
-                        <span className="text-base shrink-0">{item.icon}</span>
-                      ) : null}
-                      <span className="truncate">{item.name}</span>
-                      {item.badge && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-muted-foreground/10 font-bold text-muted-foreground uppercase tracking-tight shrink-0">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                    {value === item.id && (
-                      <Check className="w-3.5 h-3.5 shrink-0" />
+                  <div className="flex items-center gap-2 truncate">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className={cn(
+                          "w-4 h-4 object-contain bg-white shrink-0",
+                          item.type === 'person' ? 'rounded-full' : 'rounded-none'
+                        )}
+                      />
+                    ) : item.icon ? (
+                      <span className="text-base shrink-0">{item.icon}</span>
+                    ) : null}
+                    <span className="truncate">{item.name}</span>
+                    {item.badge && (
+                      <span className="text-[9px] px-1 py-0.5 rounded-none bg-muted-foreground/10 font-bold text-muted-foreground uppercase tracking-tight shrink-0">
+                        {item.badge}
+                      </span>
                     )}
+                  </div>
+                  {value === item.id && (
+                    <Check className="w-3.5 h-3.5 shrink-0 text-blue-600" />
+                  )}
                 </button>
               ))}
             </div>

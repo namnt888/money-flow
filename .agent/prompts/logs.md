@@ -1,61 +1,7 @@
-## Error Type
-Console Error
-
-## Error Message
-[DB:PB] Request FAILED [400] /api/collections/batch_items/records: "{\"data\":{},\"message\":\"Something went wrong while processing your request.\",\"status\":400}\n"
-
-
-    at pocketbaseRequest (src\services\pocketbase\server.ts:104:13)
-    at MBBBatchPage (src\app\batch\mbb\page.tsx:53:35)
-    at MBBBatchPage (<anonymous>:null:null)
-
-## Code Frame
-  102 |   if (!response.ok) {
-  103 |     const text = await response.text()
-> 104 |     console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
-      |             ^
-  105 |     throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
-  106 |   }
-  107 |
-
-Next.js version: 16.0.10 (Turbopack)
-## Error Type
-Console Error
-
-## Error Message
-C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__5dfbb803._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
-
-
-    at MBBBatchPage (src\app\batch\mbb\page.tsx:60:21)
-    at MBBBatchPage (<anonymous>:null:null)
-
-## Code Frame
-  58 |             autoSelectedPhaseId = latestItemRes.items?.[0]?.phase_id || null
-  59 |         } catch (e) {
-> 60 |             console.warn('Smart phase selection failed:', e)
-     |                     ^
-  61 |         }
-  62 |     }
-  63 |
-
-Next.js version: 16.0.10 (Turbopack)
-## Error Type
-Console Error
-
-## Error Message
-C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__a0da3610._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
-
-
-    at MBBBatchPage (src\app\batch\mbb\page.tsx:60:21)
-    at MBBBatchPage (<anonymous>:null:null)
-
-## Code Frame
-  58 |             autoSelectedPhaseId = latestItemRes.items?.[0]?.phase_id || null
-  59 |         } catch (e) {
-> 60 |             console.warn('Smart phase selection failed:', e)
-     |                     ^
-  61 |         }
-  62 |     }
-  63 |
-
-Next.js version: 16.0.10 (Turbopack)
+Date	ID	Type	Tag	Amount	Cashback	FinalPrice	Sum	Note
+2026-01-02 07:10:00.000Z	f1cj6mriex12uj5	debt	2026-01	41000	0	41000	41000	2026-01 iCloud Slot: 1 - 246,000/6
+2026-01-02 17:00:00.000Z	4qh5pq0gr33xqvl	debt	2026-01	560000	0	560000	601000	1.6% của 35
+2026-01-02 17:00:00.000Z	0c1yt25bgj51hxa	debt	2026-01	35000000	0	35000000	35601000	Bank M 35tr T1
+2026-01-12 17:00:00.000Z	5sclr36zot8s6mz	debt	2026-01	79700	0	79700	35680700	Phúc Long
+2026-02-07 12:07:42.000Z	64lo7u7wjzv8ma9	debt	2026-02	41000	0	41000	35721700	2026-02 iCloud Slot: 1 - 246,000/6
+2026-03-01 02:00:00.000Z	7h9tea69syacp1h	debt	2026-03	41000	0	41000	35762700	My 2026-03 Slot: 1 (41,000)/6

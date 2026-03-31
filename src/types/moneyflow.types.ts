@@ -177,6 +177,7 @@ export type Person = {
 
   sheet_link?: string | null;
   google_sheet_url?: string | null;
+  is_master_sheet_enabled?: boolean | null;
   sheet_full_img?: string | null;
   sheet_show_bank_account?: boolean | null;
   sheet_bank_info?: string | null;
@@ -186,6 +187,7 @@ export type Person = {
   balance?: number | null;
   is_owner?: boolean | null;
   is_archived?: boolean | null;
+  is_favorite?: boolean | null;
   is_group?: boolean | null;
   group_parent_id?: string | null;
   subscription_ids?: string[];
@@ -236,6 +238,7 @@ export type Subscription = {
   note_template?: string | null;
   members?: SubscriptionMember[];
   shop_id?: string | null;
+  image_url?: string | null;
 };
 
 // TransactionLine type removed as it is no longer supported by the schema.

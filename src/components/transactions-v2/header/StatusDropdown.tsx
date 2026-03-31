@@ -77,8 +77,8 @@ export function StatusDropdown({ value, onChange, fullWidth }: StatusDropdownPro
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 justify-between font-medium",
-            fullWidth ? 'w-full h-10' : 'w-[130px] h-9',
+            "gap-2 justify-between font-medium rounded-xl border-slate-200",
+            fullWidth ? 'w-full h-10' : 'w-[120px] h-9',
             currentOption.color
           )}
           onMouseEnter={handleMouseEnter}
@@ -105,7 +105,7 @@ export function StatusDropdown({ value, onChange, fullWidth }: StatusDropdownPro
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[160px] p-1" 
+        className="w-[180px] p-2 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-sm border-slate-200" 
         align="end"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onMouseEnter={handleMouseEnter}
@@ -117,7 +117,7 @@ export function StatusDropdown({ value, onChange, fullWidth }: StatusDropdownPro
               key={option.value}
               onClick={() => handleSelect(option.value)}
               className={cn(
-                "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-sm transition-colors",
+                "w-full flex items-center justify-between px-2 py-1.5 text-sm rounded-lg transition-colors",
                 option.bgColor,
                 option.color,
                 value === option.value && "bg-accent"
