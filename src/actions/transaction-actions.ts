@@ -48,6 +48,10 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     return null;
   }
 
+  revalidatePath('/');
+  revalidatePath('/people');
+  revalidatePath('/transactions');
+  revalidatePath('/txn/v2');
   return transactionId;
 }
 
@@ -58,13 +62,24 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
   const success = await updatePBTransaction(pbId, input as any);
   if (!success) return false;
 
+  revalidatePath('/');
+  revalidatePath('/people');
+  revalidatePath('/transactions');
+  revalidatePath('/txn/v2');
   return true;
 }
 
 export async function voidTransactionAction(id: string): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'pvl_txn_001');
   // Sheet sync is handled inside service layer.
-  return await voidPBTransaction(pbId);
+  const success = await voidPBTransaction(pbId);
+  if (success) {
+    revalidatePath('/');
+    revalidatePath('/people');
+    revalidatePath('/transactions');
+    revalidatePath('/txn/v2');
+  }
+  return success;
 }
 
 export async function restoreTransaction(id: string): Promise<boolean> {

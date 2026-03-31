@@ -230,6 +230,15 @@ function renderCell(
   onAudit?: () => void,
 ) {
   const { totalBalance, currentCycleDebt } = useMemo(() => {
+    // 1. Priority: Use pre-calculated robust values from service layer if available
+    if (person.current_cycle_debt !== undefined && person.current_cycle_debt !== null) {
+      return {
+        totalBalance: person.balance ?? 0,
+        currentCycleDebt: person.current_cycle_debt
+      };
+    }
+
+    // 2. Logic for manual calculation (legacy/fallback)
     const stats = person.cycle_stats || [];
     const currentTag = person.current_cycle_label || "";
     
@@ -245,17 +254,17 @@ function renderCell(
         return sum + (net > 0 ? net : 0);
     }, 0);
 
-    // Calculate current cycle debt (Fresh Net)
+    // Calculate current cycle debt (Balance for current month tag only)
     const currentCycle = stats.find(c => c.tag === currentTag);
     const calculatedCurrent = currentCycle 
-        ? (currentCycle.baseLend || 0) - (currentCycle.repaid || 0) - (currentCycle.cashback || 0)
+        ? (currentCycle.baseLend || 0) - (currentCycle.repaid || 0) - (currentCycle.cashback || 0) 
         : 0;
 
     return { 
         totalBalance: calculatedTotal,
         currentCycleDebt: calculatedCurrent
     };
-  }, [person.cycle_stats, person.balance, person.current_cycle_label]);
+  }, [person.cycle_stats, person.balance, person.current_cycle_label, person.current_cycle_debt]);
   const { copied, setCopied } = copyState;
 
   switch (key) {
@@ -485,7 +494,7 @@ function renderCell(
       );
     }
     case "current_debt": case "base_lend":
-      if (totalBalance === 0) {
+      if (Math.abs(totalBalance) < 1) {
         return (
           <div className="flex items-center gap-1 p-1 px-2 rounded-full bg-emerald-50 border border-emerald-100 w-fit">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />

@@ -9,9 +9,11 @@
 export function isPocketBase400Or404(error: unknown): boolean {
   const err = error as any
   return err?.status === 400 || err?.status === 404 || 
+         err?.name === 'AbortError' ||
          err?.message?.includes('400') ||
          err?.message?.includes('404') ||
          err?.message?.includes('fetch failed') ||
+         err?.message?.includes('aborted') ||
          err?.code === 'UND_ERR_SOCKET' ||
          err?.cause?.code === 'UND_ERR_SOCKET'
 }
@@ -32,28 +34,22 @@ export function isPocketBaseAuthError(error: unknown): boolean {
  */
 export async function executeWithFallback<T>(
   pbQuery: () => Promise<T>,
-  sbQuery: () => Promise<T>,
+  _sbQuery: () => Promise<T>,
   context: string
 ): Promise<T> {
   try {
-    // console.log(`[source:PB] ${context}`)
     const result = await pbQuery()
     return result
   } catch (error) {
     if (isPocketBase400Or404(error)) {
       const status = (error as any)?.status || '?';
       console.warn(`[source:PB] ${context} failed (${status}): ${(error as any)?.message || String(error)}`)
-      console.log(`[source:SB] ${context} - falling back to Supabase`)
-      try {
-        const result = await sbQuery()
-        return result
-      } catch (sbError) {
-        console.error(`[source:SB] ${context} - fallback also failed`, sbError)
-        throw sbError
-      }
+      // Supabase fallback disabled - Project migrated to PocketBase
+      // console.log(`[source:SB] ${context} - fallback skipped`)
+      throw error
     }
     // Rethrow auth errors and other non-recoverable errors
-    console.error(`[source:PB] ${context} - non-recoverable error`, error)
+    console.error(`[source:PB] ${context} - error`, error)
     throw error
   }
 }

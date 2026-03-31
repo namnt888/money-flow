@@ -183,6 +183,7 @@ export type Person = {
   sheet_bank_info?: string | null;
   sheet_linked_bank_id?: string | null;
   sheet_show_qr_image?: boolean | null;
+  default_repayment_account_id?: string | null;
   debt_account_id?: string | null;
   balance?: number | null;
   is_owner?: boolean | null;

@@ -1,3 +1,4 @@
+import 'server-only'
 import { createHash } from 'crypto'
 
 type PocketBaseAuth = {
@@ -12,7 +13,7 @@ type PocketBaseListResponse<T> = {
   items: T[]
 }
 
-const POCKETBASE_URL = process.env.POCKETBASE_URL || 'https://api-db.reiwarden.io.vn'
+const POCKETBASE_URL = (process.env.POCKETBASE_URL || 'https://api-db.reiwarden.io.vn').replace(/\/+$/, '')
 const POCKETBASE_EMAIL = (process.env.POCKETBASE_DB_EMAIL || '').trim()
 const POCKETBASE_PASSWORD = (process.env.POCKETBASE_DB_PASSWORD || '').trim()
 
@@ -41,22 +42,52 @@ async function getAuthToken(): Promise<string> {
     throw new Error('Missing POCKETBASE_DB_EMAIL or POCKETBASE_DB_PASSWORD')
   }
 
-  const response = await fetch(`${POCKETBASE_URL}/api/collections/_superusers/auth-with-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identity: POCKETBASE_EMAIL, password: POCKETBASE_PASSWORD }),
-    cache: 'no-store',
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 30_000)
 
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`PocketBase auth failed: ${text}`)
+  // Try newer superuser endpoint first, fallback to older admin endpoint if 404
+  const authEndpoints = [
+    '/api/collections/_superusers/auth-with-password',
+    '/api/admins/auth-with-password'
+  ]
+
+  let lastError: unknown
+
+  try {
+    for (const endpoint of authEndpoints) {
+      try {
+        const response = await fetch(`${POCKETBASE_URL}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity: POCKETBASE_EMAIL, password: POCKETBASE_PASSWORD }),
+          cache: 'no-store',
+          signal: controller.signal,
+        })
+
+        if (response.ok) {
+          const payload = (await response.json()) as PocketBaseAuth
+          cachedToken = payload.token
+          cachedTokenExpiresAt = decodeTokenExpiry(payload.token)
+          return payload.token
+        }
+
+        const text = await response.text()
+        lastError = `PocketBase auth failed at ${endpoint}: [${response.status}] ${text}`
+        
+        // If not 404, the path is correct but auth simply failed (wrong credentials)
+        if (response.status !== 404) {
+          throw new Error(lastError as string)
+        }
+      } catch (err) {
+        if ((err as any)?.name === 'AbortError') throw err
+        lastError = err
+      }
+    }
+
+    throw new Error(String(lastError || 'PocketBase auth failed: All endpoints returned 404'))
+  } finally {
+    clearTimeout(timeoutId)
   }
-
-  const payload = (await response.json()) as PocketBaseAuth
-  cachedToken = payload.token
-  cachedTokenExpiresAt = decodeTokenExpiry(payload.token)
-  return payload.token
 }
 
 function buildQuery(params?: Record<string, string | number | boolean | undefined>): string {
@@ -80,7 +111,9 @@ export async function pocketbaseRequest<T>(
 ): Promise<T> {
   const token = await getAuthToken()
   const query = buildQuery(options?.params)
-  const url = `${POCKETBASE_URL}${path}${query}`
+  // Ensure we don't have double slashes if path starts with /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  const url = `${POCKETBASE_URL}${cleanPath}${query}`
   const method = options?.method || 'GET'
   if (method !== 'GET') {
     console.log(`[DB:PB] ${method} ${url}`)
@@ -89,27 +122,35 @@ export async function pocketbaseRequest<T>(
     }
   }
 
-  const response = await fetch(url, {
-    method: options?.method || 'GET',
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-    body: typeof options?.body === 'undefined' ? undefined : JSON.stringify(options.body),
-    cache: 'no-store',
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 30_000)
 
-  if (!response.ok) {
-    const text = await response.text()
-    console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
-    throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
+  try {
+    const response = await fetch(url, {
+      method: options?.method || 'GET',
+      headers: {
+        Authorization: token,
+        'Content-Type': 'application/json',
+      },
+      body: typeof options?.body === 'undefined' ? undefined : JSON.stringify(options.body),
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
+      throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
+    }
+
+    if (response.status === 204) {
+      return null as T
+    }
+
+    return (await response.json()) as T
+  } finally {
+    clearTimeout(timeoutId)
   }
-
-  if (response.status === 204) {
-    return null as T
-  }
-
-  return (await response.json()) as T
 }
 
 export async function pocketbaseList<T>(

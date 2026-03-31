@@ -1,6 +1,6 @@
-'use server';
+"use server";
+import 'server-only'
 
-import { createClient } from '@/lib/supabase/server';
 import { executeWithFallback, logSource } from '@/lib/pocketbase/fallback-helpers';
 import {
   pocketbaseList,
@@ -27,16 +27,7 @@ export async function getInstallments() {
       });
       return res.items.map(mapPBInstallment);
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('installments')
-        .select('*, original_transaction:transactions(account:accounts!transactions_account_id_fkey(id, name), person:people(name))')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Installment[];
-    },
+    async () => [],
     context
   );
 }
@@ -51,17 +42,7 @@ export async function getInstallmentById(id: string) {
       );
       return record ? mapPBInstallment(record) : null;
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('installments')
-        .select('*, original_transaction:transactions(account:accounts!transactions_account_id_fkey(id, name), person:people(name))')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data as Installment;
-    },
+    async () => null,
     context
   );
 }
@@ -77,17 +58,7 @@ export async function getActiveInstallments() {
       });
       return res.items.map(mapPBInstallment);
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('installments')
-        .select('*, original_transaction:transactions(account:accounts!transactions_account_id_fkey(id, name), person:people(name))')
-        .eq('status', 'active')
-        .order('next_due_date', { ascending: true });
-
-      if (error) throw error;
-      return data as Installment[];
-    },
+    async () => [],
     context
   );
 }
@@ -109,22 +80,7 @@ export async function getAccountsWithActiveInstallments() {
       });
       return Array.from(accountIds);
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('installments')
-        .select('original_transaction:transactions(account_id)')
-        .eq('status', 'active');
-
-      if (error) throw error;
-      const accountIds = new Set<string>();
-      data?.forEach((item: any) => {
-        if (item.original_transaction?.account_id) {
-          accountIds.add(item.original_transaction.account_id);
-        }
-      });
-      return Array.from(accountIds);
-    },
+    async () => [],
     context
   );
 }
@@ -140,17 +96,7 @@ export async function getCompletedInstallments() {
       });
       return res.items.map(mapPBInstallment);
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('installments')
-        .select('*, original_transaction:transactions(account:accounts!transactions_account_id_fkey(id, name))')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Installment[];
-    },
+    async () => [],
     context
   );
 }
@@ -165,18 +111,7 @@ export async function getPendingInstallmentTransactions() {
       });
       return res.items;
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('is_installment', true)
-        .is('installment_plan_id', null)
-        .order('occurred_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
+    async () => [],
     context
   );
 }
@@ -249,32 +184,7 @@ export async function checkAndAutoSettleInstallment(planId: string) {
       logSource('PB', `Auto-settled installment ${pbPlanId}`, { remaining, status: updates.status || plan.status });
       return { success: true, remaining, status: updates.status || plan.status };
     },
-    async () => {
-      const supabase: any = createClient();
-      const { data: plan, error: planError } = await supabase
-        .from('installments')
-        .select('*')
-        .eq('id', planId)
-        .single();
-      if (planError || !plan) return;
-
-      const { data: txns, error: txnError } = await supabase
-        .from('transactions')
-        .select('amount, type')
-        .eq('installment_plan_id', planId);
-      if (txnError) return;
-
-      let totalPaid = 0;
-      txns?.forEach((t: any) => { totalPaid += t.amount || 0; });
-
-      const remaining = plan.total_amount - totalPaid;
-      const updates: any = { remaining_amount: remaining };
-      if (remaining <= 1000 && plan.status === 'active') { updates.status = 'completed'; }
-      else if (remaining > 1000 && plan.status === 'completed') { updates.status = 'active'; }
-
-      await supabase.from('installments').update(updates).eq('id', planId);
-      return { success: true, remaining, status: updates.status || plan.status };
-    },
+    async () => null,
     context
   );
 }
@@ -334,32 +244,8 @@ export async function convertTransactionToInstallment(payload: {
 
     return installment;
   } catch (error) {
-    console.error(`[DB:PB] ${context} failed, falling back to Supabase`, error);
-    // Supabase Fallback
-    const supabase: any = createClient();
-    const { data: txn, error: txnError } = await supabase.from('transactions').select('*').eq('id', payload.transactionId).single();
-    if (txnError || !txn) throw new Error('Transaction not found in SB');
-
-    const totalAmount = Math.abs(txn.amount || 0);
-    const monthlyAmount = Math.ceil(totalAmount / payload.term);
-    const { data: installment, error: createError } = await supabase.from('installments').insert({
-      original_transaction_id: payload.transactionId,
-      name: payload.name || txn.note || 'Installment Plan',
-      total_amount: totalAmount,
-      conversion_fee: payload.fee,
-      term_months: payload.term,
-      monthly_amount: monthlyAmount,
-      start_date: new Date().toISOString(),
-      remaining_amount: totalAmount,
-      next_due_date: addMonths(new Date(), 1).toISOString(),
-      status: 'active',
-      type: payload.type,
-      debtor_id: payload.debtorId || null
-    }).select().single();
-
-    if (createError) throw createError;
-    await supabase.from('transactions').update({ installment_plan_id: installment.id }).eq('id', payload.transactionId);
-    return installment;
+    console.error(`[DB:PB] ${context} failed`, error);
+    throw error;
   }
 }
 
@@ -394,22 +280,8 @@ export async function createManualInstallment(payload: {
       debtor_id: payload.debtorId ? toPocketBaseId(payload.debtorId, 'people') : null
     });
   } catch (error) {
-    console.error(`[DB:PB] ${context} failed, falling back to Supabase`, error);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error: err } = await supabase.from('installments').insert({
-      owner_id: user?.id ?? SYSTEM_ACCOUNTS.DEFAULT_USER_ID,
-      name: payload.name,
-      total_amount: payload.totalAmount,
-      term_months: payload.term,
-      monthly_amount: Math.ceil(payload.totalAmount / payload.term),
-      remaining_amount: payload.totalAmount,
-      status: 'active',
-      type: payload.type,
-      start_date: payload.startDate || new Date().toISOString()
-    }).select().single();
-    if (err) throw err;
-    return data;
+    console.error(`[DB:PB] createManualInstallment failed`, error);
+    throw error;
   }
 }
 
@@ -435,21 +307,8 @@ export async function processMonthlyPayment(installmentId: string, amountPaid: n
     });
     return true;
   } catch (error) {
-    console.error(`[DB:PB] ${context} failed, falling back to Supabase`, error);
-    const supabase: any = createClient();
-    const { data: installment, error: fetchError } = await supabase.from('installments').select('*').eq('id', installmentId).single();
-    if (fetchError || !installment) throw new Error('Installment not found in SB');
-
-    const newRemaining = Math.max(0, installment.remaining_amount - amountPaid);
-    const newStatus = newRemaining <= 0 ? 'completed' : 'active';
-    const nextDueDate = newStatus === 'active' ? addMonths(new Date(installment.next_due_date || new Date()), 1).toISOString() : null;
-
-    await supabase.from('installments').update({
-      remaining_amount: newRemaining,
-      status: newStatus,
-      next_due_date: nextDueDate
-    }).eq('id', installmentId);
-    return true;
+    console.error(`[DB:PB] ${context} failed`, error);
+    throw error;
   }
 }
 
@@ -466,14 +325,8 @@ export async function settleEarly(installmentId: string) {
     });
     return true;
   } catch (error) {
-    console.error(`[DB:PB] ${context} failed, falling back to Supabase`, error);
-    const supabase: any = createClient();
-    await supabase.from('installments').update({
-      remaining_amount: 0,
-      status: 'settled_early',
-      next_due_date: null
-    }).eq('id', installmentId);
-    return true;
+    console.error(`[DB:PB] ${context} failed`, error);
+    throw error;
   }
 }
 
@@ -548,16 +401,7 @@ export async function getInstallmentRepayments(planId: string) {
       });
       return res.items;
     },
-    async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('id, occurred_at, amount, note, type, created_by, profiles:created_by ( name )')
-        .eq('installment_plan_id', planId)
-        .order('occurred_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    async () => [],
     context
   );
 }

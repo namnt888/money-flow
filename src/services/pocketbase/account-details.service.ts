@@ -30,7 +30,6 @@ import {
 } from "./server";
 import { resolvePocketBasePersonRecord } from "./people.service";
 import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
-import { createClient } from "@/lib/supabase/server";
 
 type PocketBaseRecord = Record<string, any>;
 
@@ -425,26 +424,7 @@ export async function getPocketBaseCategories(): Promise<Category[]> {
         .map(mapCategory)
         .sort((a, b) => a.name.localeCompare(b.name));
     },
-    async () => {
-      logSource("SB", "categories.list fallback");
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (error) throw error;
-      return (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        type: (item.type || "expense").toLowerCase() as Category["type"],
-        icon: item.icon,
-        image_url: item.image_url,
-        kind: item.kind,
-        is_archived: Boolean(item.is_archived),
-        slug: item.id,
-      }));
-    },
+    async () => [], // Supabase fallback removed
     "categories.list"
   );
 }
@@ -606,23 +586,7 @@ export async function getPocketBaseShops(): Promise<Shop[]> {
         .map(mapShop)
         .sort((a, b) => a.name.localeCompare(b.name));
     },
-    async () => {
-      logSource("SB", "shops.list fallback");
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("shops")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (error) throw error;
-      return (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        image_url: item.image_url,
-        default_category_id: item.default_category_id,
-        is_archived: Boolean(item.is_archived),
-      }));
-    },
+    async () => [], // Supabase fallback removed
     "shops.list"
   );
 }
@@ -1182,12 +1146,16 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
   let rawTransactions: PocketBaseRecord[] = [];
   const queryAttempts = [
     {
-      filter: `account_id='${pocketBaseAccountId}'`,
+      // Primary attempt: filter by cycle tag directly in DB for high performance
+      filter: resolvedCycleTag 
+        ? `account_id='${pocketBaseAccountId}' && (persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')`
+        : `account_id='${pocketBaseAccountId}'`,
       sort: "-date,id",
       fields:
         "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
     },
     {
+      // Fallback: search by date range if tag filter yields nothing or tag is missing
       filter: `account_id='${pocketBaseAccountId}'`,
       fields:
         "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",

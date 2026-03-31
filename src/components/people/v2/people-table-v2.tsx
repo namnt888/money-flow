@@ -10,6 +10,7 @@ import { ColumnCustomizer } from "@/components/moneyflow/column-customizer";
 import { Settings2, Minimize2, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CustomTooltip } from "@/components/ui/custom-tooltip";
 
 interface PeopleTableProps {
     people: Person[];
@@ -206,42 +207,65 @@ export function PeopleTableV2({
                                     <Minimize2 className="h-3.5 w-3.5" />
                                 </Button>
                             </th>
-                            {visibleCols.map((col, idx) => (
-                                <th
-                                    key={col.key}
-                                    style={{ width: columnWidths[col.key], minWidth: col.minWidth }}
-                                    className={cn(
-                                        "h-10 px-4 text-left align-middle font-bold text-slate-500 text-[12px] bg-slate-50/50 border-b border-slate-200",
-                                        col.frozen && "sticky left-0 z-20 bg-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
-                                        "cursor-pointer hover:bg-slate-100 transition-colors"
-                                    )}
-                                    onClick={() => handleSort(col.key)}
-                                >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-1.5">
-                                            <span>{col.label}</span>
-                                            {sortConfig?.key === col.key && (
-                                                sortConfig.direction === 'asc'
-                                                    ? <ChevronUp className="h-3 w-3 text-indigo-600" />
-                                                    : <ChevronDown className="h-3 w-3 text-indigo-600" />
+                            {visibleCols.map((col, idx) => {
+                                const isAllDebt = col.key === 'base_lend' || col.key === 'balance';
+                                const isCurrent = col.key === 'repayment' || col.key === 'cashback_total' || col.key === 'current_debt';
+                                
+                                const headerContent = (
+                                    <th
+                                        key={col.key}
+                                        style={{ width: columnWidths[col.key], minWidth: col.minWidth }}
+                                        className={cn(
+                                            "h-10 px-4 text-left align-middle font-bold text-slate-500 text-[12px] bg-slate-50/50 border-b border-slate-200",
+                                            col.frozen && "sticky left-0 z-20 bg-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
+                                            "cursor-pointer hover:bg-slate-100 transition-colors"
+                                        )}
+                                        onClick={() => handleSort(col.key)}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-1.5">
+                                                <span>{col.label}</span>
+                                                {sortConfig?.key === col.key && (
+                                                    sortConfig.direction === 'asc'
+                                                        ? <ChevronUp className="h-3 w-3 text-indigo-600" />
+                                                        : <ChevronDown className="h-3 w-3 text-indigo-600" />
+                                                )}
+                                            </div>
+                                            {col.key === 'action' && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 opacity-50 hover:opacity-100"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCustomizeOpen(true);
+                                                    }}
+                                                >
+                                                    <Settings2 className="h-3.5 w-3.5" />
+                                                </Button>
                                             )}
                                         </div>
-                                        {col.key === 'action' && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 opacity-50 hover:opacity-100"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setCustomizeOpen(true);
-                                                }}
-                                            >
-                                                <Settings2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </th>
-                            ))}
+                                    </th>
+                                );
+
+                                if (isAllDebt || isCurrent) {
+                                    const tooltipText = isAllDebt 
+                                        ? "Dư nợ Toàn Bộ (Hiện tại + Quá khứ)"
+                                        : "Tổng cộng trong Kỳ hiện tại (Current Month/Cycle Only)";
+                                    
+                                    return (
+                                        <CustomTooltip 
+                                            key={col.key} 
+                                            content={<div className="font-medium">{tooltipText}</div>}
+                                            side="top"
+                                        >
+                                            {headerContent}
+                                        </CustomTooltip>
+                                    );
+                                }
+
+                                return headerContent;
+                            })}
                         </tr>
                     </thead>
                     <tbody className="divide-y relative">

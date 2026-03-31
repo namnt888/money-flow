@@ -36,6 +36,7 @@ export type CreatePersonPayload = {
   sheet_bank_info?: string | null
   sheet_show_qr_image?: boolean | null
   sheet_full_img?: string | null
+  default_repayment_account_id?: string | null
 }
 
 export async function createPersonAction(payload: CreatePersonPayload) {
@@ -56,7 +57,8 @@ export async function createPersonAction(payload: CreatePersonPayload) {
       sheet_show_bank_account: payload.sheet_show_bank_account,
       sheet_bank_info: payload.sheet_bank_info?.trim(),
       sheet_show_qr_image: payload.sheet_show_qr_image,
-      sheet_full_img: payload.sheet_full_img?.trim()
+      sheet_full_img: payload.sheet_full_img?.trim(),
+      default_repayment_account_id: payload.default_repayment_account_id
     }
   )
 
@@ -94,6 +96,7 @@ export type UpdatePersonPayload = {
   is_group?: boolean
   group_parent_id?: string | null
   is_master_sheet_enabled?: boolean | null
+  default_repayment_account_id?: string | null
 }
 
 export async function updatePersonAction(

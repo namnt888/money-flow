@@ -103,6 +103,7 @@ export function PeopleSlideV2({
                 sheet_show_qr_image: values.sheet_show_qr_image,
                 sheet_full_img: values.sheet_full_img,
                 sheet_linked_bank_id: values.sheet_linked_bank_id,
+                default_repayment_account_id: values.default_repayment_account_id,
             });
             handleSuccess({ success: !!result });
         } else {
@@ -122,6 +123,7 @@ export function PeopleSlideV2({
                 sheet_bank_info: values.sheet_bank_info,
                 sheet_show_qr_image: values.sheet_show_qr_image,
                 sheet_full_img: values.sheet_full_img,
+                default_repayment_account_id: values.default_repayment_account_id,
             });
             handleSuccess({ ...res, person: { id: res.profileId, name: values.name, image_url: values.image_url } });
         }
@@ -197,6 +199,7 @@ export function PeopleSlideV2({
                                 sheet_bank_info: (person as any).sheet_bank_info ?? '',
                                 sheet_show_qr_image: (person as any).sheet_show_qr_image ?? false,
                                 sheet_full_img: (person as any).sheet_full_img ?? '',
+                                default_repayment_account_id: (person as any).default_repayment_account_id ?? '',
                             } : undefined}
                             accounts={accounts}
                             defaultTab={defaultTab}

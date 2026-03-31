@@ -159,6 +159,7 @@ export function CategoryShopSection({
     "credit_pay",
     "income",
     "repayment",
+    "invest",
   ].includes(transactionType);
 
   const isValidUrl = (url: string | null | undefined): url is string => {

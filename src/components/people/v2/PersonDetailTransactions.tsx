@@ -311,6 +311,7 @@ export function PersonDetailTransactions({
                                 setIsFilterActive(true);
                                 setDateMode('cycle');
                             }}
+                            statType="debt"
                         />
 
                         <div className="relative flex items-center gap-1.5 flex-1 max-w-sm">
