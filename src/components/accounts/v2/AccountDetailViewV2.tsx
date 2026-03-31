@@ -128,153 +128,175 @@ export function AccountDetailViewV2({
     }, [initialTransactions, account])
 
     const summary = useMemo(() => {
-        // Fallback to the latest year with data if none selected
         const fallbackYear = availableYears.length > 0 ? parseInt(availableYears[0]) : new Date().getFullYear();
-        const targetYear = selectedYear 
+        const targetYearInt = selectedYear 
             ? parseInt(selectedYear) 
             : (selectedCycle && selectedCycle !== 'all' 
                 ? parseInt(selectedCycle.split('-')[0]) 
                 : fallbackYear);
 
-        const categoryMap = new Map(categories.map(c => [c.id, c]))
+        const categoryMap = new Map(categories.map(c => [c.id, c]));
+        
+        // Effective Rate Calculation from current cycle (Backend rules)
+        let effectiveCycleRate = 0;
+        if (cashbackStats?.currentSpend && cashbackStats.currentSpend > 0) {
+            effectiveCycleRate = (cashbackStats.earnedSoFar || 0) / cashbackStats.currentSpend;
+        }
+        
+        // Use base rate as minimum fallback
+        const baseRate = account.cb_base_rate ? account.cb_base_rate / 100 : 0;
+        const estimateRate = effectiveCycleRate > 0 ? effectiveCycleRate : baseRate;
 
         let cardYearlyCashbackTotal = 0;
         let cardYearlyCashbackGivenTotal = 0;
         let yearEligibleSpendForEstimate = 0;
-        let yearDebtTotal = 0;
-        let debtTotal = 0;
-        let expensesTotal = 0;
         let cashbackTotal = 0;
-        let yearExpensesTotal = 0;
         let yearPureIncomeTotal = 0;
         let yearPureExpenseTotal = 0;
-        let yearLentTotal = 0;
-        let yearRepaidTotal = 0;
         let yearTotalInflow = 0;
         let yearTotalOutflow = 0;
-
+        let yearDebtTotal = 0;
+        let yearLentTotal = 0;
+        let yearRepaidTotal = 0;
+        
         initialTransactions.forEach(tx => {
             const status = String(tx?.status || '').toLowerCase()
             if (status === 'void') return
 
-            const rawDate = tx?.occurred_at || tx?.date || tx?.created_at
-            const date = rawDate ? new Date(rawDate) : null
+            const rawDate = tx?.occurred_at || tx?.date || tx?.created_at;
+            const date = rawDate ? new Date(rawDate) : null;
             if (!date || isNaN(date.getTime())) return;
-
-            const amount = Math.abs(Number(tx?.amount || 0))
-            const type = String(tx?.type || '').toLowerCase()
-            const year = date.getFullYear();
-
-            const note = String(tx?.notes || tx?.note || '').toLowerCase()
-            const isInitial = note.includes('create initial') ||
-                note.includes('số dư đầu') ||
-                note.includes('opening balance') ||
-                note.includes('rollover')
-
-            if (isInitial) return;
-
-            // Use resolveTransactionCycleTag to determine the year the transaction belongs to
-            const txCycleTag = resolveTransactionCycleTag(tx, account);
+            
+            const txCycleTag = resolveTransactionCycleTag(tx as any, account);
             const txYearMatch = txCycleTag && /^\d{4}-\d{2}$/.test(txCycleTag) 
                 ? parseInt(txCycleTag.split('-')[0]) 
-                : (date ? date.getFullYear() : null);
+                : date.getFullYear();
 
-            // Stats for target year
-            if (txYearMatch === targetYear) {
+            const amount = Math.abs(Number(tx?.amount || 0));
+            const type = String(tx?.type || '').toLowerCase();
+            const note = String(tx?.notes || tx?.note || '').toLowerCase();
+            if (note.includes('create initial') || note.includes('số dư đầu') || note.includes('opening balance') || note.includes('rollover')) return;
+
+            if (txYearMatch === targetYearInt) {
                 const isTargetAccount = tx.target_account_id === account.id || tx.to_account_id === account.id;
                 const isSourceAccount = tx.account_id === account.id || tx.source_account_id === account.id;
 
                 const isIncoming = (type === 'income') || (type === 'repayment') || (type === 'transfer' && isTargetAccount);
-                const isOutgoing = (type === 'expense') || (type === 'debt') || (type === 'transfer' && isSourceAccount);
+                const isOutgoing = (type === 'expense') || (type === 'service') || (type === 'debt') || (type === 'invest') || (type === 'transfer' && isSourceAccount);
 
-                // Pure Income/Expense (Earnings vs Spendings)
                 if (type === 'income') {
                     yearPureIncomeTotal += amount;
-                    // Actual Claimed Cashback
-                    const categoryId = tx?.category_id
-                    const category = categoryId ? categoryMap.get(categoryId) : null
-                    const categoryName = category?.name?.toLowerCase() || ''
-                    if (categoryName.includes('cashback') || categoryName.includes('hoàn tiền')) {
-                        cashbackTotal += amount
+                    const cat = tx.category_id ? categoryMap.get(tx.category_id) : null;
+                    const catName = (cat?.name || tx?.category_name || "").toLowerCase();
+                    if (catName.includes('cashback') || catName.includes('hoàn tiền')) {
+                        cashbackTotal += amount;
                     }
                 }
                 
-                if (type === 'expense') {
+                if (isOutgoing) {
                     yearPureExpenseTotal += amount;
-                    yearEligibleSpendForEstimate += amount
+                    yearEligibleSpendForEstimate += amount;
                     
-                    // Actual Shared/Given Cashback
-                    const sharedAmountField = Number(tx?.cashback_share_amount || 0)
-                    if (sharedAmountField > 0) {
-                        cardYearlyCashbackGivenTotal += sharedAmountField
+                    // Track how much spend actually has cashback records
+                    const entries = Array.isArray((tx as any).cashback_entries) ? (tx as any).cashback_entries : [];
+                    const txEarned = entries.reduce((s: number, e: any) => {
+                        if (e.mode === 'virtual' || e.mode === 'real') {
+                            return s + Math.abs(Number(e.amount || 0));
+                        }
+                        return s;
+                    }, 0);
+
+                    if (txEarned > 0) {
+                        cardYearlyCashbackTotal += txEarned;
                     } else {
-                        const categoryId = tx?.category_id
-                        const category = categoryId ? categoryMap.get(categoryId) : null
-                        const categoryName = category?.name?.toLowerCase() || ''
-                        if (categoryName.includes('shared') || categoryName.includes('chia sẻ cashback')) {
-                            cardYearlyCashbackGivenTotal += amount
+                        // For transactions without explicit entries, we use the estimation rate
+                        cardYearlyCashbackTotal += (amount * estimateRate);
+                    }
+                    
+                    // Sum actual shared amount
+                    const sharedAmt = Number(tx?.cashback_share_amount || 0);
+                    const sharedFixed = Number(tx?.cashback_share_fixed || 0);
+                    const sharedPercent = Number(tx?.cashback_share_percent || 0);
+                    
+                    if (sharedAmt > 0) {
+                        cardYearlyCashbackGivenTotal += sharedAmt;
+                    } else if (sharedFixed > 0 || sharedPercent > 0) {
+                        const rate = sharedPercent > 1 ? sharedPercent / 100 : sharedPercent;
+                        cardYearlyCashbackGivenTotal += (amount * rate) + sharedFixed;
+                    } else {
+                        const cat = tx.category_id ? categoryMap.get(tx.category_id) : null;
+                        const catName = (cat?.name || tx?.category_name || "").toLowerCase();
+                        if (catName.includes('shared') || catName.includes('chia sẻ cashback')) {
+                            cardYearlyCashbackGivenTotal += amount;
                         }
                     }
                 }
 
                 if (type === 'repayment') yearRepaidTotal += amount;
                 if (type === 'debt') yearLentTotal += amount;
-                
                 if (isIncoming) yearTotalInflow += amount;
                 if (isOutgoing) yearTotalOutflow += amount;
-
-                // Track all expenses for waiver
-                if (type === 'expense' || type === 'transfer') {
-                    if (isOutgoing) {
-                        yearExpensesTotal += amount;
-                        expensesTotal += amount;
-                    }
-                }
                 
-                if (type === 'debt') {
-                    debtTotal += amount;
-                    yearDebtTotal += amount;
-                }
-            } else {
-                // Lifetime stats (not for the target year)
-                if (type === 'debt') debtTotal += amount;
-                if (type === 'expense' || type === 'transfer') expensesTotal += amount;
+                if (type === 'debt') yearDebtTotal += amount;
             }
-        })
+        });
 
-        if (account.type === 'credit_card') {
-            const baseRate = (account.cb_base_rate || 0) / 100
-            const estimatedCashback = yearEligibleSpendForEstimate * baseRate
-            const maxBudget = account.cb_max_budget || null
+        // Apply global limit cap if defined
+        if (account.type === 'credit_card' && account.cb_max_budget && cardYearlyCashbackTotal > account.cb_max_budget) {
+            cardYearlyCashbackTotal = account.cb_max_budget;
+        }
 
-            if (maxBudget !== null && maxBudget > 0) {
-                cardYearlyCashbackTotal = Math.min(estimatedCashback, maxBudget)
-            } else {
-                cardYearlyCashbackTotal = estimatedCashback
-            }
+        // Safety check: Potential rewards should never be less than what we actually already received (income)
+        // unless there's a serious data recording mismatch. Usually Potential >= Actual Claimed.
+        if (cashbackTotal > cardYearlyCashbackTotal) {
+            cardYearlyCashbackTotal = cashbackTotal;
         }
 
         const netProfitYearly = cardYearlyCashbackTotal - cardYearlyCashbackGivenTotal;
 
+        if (initialTransactions.length > 0) {
+            console.log(`[CalcEngine] Target YEAR: ${targetYearInt}`, {
+                totalTx: initialTransactions.length,
+                yearTx: initialTransactions.filter(tx => {
+                    const status = String(tx?.status || '').toLowerCase();
+                    if (status === 'void') return false;
+                    const rawDate = tx?.occurred_at || tx?.date || tx?.created_at;
+                    const date = rawDate ? new Date(rawDate) : null;
+                    if (!date || isNaN(date.getTime())) return false;
+                    const txCycleTag = resolveTransactionCycleTag(tx as any, account);
+                    const txYearMatch = txCycleTag && /^\d{4}-\d{2}$/.test(txCycleTag) 
+                        ? parseInt(txCycleTag.split('-')[0]) 
+                        : date.getFullYear();
+                    return txYearMatch === targetYearInt;
+                }).length,
+                profit: netProfitYearly,
+                actual: cashbackTotal,
+                est: cardYearlyCashbackTotal
+            });
+        }
+
         return {
-            yearDebtTotal,
-            debtTotal,
-            expensesTotal,
+            netProfitYearly,
             cashbackTotal,
-            yearExpensesTotal,
-            yearPureIncomeTotal,
-            yearPureExpenseTotal,
-            yearLentTotal,
-            yearRepaidTotal,
-            targetYear,
             cardYearlyCashbackTotal,
             cardYearlyCashbackGivenTotal,
-            netProfitYearly,
+            yearPureIncomeTotal,
+            yearPureExpenseTotal,
             yearTotalInflow,
             yearTotalOutflow,
-            pendingCount: pendingItems.length + pendingRefundCount
-        }
-    }, [initialTransactions, categories, selectedYear, pendingItems.length, pendingRefundCount, selectedCycle, availableYears])
+            yearLentTotal,
+            yearRepaidTotal,
+            yearEligibleSpendForEstimate,
+            yearDebtTotal,
+            pendingCount: pendingItems.length + pendingRefundCount,
+            
+            // Legacy fields for type safety
+            debtTotal: yearDebtTotal,
+            expensesTotal: yearPureExpenseTotal,
+            yearExpensesTotal: yearPureExpenseTotal,
+            targetYear: targetYearInt
+        };
+    }, [initialTransactions, categories, selectedYear, pendingItems.length, pendingRefundCount, selectedCycle, availableYears, cashbackStats])
 
     useEffect(() => {
         document.title = `${account.name} History`

@@ -521,6 +521,11 @@ export const UnifiedTransactionTable = React.forwardRef<
         });
       }
 
+      // AUTO-SHOW Cycle Column ONLY in Person context by default
+      if (context === "person" && !hiddenColumns?.includes("cycle")) {
+        initial["cycle"] = true;
+      }
+
       return initial;
     });
     // ... (skipping some lines for brevity in replacing, but need to be careful with context)
@@ -562,8 +567,8 @@ export const UnifiedTransactionTable = React.forwardRef<
             });
           }
           
-          // AUTO-SHOW Cycle Column in Person/Account context if not explicitly hidden
-          if ((context === "person" || context === "account") && !hiddenColumns?.includes("cycle")) {
+          // AUTO-SHOW Cycle Column in Person context if not explicitly hidden
+          if (context === "person" && !hiddenColumns?.includes("cycle")) {
             parsedVis["cycle"] = true;
           }
 
@@ -2521,14 +2526,23 @@ export const UnifiedTransactionTable = React.forwardRef<
                             );
                           }
                           case "cycle": {
-                            const txnAccount = accounts.find((a) => a.id === txn.account_id);
+                            const hasPerson = !!txn.person_id || !!(txn as any).person_pocketbase_id;
+                            
+                            // ONLY show if it's a person details page OR if the transaction path involves a person
+                            const isRelevant = context === "person" || hasPerson;
+                            
+                            if (!isRelevant || !txn.tag) {
+                              return null;
+                            }
+
                             return (
                               <div className="flex items-center justify-center w-full">
                                 <CycleBadge
-                                  account={txnAccount}
+                                  account={accounts.find((a) => a.id === txn.account_id)}
                                   cycleTag={txn.tag}
                                   txnDate={txn.occurred_at || txn.created_at || new Date()}
-                                  personContext={!!txn.person_id || context === 'person'}
+                                  personContext={true} // Debt Cycle column always uses person-style (tag) badges
+                                  compact
                                 />
                               </div>
                             );

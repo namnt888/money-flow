@@ -24,732 +24,270 @@ import {
 } from "@/services/pocketbase/people.service";
 import { toYYYYMMFromDate, normalizeMonthTag } from "@/lib/month-tag";
 import type {
-  MonthlyDebtSummary,
   Person as MoneyflowPerson,
   PersonCycleSheet,
+  PersonCycleStats,
 } from "@/types/moneyflow.types";
 
 type Person = MoneyflowPerson & { email?: string | null };
 
 /**
  * Revalidate paths related to a person
- * @param personId PocketBase ID or legacy UUID
  */
 function revalidatePersonPaths(personId: string | null | undefined) {
   if (!personId) return;
   revalidatePath("/people");
   revalidatePath(`/people/${personId}`);
-  try {
-    const pbId = toPocketBaseId(personId);
-    if (pbId && pbId !== personId) {
-      revalidatePath(`/people/${pbId}`);
-    }
-  } catch (e) {
-    /* ignore */
-  }
-}
-
-function calculateFinalPrice(row: any): number {
-  if (row.final_price !== undefined && row.final_price !== null) {
-    const parsed = Number(row.final_price);
-    if (!isNaN(parsed)) return Math.abs(parsed);
-  }
-  const baseAmount = Math.abs(Number(row.amount || 0));
-  const percentVal = Number(row.cashback_share_percent ?? 0);
-  const fixedVal = Number(row.cashback_share_fixed ?? 0);
-  const normalizedPercent = percentVal > 1 ? percentVal / 100 : percentVal;
-  const cashback = baseAmount * normalizedPercent + fixedVal;
-  return baseAmount - cashback;
 }
 
 /**
- * Get all people with their calculated debt stats
+ * Helper to calculate final price
+ */
+function calculateFinalPrice(row: any): number {
+  const rawAmount = Math.abs(Number(row.amount ?? 0));
+  const percentVal = Number(row.cashback_share_percent ?? 0);
+  const fixedVal = Number(row.cashback_share_fixed ?? 0);
+  const normalizedPercent = (percentVal > 1 ? percentVal / 100 : percentVal);
+  const safePercent = isNaN(normalizedPercent) ? 0 : normalizedPercent;
+  const cashbackFromPercent = rawAmount * safePercent;
+  return rawAmount - (cashbackFromPercent + fixedVal);
+}
+
+/**
+ * SOURCE OF TRUTH FILTER: Matches debt.service.ts
+ */
+function isPersonalDebt(txn: any): boolean {
+  const note = (txn.note || "").toLowerCase();
+  const type = (txn.type || "").toLowerCase();
+  if (note.startsWith("bank ") || note.startsWith("bank_")) {
+    if (type === "repayment" || type === "debt") return true;
+    const isPersonal = note.includes("điện") || note.includes("nước") || note.includes("s26") || note.includes("đơn") || note.includes("wifi") || note.includes("rác") || note.includes("icloud") || note.includes("youtube") || note.includes("derma") || note.includes("zakka");
+    if (isPersonal) return true;
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Get all people with their calculated debt stats (Reconciliation Engine v9)
+ * Strategy: 
+ * 1. Calculate RAW balance for ALL months (Present + Past).
+ * 2. Calculate SYNC balance for synced months.
+ * 3. FOR EACH MONTH:
+ *    - If Synced as 'Settled' (bal < 1000), use 0.
+ *    - Else use MAX(Raw, Sync) for that month's balance contribution.
  */
 export async function getPeople(options?: {
   includeArchived?: boolean;
 }): Promise<Person[]> {
-  console.log("[DB:PB] people.getBatch (Optimized)");
-
   const includeArchived = Boolean(options?.includeArchived);
 
   try {
-    // 1. Fetch People from PocketBase
     const people = await getPocketBasePeople();
-    const activePeople = includeArchived
-      ? people
-      : people.filter((p) => !p.is_archived);
-    const personIds = activePeople.map((p) => p.id);
-
+    const activePeople = includeArchived ? people : people.filter((p) => !p.is_archived);
+    const personIds = activePeople.map((p) => p.id as string);
     if (personIds.length === 0) return [];
 
     const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthTag = toYYYYMMFromDate(now);
 
-    // 2. Fetch Debt Accounts for mapping
-    const debtAccountsResponse = await pocketbaseList<any>("accounts", {
-      filter: `type='debt' && is_active=true`,
-      perPage: 200,
-    });
-    const debtAccounts = debtAccountsResponse.items;
+    // 1. Setup Maps
+    const debtAccountsRes = await pocketbaseList<any>("accounts", { filter: `type='debt' && is_active=true`, perPage: 500 });
     const debtAccountToPersonMap = new Map<string, string>();
-    debtAccounts.forEach((acc) => {
-      if (acc.owner_id) debtAccountToPersonMap.set(acc.id, acc.owner_id);
+    debtAccountsRes.items.forEach((acc) => { if (acc.owner_id) debtAccountToPersonMap.set(acc.id, acc.owner_id as string); });
+
+    const personCycleData = new Map<string, Map<string, { raw: any, sync: any }>>();
+    personIds.forEach(id => personCycleData.set(id, new Map()));
+
+    // 2. Fetch Sync Summaries
+    const syncedCycles = await pocketbaseList<any>("people_debt_cycles", { perPage: 2000 });
+    syncedCycles.items.forEach((c) => {
+      const pId = c.person_id as string;
+      if (!pId || !personIds.includes(pId)) return;
+      const tag = normalizeMonthTag(c.cycle_tag || c.tag_name || c.tag) || "";
+      if (!tag) return;
+
+      const cycles = personCycleData.get(pId)!;
+      const current = cycles.get(tag) || { raw: null, sync: null };
+      const initial = Number(c.initial_amount || c.base_lend || 0);
+      const back = Number(c.back_amount || c.cashback || 0);
+      const repay = Number(c.repay_net || c.repay || 0);
+      current.sync = { initial, back, repay, balance: initial - back - repay, status: c.status };
+      cycles.set(tag, current);
     });
 
-    // 3. Fetch Synced Cycles (Optimization: Use pre-calculated stats)
-    const syncedCyclesResponse = await pocketbaseList<any>("people_debt_cycles", {
-        perPage: 2000,
-    });
-    const syncedCycles = syncedCyclesResponse.items;
-    
-    // Track synced months per person to skip raw txns for those months
-    const personSyncedMonths = new Map<string, Set<string>>();
-    const personStats = new Map<string, any>();
-    const personCycleStats = new Map<string, Map<string, any>>();
-
-    // Process Synced Cycles with deduplication to avoid double counting
-    // Sort by updated DESC to ensure we pick the LATEST sync for each month
-    const sortedCycles = [...syncedCycles].sort((a, b) => 
-      new Date(b.updated || b.last_synced_at || 0).getTime() - 
-      new Date(a.updated || a.last_synced_at || 0).getTime()
-    );
-
-    const processedTags = new Map<string, Set<string>>();
-    
-    sortedCycles.forEach((c) => {
-        if (!c.person_id) return;
-        const tag = c.cycle_tag || c.tag_name || c.tag;
-        if (!tag) return;
-
-        if (!processedTags.has(c.person_id)) processedTags.set(c.person_id, new Set());
-        const tags = processedTags.get(c.person_id)!;
-        if (tags.has(tag)) return; // Skip duplicates, already have LATEST
-        tags.add(tag);
-
-        if (!personStats.has(c.person_id)) {
-            personStats.set(c.person_id, { baseLend: 0, cashback: 0, repaid: 0, outstandingDebt: 0, currentCycleDebt: 0, totalBalance: 0, syncedCycleCount: 0 });
-            personCycleStats.set(c.person_id, new Map());
-        }
-        if (!personSyncedMonths.has(c.person_id)) personSyncedMonths.set(c.person_id, new Set());
-        personSyncedMonths.get(c.person_id)!.add(normalizeMonthTag(tag) || tag);
-
-        const stats = personStats.get(c.person_id)!;
-        const isCurrentCycle = tag === currentMonthTag;
-        
-        const initial = Number(c.initial_amount || c.base_lend || 0);
-        const back = Number(c.back_amount || c.cashback || 0);
-        const repay = Number(c.repay_net || c.repay || 0);
-        const balance = initial - back - repay;
-
-        stats.baseLend += initial;
-        stats.cashback += back;
-        stats.repaid += repay;
-        stats.totalBalance += balance;
-        stats.syncedCycleCount++;
-
-        personCycleStats.get(c.person_id)!.set(tag, {
-            balance,
-            baseLend: initial,
-            cashback: back,
-            repaid: repay,
-            netLend: initial - back
-        });
-
-        if (isCurrentCycle) {
-            stats.currentCycleDebt += balance;
-            stats.currentCycleRepaid = (stats.currentCycleRepaid || 0) + repay;
-            stats.currentCycleCashback = (stats.currentCycleCashback || 0) + back;
-        }
-    });
-
-    // 4. Fetch transactions for UNSYNCED months (usually just recent ones)
-    // Increase limit to 10000 to ensure we don't miss history for un-synced members
-    const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
-      filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer')`,
+    // 3. Fetch Deep Raw Transactions
+    const txnsRes = await pocketbaseList<any>("pvl_txn_001", {
+      filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void'`,
       perPage: 10000, 
       sort: "-date",
     });
-    const recentTxns = txnsResponse.items;
 
-
-    recentTxns.forEach((txn: any) => {
-      let personId: string | null = null;
-      if (txn.person_id && personIds.includes(txn.person_id)) {
-        personId = txn.person_id;
-      } else {
+    txnsRes.items.forEach((txn: any) => {
+      let pId: string | null = null;
+      if (txn.person_id && personIds.includes(txn.person_id)) pId = txn.person_id;
+      else {
         const accId = txn.account_id || txn.to_account_id || txn.target_account_id;
-        if (accId && debtAccountToPersonMap.has(accId)) {
-          personId = debtAccountToPersonMap.get(accId) || null;
-        }
+        if (accId && debtAccountToPersonMap.has(accId)) pId = debtAccountToPersonMap.get(accId) || null;
       }
-      if (!personId) return;
+      if (!pId || !isPersonalDebt(txn)) return;
 
-      const tag = txn.debt_cycle_tag || txn.tag || txn.metadata?.tag || "";
-      const normalizedTag = normalizeMonthTag(tag) || tag;
-      
-      // SKIP synced months
-      if (personSyncedMonths.get(personId)?.has(normalizedTag)) return;
+      const tag = normalizeMonthTag(txn.debt_cycle_tag || txn.tag || txn.metadata?.tag) || "";
+      if (!tag) return;
 
-      if (!personStats.has(personId)) {
-        personStats.set(personId, { baseLend: 0, cashback: 0, repaid: 0, totalBalance: 0, currentCycleDebt: 0, currentCycleRepaid: 0, currentCycleCashback: 0, syncedCycleCount: 0 });
-        personCycleStats.set(personId, new Map());
-      }
+      const cycles = personCycleData.get(pId)!;
+      const current = cycles.get(tag) || { raw: { baseLend: 0, cashback: 0, repaid: 0, balance: 0 }, sync: null };
+      if (!current.raw) current.raw = { baseLend: 0, cashback: 0, repaid: 0, balance: 0 };
       
-      const stats = personStats.get(personId)!;
-      const cycleStatsMap = personCycleStats.get(personId)!;
       const amount = Math.abs(Number(txn.amount || 0));
-
-      // CLASSIFICATION (Type-based)
       const type = String(txn.type || "").toLowerCase();
       const note = (txn.note || "").toLowerCase();
-      
       const isRollover = note.includes("rollover");
-      // Use standard classification matches debt.service.ts
-      const isRepayment = type === "repayment" || type === "income";
-      const isCashback = type === "cashback" || (type === "expense" && (note.includes("cashback") || note.includes("refund")));
+      const isRepayment = type === "repayment" || (type === "income" && !note.includes("cashback") && !note.includes("refund"));
+      const isCashback = type === "cashback" || (type === "income" && (note.includes("cashback") || note.includes("refund"))) || (type === "expense" && (note.includes("refund") || note.includes("cashback")));
       const isSpend = (type === "expense" || type === "debt") && !isRollover && !isCashback && !isRepayment;
 
-      const isCurrentCycle = normalizedTag === currentMonthTag || (txn.date && new Date(txn.date) >= currentMonthStart);
-      
       const finalPrice = calculateFinalPrice(txn);
       const cbValue = amount - finalPrice;
 
-      if (isSpend || isRollover) {
-        stats.baseLend += amount;
-        stats.cashback += cbValue;
-        if (isCurrentCycle) {
-          stats.currentCycleCashback = (stats.currentCycleCashback || 0) + cbValue;
-          stats.currentCycleDebt += finalPrice;
-        }
-      } else if (isCashback) {
-        stats.cashback += amount;
-        if (isCurrentCycle) {
-          stats.currentCycleCashback = (stats.currentCycleCashback || 0) + amount;
-        }
-      } else if (isRepayment) {
-        stats.repaid += amount;
-        if (isCurrentCycle) {
-          stats.currentCycleRepaid = (stats.currentCycleRepaid || 0) + amount;
-        }
-      }
-      
-      // DEBT - CASHBACK - REPAY = BALANCE (Nam is owed this amount)
-      const effectiveLend = isSpend ? finalPrice : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
-      stats.totalBalance += effectiveLend;
+      if (isSpend || isRollover) { current.raw.baseLend += amount; current.raw.cashback += cbValue; }
+      else if (isCashback) current.raw.cashback += amount;
+      else if (isRepayment) current.raw.repaid += amount;
 
-      if (normalizedTag) {
-        const cs = cycleStatsMap.get(normalizedTag) || { balance: 0, baseLend: 0, cashback: 0, repaid: 0, netLend: 0 };
-        if (isSpend || isRollover) { 
-          cs.baseLend += amount; 
-          cs.cashback += cbValue; 
-          cs.netLend += isSpend ? finalPrice : amount; 
-        }
-        else if (isCashback) cs.cashback += amount;
-        else if (isRepayment) cs.repaid += amount;
-        cs.balance += effectiveLend;
-        cycleStatsMap.set(normalizedTag, cs);
-      }
+      const effective = isSpend ? finalPrice : (isCashback || isRepayment ? -amount : (isRollover ? amount : 0));
+      current.raw.balance += effective;
+      cycles.set(tag, current);
     });
 
+    // 4. Transform to Final Output
     return activePeople.map((person) => {
-      const stats = personStats.get(person.id);
-      const cycleStatsMap = personCycleStats.get(person.id);
-      const debtAccount = debtAccounts.find(a => a.owner_id === person.id);
+      const cycles = personCycleData.get(person.id)!;
+      const stats = { 
+        totalBalance: 0, totalBaseDebt: 0, totalCashback: 0, totalRepaid: 0,
+        currentBaseLend: 0, currentCashback: 0, currentRepay: 0, currentBalance: 0
+      };
 
-      let pastDueCount = 0;
-      if (cycleStatsMap) {
-        cycleStatsMap.forEach((cs, tag) => {
-          if (tag < currentMonthTag && cs.balance > 500) pastDueCount++;
-        });
-      }
+      const cycleStats: PersonCycleStats[] = [];
 
-      const cycle_stats = Array.from(cycleStatsMap?.entries() || [])
-        .map(([tag, cs]) => ({
+      Array.from(cycles.entries()).forEach(([tag, data]) => {
+        const isCurrent = tag === currentMonthTag;
+        let initial = 0, back = 0, repay = 0, balance = 0;
+        const raw = data.raw;
+        const sync = data.sync;
+
+        if (sync?.status === 'settled' || (sync && sync.balance < 1000)) {
+          initial = sync?.initial || raw?.baseLend || 0;
+          back = sync?.back || raw?.cashback || 0;
+          repay = initial - back;
+          balance = 0;
+        } else {
+          const rawBal = raw?.balance || 0;
+          const syncBal = sync?.balance || 0;
+          if (rawBal > syncBal) {
+            initial = raw.baseLend; back = raw.cashback; repay = raw.repaid; balance = rawBal;
+          } else if (sync) {
+            initial = sync.initial; back = sync.back; repay = sync.repay; balance = syncBal;
+          }
+        }
+
+        stats.totalBalance += balance;
+        stats.totalBaseDebt += initial;
+        stats.totalCashback += back;
+        stats.totalRepaid += repay;
+
+        if (isCurrent) {
+          stats.currentBaseLend = initial; stats.currentCashback = back; stats.currentRepay = repay; stats.currentBalance = balance;
+        }
+
+        cycleStats.push({
           tag,
-          baseLend: Math.round(cs.baseLend),
-          cashback: Math.round(cs.cashback),
-          repaid: Math.round(cs.repaid),
-          netLend: Math.round(cs.netLend),
-          remains: Math.round(cs.balance),
-        }))
-        .sort((a, b) => (b.tag || '').localeCompare(a.tag || ''));
+          baseLend: Math.round(initial),
+          cashback: Math.round(back),
+          repaid: Math.round(repay),
+          netLend: Math.round(initial - back),
+          remains: Math.round(balance)
+        });
+      });
 
-      // Life-time Balance Calculation
-      const totalBalance = Math.round((stats?.baseLend ?? 0) - (stats?.cashback ?? 0) - (stats?.repaid ?? 0));
-      
-      const currentMonthNet = Math.round(stats?.currentCycleDebt ?? 0);
-      const currentMonthRepaid = Math.round(stats?.currentCycleRepaid ?? 0);
-      const currentMonthCashback = Math.round(stats?.currentCycleCashback ?? 0);
-
-      const currentCycleStats = cycleStatsMap?.get(currentMonthTag);
+      const displayBalance = Math.abs(stats.totalBalance) < 1000 ? 0 : stats.totalBalance;
 
       return {
         ...person,
-        debt_account_id: debtAccount?.id ?? null,
-        current_debt_balance: totalBalance,
-        balance: totalBalance,
-        current_cycle_debt: currentMonthNet,
-        outstanding_debt: totalBalance,
-        all_debt_remains: totalBalance,
-        total_base_debt: Math.round(stats?.baseLend ?? 0),
-        total_cashback: Math.round(stats?.cashback ?? 0), 
-        total_repaid: Math.round(stats?.repaid ?? 0), 
-        current_cycle_base_lend: Math.round(currentCycleStats?.baseLend ?? 0),
-        current_cycle_cashback: currentMonthCashback,
-        current_cycle_repaid: currentMonthRepaid,
+        debt_account_id: debtAccountsRes.items.find(a => a.owner_id === person.id)?.id || null,
+        current_debt_balance: displayBalance,
+        balance: displayBalance,
+        current_cycle_debt: Math.round(stats.currentBalance),
+        outstanding_debt: displayBalance,
+        all_debt_remains: displayBalance,
+        total_base_debt: Math.round(stats.totalBaseDebt),
+        total_cashback: Math.round(stats.totalCashback), 
+        total_repaid: Math.round(stats.totalRepaid),
+        current_cycle_base_lend: Math.round(stats.currentBaseLend),
+        current_cycle_cashback: Math.round(stats.currentCashback),
+        current_cycle_repaid: Math.round(stats.currentRepay),
         current_cycle_label: currentMonthTag,
-        past_due_count: pastDueCount,
-        cycle_stats: cycle_stats,
-        synced_cycle_count: stats?.syncedCycleCount || 0,
+        cycle_stats: cycleStats.sort((a, b) => (b.tag || '').localeCompare(a.tag || '')),
+        synced_cycle_count: Array.from(cycles.values()).filter(v => v.sync).length
       };
     });
-  } catch (error) {
-    console.error("[DB:PB] getPeople failed:", error);
-    return [];
-  }
+  } catch (err) { console.error("[PB] getPeople Error:", err); return []; }
 }
 
-/**
- * Sync person cycle sheets from PocketBase
- */
-export async function getPersonCycleSheets(
-  personId: string,
-): Promise<PersonCycleSheet[]> {
-  const pbId = toPocketBaseId(personId);
-  try {
-    const response = await pocketbaseList<any>("person_cycle_sheets", {
-      filter: `person_id='${pbId}'`,
-      sort: "-cycle_tag",
-    });
-    return response.items.map((item) => ({
-      id: item.id,
-      person_id: item.person_id,
-      cycle_tag: item.cycle_tag,
-      sheet_id: item.sheet_id,
-      sheet_url: item.sheet_url,
-      created_at: item.created,
-      updated_at: item.updated,
-    }));
-  } catch (error) {
-    console.error("[DB:PB] getPersonCycleSheets failed:", error);
-    return [];
-  }
-}
-
-/**
- * Get detailed person info including memberships and debt analysis
- */
 export async function getPersonWithSubs(id: string): Promise<Person | null> {
-  if (!id || id === "details") return null;
-  console.log("[DB:PB] people.getWithSubs", { id });
-
-  try {
-    // 1. Get Person Record
-    const personRecord = (await resolvePocketBasePersonRecord(id)) as any;
-    if (!personRecord) return null;
-
-    const pbId = personRecord.id;
-
-    // 2. Fetch Memberships from PB with SB Fallback
-    const responseMembers = await executeWithFallback(
-      async () => {
-        logSource("PB", "people.memberships", { pbId });
-        const res = await pocketbaseList<any>("service_members", {
-          filter: `person_id='${pbId}'`,
-          expand: "service_id",
-        });
-        return res.items;
-      },
-      async () => {
-        logSource("SB", "people.memberships fallback", { id });
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("service_members")
-          .select("service_id")
-          .eq("person_id", id);
-        return data || [];
-      },
-      "people.memberships",
-    );
-
-    const subscription_details = responseMembers.map((m: any) => ({
-      id: m.service_id,
-      name: m.expand?.service_id?.name || "Unknown",
-      slots: m.slots || 1,
-      image_url: m.expand?.service_id?.image_url || null,
-    }));
-
-    const subscription_ids = responseMembers.map((m: any) => m.service_id);
-
-    // 3. Fetch Debt Account
-    const debtAccountResponse = await pocketbaseList<any>("accounts", {
-      filter: `owner_id='${pbId}' && type='debt'`,
-      perPage: 1,
-    });
-    const debtAccount = debtAccountResponse.items[0];
-    const debtAccountId = debtAccount?.id;
-
-    // 4. Calculate Balance from Transactions
-    let balance = 0;
-    if (debtAccountId) {
-      const txnsResponse = await pocketbaseList<any>("pvl_txn_001", {
-        filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}') && status!='void'`,
-        perPage: 1000,
-      });
-
-      txnsResponse.items.forEach((txn) => {
-        const amount = calculateFinalPrice(txn);
-        const toAccId = txn.to_account_id || txn.target_account_id;
-        if (txn.account_id === debtAccountId) {
-          balance += amount; // Outflow
-        }
-        if (toAccId === debtAccountId) {
-          balance -= amount; // Inflow (Repayment)
-        }
-      });
-    }
-
-    // 5. Fetch Recent Activity (Transaction History)
-    const filterParts = [`person_id='${pbId}'`];
-    if (debtAccountId) {
-      filterParts.push(`account_id='${debtAccountId}'`, `to_account_id='${debtAccountId}'`);
-    }
-    const recentTxnsResponse = await pocketbaseList<any>("pvl_txn_001", {
-      filter: `(${filterParts.join(" || ")}) && status!='void'`,
-      sort: "-date",
-      perPage: 10,
-    });
-    const recentTxns = recentTxnsResponse.items;
-
-    // 6. Detailed Debt Analysis (Matched with getPeople logic)
-    let totalBaseLend = 0;
-    let totalCashback = 0;
-    let totalRepaid = 0;
-    let currentCycleDebt = 0;
-    let outstandingDebt = 0;
-
-    let currentCycleBaseLend = 0;
-    let currentCycleCashback = 0;
-    let currentCycleRepaid = 0;
-    let currentCycleNetLend = 0;
-
-    const now = new Date();
-    const currentMonthTag = toYYYYMMFromDate(now);
-
-    if (debtAccountId) {
-      const allStatsTxns = await pocketbaseList<any>("pvl_txn_001", {
-        filter: `(account_id='${debtAccountId}' || to_account_id='${debtAccountId}' || person_id='${pbId}') && status!='void'`,
-        perPage: 1000,
-      });
-
-      allStatsTxns.items.forEach((txn) => {
-        const type = String(txn.type || "").toLowerCase();
-        const baseTxnAmount = Math.abs(Number(txn.amount || 0));
-
-        const pVal = Number(
-          txn.cashback_share_percent ??
-            txn.metadata?.cashback_share_percent ??
-            0,
-        );
-        const fVal = Number(
-          txn.cashback_share_fixed ?? txn.metadata?.cashback_share_fixed ?? 0,
-        );
-        const normP = pVal > 1 ? pVal / 100 : pVal;
-        const cb = baseTxnAmount * normP + fVal;
-        const net = baseTxnAmount - cb;
-
-        const tag =
-          txn.debt_cycle_tag ||
-          txn.tag ||
-          txn.persisted_cycle_tag ||
-          txn.metadata?.tag ||
-          "";
-        const normalizedTag = normalizeMonthTag(tag) ?? tag;
-        const isCurrent = normalizedTag === currentMonthTag;
-
-        // --- NEW IMPROVED CLASSIFICATION LOGIC (UNIFIED & GLOSSARY COMPLIANT) ---
-        const note = (txn.note || "").toLowerCase();
-        
-        const isRollover = note.includes("rollover");
-        const isCashback = type === "cashback" || note.includes("cashback") || note.includes("refund") || (txn.category_name && txn.category_name.toLowerCase().includes("cashback"));
-        // Unicode \u1ea3 = 'ả' as in "trả"
-        const isRepayment = ["repayment", "repay"].includes(type) || (type === "income" && (note.includes("tr\u1ea3") || note.includes("repay"))) && !isCashback;
-        const isSpend = (type === "expense" || type === "debt") && !isRollover && !isCashback && !isRepayment;
-
-        const effective = isSpend ? net : (isCashback || isRepayment ? -baseTxnAmount : (isRollover ? baseTxnAmount : 0));
-
-        if (isSpend || isRollover) {
-          totalBaseLend += baseTxnAmount;
-          if (isSpend) {
-            totalCashback += cb;
-          }
-          if (isCurrent) {
-            currentCycleBaseLend += baseTxnAmount;
-            if (isSpend) {
-              currentCycleCashback += cb;
-              currentCycleNetLend += net;
-            } else if (isRollover) {
-              currentCycleNetLend += baseTxnAmount;
-            }
-          }
-        } else if (isCashback) {
-          totalCashback += baseTxnAmount;
-          if (isCurrent) {
-            currentCycleCashback += baseTxnAmount;
-          }
-        } else if (isRepayment) {
-          totalRepaid += baseTxnAmount;
-          if (isCurrent) {
-            currentCycleRepaid += baseTxnAmount;
-          }
-        } 
-        
-        if (isCurrent) {
-          currentCycleDebt += effective;
-        } else {
-          outstandingDebt += effective;
-        }
-      });
-    }
-
-    return {
-      id: personRecord.id,
-      pocketbase_id: personRecord.id,
-      name: personRecord.name,
-      image_url: personRecord.image_url ?? null,
-      sheet_link: personRecord.sheet_link ?? null,
-      google_sheet_url: personRecord.google_sheet_url ?? null,
-      sheet_full_img: personRecord.sheet_full_img ?? null,
-      sheet_show_bank_account: personRecord.sheet_show_bank_account ?? false,
-      sheet_bank_info: personRecord.sheet_bank_info ?? null,
-      sheet_linked_bank_id: personRecord.sheet_linked_bank_id ?? null,
-      sheet_show_qr_image: personRecord.sheet_show_qr_image ?? false,
-      is_master_sheet_enabled: personRecord.is_master_sheet_enabled ?? false,
-      is_favorite: personRecord.is_favorite ?? false,
-      is_owner: personRecord.is_owner ?? false,
-      is_archived: personRecord.is_archived ?? false,
-      subscription_ids,
-      subscription_details,
-      subscription_count: subscription_details.length,
-      debt_account_id: debtAccountId ?? null,
-      balance: totalBaseLend - totalCashback - totalRepaid,
-      total_base_debt: totalBaseLend,
-      total_cashback: totalCashback,
-      total_repaid: totalRepaid,
-      total_net_debt: totalBaseLend - totalCashback,
-      current_cycle_base_lend: currentCycleBaseLend,
-      current_cycle_cashback: currentCycleCashback,
-      current_cycle_repaid: currentCycleRepaid,
-      current_cycle_net_lend: currentCycleNetLend,
-      current_cycle_debt: currentCycleDebt,
-      outstanding_debt: outstandingDebt,
-      current_debt_balance: totalBaseLend - totalCashback - totalRepaid,
-      current_cycle_label: currentMonthTag,
-      // Metadata for details UI
-      metadata: {
-        recent_transactions: recentTxns,
-      },
-    } as any;
-  } catch (error) {
-    console.error("[DB:PB] getPersonWithSubs failed:", error);
-    return null;
-  }
+  const people = await getPeople({ includeArchived: true });
+  return people.find(p => p.id === id) || null;
 }
 
-/**
- * Create a new person
- */
-export async function createPerson(
-  name: string,
-  image_url?: string | null,
-  sheet_link?: string | null,
-  subscriptionIds?: string[],
-  options: any = {},
-) {
-  console.log("[DB:PB] people.create", { name, ...options });
+export async function createPerson(name: string, image_url?: string | null, sheet_link?: string | null, subscriptionIds?: string[], options: any = {}) {
   try {
-    const person = await createPocketBasePerson({
-      name,
-      image_url,
-      sheet_link,
-      google_sheet_url: options.google_sheet_url,
-      is_owner: options.is_owner || false,
-      is_archived: options.is_archived || false,
-      is_group: options.is_group || false,
-      is_favorite: options.is_favorite || false,
-      group_parent_id: options.group_parent_id,
-      sheet_linked_bank_id: options.sheet_linked_bank_id,
-      is_master_sheet_enabled: options.is_master_sheet_enabled || false,
-      sheet_show_bank_account: options.sheet_show_bank_account || false,
-      sheet_bank_info: options.sheet_bank_info,
-      sheet_show_qr_image: options.sheet_show_qr_image || false,
-      sheet_full_img: options.sheet_full_img,
-    });
-
-    // Handle initial subscriptions if any
-    if (subscriptionIds && subscriptionIds.length > 0) {
-      const { updateServiceMembers } = await import("./service-manager");
-      const memberPayload = subscriptionIds.map((sid) => ({
-        service_id: sid,
-        person_id: person.id,
-        slots: 1,
-        is_owner: false,
-      }));
-      await updateServiceMembersForPerson(person.id as string, subscriptionIds);
-    }
-
-    // Ensure debt account exists
-    await ensureDebtAccount(person.id as string, name);
-
+    const p = await createPocketBasePerson({ name, image_url, sheet_link, ...options });
+    if (subscriptionIds?.length) await updatePersonSubs(p.id, subscriptionIds);
+    await ensureDebtAccount(p.id, name);
     revalidatePath("/people");
-    return { success: true, profileId: person.id, debtAccountId: null }; // Debt account ID will be resolved later
-  } catch (error) {
-    console.error("[DB:PB] createPerson failed:", error);
-    return { success: false, error: (error as any).message };
-  }
+    return { success: true, profileId: p.id };
+  } catch (err) { return { success: false }; }
 }
 
-/**
- * Helper to update service members for a specific person
- */
-async function updateServiceMembersForPerson(personId: string, subscriptionIds: string[]) {
-  const { pocketbaseList, pocketbaseDelete, pocketbaseCreate, toPocketBaseId } = await import("./pocketbase/server");
-  
-  // 1. Get current memberships for this person
-  const existing = await pocketbaseList<any>("service_members", {
-    filter: `person_id="${personId}"`,
-    perPage: 100
-  });
-
-  // 2. Delete memberships not in the new list
-  for (const m of existing.items) {
-    if (!subscriptionIds.includes(m.service_id)) {
-      await pocketbaseDelete("service_members", m.id);
-    }
-  }
-
-  // 3. Add new memberships
-  const currentSids = existing.items.map(m => m.service_id);
-  for (const sid of subscriptionIds) {
-    if (!currentSids.includes(sid)) {
-      const pbPersonId = toPocketBaseId(personId, "people");
-      const pbServiceId = toPocketBaseId(sid, "services");
-      await pocketbaseCreate("service_members", {
-        id: toPocketBaseId(`${pbServiceId}-${pbPersonId}`, "service_members"),
-        service_id: pbServiceId,
-        person_id: pbPersonId,
-        slots: 1,
-        is_owner: false
-      });
-    }
-  }
+async function updatePersonSubs(pId: string, sIds: string[]) {
+  const existing = await pocketbaseList<any>("service_members", { filter: `person_id="${pId}"` });
+  for (const m of existing.items) if (!sIds.includes(m.service_id)) await pocketbaseDelete("service_members", m.id);
+  const current = existing.items.map(m => m.service_id);
+  for (const sid of sIds) if (!current.includes(sid)) await pocketbaseCreate("service_members", { service_id: toPocketBaseId(sid, "services"), person_id: toPocketBaseId(pId, "people"), slots: 1, is_owner: false });
 }
 
-/**
- * Update a person's information
- */
 export async function updatePerson(id: string, data: any) {
-  console.log("[DB:PB] people.update", { id });
   try {
-    const pbId = toPocketBaseId(id);
-    await updatePocketBasePerson(pbId, {
-      name: data.name,
-      image_url: data.image_url,
-      sheet_link: data.sheet_link,
-      google_sheet_url: data.google_sheet_url,
-      sheet_full_img: data.sheet_full_img,
-      sheet_show_bank_account: data.sheet_show_bank_account,
-      sheet_bank_info: data.sheet_bank_info,
-      sheet_linked_bank_id: data.sheet_linked_bank_id,
-      sheet_show_qr_image: data.sheet_show_qr_image,
-      is_owner: data.is_owner,
-      is_archived: data.is_archived,
-      is_favorite: data.is_favorite,
-      is_master_sheet_enabled: data.is_master_sheet_enabled,
-    });
-
-    // Handle subscriptions if provided
-    if (data.subscriptionIds !== undefined) {
-      await updateServiceMembersForPerson(pbId, data.subscriptionIds);
-    }
-
+    const pbId = toPocketBaseId(id) as string;
+    await updatePocketBasePerson(pbId, data);
+    if (data.subscriptionIds !== undefined) await updatePersonSubs(pbId, data.subscriptionIds as string[]);
     revalidatePersonPaths(pbId);
     return { success: true };
-  } catch (error) {
-    console.error("[DB:PB] updatePerson failed:", error);
-    return { success: false, error: (error as any).message };
-  }
+  } catch (err) { return { success: false }; }
 }
 
-/**
- * Get recent people based on transaction history
- */
-export async function getRecentPeopleByTransactions(
-  limit: number = 5,
-): Promise<MoneyflowPerson[]> {
-  console.log("[DB:PB] transactions.recent_people");
+export async function getRecentPeopleByTransactions(limit: number = 5): Promise<Person[]> {
   try {
-    const response = await pocketbaseList<any>("pvl_txn_001", {
-      filter: "person_id != null",
-      sort: "-occurred_at",
-      perPage: 50,
-    });
-
-    const uniquePersonIds = Array.from(
-      new Set(response.items.map((t) => t.person_id)),
-    ).slice(0, limit);
-    const people = await getPocketBasePeople();
-
-    return uniquePersonIds
-      .map((id) => people.find((p) => p.id === id))
-      .filter(Boolean) as MoneyflowPerson[];
-  } catch (error) {
-    console.error("[DB:PB] getRecentPeopleByTransactions failed:", error);
-    return [];
-  }
+    const res = await pocketbaseList<any>("pvl_txn_001", { filter: "person_id != null", sort: "-occurred_at", perPage: 50 });
+    const ids = Array.from(new Set(res.items.map(t => t.person_id))).slice(0, limit);
+    const people = await getPeople({ includeArchived: true });
+    return ids.map(id => people.find(p => p.id === (id as string))).filter(Boolean) as Person[];
+  } catch (err) { return []; }
 }
 
-/**
- * Ensures a person has a debt account in PocketBase
- */
-export async function ensureDebtAccount(
-  personId: string,
-  personName?: string,
-): Promise<string | null> {
-  const pbId = toPocketBaseId(personId);
+export async function ensureDebtAccount(pId: string, name?: string): Promise<string | null> {
+  const pbId = toPocketBaseId(pId);
   try {
-    // 1. Check if already exists
-    const existing = await pocketbaseList<any>("accounts", {
-      filter: `owner_id='${pbId}' && type='debt'`,
-      perPage: 1,
-    });
+    const existing = await pocketbaseList<any>("accounts", { filter: `owner_id='${pbId}' && type='debt'`, perPage: 1 });
+    if (existing.items.length > 0) return existing.items[0].id;
+    const n = name || (await pocketbaseGetById<any>("people", pbId))?.name || "Unknown";
+    const acc = await pocketbaseCreate<any>("accounts", { name: `Debt: ${n}`, type: "debt", owner_id: pbId, is_active: true, initial_balance: 0, balance: 0, currency: "VND" });
+    return acc.id;
+  } catch (err) { return null; }
+}
 
-    if (existing.items.length > 0) {
-      return existing.items[0].id;
-    }
-
-    // 2. Resolve name if not provided
-    let name = personName;
-    if (!name) {
-      const p = await pocketbaseGetById<any>("people", pbId);
-      name = p?.name || "Unknown";
-    }
-
-    // 3. Create debt account in PB
-    const newAcc = await pocketbaseCreate<any>("accounts", {
-      name: `Debt: ${name}`,
-      type: "debt",
-      owner_id: pbId,
-      is_active: true,
-      initial_balance: 0,
-      balance: 0,
-      currency: "VND",
-    });
-
-    return newAcc.id;
-  } catch (err) {
-    console.error("[DB:PB] ensureDebtAccount failed:", err);
-    return null;
-  }
+export async function getPersonCycleSheets(id: string): Promise<PersonCycleSheet[]> {
+  try {
+    const res = await pocketbaseList<any>("person_cycle_sheets", { filter: `person_id='${toPocketBaseId(id)}'`, sort: "-cycle_tag" });
+    return res.items.map(i => ({ id: i.id, person_id: i.person_id as string, cycle_tag: i.cycle_tag as string, sheet_id: i.sheet_id as string, sheet_url: i.sheet_url as string, created_at: i.created as string, updated_at: i.updated as string }));
+  } catch (err) { return []; }
 }

@@ -101,28 +101,88 @@ export async function getDashboardStats(
     const startOfMonth = new Date(selectedYear, selectedMonth - 1, 1).toISOString()
     const endOfMonth = new Date(selectedYear, selectedMonth, 0, 23, 59, 59, 999).toISOString()
 
-    // 2. Total Assets
-    const accountResp = await pocketbaseList<any>('accounts', {
-      filter: 'is_active = true && (type = "bank" || type = "cash" || type = "savings" || type = "investment" || type = "asset")',
-      perPage: 200
-    });
-    const totalAssets = accountResp.items.reduce((sum, acc) => sum + (acc.current_balance || 0), 0);
+    // 2. Fetch all independent data in parallel
+    const [
+      accountResp,
+      expenseResp,
+      incomeResp,
+      debtAccountResp,
+      refundAccount,
+      refundTxResp,
+      batchItemsResp,
+      recentTxResp,
+    ] = await Promise.all([
+      // 2. Total Assets
+      pocketbaseList<any>("accounts", {
+        filter:
+          'is_active = true && (type = "bank" || type = "cash" || type = "savings" || type = "investment" || type = "asset")',
+        perPage: 200,
+      }),
+      // 3. Monthly Spend & Category Stats
+      pocketbaseList<any>("pvl_txn_001", {
+        filter: `type = "expense" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
+        expand: "category_id",
+        perPage: 1000,
+      }),
+      // 4. Monthly Income
+      pocketbaseList<any>("pvl_txn_001", {
+        filter: `type = "income" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
+        perPage: 500,
+      }),
+      // 5. Debt Accounts
+      pocketbaseList<any>("accounts", {
+        filter: 'type = "debt" && current_balance > 0',
+        sort: "-current_balance",
+        perPage: 10,
+      }),
+      // 7. Refund Account
+      pocketbaseGetById<any>(
+        "accounts",
+        toPocketBaseId(SYSTEM_ACCOUNTS.PENDING_REFUNDS, "accounts")
+      ).catch(() => null),
+      // 7. Refund Transactions
+      pocketbaseList<any>("pvl_txn_001", {
+        filter: `to_account_id = "${toPocketBaseId(SYSTEM_ACCOUNTS.PENDING_REFUNDS, "accounts")}" && status != "void"`,
+        sort: "-date",
+        perPage: 3,
+      }),
+      // 8. Pending Batches
+      pocketbaseList<any>("batch_items", {
+        filter: 'status = "pending"',
+        perPage: 500,
+      }).catch(() => ({ items: [], totalItems: 0 })),
+      // 9. Recent Transactions
+      pocketbaseList<any>("pvl_txn_001", {
+        filter: 'status != "void"',
+        sort: "-date",
+        perPage: 5,
+        expand: "category_id",
+      }),
+    ]);
 
-    // 3. Monthly Spend & Category Stats
-    const expenseResp = await pocketbaseList<any>('pvl_txn_001', {
-      filter: `type = "expense" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
-      expand: 'category_id',
-      perPage: 1000
-    });
-    
-    const monthlySpend = expenseResp.items.reduce((sum, tx) => sum + Math.abs(tx.amount || 0), 0);
-    
+    // ─── Process Results ──────────────────────────────────────────────────
+
+    const totalAssets = accountResp.items.reduce(
+      (sum, acc) => sum + (acc.current_balance || 0),
+      0
+    );
+
+    const monthlySpend = expenseResp.items.reduce(
+      (sum, tx) => sum + Math.abs(tx.amount || 0),
+      0
+    );
+
     const categoryMap = new Map<string, any>();
-    expenseResp.items.forEach(tx => {
+    expenseResp.items.forEach((tx) => {
       const cat = tx.expand?.category_id;
       if (!cat) return;
-      
-      const entry = categoryMap.get(cat.id) || { name: cat.name, value: 0, icon: cat.icon, image_url: cat.image_url };
+
+      const entry = categoryMap.get(cat.id) || {
+        name: cat.name,
+        value: 0,
+        icon: cat.icon,
+        image_url: cat.image_url,
+      };
       entry.value += Math.abs(tx.amount || 0);
       categoryMap.set(cat.id, entry);
     });
@@ -130,85 +190,63 @@ export async function getDashboardStats(
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
-    // 4. Monthly Income
-    const incomeResp = await pocketbaseList<any>('pvl_txn_001', {
-      filter: `type = "income" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
-      perPage: 500
-    });
-    const monthlyIncome = incomeResp.items.reduce((sum, tx) => sum + Math.abs(tx.amount || 0), 0);
+    const monthlyIncome = incomeResp.items.reduce(
+      (sum, tx) => sum + Math.abs(tx.amount || 0),
+      0
+    );
 
-    // 5. Debt Overview & Debtors
-    const debtAccountResp = await pocketbaseList<any>('accounts', {
-      filter: 'type = "debt" && current_balance > 0',
-      sort: '-current_balance',
-      perPage: 10
-    });
-    
-    // In PB, debtors might be linked via holder_person_id or metadata. 
-    // The original code used owner_id which was a profile. 
-    // In our PB schema, people are in 'people' collection.
+    // ─── Debt Overview & Debtors (Requires follow-up fetch for people) ───
     const debtorAccountList = debtAccountResp.items;
-    const personIds = Array.from(new Set(debtorAccountList.map(a => a.holder_person_id).filter(Boolean)));
-    
-    const peopleResp = personIds.length > 0 
-      ? await pocketbaseList<any>('people', { filter: personIds.map(id => `id="${id}"`).join(' || ') })
-      : { items: [] };
-    const peopleMap = new Map(peopleResp.items.map(p => [p.id, p]));
+    const personIds = Array.from(
+      new Set(debtorAccountList.map((a) => a.holder_person_id).filter(Boolean))
+    );
 
-    const topDebtors = debtorAccountList.slice(0, 5).map(acc => ({
+    const peopleResp =
+      personIds.length > 0
+        ? await pocketbaseList<any>("people", {
+            filter: personIds.map((id) => `id="${id}"`).join(" || "),
+          })
+        : { items: [] };
+    const peopleMap = new Map(peopleResp.items.map((p) => [p.id, p]));
+
+    const topDebtors = debtorAccountList.slice(0, 5).map((acc) => ({
       id: acc.id,
-      name: acc.holder_person_id ? peopleMap.get(acc.holder_person_id)?.name || acc.name : acc.name,
+      name: acc.holder_person_id
+        ? peopleMap.get(acc.holder_person_id)?.name || acc.name
+        : acc.name,
       balance: acc.current_balance || 0,
-      image_url: acc.holder_person_id ? peopleMap.get(acc.holder_person_id)?.image_url : null
+      image_url: acc.holder_person_id
+        ? peopleMap.get(acc.holder_person_id)?.image_url
+        : null,
     }));
     const debtOverview = topDebtors.reduce((sum, d) => sum + d.balance, 0);
 
-    // 6. Outstanding By Cycle (This logic is complex, might need transaction aggregation)
-    // Simplified for now: Get recent debt transactions
-    const outstandingByCycle: any[] = []; // Placeholder or implement if needed
+    // ─── Outstanding By Cycle (Placeholder) ──────────────────────────────
+    const outstandingByCycle: any[] = [];
 
-    // 7. Pending Refunds
-    const refundPbId = toPocketBaseId(SYSTEM_ACCOUNTS.PENDING_REFUNDS, 'accounts');
-    const refundAccount = await pocketbaseGetById<any>('accounts', refundPbId).catch(() => null);
+    // ─── Process Refunds & Batches ────────────────────────────────────────
     const refundBalance = refundAccount?.current_balance || 0;
-
-    const refundTxResp = await pocketbaseList<any>('pvl_txn_001', {
-      filter: `to_account_id = "${refundPbId}" && status != "void"`,
-      sort: '-date',
-      perPage: 3
-    });
-    const topRefundTransactions = refundTxResp.items.map(tx => ({
+    const topRefundTransactions = refundTxResp.items.map((tx) => ({
       id: tx.id,
       note: tx.note,
       amount: Math.abs(tx.amount || 0),
-      occurred_at: tx.date || tx.occurred_at
+      occurred_at: tx.date || tx.occurred_at,
     }));
 
-    // 8. Pending Batches
-    const batchItemsResp = await pocketbaseList<any>('batch_items', {
-      filter: 'status = "pending"',
-      perPage: 500
-    }).catch(() => ({ items: [], totalItems: 0 }));
-    
     const pendingBatchCount = batchItemsResp.totalItems;
-    const pendingBatchAmount = batchItemsResp.items.reduce((sum, item) => sum + Math.abs(item.amount || 0), 0);
+    const pendingBatchAmount = batchItemsResp.items.reduce(
+      (sum, item) => sum + Math.abs(item.amount || 0),
+      0
+    );
 
-    // 9. Recent Transactions
-    const recentTxResp = await pocketbaseList<any>('pvl_txn_001', {
-      filter: 'status != "void"',
-      sort: '-date',
-      perPage: 5,
-      expand: 'category_id'
-    });
-    
-    const recentTransactions = recentTxResp.items.map(tx => ({
+    const recentTransactions = recentTxResp.items.map((tx) => ({
       id: tx.id,
       amount: Math.abs(tx.amount || 0),
       description: tx.note || tx.description,
       occurred_at: tx.date || tx.occurred_at,
       type: tx.type,
-      category_name: tx.expand?.category_id?.name || 'Uncategorized',
-      category_icon: tx.expand?.category_id?.icon || null
+      category_name: tx.expand?.category_id?.name || "Uncategorized",
+      category_icon: tx.expand?.category_id?.icon || null,
     }));
 
     return {
@@ -220,7 +258,7 @@ export async function getDashboardStats(
         count: pendingBatchCount,
         totalAmount: pendingBatchAmount,
       },
-      fundedBatchItems: [], // Grouping logic omitted for brevity, can add if critical
+      fundedBatchItems: [],
       pendingRefunds: {
         balance: refundBalance,
         topTransactions: topRefundTransactions,
@@ -229,9 +267,13 @@ export async function getDashboardStats(
       topDebtors,
       outstandingByCycle,
       recentTransactions,
-    }
+    };
   } catch (error) {
-    console.error('[DB:PB] getDashboardStats failed:', error)
-    return defaultStats
+    if ((error as any)?.name === "AbortError") {
+      console.error("[DB:PB] getDashboardStats timed out (30s)");
+    } else {
+      console.error("[DB:PB] getDashboardStats failed:", error);
+    }
+    return defaultStats;
   }
 }

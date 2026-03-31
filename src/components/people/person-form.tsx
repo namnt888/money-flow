@@ -61,6 +61,7 @@ export type PersonFormValues = {
   sheet_bank_info?: string
   sheet_show_qr_image?: boolean
   sheet_full_img?: string
+  default_repayment_account_id?: string
 }
 
 type PersonFormProps = {
@@ -94,6 +95,7 @@ const schema = z.object({
   sheet_bank_info: z.string().optional(),
   sheet_show_qr_image: z.boolean().optional(),
   sheet_full_img: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  default_repayment_account_id: z.string().optional(),
 })
 
 export function PersonForm({
@@ -111,7 +113,8 @@ export function PersonForm({
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [imagePreview, setImagePreview] = useState<string | null>(initialValues?.image_url || null)
   const [status, setStatus] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
-  const [isAccountPickerOpen, setIsAccountPickerOpen] = useState(false)
+  const [isSheetPickerOpen, setIsSheetPickerOpen] = useState(false)
+  const [isRepayPickerOpen, setIsRepayPickerOpen] = useState(false)
 
   const {
     register,
@@ -139,6 +142,7 @@ export function PersonForm({
       sheet_bank_info: initialValues?.sheet_bank_info ?? '',
       sheet_show_qr_image: initialValues?.sheet_show_qr_image ?? false,
       sheet_full_img: initialValues?.sheet_full_img ?? '',
+      default_repayment_account_id: initialValues?.default_repayment_account_id ?? '',
     },
   })
 
@@ -166,6 +170,7 @@ export function PersonForm({
       sheet_bank_info: initialValues?.sheet_bank_info ?? '',
       sheet_show_qr_image: initialValues?.sheet_show_qr_image ?? false,
       sheet_full_img: initialValues?.sheet_full_img ?? '',
+      default_repayment_account_id: initialValues?.default_repayment_account_id ?? '',
     }
     reset(nextValues)
     setImagePreview(nextValues.image_url || null)
@@ -177,6 +182,7 @@ export function PersonForm({
   const watchedIsArchived = watch('is_archived')
   const watchedIsFavorite = watch('is_favorite')
   const watchedSheetLinkedBankId = watch('sheet_linked_bank_id')
+  const watchedDefaultRepaymentAccountId = watch('default_repayment_account_id')
   const watchedSheetBankInfo = watch('sheet_bank_info')
   const watchedSheetShowBankAccount = watch('sheet_show_bank_account')
   const watchedSheetShowQrImage = watch('sheet_show_qr_image')
@@ -189,6 +195,7 @@ export function PersonForm({
   useEffect(() => {
     register('subscriptionIds')
     register('sheet_linked_bank_id')
+    register('default_repayment_account_id')
   }, [register])
 
   // AUTO-FILL Bank Info if missing
@@ -213,9 +220,14 @@ export function PersonForm({
     }
   }
 
-  const selectedAccount = useMemo(() => 
+  const selectedSheetAccount = useMemo(() => 
     accounts.find(a => a.id === watchedSheetLinkedBankId), 
     [accounts, watchedSheetLinkedBankId]
+  )
+
+  const selectedRepayAccount = useMemo(() =>
+    accounts.find(a => a.id === watchedDefaultRepaymentAccountId),
+    [accounts, watchedDefaultRepaymentAccountId]
   )
 
   const bankAccounts = useMemo(() => 
@@ -492,6 +504,62 @@ export function PersonForm({
                                 />
                             </div>
                         )}
+
+                        {/* Sheet Linked Bank */}
+                        <div className="space-y-2 mt-4 pt-4 border-t border-emerald-100/30">
+                            <label className="text-[11px] font-black uppercase tracking-wider text-emerald-800/60 ml-1">Sheet Linked Bank Account</label>
+                            <Popover open={isSheetPickerOpen} onOpenChange={setIsSheetPickerOpen} modal={false}>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full h-[52px] justify-between rounded-xl border-emerald-100 bg-white/60 shadow-sm hover:bg-white hover:border-emerald-300 px-4 transition-all"
+                                >
+                                    <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                                        {selectedSheetAccount?.image_url ? (
+                                        <img src={selectedSheetAccount.image_url} className="h-5 w-5 object-contain" />
+                                        ) : (
+                                        <Landmark className="h-4 w-4 text-emerald-400" />
+                                        )}
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-900">{selectedSheetAccount?.name || 'Link a bank for sheets'}</span>
+                                    </div>
+                                    <ChevronDown className="h-4 w-4 text-emerald-400" />
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent 
+                                    className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[400px] overflow-hidden z-[750] border border-emerald-200 shadow-xl rounded-xl" 
+                                    align="start"
+                                    onWheel={(e) => e.stopPropagation()}
+                                >
+                                    <Command className="h-auto border-none flex flex-col bg-white">
+                                        <CommandInput placeholder="Search bank accounts..." className="h-10 text-xs" />
+                                        <CommandList className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-100 flex-1 overscroll-contain">
+                                            <CommandEmpty>No accounts found.</CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem 
+                                                    onSelect={() => { setValue('sheet_linked_bank_id', ''); setIsSheetPickerOpen(false); }}
+                                                    className="text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50"
+                                                >
+                                                    <Archive className="h-4 w-4 mr-2" /> None / Unlinked
+                                                </CommandItem>
+                                                {bankAccounts.map(acc => (
+                                                    <CommandItem 
+                                                        key={acc.id} 
+                                                        onSelect={() => { setValue('sheet_linked_bank_id', acc.id); setIsSheetPickerOpen(false); }}
+                                                        className="text-xs font-bold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50"
+                                                    >
+                                                        {acc.image_url && <img src={acc.image_url} className="h-4 w-4 mr-2 object-contain" />}
+                                                        {acc.name}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -507,7 +575,7 @@ export function PersonForm({
                     {/* Default Repayment Account */}
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 ml-1">Default Repayment Account</label>
-                        <Popover open={isAccountPickerOpen} onOpenChange={setIsAccountPickerOpen} modal={false}>
+                        <Popover open={isRepayPickerOpen} onOpenChange={setIsRepayPickerOpen} modal={false}>
                             <PopoverTrigger asChild>
                             <Button
                                 type="button"
@@ -516,13 +584,13 @@ export function PersonForm({
                             >
                                 <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center">
-                                    {selectedAccount?.image_url ? (
-                                    <img src={selectedAccount.image_url} className="h-5 w-5 object-contain" />
+                                    {selectedRepayAccount?.image_url ? (
+                                    <img src={selectedRepayAccount.image_url} className="h-5 w-5 object-contain" />
                                     ) : (
                                     <Landmark className="h-4 w-4 text-slate-400" />
                                     )}
                                 </div>
-                                <span className="text-sm font-bold text-slate-700">{selectedAccount?.name || 'Link a source bank account'}</span>
+                                <span className="text-sm font-bold text-slate-700">{selectedRepayAccount?.name || 'Set target for quick repayment'}</span>
                                 </div>
                                 <ChevronDown className="h-4 w-4 text-slate-400" />
                             </Button>
@@ -537,11 +605,11 @@ export function PersonForm({
                                     <CommandList className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 flex-1 overscroll-contain">
                                         <CommandEmpty>No accounts found.</CommandEmpty>
                                         <CommandGroup>
-                                            <CommandItem onSelect={() => { setValue('sheet_linked_bank_id', ''); setIsAccountPickerOpen(false); }}>
-                                                <Archive className="h-4 w-4 mr-2" /> None / Unlinked
+                                            <CommandItem onSelect={() => { setValue('default_repayment_account_id', ''); setIsRepayPickerOpen(false); }}>
+                                                <Archive className="h-4 w-4 mr-2" /> None / Prompt Me
                                             </CommandItem>
                                             {bankAccounts.map(acc => (
-                                                <CommandItem key={acc.id} onSelect={() => { setValue('sheet_linked_bank_id', acc.id); setIsAccountPickerOpen(false); }}>
+                                                <CommandItem key={acc.id} onSelect={() => { setValue('default_repayment_account_id', acc.id); setIsRepayPickerOpen(false); }}>
                                                     {acc.image_url && <img src={acc.image_url} className="h-4 w-4 mr-2 object-contain" />}
                                                     {acc.name}
                                                 </CommandItem>

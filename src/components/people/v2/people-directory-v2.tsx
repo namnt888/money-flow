@@ -157,14 +157,14 @@ export function PeopleDirectoryV2({
           valA = a.current_debt_balance || 0;
           valB = b.current_debt_balance || 0;
         } else if (sortConfig.key === "base_lend") {
-          valA = a.current_cycle_base_lend ?? a.total_base_debt ?? 0;
-          valB = b.current_cycle_base_lend ?? b.total_base_debt ?? 0;
+          valA = a.total_base_debt ?? a.current_cycle_base_lend ?? 0;
+          valB = b.total_base_debt ?? b.current_cycle_base_lend ?? 0;
         } else if (sortConfig.key === "cashback_total") {
-          valA = a.total_cashback ?? 0;
-          valB = b.total_cashback ?? 0;
+          valA = a.current_cycle_cashback ?? 0;
+          valB = b.current_cycle_cashback ?? 0;
         } else if (sortConfig.key === "repayment") {
-          valA = a.total_repaid ?? 0;
-          valB = b.total_repaid ?? 0;
+          valA = a.current_cycle_repaid ?? 0;
+          valB = b.current_cycle_repaid ?? 0;
         } else if (sortConfig.key === "net_lend") {
           valA = a.outstanding_debt ?? 0;
           valB = b.outstanding_debt ?? 0;
@@ -252,13 +252,17 @@ export function PeopleDirectoryV2({
       });
       setTxnSlideOpen(true);
     } else if (action === "repay") {
-      const debtAmount =
-        (person.current_cycle_debt || 0) + (person.outstanding_debt || 0);
+      const cycleDebt = person.current_cycle_debt || 0;
+      const cycleRepaid = person.current_cycle_repaid || 0;
+      const cycleRemains = Math.max(0, cycleDebt - cycleRepaid);
+      
       setTxnInitialData({
         type: "repayment",
         person_id: person.id,
-        // Pre-fill full amount if positive, otherwise 0
-        amount: debtAmount > 0 ? debtAmount : 0,
+        // Pre-fill target account if default is set
+        target_account_id: person.default_repayment_account_id || undefined,
+        // Pre-fill current cycle remains (Net)
+        amount: cycleRemains,
         occurred_at: new Date(),
       });
       setTxnSlideOpen(true);

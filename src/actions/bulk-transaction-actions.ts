@@ -58,8 +58,10 @@ export async function bulkCreateTransactions(
         }
     }
 
+    revalidatePath("/");
     revalidatePath("/transactions");
     revalidatePath("/txn/v2");
+    revalidatePath("/people");
 
     return {
         success: errors.length === 0,

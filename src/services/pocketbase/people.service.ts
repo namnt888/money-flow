@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+"use server"
+import 'server-only'
+
 import { executeWithFallback, logSource } from '@/lib/pocketbase/fallback-helpers'
 import { Person } from '@/types/moneyflow.types'
 import {
@@ -30,6 +32,7 @@ type PocketBasePersonWrite = {
   sheet_linked_bank_id?: string | null
   sheet_show_qr_image?: boolean
   is_master_sheet_enabled?: boolean | null
+  default_repayment_account_id?: string | null
 }
 
 function mapPerson(record: PocketBaseRecord): Person {
@@ -52,6 +55,7 @@ function mapPerson(record: PocketBaseRecord): Person {
     is_favorite: (record.is_favorite as boolean | null | undefined) ?? null,
     is_group: (record.is_group as boolean | null | undefined) ?? null,
     group_parent_id: (record.group_parent_id as string | null | undefined) ?? null,
+    default_repayment_account_id: (record.default_repayment_account_id as string | null | undefined) ?? null,
   }
 }
 
@@ -94,38 +98,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
       })
       return response.items.map(mapPerson).sort((a, b) => a.name.localeCompare(b.name))
     },
-    async () => {
-      logSource('SB', 'people.list fallback')
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-
-      const rows = (data ?? []) as Array<any>
-
-      return rows.map((item) => ({
-        id: item.id,
-        created_at: item.created_at ?? undefined,
-        name: item.name,
-        image_url: item.image_url,
-        sheet_link: item.sheet_link,
-        google_sheet_url: item.google_sheet_url,
-        is_owner: item.is_owner,
-        is_archived: item.is_archived,
-        is_favorite: item.is_favorite,
-        is_group: item.is_group,
-        group_parent_id: item.group_parent_id,
-        sheet_full_img: item.sheet_full_img,
-        sheet_show_bank_account: item.sheet_show_bank_account,
-        sheet_bank_info: item.sheet_bank_info,
-        sheet_linked_bank_id: item.sheet_linked_bank_id,
-        sheet_show_qr_image: item.sheet_show_qr_image,
-        is_master_sheet_enabled: item.is_master_sheet_enabled,
-      }))
-    },
+    async () => [], // Supabase fallback removed
     'people.list'
   )
 }
@@ -209,40 +182,7 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
 
       return hydrated
     },
-    async () => {
-      logSource('SB', 'people.get fallback', { sourceOrPocketBaseId })
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('people')
-        .select('id, created_at, name, image_url, sheet_link, google_sheet_url, is_owner, is_archived, is_favorite, is_group, group_parent_id, sheet_full_img, sheet_show_bank_account, sheet_bank_info, sheet_linked_bank_id, sheet_show_qr_image, is_master_sheet_enabled')
-        .eq('id', sourceOrPocketBaseId)
-        .maybeSingle()
-
-      if (error) throw error
-      if (!data) return null
-
-      const row = data as any
-
-      return {
-        id: row.id,
-        created_at: row.created_at ?? undefined,
-        name: row.name,
-        image_url: row.image_url,
-        sheet_link: row.sheet_link,
-        google_sheet_url: row.google_sheet_url,
-        is_owner: row.is_owner,
-        is_archived: row.is_archived,
-        is_favorite: row.is_favorite,
-        is_group: row.is_group,
-        group_parent_id: row.group_parent_id,
-        sheet_full_img: row.sheet_full_img,
-        sheet_show_bank_account: row.sheet_show_bank_account,
-        sheet_bank_info: row.sheet_bank_info,
-        sheet_linked_bank_id: row.sheet_linked_bank_id,
-        sheet_show_qr_image: row.sheet_show_qr_image,
-        is_master_sheet_enabled: row.is_master_sheet_enabled,
-      }
-    },
+    async () => null, // Supabase fallback removed
     'people.get'
   )
 }
@@ -282,10 +222,7 @@ export async function updatePocketBasePerson(
       await pocketbaseUpdate<PocketBaseRecord>('pvl_people_001', String(record.id), body)
       return true
     },
-    async () => {
-      logSource('SB', 'people.update fallback', { sourceOrPocketBaseId })
-      return false
-    },
+    async () => false, // Supabase fallback removed
     'people.update'
   )
 }
@@ -298,10 +235,7 @@ export async function deletePocketBasePerson(sourceOrPocketBaseId: string): Prom
       await pocketbaseDelete('pvl_people_001', String(record.id))
       return true
     },
-    async () => {
-      logSource('SB', 'people.delete fallback', { sourceOrPocketBaseId })
-      return false
-    },
+    async () => false, // Supabase fallback removed
     'people.delete'
   )
 }
