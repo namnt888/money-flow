@@ -21,6 +21,7 @@ import {
   createPocketBasePerson,
   updatePocketBasePerson,
   resolvePocketBasePersonRecord,
+  getPocketBasePersonDetails as getPocketBasePersonById,
 } from "@/services/pocketbase/people.service";
 import { toYYYYMMFromDate, normalizeMonthTag } from "@/lib/month-tag";
 import type {
@@ -69,22 +70,32 @@ function isPersonalDebt(txn: any): boolean {
 }
 
 /**
- * Get all people with their calculated debt stats (Reconciliation Engine v9)
- * Strategy: 
- * 1. Calculate RAW balance for ALL months (Present + Past).
- * 2. Calculate SYNC balance for synced months.
- * 3. FOR EACH MONTH:
- *    - If Synced as 'Settled' (bal < 1000), use 0.
- *    - Else use MAX(Raw, Sync) for that month's balance contribution.
+ * Get all people with their calculated debt stats (Reconciliation Engine v10 - Bulletproof)
+ * Strategy:
+ * 1. Calculate RAW stats per month using STRICT isPersonalDebt filter.
+ * 2. Calculate SYNC stats per month from people_debt_cycles.
+ * 3. MONTHLY RECONCILIATION:
+ *    - IF month is 'Settled' in Sync -> balance = 0.
+ *    - ELSE: balance = MAX(RawNetBalance, SyncNetBalance).
+ *      - Why MAX? Because My's stale January sync (16M) must be overridden by Raw (35.9M).
+ *      - Why MAX for Ánh? If her Raw extras are correctly filtered, her Raw should be ~7.8M, matching Sync.
  */
 export async function getPeople(options?: {
   includeArchived?: boolean;
+  targetPersonId?: string;
 }): Promise<Person[]> {
   const includeArchived = Boolean(options?.includeArchived);
+  const targetPersonId = options?.targetPersonId;
 
   try {
-    const people = await getPocketBasePeople();
-    const activePeople = includeArchived ? people : people.filter((p) => !p.is_archived);
+    let activePeople: Person[] = [];
+    if (targetPersonId) {
+      const p = await getPocketBasePersonById(targetPersonId);
+      if (p) activePeople = [p];
+    } else {
+      const people = await getPocketBasePeople();
+      activePeople = includeArchived ? people : people.filter((p) => !p.is_archived);
+    }
     const personIds = activePeople.map((p) => p.id as string);
     if (personIds.length === 0) return [];
 
@@ -92,15 +103,27 @@ export async function getPeople(options?: {
     const currentMonthTag = toYYYYMMFromDate(now);
 
     // 1. Setup Maps
-    const debtAccountsRes = await pocketbaseList<any>("accounts", { filter: `type='debt' && is_active=true`, perPage: 500 });
+    const debtAccountsRes = await pocketbaseList<any>("accounts", { 
+      filter: `type='debt' && is_active=true${targetPersonId ? ` && owner_id='${toPocketBaseId(targetPersonId)}'` : ''}`, 
+      perPage: 500 
+    });
     const debtAccountToPersonMap = new Map<string, string>();
     debtAccountsRes.items.forEach((acc) => { if (acc.owner_id) debtAccountToPersonMap.set(acc.id, acc.owner_id as string); });
+    
+    // Reverse map for faster filtering if we have targetPersonId
+    const personToDebtAccountIds = new Set<string>();
+    if (targetPersonId) {
+        debtAccountsRes.items.forEach(acc => personToDebtAccountIds.add(acc.id));
+    }
 
     const personCycleData = new Map<string, Map<string, { raw: any, sync: any }>>();
     personIds.forEach(id => personCycleData.set(id, new Map()));
 
-    // 2. Fetch Sync Summaries
-    const syncedCycles = await pocketbaseList<any>("people_debt_cycles", { perPage: 2000 });
+    // 2. Fetch Sync Summaries (The "Settled" authority)
+    const syncedCycles = await pocketbaseList<any>("people_debt_cycles", { 
+      filter: targetPersonId ? `person_id='${toPocketBaseId(targetPersonId)}'` : '',
+      perPage: 2000 
+    });
     syncedCycles.items.forEach((c) => {
       const pId = c.person_id as string;
       if (!pId || !personIds.includes(pId)) return;
@@ -112,14 +135,30 @@ export async function getPeople(options?: {
       const initial = Number(c.initial_amount || c.base_lend || 0);
       const back = Number(c.back_amount || c.cashback || 0);
       const repay = Number(c.repay_net || c.repay || 0);
-      current.sync = { initial, back, repay, balance: initial - back - repay, status: c.status };
+      const updated = new Date(c.updated || c.created || 0).getTime();
+      current.sync = { initial, back, repay, balance: initial - back - repay, status: c.status, updatedAt: updated };
       cycles.set(tag, current);
     });
 
-    // 3. Fetch Deep Raw Transactions
+    // 3. Fetch Raw Transactions (The "Deep" authority)
+    // Optimization: If targetPersonId is set, filter by person_id or debt accounts directly
+    const txFilter = `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void'${
+      targetPersonId 
+        ? ` && (person_id='${toPocketBaseId(targetPersonId)}'${
+            Array.from(personToDebtAccountIds).length > 0 
+              ? ` || (${Array.from(personToDebtAccountIds).map(id => `account_id='${toPocketBaseId(id)}'`).join(' || ')})` 
+              : ''
+          })` 
+        : ''
+    }`;
+
+    if (targetPersonId) {
+        console.log(`[getPeople] Filter for ${targetPersonId}:`, txFilter);
+    }
+
     const txnsRes = await pocketbaseList<any>("pvl_txn_001", {
-      filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void'`,
-      perPage: 10000, 
+      filter: txFilter,
+      perPage: targetPersonId ? 5000 : 10000, 
       sort: "-date",
     });
 
@@ -132,7 +171,9 @@ export async function getPeople(options?: {
       }
       if (!pId || !isPersonalDebt(txn)) return;
 
-      const tag = normalizeMonthTag(txn.debt_cycle_tag || txn.tag || txn.metadata?.tag) || "";
+      const metadata = txn.metadata && typeof txn.metadata === 'object' ? txn.metadata : {};
+      const tagStr = String(txn.debt_cycle_tag || txn.tag || metadata.debt_cycle_tag || metadata.tag || "");
+      const tag = normalizeMonthTag(tagStr) || tagStr;
       if (!tag) return;
 
       const cycles = personCycleData.get(pId)!;
@@ -159,7 +200,7 @@ export async function getPeople(options?: {
       cycles.set(tag, current);
     });
 
-    // 4. Transform to Final Output
+    // 4. Final Aggregation
     return activePeople.map((person) => {
       const cycles = personCycleData.get(person.id)!;
       const stats = { 
@@ -187,6 +228,8 @@ export async function getPeople(options?: {
             initial = raw.baseLend; back = raw.cashback; repay = raw.repaid; balance = rawBal;
           } else if (sync) {
             initial = sync.initial; back = sync.back; repay = sync.repay; balance = syncBal;
+          } else {
+            initial = raw?.baseLend || 0; back = raw?.cashback || 0; repay = raw?.repaid || 0; balance = rawBal;
           }
         }
 
@@ -205,7 +248,14 @@ export async function getPeople(options?: {
           cashback: Math.round(back),
           repaid: Math.round(repay),
           netLend: Math.round(initial - back),
-          remains: Math.round(balance)
+          remains: Math.round(balance),
+          isSettled: balance < 1000,
+          stats: {
+            originalLend: Math.round(initial),
+            cashback: Math.round(back),
+            repay: Math.round(repay),
+            lend: Math.round(initial - back)
+          }
         });
       });
 
@@ -234,15 +284,16 @@ export async function getPeople(options?: {
 }
 
 export async function getPersonWithSubs(id: string): Promise<Person | null> {
-  const people = await getPeople({ includeArchived: true });
-  return people.find(p => p.id === id) || null;
+  const people = await getPeople({ includeArchived: true, targetPersonId: id });
+  return people.find(p => p.id === id || p.pocketbase_id === id) || null;
 }
 
 export async function createPerson(name: string, image_url?: string | null, sheet_link?: string | null, subscriptionIds?: string[], options: any = {}) {
   try {
     const p = await createPocketBasePerson({ name, image_url, sheet_link, ...options });
-    if (subscriptionIds?.length) await updatePersonSubs(p.id, subscriptionIds);
-    await ensureDebtAccount(p.id, name);
+    const pId = p.id as string;
+    if (subscriptionIds?.length) await updatePersonSubs(pId, subscriptionIds as string[]);
+    await ensureDebtAccount(pId, name);
     revalidatePath("/people");
     return { success: true, profileId: p.id };
   } catch (err) { return { success: false }; }

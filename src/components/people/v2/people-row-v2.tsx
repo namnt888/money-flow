@@ -155,6 +155,29 @@ export function PeopleRowV2({
     onToggleExpand(person.id);
   };
 
+  const { totalBalance, currentCycleDebt, otherCyclesWithDebtCount } = useMemo(() => {
+    // SINGLE SOURCE OF TRUTH: Use the service-layer pre-calculated totals.
+    // The service (people.service.ts) handles complex MAX(Raw, Sync) reconciliation
+    // and historical debt aggregation (including pre-2026).
+    const serviceTotal = person.balance ?? 0;
+    const serviceCurrent = person.current_cycle_debt ?? 0;
+    
+    // We can still derive otherCyclesCount from stats if not provided by service,
+    // but we use c.remains (reconciled balance) instead of re-calculating baseLend - repaid.
+    const serviceOtherCount = person.past_due_count ?? (person.cycle_stats || []).filter(c => {
+        const currentTag = person.current_cycle_label || "";
+        if (c.tag === currentTag) return false;
+        // c.remains is the reconciled balance for that month
+        return Math.abs(c.remains || 0) >= 1000;
+    }).length;
+
+    return { 
+        totalBalance: Math.round(serviceTotal),
+        currentCycleDebt: Math.round(serviceCurrent),
+        otherCyclesWithDebtCount: serviceOtherCount
+    };
+  }, [person.balance, person.current_cycle_debt, person.past_due_count, person.cycle_stats, person.current_cycle_label]);
+
   return (
     <>
       <tr
@@ -186,6 +209,7 @@ export function PeopleRowV2({
               onLend,
               onRepay,
               { copied, setCopied },
+              { totalBalance, currentCycleDebt, otherCyclesWithDebtCount },
               onSync,
               accounts,
               onOpenSettings,
@@ -203,16 +227,6 @@ export function PeopleRowV2({
         </tr>
       )}
 
-      <ReAlignAuditDialog
-        open={isAuditOpen}
-        onOpenChange={setIsAuditOpen}
-        person={person}
-        initialYear={person.current_cycle_label?.split("-")[0] || new Date().getFullYear().toString()}
-        availableYears={Array.from(new Set([
-            ... (person.cycle_stats || []).map(c => c.tag?.split("-")[0]),
-            new Date().getFullYear().toString()
-        ])).filter(Boolean).sort((a, b) => b!.localeCompare(a!)) as string[]}
-      />
     </>
   );
 }
@@ -224,47 +238,13 @@ function renderCell(
   onLend: (p: Person) => void,
   onRepay: (p: Person) => void,
   copyState: { copied: boolean; setCopied: (v: boolean) => void },
+  calculatedStats: { totalBalance: number; currentCycleDebt: number; otherCyclesWithDebtCount: number },
   onSync?: (pid: string) => void,
   accounts?: Account[],
   onOpenSettings?: (p: Person) => void,
   onAudit?: () => void,
 ) {
-  const { totalBalance, currentCycleDebt } = useMemo(() => {
-    // 1. Priority: Use pre-calculated robust values from service layer if available
-    if (person.current_cycle_debt !== undefined && person.current_cycle_debt !== null) {
-      return {
-        totalBalance: person.balance ?? 0,
-        currentCycleDebt: person.current_cycle_debt
-      };
-    }
-
-    // 2. Logic for manual calculation (legacy/fallback)
-    const stats = person.cycle_stats || [];
-    const currentTag = person.current_cycle_label || "";
-    
-    // Calculate total balance from all cycles (Fresh Net)
-    // FIX: Match Detail View logic - ignore negative "phantom" remains from previous years
-    const calculatedTotal = stats.reduce((sum, c) => {
-        // Only consider cycles from 2026 onwards for the main balance display
-        const cycleYear = parseInt(c.tag?.split('-')[0] || '0');
-        if (cycleYear < 2026) return sum;
-
-        const net = (c.baseLend || 0) - (c.repaid || 0) - (c.cashback || 0);
-        // If net is negative, it's a surplus/phantom repayment, treat as 0 for remains calculation
-        return sum + (net > 0 ? net : 0);
-    }, 0);
-
-    // Calculate current cycle debt (Balance for current month tag only)
-    const currentCycle = stats.find(c => c.tag === currentTag);
-    const calculatedCurrent = currentCycle 
-        ? (currentCycle.baseLend || 0) - (currentCycle.repaid || 0) - (currentCycle.cashback || 0) 
-        : 0;
-
-    return { 
-        totalBalance: calculatedTotal,
-        currentCycleDebt: calculatedCurrent
-    };
-  }, [person.cycle_stats, person.balance, person.current_cycle_label, person.current_cycle_debt]);
+  const { totalBalance, currentCycleDebt, otherCyclesWithDebtCount } = calculatedStats;
   const { copied, setCopied } = copyState;
 
   switch (key) {
@@ -443,6 +423,14 @@ function renderCell(
                   sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
                   showQrImage={person.sheet_show_qr_image ?? undefined}
                   isMasterSheetEnabled={person.is_master_sheet_enabled}
+                  allCycles={person.cycle_stats || []}
+                  selectedYear={now.getFullYear().toString()}
+                  activeCycleRemains={currentCycleDebt}
+                  isSettled={currentCycleDebt === 0}
+                  onCycleChange={(tag) => {
+                    // Update: Link to detail page for that cycle
+                    window.location.href = `/people/${getPersonRouteId(person)}?tag=${tag}`;
+                  }}
                   accounts={accounts}
                   className="w-full h-8"
                   buttonClassName="text-[11px] font-black rounded-none"
@@ -484,9 +472,9 @@ function renderCell(
                  </span>
                </div>
 
-               {overdueCount > 0 && (
-                  <div className="h-5 px-2 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 leading-none shadow-sm tooltip" title="Cycles Past Due">
-                    +{overdueCount}
+               {otherCyclesWithDebtCount > 0 && (
+                  <div className="h-5 px-2 rounded-full bg-slate-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 leading-none shadow-sm tooltip" title="Debt exists in other cycles (Past or Future)">
+                    +{otherCyclesWithDebtCount}
                   </div>
                )}
             </div>
@@ -526,24 +514,6 @@ function renderCell(
       return (
         <TooltipProvider>
           <div className="action-cell flex items-center gap-1">
-            <Tooltip delayDuration={300}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAudit?.();
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="bg-indigo-900 text-white border-indigo-800">
-                <p>Re-Align Audit</p>
-              </TooltipContent>
-            </Tooltip>
 
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>

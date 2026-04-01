@@ -62,25 +62,31 @@ function mapPerson(record: PocketBaseRecord): Person {
 export async function resolvePocketBasePersonRecord(sourceOrPocketBaseId: string): Promise<PocketBaseRecord | null> {
   if (!sourceOrPocketBaseId) return null
 
-  try {
-    return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', sourceOrPocketBaseId)
-  } catch {
-    // continue
+  const isPbId = sourceOrPocketBaseId.length === 15 && !sourceOrPocketBaseId.includes('-')
+  const isUuidFormat = isUuid(sourceOrPocketBaseId)
+
+  // 1. Direct fetch if it looks like a PB ID
+  if (isPbId) {
+    try {
+      return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', sourceOrPocketBaseId)
+    } catch { /* Probing next */ }
   }
 
+  // 2. Try as source_id / source ID
   try {
     const pbId = toPocketBaseId(sourceOrPocketBaseId)
-    return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', pbId)
-  } catch {
-    // continue
-  }
+    if (pbId !== sourceOrPocketBaseId) {
+        return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', pbId)
+    }
+  } catch { /* Probing next */ }
 
+  // 3. Try lookup by slug
   try {
     const escapedId = sourceOrPocketBaseId.replace(/'/g, "\\'")
     const bySlug = await pocketbaseList<PocketBaseRecord>('pvl_people_001', {
       perPage: 1,
       page: 1,
-      filter: `slug='${escapedId}'`,
+      filter: `slug='${escapedId}' || name~'${escapedId}'`,
     })
     return bySlug.items?.[0] ?? null
   } catch {
@@ -98,7 +104,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
       })
       return response.items.map(mapPerson).sort((a, b) => a.name.localeCompare(b.name))
     },
-    async () => [], // Supabase fallback removed
+    async () => [],
     'people.list'
   )
 }

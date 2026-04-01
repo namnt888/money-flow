@@ -166,6 +166,13 @@ export type PersonCycleStats = {
   repaid: number;
   netLend: number;
   remains: number;
+  isSettled?: boolean;
+  stats?: {
+    originalLend: number;
+    cashback: number;
+    repay: number;
+    lend: number;
+  };
 };
 
 export type Person = {

@@ -416,13 +416,19 @@ export async function syncTransactionToSheet(
       }
     }
 
+    let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at ?? txn.date ?? null)
+    if (personData.is_master_sheet_enabled && cycleTag && isYYYYMM(cycleTag)) {
+      cycleTag = cycleTag.split('-')[0] // '2026-03' -> '2026'
+    }
+
     const payload = {
       ...buildPayload({
         ...txn,
+        tag: cycleTag, // Pass the truncated tag to builder for consistency
         shop_name: resolvedShopName,
       }, action),
       person_id: personId,
-      cycle_tag: resolveCycleTagForSheet(txn.tag, txn.occurred_at ?? txn.date ?? null),
+      cycle_tag: cycleTag,
       bank_account: showBankAccount ? resolvedBankInfo : '', // Send empty to clear if disabled
       img: showQrImage && qrImageUrl ? qrImageUrl : '' // Send empty to clear if disabled
     }
@@ -430,10 +436,10 @@ export async function syncTransactionToSheet(
     console.log(`[Sheet Sync] Sending payload to ${personId}:`, {
       action: payload.action,
       id: payload.id,
+      cycle_tag: payload.cycle_tag,
       shop: payload.shop,
       amount: payload.amount,
       note: payload.note,
-      notes: payload.notes,
       type: payload.type
     })
 
@@ -597,7 +603,10 @@ export async function syncAllTransactions(personId: string) {
     const cycleMap = new Map<string, typeof rows>()
 
     for (const txn of eligibleRows) {
-      const cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at)
+      let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at)
+      if (personData?.is_master_sheet_enabled && cycleTag && isYYYYMM(cycleTag)) {
+        cycleTag = cycleTag.split('-')[0]
+      }
       if (!cycleMap.has(cycleTag)) {
         cycleMap.set(cycleTag, [])
       }
