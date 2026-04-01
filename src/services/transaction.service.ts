@@ -453,6 +453,7 @@ export async function loadTransactions(options: {
   categoryId?: string;
   shopId?: string;
   installmentPlanId?: string;
+  serviceId?: string | null;
   limit?: number;
   context?: "person" | "account" | "general";
   includeVoided?: boolean;
@@ -481,6 +482,12 @@ export async function loadTransactions(options: {
     if (options.shopId) filterParts.push(`shop_id = '${toPocketBaseId(options.shopId, "shops")}'`);
     if (options.categoryId) filterParts.push(`category_id = '${toPocketBaseId(options.categoryId, "categories")}'`);
     if (options.installmentPlanId) filterParts.push(`installment_plan_id = '${toPocketBaseId(options.installmentPlanId, "installments")}'`);
+    if (options.serviceId) {
+      filterParts.push(`metadata ~ "${options.serviceId}"`);
+    } else if (options.serviceId === null) {
+      // In "All Services" mode, filter for any transaction that has a service_id in metadata
+      filterParts.push('metadata ~ "service_id"');
+    }
 
     if (options.tag) {
       filterParts.push(`tag = '${options.tag}'`);
