@@ -248,7 +248,14 @@ export async function getPeople(options?: {
           cashback: Math.round(back),
           repaid: Math.round(repay),
           netLend: Math.round(initial - back),
-          remains: Math.round(balance)
+          remains: Math.round(balance),
+          isSettled: balance < 1000,
+          stats: {
+            originalLend: Math.round(initial),
+            cashback: Math.round(back),
+            repay: Math.round(repay),
+            lend: Math.round(initial - back)
+          }
         });
       });
 

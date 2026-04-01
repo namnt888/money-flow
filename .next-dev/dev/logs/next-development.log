@@ -55,3 +55,197 @@
 [00:09:02.617] Browser LOG        operationMode: add
 [00:09:02.617] Browser LOG        ℹ️ No initialData - using defaults
 [00:09:03.287] Server  LOG     [DB:PB] accounts.getAll
+[00:12:36.104] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:12:36.693] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:12:36.861] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:12:37.530] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:12:38.418] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
+[00:12:48.632] Browser LOG     🎨 defaultFormValues computed:
+[00:12:48.632] Browser LOG        initialData: undefined
+[00:12:48.632] Browser LOG        operationMode: add
+[00:12:48.632] Browser LOG        ℹ️ No initialData - using defaults
+[00:12:48.632] Browser LOG     🎨 defaultFormValues computed:
+[00:12:48.632] Browser LOG        initialData: undefined
+[00:12:48.632] Browser LOG        operationMode: add
+[00:12:48.632] Browser LOG        ℹ️ No initialData - using defaults
+[00:12:54.717] Server  LOG     [Stats:PB] resolve account: {}
+[00:12:55.766] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:12:56.535] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:12:57.611] Server  LOG     [Stats:PB] resolve account: {}
+[00:12:58.117] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:12:58.463] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:12:59.148] Server  LOG     [DB:PB] accounts.getAll
+[00:13:24.836] Server  LOG     [DB:PB] accounts.getAll
+[00:13:31.038] Browser LOG     🎨 defaultFormValues computed:
+[00:13:31.038] Browser LOG        initialData: null
+[00:13:31.038] Browser LOG        operationMode: add
+[00:13:31.038] Browser LOG        ℹ️ No initialData - using defaults
+[00:13:31.038] Browser LOG     🎨 defaultFormValues computed:
+[00:13:31.038] Browser LOG        initialData: null
+[00:13:31.038] Browser LOG        operationMode: add
+[00:13:31.038] Browser LOG        ℹ️ No initialData - using defaults
+[00:21:15.755] Server  LOG      ✓ Compiled in 2.5s
+[00:21:26.552] Server  LOG      ✓ Compiled in 2.2s
+[00:21:40.780] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
+Parsing ecmascript source code failed
+  413 |             <div className="w-[175px] shrink-0">
+  414 |               {person.sheet_link ? (
+> 415 |                   allCycles={person.cycle_stats || []}
+      |                                    ^
+  416 |                   selectedYear={now.getFullYear().toString()}
+  417 |                   activeCycleRemains={currentCycleDebt}
+  418 |                   isSettled={currentCycleDebt === 0}
+
+Expected a semicolon
+
+Import traces:
+  Client Component Browser:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+[00:21:44.084] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
+Parsing ecmascript source code failed
+  413 |             <div className="w-[175px] shrink-0">
+  414 |               {person.sheet_link ? (
+> 415 |                   allCycles={person.cycle_stats || []}
+      |                                    ^
+  416 |                   selectedYear={now.getFullYear().toString()}
+  417 |                   activeCycleRemains={currentCycleDebt}
+  418 |                   isSettled={currentCycleDebt === 0}
+
+Expected a semicolon
+
+Import traces:
+  Client Component Browser:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+[00:21:45.380] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:21:45.476] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:21:45.678] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:21:45.745] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:21:45.822] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
+[00:22:08.424] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
+Parsing ecmascript source code failed
+  413 |             <div className="w-[175px] shrink-0">
+  414 |               {person.sheet_link ? (
+> 415 |                   allCycles={person.cycle_stats || []}
+      |                                    ^
+  416 |                   selectedYear={now.getFullYear().toString()}
+  417 |                   activeCycleRemains={currentCycleDebt}
+  418 |                   isSettled={currentCycleDebt === 0}
+
+Expected a semicolon
+
+Import traces:
+  Client Component Browser:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
+    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
+    ./src/app/people/page.tsx [Server Component]
+[00:22:10.073] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:22:10.162] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:22:10.487] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:22:10.577] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:22:10.623] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:22:44.623] Server  LOG      ✓ Compiled in 2s
+[00:24:18.210] Browser LOG     🎨 defaultFormValues computed:
+[00:24:18.211] Browser LOG        initialData: undefined
+[00:24:18.211] Browser LOG        operationMode: add
+[00:24:18.211] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:18.211] Browser LOG     🎨 defaultFormValues computed:
+[00:24:18.211] Browser LOG        initialData: undefined
+[00:24:18.211] Browser LOG        operationMode: add
+[00:24:18.211] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:42.019] Browser LOG     🎨 defaultFormValues computed:
+[00:24:42.019] Browser LOG        initialData: undefined
+[00:24:42.019] Browser LOG        operationMode: add
+[00:24:42.019] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:42.019] Browser LOG     🎨 defaultFormValues computed:
+[00:24:42.019] Browser LOG        initialData: undefined
+[00:24:42.019] Browser LOG        operationMode: add
+[00:24:42.019] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:50.709] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:24:50.798] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:24:51.147] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:24:51.216] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:24:51.332] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:24:53.885] Browser LOG     🎨 defaultFormValues computed:
+[00:24:53.885] Browser LOG        initialData: undefined
+[00:24:53.885] Browser LOG        operationMode: add
+[00:24:53.885] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:53.885] Browser LOG     🎨 defaultFormValues computed:
+[00:24:53.885] Browser LOG        initialData: undefined
+[00:24:53.885] Browser LOG        operationMode: add
+[00:24:53.885] Browser LOG        ℹ️ No initialData - using defaults
+[00:24:55.831] Server  LOG     [Stats:PB] resolve account: {}
+[00:24:56.124] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:24:56.441] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:25:00.978] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:25:01.088] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:25:01.299] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:25:01.380] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:25:01.543] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
+[00:25:20.046] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:25:20.131] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:25:20.328] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:25:20.385] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:25:20.453] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:26:19.350] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:26:19.534] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:26:19.697] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:26:19.782] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:26:20.079] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
+[00:27:00.972] Browser LOG     🎨 defaultFormValues computed:
+[00:27:00.972] Browser LOG        initialData: undefined
+[00:27:00.972] Browser LOG        operationMode: add
+[00:27:00.972] Browser LOG        ℹ️ No initialData - using defaults
+[00:27:00.972] Browser LOG     🎨 defaultFormValues computed:
+[00:27:00.972] Browser LOG        initialData: undefined
+[00:27:00.972] Browser LOG        operationMode: add
+[00:27:00.972] Browser LOG        ℹ️ No initialData - using defaults
+[00:27:40.165] Browser LOG     🎨 defaultFormValues computed:
+[00:27:40.165] Browser LOG        initialData: undefined
+[00:27:40.166] Browser LOG        operationMode: add
+[00:27:40.166] Browser LOG        ℹ️ No initialData - using defaults
+[00:27:40.166] Browser LOG     🎨 defaultFormValues computed:
+[00:27:40.166] Browser LOG        initialData: undefined
+[00:27:40.166] Browser LOG        operationMode: add
+[00:27:40.166] Browser LOG        ℹ️ No initialData - using defaults
+[00:29:09.204] Browser LOG     🎨 defaultFormValues computed:
+[00:29:09.204] Browser LOG        initialData: undefined
+[00:29:09.204] Browser LOG        operationMode: add
+[00:29:09.204] Browser LOG        ℹ️ No initialData - using defaults
+[00:29:09.204] Browser LOG     🎨 defaultFormValues computed:
+[00:29:09.204] Browser LOG        initialData: undefined
+[00:29:09.204] Browser LOG        operationMode: add
+[00:29:09.204] Browser LOG        ℹ️ No initialData - using defaults
+[00:29:23.856] Server  LOG     [Stats:PB] resolve account: {}
+[00:29:24.672] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:29:24.975] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}

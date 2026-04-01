@@ -5571,6 +5571,14 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                 sheetLinkedBankId: person.sheet_linked_bank_id ?? undefined,
                                 showQrImage: person.sheet_show_qr_image ?? undefined,
                                 isMasterSheetEnabled: person.is_master_sheet_enabled,
+                                allCycles: person.cycle_stats || [],
+                                selectedYear: now.getFullYear().toString(),
+                                activeCycleRemains: currentCycleDebt,
+                                isSettled: currentCycleDebt === 0,
+                                onCycleChange: (tag)=>{
+                                    // Update: Link to detail page for that cycle
+                                    window.location.href = `/people/${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$person$2d$route$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getPersonRouteId"])(person)}?tag=${tag}`;
+                                },
                                 accounts: accounts,
                                 className: "w-full h-8",
                                 buttonClassName: "text-[11px] font-black rounded-none",
@@ -5595,19 +5603,19 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                             className: "h-3 w-3 opacity-50 group-hover:opacity-100"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 443,
+                                            lineNumber: 451,
                                             columnNumber: 21
                                         }, this),
                                         person.current_cycle_label || "NO TAG"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 442,
+                                    lineNumber: 450,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                lineNumber: 435,
+                                lineNumber: 443,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
@@ -5625,12 +5633,12 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                         children: currentCycleDebt !== 0 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatMoneyVND"])(currentCycleDebt) : "Settled"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 459,
+                                        lineNumber: 467,
                                         columnNumber: 18
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 451,
+                                    lineNumber: 459,
                                     columnNumber: 16
                                 }, this),
                                 otherCyclesWithDebtCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5642,13 +5650,13 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 468,
+                                    lineNumber: 476,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 450,
+                            lineNumber: 458,
                             columnNumber: 13
                         }, this)
                     ]
@@ -5668,7 +5676,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                             className: "h-3.5 w-3.5 text-emerald-600"
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 480,
+                            lineNumber: 488,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5676,13 +5684,13 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                             children: "Settled"
                         }, void 0, false, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 481,
+                            lineNumber: 489,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                    lineNumber: 479,
+                    lineNumber: 487,
                     columnNumber: 11
                 }, this);
             }
@@ -5691,7 +5699,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                 className: "text-amber-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 486,
+                lineNumber: 494,
                 columnNumber: 9
             }, this);
         case "repayment":
@@ -5700,7 +5708,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                 className: "text-emerald-600 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 493,
+                lineNumber: 501,
                 columnNumber: 9
             }, this);
         case "cashback_total":
@@ -5709,7 +5717,7 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                 className: "text-amber-500 font-bold"
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 500,
+                lineNumber: 508,
                 columnNumber: 9
             }, this);
         case "action":
@@ -5734,17 +5742,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 521,
+                                            lineNumber: 529,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 512,
+                                        lineNumber: 520,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 511,
+                                    lineNumber: 519,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5753,18 +5761,18 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                         children: "Lend Money"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 525,
+                                        lineNumber: 533,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 524,
+                                    lineNumber: 532,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 510,
+                            lineNumber: 518,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -5784,17 +5792,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 540,
+                                            lineNumber: 548,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 531,
+                                        lineNumber: 539,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 530,
+                                    lineNumber: 538,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5803,18 +5811,18 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                         children: "Repay Debt"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 544,
+                                        lineNumber: 552,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 543,
+                                    lineNumber: 551,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 529,
+                            lineNumber: 537,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -5834,17 +5842,17 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                            lineNumber: 559,
+                                            lineNumber: 567,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 550,
+                                        lineNumber: 558,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 549,
+                                    lineNumber: 557,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -5852,29 +5860,29 @@ function renderCell(person, key, onEdit, onLend, onRepay, copyState, calculatedS
                                         children: "Edit Details"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                        lineNumber: 563,
+                                        lineNumber: 571,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                                    lineNumber: 562,
+                                    lineNumber: 570,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                            lineNumber: 548,
+                            lineNumber: 556,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                    lineNumber: 508,
+                    lineNumber: 516,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/people/v2/people-row-v2.tsx",
-                lineNumber: 507,
+                lineNumber: 515,
                 columnNumber: 9
             }, this);
         default:

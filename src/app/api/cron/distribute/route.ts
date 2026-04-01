@@ -5,7 +5,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
+
+  if (!process.env.CRON_SECRET) {
+    console.error('[Cron] CRON_SECRET is not configured in environment variables');
+    return new Response('CRON_SECRET not configured', { status: 500 });
+  }
+
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.warn(`[Cron] Unauthorized request. Authorization header length: ${authHeader?.length || 0}`);
     return new Response('Unauthorized', { status: 401 });
   }
 

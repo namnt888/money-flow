@@ -423,6 +423,14 @@ function renderCell(
                   sheetLinkedBankId={person.sheet_linked_bank_id ?? undefined}
                   showQrImage={person.sheet_show_qr_image ?? undefined}
                   isMasterSheetEnabled={person.is_master_sheet_enabled}
+                  allCycles={person.cycle_stats || []}
+                  selectedYear={now.getFullYear().toString()}
+                  activeCycleRemains={currentCycleDebt}
+                  isSettled={currentCycleDebt === 0}
+                  onCycleChange={(tag) => {
+                    // Update: Link to detail page for that cycle
+                    window.location.href = `/people/${getPersonRouteId(person)}?tag=${tag}`;
+                  }}
                   accounts={accounts}
                   className="w-full h-8"
                   buttonClassName="text-[11px] font-black rounded-none"
