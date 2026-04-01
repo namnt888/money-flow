@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Globe, Bot, Send, Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ServiceCreateDialog } from '@/components/services/service-create-dialog'
+import { GlobalServiceSettingsDialog } from '@/components/services/global-service-settings-dialog'
 import { runAllServiceDistributionsAction } from '@/actions/service-actions'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -16,9 +17,10 @@ import Link from 'next/link'
 interface ServicesPageContentProps {
     services: any[]
     people: any[]
+    globalConfig?: any
 }
 
-export function ServicesPageContent({ services, people }: ServicesPageContentProps) {
+export function ServicesPageContent({ services, people, globalConfig }: ServicesPageContentProps) {
     const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
     const [isDistributing, setIsDistributing] = useState(false)
     const [isTesting, setIsTesting] = useState(false)
@@ -111,15 +113,25 @@ export function ServicesPageContent({ services, people }: ServicesPageContentPro
                                                 className="h-4 w-4 mr-2 rounded-sm"
                                             />
                                         )}
-                                        {service.name}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
+                                    {service.name}
+                                </TabsTrigger>
+                            ))}
 
-                            {/* Action Buttons */}
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={handleTestBot}
+                            {globalConfig?.is_enabled && (
+                                <div className="ml-auto hidden lg:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                                    <Bot className="h-3.5 w-3.5 text-blue-600" />
+                                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                                        Global: Day {globalConfig.config?.runDay}, {globalConfig.config?.runHour?.toString().padStart(2, '0')}:00
+                                    </span>
+                                </div>
+                            )}
+                        </TabsList>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                            <GlobalServiceSettingsDialog />
+                            <Button
+                                onClick={handleTestBot}
                                     disabled={isTesting}
                                     size="sm"
                                     variant="outline"

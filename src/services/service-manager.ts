@@ -351,6 +351,30 @@ export async function getServiceBotConfig(serviceId: string) {
   return res.items[0] || null;
 }
 
+export async function getGlobalServiceBotConfig() {
+  const key = 'global_service_bot';
+  const res = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
+  return res.items[0] || null;
+}
+
+export async function saveGlobalServiceBotConfig(config: any) {
+  const key = 'global_service_bot';
+  const payload = {
+    key: key,
+    name: 'Global Service Distribution Bot',
+    is_enabled: config.isEnabled,
+    config: config
+  };
+
+  const existing = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
+  if (existing.items.length > 0) {
+    await pocketbaseUpdate('bot_configs', existing.items[0].id, payload);
+  } else {
+    await pocketbaseCreate('bot_configs', payload);
+  }
+  return true;
+}
+
 export async function saveServiceBotConfig(serviceId: string, config: any) {
   const context = `saveServiceBotConfig:${serviceId}`;
   logSource('PB', context);
@@ -407,15 +431,45 @@ export async function distributeAllServices(
     let successCount = 0, skippedCount = 0, failedCount = 0;
     const reports: any[] = [];
 
+    // 1. Get Global Config
+    const globalConfigRes = await getGlobalServiceBotConfig();
+    const globalConfig = globalConfigRes?.is_enabled ? globalConfigRes.config : null;
+    
+    if (globalConfig) {
+      console.error(`🔴 [DistributeAll] Using GLOBAL schedule: Day ${globalConfig.runDay}, Time ${globalConfig.runHour}:${globalConfig.runMinute || 0}`);
+    }
+
     for (const service of services) {
       try {
-        const dueDay = service.due_day || service.billing_day || 1;
-        const checkDay = activeDate.getDate();
+        const globalRunDay = globalConfig?.runDay;
+        const globalRunHour = globalConfig?.runHour || 0;
+        const globalRunMinute = globalConfig?.runMinute || 0;
+        
+        const serviceDueDay = service.due_day || service.billing_day || 1;
+        
+        // Priority to global if globalConfig exists
+        const dueDay = globalConfig ? globalRunDay : serviceDueDay;
+        const dueHour = globalConfig ? globalRunHour : 0;
+        const dueMinute = globalConfig ? globalRunMinute : 0;
 
-        if (!force && checkDay < dueDay) {
+        const checkDay = activeDate.getDate();
+        const checkHour = activeDate.getHours();
+        const checkMinute = activeDate.getMinutes();
+
+        // Skip if not yet due (Day, Hour, Minute)
+        const isNotDueYet = !force && (
+          checkDay < dueDay || 
+          (checkDay === dueDay && (checkHour < dueHour || (checkHour === dueHour && checkMinute < dueMinute)))
+        );
+
+        if (isNotDueYet) {
           skippedCount++;
-          console.error(`  - [${service.name}] Skipped: Due on day ${dueDay} (current: ${checkDay})`);
-          reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay} (current: ${checkDay})` });
+          console.error(`  - [${service.name}] Skipped: Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`);
+          reports.push({ 
+            name: service.name, 
+            status: 'skipped', 
+            reason: `Due at day ${dueDay} time ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})` 
+          });
           continue;
         }
 

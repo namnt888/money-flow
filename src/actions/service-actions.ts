@@ -9,7 +9,9 @@ import {
   saveServiceBotConfig, 
   distributeAllServices,
   recallServiceDistribution,
-  getServices
+  getServices,
+  getGlobalServiceBotConfig,
+  saveGlobalServiceBotConfig
 } from '@/services/service-manager'
 import { processBatchInstallments } from '@/services/installment.service'
 import { revalidatePath } from 'next/cache'
@@ -75,6 +77,16 @@ export async function getServiceBotConfigAction(serviceId: string) {
 export async function saveServiceBotConfigAction(serviceId: string, config: any) {
   const result = await saveServiceBotConfig(serviceId, config)
   revalidatePath(`/services/${serviceId}`)
+  return result
+}
+
+export async function getGlobalServiceBotConfigAction() {
+  return await getGlobalServiceBotConfig()
+}
+
+export async function saveGlobalServiceBotConfigAction(config: any) {
+  const result = await saveGlobalServiceBotConfig(config)
+  revalidatePath('/services')
   return result
 }
 
