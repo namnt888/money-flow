@@ -139,6 +139,23 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
         } catch (e) {}
     }
 
+    function insertVariable(variable: string) {
+        const input = document.getElementById('botNoteTemplateInput') as HTMLInputElement;
+        if (!input) {
+            setBotNoteTemplate(prev => prev + variable);
+            return;
+        }
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const currentText = botNoteTemplate;
+        const newText = currentText.substring(0, start) + variable + currentText.substring(end);
+        setBotNoteTemplate(newText);
+        setTimeout(() => {
+            input.focus();
+            input.setSelectionRange(start + variable.length, start + variable.length);
+        }, 0);
+    }
+
     function formatVNDLabel(value: number) {
         if (!value) return ''
         if (value >= 1000000) {
@@ -356,19 +373,45 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                                 <div className="space-y-2 col-span-2">
                                     <Label className="text-slate-600">Note Template</Label>
                                     <Input 
+                                        id="botNoteTemplateInput"
                                         value={botNoteTemplate} 
                                         onChange={(e) => setBotNoteTemplate(e.target.value)} 
                                         className="font-mono text-sm rounded-lg h-10 border-slate-200" 
                                         placeholder="{service} {date}..." 
                                     />
-                                    <div className="mt-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        {[
+                                            { label: '{service}', value: '{service}', hint: 'Service Name' },
+                                            { label: '{date}', value: '{date}', hint: 'YYYY-MM' },
+                                            { label: '{slots}', value: '{slots}', hint: 'Member Slots' },
+                                            { label: '{price}', value: '{price}', hint: 'Price/Slot' },
+                                            { label: '{total_slots}', value: '{total_slots}', hint: 'Total Service Slots' },
+                                            { label: '{member}', value: '{member}', hint: 'Member Name' },
+                                            { label: '{initialPrice}', value: '{initialPrice}', hint: 'Full Price' },
+                                        ].map((v) => (
+                                            <button
+                                                key={v.value}
+                                                type="button"
+                                                onClick={() => insertVariable(v.value)}
+                                                className="px-2 py-1 rounded-md bg-slate-100 hover:bg-blue-100 hover:text-blue-600 text-[10px] font-mono text-slate-500 transition-colors border border-transparent hover:border-blue-200 flex flex-col items-center gap-0.5"
+                                                title={v.hint}
+                                            >
+                                                <span>{v.label}</span>
+                                                <span className="text-[8px] opacity-70 font-sans tracking-tighter">{v.hint}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="mt-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Real-time Preview</p>
                                         <p className="text-xs font-mono text-slate-600 break-all">
                                             {botNoteTemplate
                                                 .replace(/{service}/g, name || 'Service')
                                                 .replace(/{date}/g, monthTag)
+                                                .replace(/{member}/g, 'Member ABC')
                                                 .replace(/{slots}/g, '1')
                                                 .replace(/{price}/g, (price || 0).toLocaleString())
+                                                .replace(/{total_slots}/g, (service.max_slots || 6).toString())
+                                                .replace(/{initialPrice}/g, (price || 0).toLocaleString())
                                                 .replace(/{{slots}}/g, '1')
                                                 .replace(/{{price}}/g, (price || 0).toLocaleString())
                                             }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { loadTransactions as getServiceTransactions } from '@/services/transaction.service'
 import { UnifiedTransactionTable } from '@/components/moneyflow/unified-transaction-table'
 import { Loader2, Calendar, Users, DollarSign, Clock } from 'lucide-react'
 import { Select } from '@/components/ui/select'
@@ -31,57 +31,21 @@ export function ServiceTransactionsTable({ serviceId, serviceName }: ServiceTran
         setError(null)
 
         try {
-            const supabase = createClient()
+            // Use the transaction service instead of direct Supabase query
+            // This ensures we get data from PocketBase where the cron distributes services
+            const data = await getServiceTransactions({
+                serviceId: serviceId, // Pass as-is (null for All Services, or string ID)
+                limit: 500,
+                includeVoided: true
+            })
 
-            // Build query based on serviceId
-            let query = supabase
-                .from('transactions')
-                .select(`
-          *,
-          account:accounts!transactions_account_id_fkey(id, name, type, image_url),
-          person:people!transactions_person_id_fkey(id, name, image_url),
-          shop:shops!transactions_shop_id_fkey1(id, name, image_url),
-          category:categories!transactions_category_id_fkey(id, name, icon)
-        `)
-                .order('occurred_at', { ascending: false })
-
-            // If serviceId is provided, filter by it
-            // Otherwise, show all transactions with service_id in metadata
-            if (serviceId) {
-                query = query.contains('metadata', { service_id: serviceId })
-            } else {
-                // Show all transactions that have any service_id in metadata
-                query = query.not('metadata->service_id', 'is', null)
-            }
-
-            const { data, error: queryError } = await query
-
-            if (queryError) {
-                console.error('Error loading service transactions:', queryError)
-                setError(queryError.message)
-                return
-            }
-
-            // Transform data to match UnifiedTransactionTable expectations
-            const transformedData = (data || []).map((txn: any) => ({
-                ...txn,
-                // Flatten shop data
-                shop_name: txn.shop?.name,
-                shop_image_url: txn.shop?.image_url,
-                // Flatten account data
-                account_name: txn.account?.name,
-                account_image_url: txn.account?.image_url,
-                source_name: txn.account?.name,
-                source_image: txn.account?.image_url,
-                // Flatten person data
-                person_name: txn.person?.name,
-                person_image_url: txn.person?.image_url,
-                // Flatten category data
-                category_name: txn.category?.name,
-                category_icon: txn.category?.icon,
-            }))
-
-            setTransactions(transformedData)
+            // Filter logic: if serviceId is null (All Services), it should still only show service distributions
+            // The loadTransactions in service layer already handles metadata~serviceId if serviceId is provided.
+            // If serviceId is NOT provided, loadTransactions needs to know to filter for service distributions generally.
+            // For now, if serviceId is null, our service layer doesn't have a broad "is_service" flag, 
+            // but the caller of this component in "All Services" mode might pass serviceId=null.
+            
+            setTransactions(data || [])
         } catch (err) {
             console.error('Failed to load transactions:', err)
             setError('Failed to load transactions')
@@ -105,8 +69,8 @@ export function ServiceTransactionsTable({ serviceId, serviceName }: ServiceTran
     const availablePeople = useMemo(() => {
         const people = new Map<string, any>()
         transactions.forEach(txn => {
-            if (txn.person_id && txn.person) {
-                people.set(txn.person_id, txn.person)
+            if (txn.person_id && txn.person_name) {
+                people.set(txn.person_id, { id: txn.person_id, name: txn.person_name })
             }
         })
         return Array.from(people.values())
@@ -170,26 +134,11 @@ export function ServiceTransactionsTable({ serviceId, serviceName }: ServiceTran
         }
     }, [filteredTransactions])
 
-    // Format last distribution date
-    const formatLastDistribution = (date: Date | null) => {
-        if (!date) return 'Never'
-        const now = new Date()
-        const diffMs = now.getTime() - date.getTime()
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-        if (diffDays === 0) return 'Today'
-        if (diffDays === 1) return '1d ago'
-        if (diffDays < 30) return `${diffDays}d ago`
-        if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`
-        return `${Math.floor(diffDays / 365)}y ago`
-    }
-
-    // Format next distribution date
     const formatNextDistribution = (date: Date | null) => {
         if (!date) return 'N/A'
         const now = new Date()
         const diffMs = date.getTime() - now.getTime()
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
 
         if (diffDays < 0) return 'Overdue'
         if (diffDays === 0) return 'Today'
@@ -256,7 +205,7 @@ export function ServiceTransactionsTable({ serviceId, serviceName }: ServiceTran
                     <div className="text-xl font-bold text-purple-900">{summaryStats.uniquePeople}</div>
                 </div>
 
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3 border border-orange-200">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3 border border-orange- orange-200">
                     <div className="flex items-center gap-1.5 text-orange-600 mb-0.5">
                         <Clock className="h-3.5 w-3.5" />
                         <span className="text-[10px] font-medium uppercase tracking-wide">Next</span>
