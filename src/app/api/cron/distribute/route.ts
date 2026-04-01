@@ -5,21 +5,20 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  if (!process.env.CRON_SECRET) {
-    console.error('[Cron] CRON_SECRET is not configured in environment variables');
-    return new Response('CRON_SECRET not configured', { status: 500 });
-  }
-
-  // Verbose logging for debugging 401s in Vercel
-  const isAuthorized = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-  if (!isAuthorized) {
-    console.warn(`[Cron] Unauthorized request. Header present: ${!!authHeader}, Length: ${authHeader?.length || 0}`);
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-       const partial = authHeader.substring(7, 10) + '...';
-       console.warn(`[Cron] Header starts with: ${partial}`);
+  if (cronSecret) {
+    const isAuthorized = authHeader === `Bearer ${cronSecret}`;
+    if (!isAuthorized) {
+      console.warn(`[Cron] Unauthorized request. Header present: ${!!authHeader}, Length: ${authHeader?.length || 0}`);
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+         const partial = authHeader.substring(7, 10) + '...';
+         console.warn(`[Cron] Header starts with: ${partial}`);
+      }
+      return new Response('Unauthorized', { status: 401 });
     }
-    return new Response('Unauthorized', { status: 401 });
+  } else {
+    console.warn('[Cron] CRON_SECRET is not configured. Running UNSECURED.');
   }
 
   try {

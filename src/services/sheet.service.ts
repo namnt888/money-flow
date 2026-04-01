@@ -400,7 +400,8 @@ export async function syncTransactionToSheet(
       }
     }
 
-    // Repayment rows often have no shop; fallback to target bank name for sheet column K.
+    // Repayment/Service rows: ensuring shop_name stays as is if provided.
+    // If not provided, fallback to target bank name for sheet column K.
     if (!resolvedShopName) {
       const fallbackAccountId =
         txn.type === 'repayment'
