@@ -264,11 +264,11 @@ async function PeopleDetailContent({ params, searchParams }) {
             }
             return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnifiedTransactions"])({
                 personId: sourcePersonId,
-                limit: activeTag === 'all' ? 2005 : 1000,
+                limit: 2000,
                 context: 'person',
                 dateFrom: effectiveDateFrom,
                 dateTo: effectiveDateTo,
-                tag: activeTag === 'all' || activeTag === '3m' || activeTag === 'year' ? undefined : activeTag,
+                // Remove tag filtering here so usePersonDetails gets ALL transactions to group into cycles
                 includeVoided: true
             });
         })

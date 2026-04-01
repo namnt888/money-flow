@@ -716,6 +716,8 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
 
     revalidatePath("/transactions");
     revalidatePath(`/transactions/${pbId}`);
+    revalidatePath("/people");
+    revalidatePersonPaths(newPersonId || oldPersonId);
     return true;
   } catch (error) {
     console.error("[DB:PB] updateTransaction failed:", error);
@@ -875,6 +877,8 @@ export async function voidTransaction(id: string): Promise<boolean> {
     );
 
     revalidatePath("/transactions");
+    revalidatePath("/people");
+    revalidatePersonPaths(existing.person_id);
     return true;
   } catch (error) {
     console.error("[DB:PB] voidTransaction failed:", error);
@@ -928,6 +932,8 @@ export async function deleteTransactionCascade(id: string): Promise<boolean> {
     );
 
     revalidatePath("/transactions");
+    revalidatePath("/people");
+    revalidatePersonPaths(existing.person_id);
     return true;
   } catch (error) {
     console.error("[DB:PB] deleteTransactionCascade failed:", error);
@@ -1079,6 +1085,8 @@ export async function confirmRefund(
 
     try {
       revalidatePath("/transactions");
+      revalidatePath("/people");
+      revalidatePersonPaths(existing.person_id);
     } catch (revalidateError) {
       console.warn('[DB:PB] confirmRefund revalidate skipped:', revalidateError);
     }

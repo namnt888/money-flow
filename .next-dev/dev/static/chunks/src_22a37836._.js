@@ -1167,16 +1167,32 @@ function usePersonDetails({ person, transactions, debtTags, cycleSheets, urlTag 
             const now = new Date();
             const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
             groups.set(currentMonthTag, []);
-            if (urlTag && (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isYYYYMM"])(urlTag)) {
+            // Also ensure periodic tags are initialized as groups if relevant
+            if (urlTag === '3m' || urlTag === 'year' || urlTag === 'all') {
+                groups.set(urlTag, []);
+            } else if (urlTag && (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isYYYYMM"])(urlTag)) {
                 groups.set(urlTag, []);
             }
             activeTransactions.forEach({
                 "usePersonDetails.useMemo[debtCycles]": (txn)=>{
                     const tag = getTxnCycleTag(txn);
+                    // Standard grouping
                     if (!groups.has(tag)) {
                         groups.set(tag, []);
                     }
                     groups.get(tag)?.push(txn);
+                    // Periodic Aggregation
+                    const txnDate = new Date(txn.occurred_at || txn.created_at);
+                    const daysDiff = (now.getTime() - txnDate.getTime()) / (1000 * 60 * 60 * 24);
+                    if (urlTag === '3m' && daysDiff <= 90) {
+                        groups.get('3m')?.push(txn);
+                    }
+                    if (urlTag === 'year' && txnDate.getFullYear() === now.getFullYear()) {
+                        groups.get('year')?.push(txn);
+                    }
+                    if (urlTag === 'all') {
+                        groups.get('all')?.push(txn);
+                    }
                 }
             }["usePersonDetails.useMemo[debtCycles]"]);
             return Array.from(groups.entries()).map({
@@ -1329,6 +1345,14 @@ function usePersonDetails({ person, transactions, debtTags, cycleSheets, urlTag 
     // Current cycle info
     const currentCycle = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
         "usePersonDetails.useMemo[currentCycle]": ()=>{
+            // 1. If urlTag is provided, try to find it first
+            if (urlTag) {
+                const match = debtCycles.find({
+                    "usePersonDetails.useMemo[currentCycle].match": (c)=>c.tag === urlTag
+                }["usePersonDetails.useMemo[currentCycle].match"]);
+                if (match) return match;
+            }
+            // 2. Fallback to current month
             const now = new Date();
             const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
             return debtCycles.find({
@@ -1336,7 +1360,8 @@ function usePersonDetails({ person, transactions, debtTags, cycleSheets, urlTag 
             }["usePersonDetails.useMemo[currentCycle]"]) || debtCycles[0];
         }
     }["usePersonDetails.useMemo[currentCycle]"], [
-        debtCycles
+        debtCycles,
+        urlTag
     ]);
     return {
         metrics,

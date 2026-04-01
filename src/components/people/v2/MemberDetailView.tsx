@@ -880,7 +880,9 @@ export function MemberDetailView({
     const handleSlideSuccess = () => {
         setSelectedTxn(null)
         setSlideOverrideType(undefined)
-        router.refresh()
+        startTransition(() => {
+            router.refresh()
+        })
     }
 
     const handleSubmissionStart = () => {

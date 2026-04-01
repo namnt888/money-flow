@@ -13,6 +13,13 @@
 - **Type System (`src/types/moneyflow.types.ts`):** Extended `PersonCycleStats` interface to include `isSettled` and the `stats` breakdown.
 - **UI Component (`src/components/people/v2/people-row-v2.tsx`):** Added the missing `allCycles`, `activeCycleRemains`, and `isSettled` props to the `ManageSheetButton` in the row view.
 - **Navigation:** Updated the `onCycleChange` handler in the row view to redirect to the person's detail page with the selected cycle tag for a deep dive.
+- **Select-then-Apply UX (`ManageSheetButton.tsx`):**
+    - Transitioned to a deliberate selection workflow. Clicking a cycle or quick-select option now highlights it in **Amber** but requires an **Apply Change** button click to navigate.
+    - Added a sticky footer to the popover for better UX and to prevent accidental reloads.
+- **Virtual Aggregated Cycles (`use-person-details.ts`):** 
+    - Implemented "Virtual Cycles" for **Last 3 Months**, **This Year**, and **All-Time** views. 
+    - These views now correctly aggregate transactions into a single "session" for the UI, ensuring data consistency when following periodic navigation tags.
+- **UI Polish:** Increased year selector width and fixed layout breaking in the popover header.
 
 ### 2. Cron Job Distribution Fix
 **Problem:** The `/api/cron/distribute` job was failing with `401 Unauthorized` in Vercel.
@@ -33,6 +40,18 @@ The reconciliation logic is now stable using the **MAX(Raw, Sync)** strategy per
 - Otherwise, it uses the higher value between the raw transaction sum and the sync record to prevent data loss or double-counting.
 - Total balance is the sum of all individual cycle buckets.
 - `Cashback Total` is now strictly scoped to the `currentMonthTag` (2026-04).
+
+## 🛠️ Next Steps & Research (Critical for Next Agent)
+
+### 1. Service Page & Cron Verification
+**Task:** Research the `/services` page and logs to confirm if the **April 1st recurring transactions** were correctly created.
+- Check if services with `due_day = 1` have transactions generated for `2026-04-01`.
+- If missing, investigate `src/services/service-manager.ts` and verify if the cron actually fired (check Vercel Logs for `/api/cron/distribute`).
+- The user mentioned that even though it's April 1st, some expected services didn't seem to trigger.
+
+### 2. Monitoring Debt Balance
+- Verify that "Debt History" updates in real-time when adding new records from within the detail page.
+- Test the "Apply" workflow across multiple historical years (e.g. 2025 to 2026) to ensure the 3M/Year/All filters behave as expected.
 
 --- 
 *Last Updated: 2026-04-01 | Antigravity AI*

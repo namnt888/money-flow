@@ -2758,6 +2758,10 @@
     scale: .99;
   }
 
+  .scale-\[1\.01\] {
+    scale: 1.01;
+  }
+
   .scale-\[1\.4\] {
     scale: 1.4;
   }
@@ -8371,16 +8375,6 @@
     --tw-ring-color: var(--color-amber-100);
   }
 
-  .ring-amber-100\/50 {
-    --tw-ring-color: #fef3c680;
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .ring-amber-100\/50 {
-      --tw-ring-color: color-mix(in oklab, var(--color-amber-100) 50%, transparent);
-    }
-  }
-
   .ring-amber-200 {
     --tw-ring-color: var(--color-amber-200);
   }
@@ -8397,6 +8391,16 @@
 
   .ring-amber-400 {
     --tw-ring-color: var(--color-amber-400);
+  }
+
+  .ring-amber-400\/20 {
+    --tw-ring-color: #fcbb0033;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .ring-amber-400\/20 {
+      --tw-ring-color: color-mix(in oklab, var(--color-amber-400) 20%, transparent);
+    }
   }
 
   .ring-amber-500 {
@@ -9638,6 +9642,15 @@
 
   .placeholder\:text-slate-500::placeholder {
     color: var(--color-slate-500);
+  }
+
+  .first\:border-0:first-child {
+    border-style: var(--tw-border-style);
+    border-width: 0;
+  }
+
+  .first\:pt-0:first-child {
+    padding-top: calc(var(--spacing) * 0);
   }
 
   .last\:border-0:last-child {

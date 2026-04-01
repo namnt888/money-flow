@@ -1,251 +1,1350 @@
-[00:00:18.330] Server  LOG      ○ Compiling middleware ...
-[00:00:20.482] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:25.117] Server  LOG      ✓ Ready in 19.7s
-[00:01:40.968] Server  LOG      ○ Compiling /people ...
-[00:02:24.283] Server  LOG     [DB:PB] accounts.getAll
-[00:02:24.645] Server  LOG      ○ Compiling /api/sidebar/search ...
-[00:02:26.823] Browser LOG     🎨 defaultFormValues computed:
-[00:02:26.823] Browser LOG        initialData: undefined
-[00:02:26.824] Browser LOG        operationMode: add
-[00:02:26.824] Browser LOG        ℹ️ No initialData - using defaults
-[00:02:26.824] Browser LOG     🎨 defaultFormValues computed:
-[00:02:26.824] Browser LOG        initialData: undefined
-[00:02:26.824] Browser LOG        operationMode: add
-[00:02:26.824] Browser LOG        ℹ️ No initialData - using defaults
-[00:02:48.848] Browser LOG     🎨 defaultFormValues computed:
-[00:02:48.848] Browser LOG        initialData: null
-[00:02:48.848] Browser LOG        operationMode: add
-[00:02:48.848] Browser LOG        ℹ️ No initialData - using defaults
-[00:02:48.848] Browser LOG     🎨 defaultFormValues computed:
-[00:02:48.848] Browser LOG        initialData: null
-[00:02:48.848] Browser LOG        operationMode: add
-[00:02:48.848] Browser LOG        ℹ️ No initialData - using defaults
-[00:02:49.711] Server  LOG     [DB:PB] accounts.getAll
-[00:04:38.820] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
-[00:04:39.835] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:39.838] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:39.840] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:39.843] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:51.375] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
-[00:04:51.921] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:51.925] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:51.927] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:04:51.930] Server  LOG     [DB:PB] accounts.getDetails {}
-[00:07:57.246] Server  LOG      ○ Compiling /people/[id] ...
-[00:08:22.347] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:08:22.619] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:08:22.962] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:08:23.278] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:08:30.085] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
-[00:08:44.134] Server  LOG     [DB:PB] accounts.getAll
-[00:08:44.475] Browser LOG     🎨 defaultFormValues computed:
-[00:08:44.475] Browser LOG        initialData: undefined
-[00:08:44.475] Browser LOG        operationMode: add
-[00:08:44.475] Browser LOG        ℹ️ No initialData - using defaults
-[00:08:44.475] Browser LOG     🎨 defaultFormValues computed:
-[00:08:44.475] Browser LOG        initialData: undefined
-[00:08:44.475] Browser LOG        operationMode: add
-[00:08:44.476] Browser LOG        ℹ️ No initialData - using defaults
-[00:09:02.617] Browser LOG     🎨 defaultFormValues computed:
-[00:09:02.617] Browser LOG        initialData: null
-[00:09:02.617] Browser LOG        operationMode: add
-[00:09:02.617] Browser LOG        ℹ️ No initialData - using defaults
-[00:09:02.617] Browser LOG     🎨 defaultFormValues computed:
-[00:09:02.617] Browser LOG        initialData: null
-[00:09:02.617] Browser LOG        operationMode: add
-[00:09:02.617] Browser LOG        ℹ️ No initialData - using defaults
-[00:09:03.287] Server  LOG     [DB:PB] accounts.getAll
-[00:12:36.104] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:12:36.693] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:12:36.861] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:12:37.530] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:12:38.418] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
-[00:12:48.632] Browser LOG     🎨 defaultFormValues computed:
-[00:12:48.632] Browser LOG        initialData: undefined
-[00:12:48.632] Browser LOG        operationMode: add
-[00:12:48.632] Browser LOG        ℹ️ No initialData - using defaults
-[00:12:48.632] Browser LOG     🎨 defaultFormValues computed:
-[00:12:48.632] Browser LOG        initialData: undefined
-[00:12:48.632] Browser LOG        operationMode: add
-[00:12:48.632] Browser LOG        ℹ️ No initialData - using defaults
-[00:12:54.717] Server  LOG     [Stats:PB] resolve account: {}
-[00:12:55.766] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
-[00:12:56.535] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
-[00:12:57.611] Server  LOG     [Stats:PB] resolve account: {}
-[00:12:58.117] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
-[00:12:58.463] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
-[00:12:59.148] Server  LOG     [DB:PB] accounts.getAll
-[00:13:24.836] Server  LOG     [DB:PB] accounts.getAll
-[00:13:31.038] Browser LOG     🎨 defaultFormValues computed:
-[00:13:31.038] Browser LOG        initialData: null
-[00:13:31.038] Browser LOG        operationMode: add
-[00:13:31.038] Browser LOG        ℹ️ No initialData - using defaults
-[00:13:31.038] Browser LOG     🎨 defaultFormValues computed:
-[00:13:31.038] Browser LOG        initialData: null
-[00:13:31.038] Browser LOG        operationMode: add
-[00:13:31.038] Browser LOG        ℹ️ No initialData - using defaults
-[00:21:15.755] Server  LOG      ✓ Compiled in 2.5s
-[00:21:26.552] Server  LOG      ✓ Compiled in 2.2s
-[00:21:40.780] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
-Parsing ecmascript source code failed
-  413 |             <div className="w-[175px] shrink-0">
-  414 |               {person.sheet_link ? (
-> 415 |                   allCycles={person.cycle_stats || []}
-      |                                    ^
-  416 |                   selectedYear={now.getFullYear().toString()}
-  417 |                   activeCycleRemains={currentCycleDebt}
-  418 |                   isSettled={currentCycleDebt === 0}
-
-Expected a semicolon
-
-Import traces:
-  Client Component Browser:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-[00:21:44.084] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
-Parsing ecmascript source code failed
-  413 |             <div className="w-[175px] shrink-0">
-  414 |               {person.sheet_link ? (
-> 415 |                   allCycles={person.cycle_stats || []}
-      |                                    ^
-  416 |                   selectedYear={now.getFullYear().toString()}
-  417 |                   activeCycleRemains={currentCycleDebt}
-  418 |                   isSettled={currentCycleDebt === 0}
-
-Expected a semicolon
-
-Import traces:
-  Client Component Browser:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-[00:21:45.380] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:21:45.476] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:21:45.678] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:21:45.745] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:21:45.822] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
-[00:22:08.424] Browser ERROR   ./src/components/people/v2/people-row-v2.tsx:415:36
-Parsing ecmascript source code failed
-  413 |             <div className="w-[175px] shrink-0">
-  414 |               {person.sheet_link ? (
-> 415 |                   allCycles={person.cycle_stats || []}
-      |                                    ^
-  416 |                   selectedYear={now.getFullYear().toString()}
-  417 |                   activeCycleRemains={currentCycleDebt}
-  418 |                   isSettled={currentCycleDebt === 0}
-
-Expected a semicolon
-
-Import traces:
-  Client Component Browser:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component Browser]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./src/components/people/v2/people-row-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-table-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Client Component SSR]
-    ./src/components/people/v2/people-directory-v2.tsx [Server Component]
-    ./src/app/people/page.tsx [Server Component]
-[00:22:10.073] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:22:10.162] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:22:10.487] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:22:10.577] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:22:10.623] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
-[00:22:44.623] Server  LOG      ✓ Compiled in 2s
-[00:24:18.210] Browser LOG     🎨 defaultFormValues computed:
-[00:24:18.211] Browser LOG        initialData: undefined
-[00:24:18.211] Browser LOG        operationMode: add
-[00:24:18.211] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:18.211] Browser LOG     🎨 defaultFormValues computed:
-[00:24:18.211] Browser LOG        initialData: undefined
-[00:24:18.211] Browser LOG        operationMode: add
-[00:24:18.211] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:42.019] Browser LOG     🎨 defaultFormValues computed:
-[00:24:42.019] Browser LOG        initialData: undefined
-[00:24:42.019] Browser LOG        operationMode: add
-[00:24:42.019] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:42.019] Browser LOG     🎨 defaultFormValues computed:
-[00:24:42.019] Browser LOG        initialData: undefined
-[00:24:42.019] Browser LOG        operationMode: add
-[00:24:42.019] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:50.709] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:24:50.798] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:24:51.147] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:24:51.216] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:24:51.332] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
-[00:24:53.885] Browser LOG     🎨 defaultFormValues computed:
-[00:24:53.885] Browser LOG        initialData: undefined
-[00:24:53.885] Browser LOG        operationMode: add
-[00:24:53.885] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:53.885] Browser LOG     🎨 defaultFormValues computed:
-[00:24:53.885] Browser LOG        initialData: undefined
-[00:24:53.885] Browser LOG        operationMode: add
-[00:24:53.885] Browser LOG        ℹ️ No initialData - using defaults
-[00:24:55.831] Server  LOG     [Stats:PB] resolve account: {}
-[00:24:56.124] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
-[00:24:56.441] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
-[00:25:00.978] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:25:01.088] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:25:01.299] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:25:01.380] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:25:01.543] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
-[00:25:20.046] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:25:20.131] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:25:20.328] Server  LOG     [people.service] Merge config for Lâm: {}
-[00:25:20.385] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
-[00:25:20.453] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
-[00:26:19.350] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:26:19.534] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:26:19.697] Server  LOG     [people.service] Merge config for C Ánh: {}
-[00:26:19.782] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
-[00:26:20.079] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
-[00:27:00.972] Browser LOG     🎨 defaultFormValues computed:
-[00:27:00.972] Browser LOG        initialData: undefined
-[00:27:00.972] Browser LOG        operationMode: add
-[00:27:00.972] Browser LOG        ℹ️ No initialData - using defaults
-[00:27:00.972] Browser LOG     🎨 defaultFormValues computed:
-[00:27:00.972] Browser LOG        initialData: undefined
-[00:27:00.972] Browser LOG        operationMode: add
-[00:27:00.972] Browser LOG        ℹ️ No initialData - using defaults
-[00:27:40.165] Browser LOG     🎨 defaultFormValues computed:
-[00:27:40.165] Browser LOG        initialData: undefined
-[00:27:40.166] Browser LOG        operationMode: add
-[00:27:40.166] Browser LOG        ℹ️ No initialData - using defaults
-[00:27:40.166] Browser LOG     🎨 defaultFormValues computed:
-[00:27:40.166] Browser LOG        initialData: undefined
-[00:27:40.166] Browser LOG        operationMode: add
-[00:27:40.166] Browser LOG        ℹ️ No initialData - using defaults
-[00:29:09.204] Browser LOG     🎨 defaultFormValues computed:
-[00:29:09.204] Browser LOG        initialData: undefined
-[00:29:09.204] Browser LOG        operationMode: add
-[00:29:09.204] Browser LOG        ℹ️ No initialData - using defaults
-[00:29:09.204] Browser LOG     🎨 defaultFormValues computed:
-[00:29:09.204] Browser LOG        initialData: undefined
-[00:29:09.204] Browser LOG        operationMode: add
-[00:29:09.204] Browser LOG        ℹ️ No initialData - using defaults
-[00:29:23.856] Server  LOG     [Stats:PB] resolve account: {}
-[00:29:24.672] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
-[00:29:24.975] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:00:04.116] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:04.787] Server  LOG      ✓ Ready in 4.1s
+[00:00:14.983] Server  LOG      ○ Compiling /people ...
+[00:00:22.848] Server  LOG     [DB:PB] accounts.getAll
+[00:00:30.680] Server  LOG      ○ Compiling /people/[id] ...
+[00:00:36.008] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:00:36.332] Server  LOG     [people.service] Merge config for C Ánh: {}
+[00:00:36.615] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:00:36.949] Server  LOG     [getPeople] Filter for 5gs6yx5whghutqm: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='5gs6yx5whghutqm' || (account_id='qhc00dxwr04hy03'))"
+[00:00:37.319] Server  LOG     [DB:PB] person-cycle-sheets.get person=5gs6yx5whghutqm
+[00:00:39.405] Server  LOG     [DB:PB] accounts.getAll
+[00:00:40.397] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:00:40.397] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:00:40.397] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:00:40.397] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:00:41.305] Browser LOG     🎨 defaultFormValues computed:
+[00:00:41.305] Browser LOG        initialData: undefined
+[00:00:41.305] Browser LOG        operationMode: add
+[00:00:41.305] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:41.305] Browser LOG     🎨 defaultFormValues computed:
+[00:00:41.305] Browser LOG        initialData: undefined
+[00:00:41.305] Browser LOG        operationMode: add
+[00:00:41.305] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:48.573] Server  LOG     [DB:PB] accounts.getAll
+[00:00:48.696] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:00:48.943] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:00:49.289] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:00:49.594] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:00:50.003] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:00:51.736] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:00:51.736] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:00:51.736] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:00:51.736] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:00:52.084] Browser LOG     🎨 defaultFormValues computed:
+[00:00:52.084] Browser LOG        initialData: undefined
+[00:00:52.084] Browser LOG        operationMode: add
+[00:00:52.084] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:52.084] Browser LOG     🎨 defaultFormValues computed:
+[00:00:52.084] Browser LOG        initialData: undefined
+[00:00:52.084] Browser LOG        operationMode: add
+[00:00:52.084] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:58.244] Browser LOG     🎨 defaultFormValues computed:
+[00:00:58.245] Browser LOG        initialData: null
+[00:00:58.245] Browser LOG        operationMode: add
+[00:00:58.245] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:58.245] Browser LOG     🎨 defaultFormValues computed:
+[00:00:58.245] Browser LOG        initialData: null
+[00:00:58.245] Browser LOG        operationMode: add
+[00:00:58.245] Browser LOG        ℹ️ No initialData - using defaults
+[00:00:59.064] Server  LOG     [Stats:PB] resolve account: {}
+[00:00:59.360] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:00:59.644] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:00:59.894] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:00.175] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:00.459] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:00.985] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:01.266] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:01.473] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:01.473] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:01.551] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:02.113] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:02.690] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:03.025] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:03.326] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:03.417] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:01:03.731] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:01:03.923] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:04.018] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:01:04.074] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:04.238] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:04.409] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:01:04.425] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:04.510] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:04.777] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:04.814] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:04.840] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:01:05.171] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:05.565] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:05.687] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:05.855] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:05.946] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:06.193] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:06.243] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:06.480] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
+[00:01:06.490] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:01:06.491] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:01:06.491] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:06.491] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:06.527] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:06.808] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
+[00:01:06.812] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:06.813] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:06.814] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:06.815] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:06.987] Browser LOG     🎨 defaultFormValues computed:
+[00:01:06.987] Browser LOG        initialData: undefined
+[00:01:06.987] Browser LOG        operationMode: add
+[00:01:06.987] Browser LOG        ℹ️ No initialData - using defaults
+[00:01:06.987] Browser LOG     🎨 defaultFormValues computed:
+[00:01:06.987] Browser LOG        initialData: undefined
+[00:01:06.987] Browser LOG        operationMode: add
+[00:01:06.987] Browser LOG        ℹ️ No initialData - using defaults
+[00:01:07.180] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:07.181] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:07.182] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:07.183] Server  LOG     [DB:PB] accounts.getDetails {}
+[00:01:08.649] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:09.198] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:09.612] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:09.617] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:09.893] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:09.915] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:10.126] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:10.211] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:10.407] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:10.493] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:10.528] Server  LOG     [Stats:PB] resolve account: {}
+[00:01:10.699] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:10.817] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:01:11.110] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     🎨 defaultFormValues computed:
+[00:01:37.517] Browser LOG        initialData: undefined
+[00:01:37.517] Browser LOG        operationMode: add
+[00:01:37.517] Browser LOG        ℹ️ No initialData - using defaults
+[00:01:37.517] Browser LOG     🎨 defaultFormValues computed:
+[00:01:37.517] Browser LOG        initialData: undefined
+[00:01:37.517] Browser LOG        operationMode: add
+[00:01:37.517] Browser LOG        ℹ️ No initialData - using defaults
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:37.518] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:41.825] Server  LOG     [DB:PB] accounts.getAll
+[00:01:57.237] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:57.237] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:01:58.672] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:01:59.276] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:01:59.333] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:01:59.925] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:02:00.324] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:02:01.715] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:02:01.715] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:02:01.715] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:01.715] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:01.828] Server  LOG     [DB:PB] accounts.getAll
+[00:02:02.498] Browser LOG     🎨 defaultFormValues computed:
+[00:02:02.498] Browser LOG        initialData: null
+[00:02:02.498] Browser LOG        operationMode: add
+[00:02:02.498] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:02.499] Browser LOG     🎨 defaultFormValues computed:
+[00:02:02.499] Browser LOG        initialData: null
+[00:02:02.499] Browser LOG        operationMode: add
+[00:02:02.499] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:02.613] Browser LOG     🎨 defaultFormValues computed:
+[00:02:02.613] Browser LOG        initialData: undefined
+[00:02:02.613] Browser LOG        operationMode: add
+[00:02:02.613] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:02.613] Browser LOG     🎨 defaultFormValues computed:
+[00:02:02.613] Browser LOG        initialData: undefined
+[00:02:02.613] Browser LOG        operationMode: add
+[00:02:02.613] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:03.165] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:03.409] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:03.687] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:03.996] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:04.291] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:04.576] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:04.906] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:05.207] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:06.342] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:06.637] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:06.941] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:07.148] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:07.441] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:07.734] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:08.573] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:33.547] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:02:33.547] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:02:33.547] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:33.547] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:35.607] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:35.607] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:37.642] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:02:38.145] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:02:38.214] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:02:38.713] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:02:39.030] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:02:40.398] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:02:40.398] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:02:40.398] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:40.399] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:02:40.870] Browser LOG     🎨 defaultFormValues computed:
+[00:02:40.870] Browser LOG        initialData: undefined
+[00:02:40.870] Browser LOG        operationMode: add
+[00:02:40.870] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:40.870] Browser LOG     🎨 defaultFormValues computed:
+[00:02:40.870] Browser LOG        initialData: undefined
+[00:02:40.870] Browser LOG        operationMode: add
+[00:02:40.870] Browser LOG        ℹ️ No initialData - using defaults
+[00:02:41.474] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:41.990] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:42.509] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:42.782] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:43.079] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:43.339] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:43.611] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:43.889] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:44.125] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:44.396] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:44.667] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:45.018] Browser LOG     🎨 defaultFormValues computed:
+[00:02:45.018] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[00:02:45.018] Browser LOG        operationMode: edit
+[00:02:45.018] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[00:02:45.018] Browser LOG     🎨 defaultFormValues computed:
+[00:02:45.018] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[00:02:45.018] Browser LOG        operationMode: edit
+[00:02:45.018] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[00:02:45.018] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"single":true}
+[00:02:45.018] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"initialData":true,"single":true}
+[00:02:45.018] Browser LOG     🔄 TransactionSlideV2 RESET TRIGGERED
+[00:02:45.018] Browser LOG        - operationMode: edit
+[00:02:45.018] Browser LOG        - initialData present: true
+[00:02:45.018] Browser LOG        - reset values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[00:02:45.018] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:02:45.018] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:02:45.294] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:45.498] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:45.773] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:45.901] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:46.050] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:46.078] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:46.201] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:46.351] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:46.476] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:46.626] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:47.148] Server  LOG     [CLIENT-LOG] TransactionSlideV2 Open - Schema Check "{\n  \"single\": true,\n  \"bulk\": true,\n  \"initialData\": true\n}"
+[00:02:50.070] Server  LOG     [Stats:PB] resolve account: {}
+[00:02:50.340] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:02:50.415] Browser LOG     ✅ onSingleSubmit triggered: {"account_id":"3xhx6optlr91lez","amount":1654000,"category_id":"h2gze8dxdxluypm","mode":"edit","target_account_id":null,"type":"debt"}
+[00:02:50.415] Browser LOG     ✅ onSingleSubmit called - Form validation PASSED
+[00:02:50.415] Browser LOG     📋 Form data raw: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","participants":[],"person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[00:02:50.415] Browser LOG     🎯 Operation: edit | editingId: swv9s8kl181w1zl
+[00:02:50.415] Browser LOG     🔀 Will call: updateTransaction()
+[00:02:50.415] Browser LOG     🚀 Mapped Payload for Service: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":null,"category_id":"h2gze8dxdxluypm","debt_cycle_tag":"2026-01","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","persisted_cycle_tag":"2026-01","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","statement_cycle_tag":"2026-01","tag":"2026-01","target_account_id":null,"type":"debt"}
+[00:02:50.613] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:02:50.675] Server  LOG     [DB:PB] transactions.update {}
+[00:02:50.948] Server  LOG     [DB:PB] POST https://api-db.reiwarden.io.vn/api/collections/transaction_history/records
+[00:02:50.948] Server  LOG     [DB:PB] body: "{\"id\":\"jvfmogoc8kovdb6\",\"transaction_id\":\"swv9s8kl181w1zl\",\"change_type\":\"edit\",\"snapshot_before\":{\"id\":\"swv9s8kl181w1zl\",\"occurred_at\":\"2025-12-20 05:00:00.000Z\",\"date\":\"2025-12-20 05:00:00.000Z\",\"note\":\"Derma giảm 50k Mbb\",\"type\":\"debt\",\"status\":\"posted\",\"amount\":1654000,\"original_amount\":1654000,\"final_price\":1654000,\"account_id\":\"3xhx6optlr91lez\",\"target_account_id\":\"\",\"person_id\":\"4wxl4cpp7u4adbb\",\"category_id\":\"h2gze8dxdxluypm\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"cashback_mode\":\"real_fixed\",\"cash"
+[00:02:51.231] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/pvl_txn_001/records/swv9s8kl181w1zl
+[00:02:51.232] Server  LOG     [DB:PB] body: "{\"occurred_at\":\"2025-12-20T05:00:00.000Z\",\"note\":\"Derma giảm 50k Mbb\",\"type\":\"debt\",\"amount\":1654000,\"account_id\":\"3xhx6optlr91lez\",\"target_account_id\":null,\"to_account_id\":null,\"category_id\":\"h2gze8dxdxluypm\",\"person_id\":\"4wxl4cpp7u4adbb\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"tag\":\"2026-01\",\"debt_cycle_tag\":\"2026-01\",\"persisted_cycle_tag\":\"2026-01\",\"statement_cycle_tag\":\"2026-01\",\"status\":\"posted\",\"metadata\":{\"cashback_policy\":{\"policySource\":\"program_default\",\"priority\":0,\"rate\":0,\"reason\":\"Card base r"
+[00:02:53.144] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/cashback_cycles/records/cc2cb0a3rdiefst
+[00:02:53.144] Server  LOG     [DB:PB] body: "{\"spent_amount\":1654000,\"real_awarded\":0,\"virtual_profit\":0,\"overflow_loss\":0,\"met_min_spend\":true,\"is_exhausted\":false,\"max_budget\":100000,\"min_spend_target\":0,\"shared_amount\":0,\"total_profit\":0,\"matched_tier\":\"Dưới 15 triệu\"}"
+[00:02:53.416] Server  LOG     [DB:PB] accounts.recalcBalance {}
+[00:02:53.965] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/accounts/records/3xhx6optlr91lez
+[00:02:53.966] Server  LOG     [DB:PB] body: "{\"current_balance\":2879988,\"total_in\":0,\"total_out\":-2879988}"
+[00:02:54.511] Server  LOG     [Sheet] Profile lookup result {}
+[00:02:55.076] Server  LOG     [syncTransactionToSheet] Person sheet preferences: {}
+[00:02:55.344] Server  LOG     [Sheet Sync] Sending payload to 4wxl4cpp7u4adbb: {}
+[00:03:09.233] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:09.233] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:14.030] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:14.030] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:23.324] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:03:23.475] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:03:23.501] Browser LOG     🎉 Submit success: true
+[00:03:23.501] Browser LOG     🎨 defaultFormValues computed:
+[00:03:23.501] Browser LOG        initialData: undefined
+[00:03:23.501] Browser LOG        operationMode: edit
+[00:03:23.501] Browser LOG        ℹ️ No initialData - using defaults
+[00:03:23.501] Browser LOG     🎨 defaultFormValues computed:
+[00:03:23.501] Browser LOG        initialData: undefined
+[00:03:23.501] Browser LOG        operationMode: edit
+[00:03:23.501] Browser LOG        ℹ️ No initialData - using defaults
+[00:03:23.856] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:03:24.043] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:03:24.168] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:03:24.320] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:03:24.933] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:03:25.213] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:03:25.809] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:03:26.179] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:03:28.509] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:03:28.509] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[00:03:28.509] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:03:28.509] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:03:28.509] Browser LOG     🎨 defaultFormValues computed:
+[00:03:28.509] Browser LOG        initialData: undefined
+[00:03:28.509] Browser LOG        operationMode: edit
+[00:03:28.509] Browser LOG        ℹ️ No initialData - using defaults
+[00:03:28.509] Browser LOG     🎨 defaultFormValues computed:
+[00:03:28.509] Browser LOG        initialData: undefined
+[00:03:28.509] Browser LOG        operationMode: edit
+[00:03:28.509] Browser LOG        ℹ️ No initialData - using defaults
+[00:03:28.559] Server  LOG     [Stats:PB] resolve account: {}
+[00:03:28.796] Server  LOG     [Stats:PB] resolve account: {}
+[00:03:29.030] Server  LOG     [Stats:PB] resolve account: {}
+[00:03:29.377] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:03:30.189] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:03:30.398] Server  LOG     [Stats:PB] resolve account: {}
+[00:03:30.678] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:03:30.958] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:03:31.179] Server  LOG     [Stats:PB] resolve account: {}
+[00:03:31.453] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:03:31.728] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:03:31.947] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:11.990] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:04:11.990] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:04:11.990] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:11.990] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:13.641] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:13.641] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:17.212] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:04:17.812] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:04:17.899] Server  LOG     [people.service] Merge config for Lâm: {}
+[00:04:18.482] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[00:04:18.833] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[00:04:20.330] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:04:20.330] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[00:04:20.330] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:20.330] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[00:04:20.330] Browser LOG     🎨 defaultFormValues computed:
+[00:04:20.330] Browser LOG        initialData: undefined
+[00:04:20.330] Browser LOG        operationMode: edit
+[00:04:20.330] Browser LOG        ℹ️ No initialData - using defaults
+[00:04:20.330] Browser LOG     🎨 defaultFormValues computed:
+[00:04:20.330] Browser LOG        initialData: undefined
+[00:04:20.330] Browser LOG        operationMode: edit
+[00:04:20.330] Browser LOG        ℹ️ No initialData - using defaults
+[00:04:20.550] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:20.748] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:20.975] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:21.270] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:04:21.557] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:04:21.779] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:22.067] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:04:22.365] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:04:22.562] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:22.846] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:04:23.140] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:04:23.402] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:23.697] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[00:04:23.984] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[00:04:24.187] Server  LOG     [Stats:PB] resolve account: {}
+[00:04:30.913] Server  INFO    [ManageSheet API] request:start {}
+[00:04:31.716] Server  INFO    [ManageSheet API] request {}
+[00:04:31.717] Server  INFO    [ManageSheet API] target {}
+[00:04:32.009] Server  INFO    [ManageSheet API] person_cycle_sheets (PocketBase) lookup: {}
+[00:04:32.010] Server  INFO    [ManageSheet API] existing {}
+[00:04:32.010] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/person_cycle_sheets/records/060mjcundcmc7d6
+[00:04:32.011] Server  LOG     [DB:PB] body: "{\"updated_at\":\"2026-04-01T05:01:56.620Z\"}"
+[00:04:32.954] Server  LOG     [Sheet] Profile lookup result {}
+[00:04:32.958] Server  LOG     [syncCycleTransactions] Mapped rows diagnostics: {}
+[00:04:32.959] Server  LOG     [Sheet Sync] Sending 12 mapped transactions to 4wxl4cpp7u4adbb for cycle 2026-01
+[00:04:33.519] Server  LOG     [syncCycleTransactions] Person sheet preferences: {}
+[00:04:33.521] Server  LOG     [syncCycleTransactions] Final payload: {}
+[00:04:49.093] Server  INFO    [ManageSheet API] sync result {}
+[01:12:25.562] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:12:25.844] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:12:26.433] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:12:26.568] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:12:26.768] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:12:34.540] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:12:34.540] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:12:34.540] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:12:34.540] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:12:34.540] Browser LOG     🎨 defaultFormValues computed:
+[01:12:34.540] Browser LOG        initialData: undefined
+[01:12:34.540] Browser LOG        operationMode: add
+[01:12:34.540] Browser LOG        ℹ️ No initialData - using defaults
+[01:12:34.540] Browser LOG     🎨 defaultFormValues computed:
+[01:12:34.540] Browser LOG        initialData: undefined
+[01:12:34.540] Browser LOG        operationMode: add
+[01:12:34.540] Browser LOG        ℹ️ No initialData - using defaults
+[01:12:34.896] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:35.162] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:35.386] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:36.074] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:36.791] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:36.993] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:37.276] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:37.564] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:37.789] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:38.074] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:38.362] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:38.608] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:38.894] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:39.186] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:39.359] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:39.647] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:39.935] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:40.188] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:40.407] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:40.629] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:40.884] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:41.169] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:41.463] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:41.683] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:41.969] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:42.257] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:42.454] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:42.739] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:43.023] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:43.218] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:43.498] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:12:43.779] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:12:43.995] Server  LOG     [Stats:PB] resolve account: {}
+[01:12:44.780] Server  LOG     [DB:PB] accounts.getAll
+[01:13:03.248] Server  LOG     [DB:PB] accounts.getAll
+[01:13:03.500] Browser LOG     🎨 defaultFormValues computed:
+[01:13:03.500] Browser LOG        initialData: null
+[01:13:03.500] Browser LOG        operationMode: add
+[01:13:03.500] Browser LOG        ℹ️ No initialData - using defaults
+[01:13:03.500] Browser LOG     🎨 defaultFormValues computed:
+[01:13:03.500] Browser LOG        initialData: null
+[01:13:03.500] Browser LOG        operationMode: add
+[01:13:03.500] Browser LOG        ℹ️ No initialData - using defaults
+[01:27:00.698] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:00.755] Browser LOG     🎨 defaultFormValues computed:
+[01:27:00.755] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[01:27:00.755] Browser LOG        operationMode: edit
+[01:27:00.755] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:00.755] Browser LOG     🎨 defaultFormValues computed:
+[01:27:00.755] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[01:27:00.755] Browser LOG        operationMode: edit
+[01:27:00.755] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:00.755] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"single":true}
+[01:27:00.755] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"initialData":true,"single":true}
+[01:27:00.755] Browser LOG     🔄 TransactionSlideV2 RESET TRIGGERED
+[01:27:00.755] Browser LOG        - operationMode: edit
+[01:27:00.755] Browser LOG        - initialData present: true
+[01:27:00.755] Browser LOG        - reset values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:00.755] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:27:00.755] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:27:01.553] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:01.732] Server  LOG     [CLIENT-LOG] TransactionSlideV2 Open - Schema Check "{\n  \"single\": true,\n  \"bulk\": true,\n  \"initialData\": true\n}"
+[01:27:01.842] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:01.872] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:02.154] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:02.442] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:02.873] Browser LOG     🎨 defaultFormValues computed:
+[01:27:02.873] Browser LOG        initialData: undefined
+[01:27:02.873] Browser LOG        operationMode: edit
+[01:27:02.873] Browser LOG        ℹ️ No initialData - using defaults
+[01:27:02.873] Browser LOG     🎨 defaultFormValues computed:
+[01:27:02.873] Browser LOG        initialData: undefined
+[01:27:02.873] Browser LOG        operationMode: edit
+[01:27:02.873] Browser LOG        ℹ️ No initialData - using defaults
+[01:27:16.526] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:16.549] Browser LOG     🎨 defaultFormValues computed:
+[01:27:16.549] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[01:27:16.549] Browser LOG        operationMode: edit
+[01:27:16.549] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:16.549] Browser LOG     🎨 defaultFormValues computed:
+[01:27:16.549] Browser LOG        initialData: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","type":"debt"}
+[01:27:16.549] Browser LOG        operationMode: edit
+[01:27:16.549] Browser LOG        ✅ Using initialData values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:16.549] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"single":true}
+[01:27:16.549] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"initialData":true,"single":true}
+[01:27:16.549] Browser LOG     🔄 TransactionSlideV2 RESET TRIGGERED
+[01:27:16.549] Browser LOG        - operationMode: edit
+[01:27:16.549] Browser LOG        - initialData present: true
+[01:27:16.549] Browser LOG        - reset values: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:16.549] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:27:16.549] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:27:17.160] Server  LOG     [CLIENT-LOG] TransactionSlideV2 Open - Schema Check "{\n  \"single\": true,\n  \"bulk\": true,\n  \"initialData\": true\n}"
+[01:27:17.357] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:17.654] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:17.701] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:17.989] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:18.281] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:33.916] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:34.769] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:35.133] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:35.210] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:35.506] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:35.806] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:45.104] Server  LOG     [Stats:PB] resolve account: {}
+[01:27:45.293] Browser LOG     ✅ onSingleSubmit triggered: {"account_id":"3xhx6optlr91lez","amount":1654000,"category_id":"h2gze8dxdxluypm","mode":"edit","target_account_id":null,"type":"debt"}
+[01:27:45.293] Browser LOG     ✅ onSingleSubmit called - Form validation PASSED
+[01:27:45.293] Browser LOG     📋 Form data raw: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2026-01","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","participants":[],"person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","tag":"2025-12","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:27:45.293] Browser LOG     🎯 Operation: edit | editingId: swv9s8kl181w1zl
+[01:27:45.293] Browser LOG     🔀 Will call: updateTransaction()
+[01:27:45.293] Browser LOG     🚀 Mapped Payload for Service: {"amount":1654000,"cashback_mode":"real_fixed","cashback_share_fixed":0,"cashback_share_percent":null,"category_id":"h2gze8dxdxluypm","debt_cycle_tag":"2025-12","is_installment":false,"metadata":{"cashback_policy":{"policySource":"program_default","priority":0,"rate":0,"reason":"Card base rate","ruleType":"program_default"},"debt_cycle_tag":"2025-12","edited_at":"2026-04-01T05:00:15.841Z","is_edited":true,"persisted_cycle_tag":"2025-12","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"d6098419-90d9-4189-811d-1695c14f1f53"},"note":"Derma giảm 50k Mbb","occurred_at":"2025-12-20T05:00:00.000Z","persisted_cycle_tag":"2025-12","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"3xhx6optlr91lez","statement_cycle_tag":"2025-12","tag":"2025-12","target_account_id":null,"type":"debt"}
+[01:27:45.390] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:27:45.513] Server  LOG     [DB:PB] transactions.update {}
+[01:27:45.671] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:27:46.335] Server  LOG     [DB:PB] POST https://api-db.reiwarden.io.vn/api/collections/transaction_history/records
+[01:27:46.336] Server  LOG     [DB:PB] body: "{\"id\":\"tjitkr2ycmscsy1\",\"transaction_id\":\"swv9s8kl181w1zl\",\"change_type\":\"edit\",\"snapshot_before\":{\"id\":\"swv9s8kl181w1zl\",\"occurred_at\":\"2025-12-20 05:00:00.000Z\",\"date\":\"2025-12-20 05:00:00.000Z\",\"note\":\"Derma giảm 50k Mbb\",\"type\":\"debt\",\"status\":\"posted\",\"amount\":1654000,\"original_amount\":1654000,\"final_price\":1654000,\"account_id\":\"3xhx6optlr91lez\",\"target_account_id\":\"\",\"person_id\":\"4wxl4cpp7u4adbb\",\"category_id\":\"h2gze8dxdxluypm\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"cashback_mode\":\"real_fixed\",\"cash"
+[01:27:46.635] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/pvl_txn_001/records/swv9s8kl181w1zl
+[01:27:46.636] Server  LOG     [DB:PB] body: "{\"occurred_at\":\"2025-12-20T05:00:00.000Z\",\"note\":\"Derma giảm 50k Mbb\",\"type\":\"debt\",\"amount\":1654000,\"account_id\":\"3xhx6optlr91lez\",\"target_account_id\":null,\"to_account_id\":null,\"category_id\":\"h2gze8dxdxluypm\",\"person_id\":\"4wxl4cpp7u4adbb\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"tag\":\"2025-12\",\"debt_cycle_tag\":\"2025-12\",\"persisted_cycle_tag\":\"2025-12\",\"statement_cycle_tag\":\"2025-12\",\"status\":\"posted\",\"metadata\":{\"cashback_policy\":{\"policySource\":\"program_default\",\"priority\":0,\"rate\":0,\"reason\":\"Card base r"
+[01:27:47.734] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/pvl_txn_001/records/swv9s8kl181w1zl
+[01:27:47.734] Server  LOG     [DB:PB] body: "{\"persisted_cycle_tag\":\"2026-01\"}"
+[01:27:48.834] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/cashback_cycles/records/cc2cb0a3rdiefst
+[01:27:48.834] Server  LOG     [DB:PB] body: "{\"spent_amount\":1654000,\"real_awarded\":0,\"virtual_profit\":0,\"overflow_loss\":0,\"met_min_spend\":true,\"is_exhausted\":false,\"max_budget\":100000,\"min_spend_target\":0,\"shared_amount\":0,\"total_profit\":0,\"matched_tier\":\"Dưới 15 triệu\"}"
+[01:27:49.112] Server  LOG     [DB:PB] accounts.recalcBalance {}
+[01:27:49.671] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/accounts/records/3xhx6optlr91lez
+[01:27:49.672] Server  LOG     [DB:PB] body: "{\"current_balance\":2879988,\"total_in\":0,\"total_out\":-2879988}"
+[01:27:50.225] Server  LOG     [Sheet] Profile lookup result {}
+[01:27:50.770] Server  LOG     [syncTransactionToSheet] Person sheet preferences: {}
+[01:27:50.771] Server  LOG     [Sheet Sync] Sending payload to 4wxl4cpp7u4adbb: {}
+[01:27:57.674] Server  LOG     [Sheet] Profile lookup result {}
+[01:27:58.196] Server  LOG     [syncTransactionToSheet] Person sheet preferences: {}
+[01:27:58.451] Server  LOG     [Sheet Sync] Sending payload to 4wxl4cpp7u4adbb: {}
+[01:28:29.994] Browser LOG     🎉 Submit success: true
+[01:28:29.994] Browser LOG     🎨 defaultFormValues computed:
+[01:28:29.994] Browser LOG        initialData: undefined
+[01:28:29.994] Browser LOG        operationMode: edit
+[01:28:29.994] Browser LOG        ℹ️ No initialData - using defaults
+[01:28:29.994] Browser LOG     🎨 defaultFormValues computed:
+[01:28:29.994] Browser LOG        initialData: undefined
+[01:28:29.994] Browser LOG        operationMode: edit
+[01:28:29.994] Browser LOG        ℹ️ No initialData - using defaults
+[01:28:30.602] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:28:30.942] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:28:31.175] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:28:31.544] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:28:31.589] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:28:31.923] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:28:31.941] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:28:32.095] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:28:32.644] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:28:32.962] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:28:34.423] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:28:34.423] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:28:34.423] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:28:34.423] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:28:34.423] Browser LOG     🎨 defaultFormValues computed:
+[01:28:34.423] Browser LOG        initialData: undefined
+[01:28:34.423] Browser LOG        operationMode: edit
+[01:28:34.423] Browser LOG        ℹ️ No initialData - using defaults
+[01:28:34.423] Browser LOG     🎨 defaultFormValues computed:
+[01:28:34.423] Browser LOG        initialData: undefined
+[01:28:34.423] Browser LOG        operationMode: edit
+[01:28:34.423] Browser LOG        ℹ️ No initialData - using defaults
+[01:28:34.690] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:34.907] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:35.114] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:35.388] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:28:35.658] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:28:35.890] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:36.162] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:28:36.435] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:28:36.653] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:36.924] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:28:37.196] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:28:37.437] Server  LOG     [Stats:PB] resolve account: {}
+[01:28:37.711] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:28:37.984] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:28:38.220] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:36.442] Server  INFO    [ManageSheet API] request:start {}
+[01:31:37.275] Server  INFO    [ManageSheet API] request {}
+[01:31:37.276] Server  INFO    [ManageSheet API] target {}
+[01:31:37.577] Server  INFO    [ManageSheet API] person_cycle_sheets (PocketBase) lookup: {}
+[01:31:37.578] Server  INFO    [ManageSheet API] existing {}
+[01:31:37.579] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/person_cycle_sheets/records/060mjcundcmc7d6
+[01:31:37.580] Server  LOG     [DB:PB] body: "{\"updated_at\":\"2026-04-01T06:28:56.664Z\"}"
+[01:31:38.492] Server  LOG     [Sheet] Profile lookup result {}
+[01:31:38.495] Server  LOG     [syncCycleTransactions] Mapped rows diagnostics: {}
+[01:31:38.496] Server  LOG     [Sheet Sync] Sending 11 mapped transactions to 4wxl4cpp7u4adbb for cycle 2026-01
+[01:31:39.073] Server  LOG     [syncCycleTransactions] Person sheet preferences: {}
+[01:31:39.074] Server  LOG     [syncCycleTransactions] Final payload: {}
+[01:31:48.866] Server  INFO    [ManageSheet API] sync result {}
+[01:31:50.474] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:31:50.727] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:31:51.038] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:31:51.271] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:31:51.578] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:31:53.073] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:31:53.073] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:31:53.073] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:31:53.073] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:31:53.073] Browser LOG     🎨 defaultFormValues computed:
+[01:31:53.073] Browser LOG        initialData: undefined
+[01:31:53.073] Browser LOG        operationMode: edit
+[01:31:53.073] Browser LOG        ℹ️ No initialData - using defaults
+[01:31:53.073] Browser LOG     🎨 defaultFormValues computed:
+[01:31:53.073] Browser LOG        initialData: undefined
+[01:31:53.073] Browser LOG        operationMode: edit
+[01:31:53.073] Browser LOG        ℹ️ No initialData - using defaults
+[01:31:53.291] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:53.496] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:53.695] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:53.969] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:31:54.247] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:31:54.461] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:54.737] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:31:55.016] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:31:55.222] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:55.494] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:31:55.769] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:31:55.990] Server  LOG     [Stats:PB] resolve account: {}
+[01:31:56.269] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:31:56.551] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:31:56.765] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:34.318] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:32:34.318] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:32:34.318] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:34.318] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:36.097] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:36.097] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:38.532] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:32:38.771] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:32:39.107] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:32:39.319] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:32:39.656] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:32:41.841] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:32:41.841] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:32:41.841] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:41.841] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:32:41.841] Browser LOG     🎨 defaultFormValues computed:
+[01:32:41.841] Browser LOG        initialData: undefined
+[01:32:41.841] Browser LOG        operationMode: edit
+[01:32:41.841] Browser LOG        ℹ️ No initialData - using defaults
+[01:32:41.841] Browser LOG     🎨 defaultFormValues computed:
+[01:32:41.841] Browser LOG        initialData: undefined
+[01:32:41.841] Browser LOG        operationMode: edit
+[01:32:41.841] Browser LOG        ℹ️ No initialData - using defaults
+[01:32:42.376] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:42.597] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:42.815] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:43.096] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:32:43.434] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:32:43.656] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:43.937] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:32:44.226] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:32:44.445] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:44.724] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:32:45.002] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:32:45.216] Server  LOG     [Stats:PB] resolve account: {}
+[01:32:45.493] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:32:45.774] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:32:45.997] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:30.662] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:33:30.891] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:33:31.245] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:33:31.440] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:33:31.770] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:33:36.285] Server  LOG     [DB:PB] accounts.getAll
+[01:33:36.512] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:36.512] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:36.512] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:36.512] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:37.508] Browser LOG     🎨 defaultFormValues computed:
+[01:33:37.508] Browser LOG        initialData: undefined
+[01:33:37.508] Browser LOG        operationMode: add
+[01:33:37.508] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:37.508] Browser LOG     🎨 defaultFormValues computed:
+[01:33:37.508] Browser LOG        initialData: undefined
+[01:33:37.508] Browser LOG        operationMode: add
+[01:33:37.508] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:37.508] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:33:37.508] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":2,"firstTag":"2026-04","historyYear":"2025"}
+[01:33:37.508] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:37.508] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:49.918] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:49.918] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:49.918] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:49.918] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:51.060] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:51.060] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:52.496] Server  LOG     [DB:PB] accounts.getAll
+[01:33:52.957] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:33:53.441] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:33:53.506] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:33:54.072] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:33:54.440] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:33:55.085] Browser LOG     🎨 defaultFormValues computed:
+[01:33:55.085] Browser LOG        initialData: null
+[01:33:55.085] Browser LOG        operationMode: add
+[01:33:55.085] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:55.085] Browser LOG     🎨 defaultFormValues computed:
+[01:33:55.085] Browser LOG        initialData: null
+[01:33:55.085] Browser LOG        operationMode: add
+[01:33:55.085] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:55.229] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:55.624] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:55.950] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:56.009] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:56.009] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:33:56.009] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:56.009] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:33:56.208] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:33:56.523] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:33:56.831] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:57.087] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:33:57.349] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:33:57.509] Browser LOG     🎨 defaultFormValues computed:
+[01:33:57.509] Browser LOG        initialData: undefined
+[01:33:57.509] Browser LOG        operationMode: add
+[01:33:57.509] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:57.509] Browser LOG     🎨 defaultFormValues computed:
+[01:33:57.509] Browser LOG        initialData: undefined
+[01:33:57.509] Browser LOG        operationMode: add
+[01:33:57.509] Browser LOG        ℹ️ No initialData - using defaults
+[01:33:57.744] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:58.000] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:33:58.254] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:33:58.463] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:58.719] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:33:58.972] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:33:59.185] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:59.385] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:59.595] Server  LOG     [Stats:PB] resolve account: {}
+[01:33:59.806] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:00.058] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:00.422] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:00.660] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:00.913] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:01.170] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:01.372] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:01.623] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:01.878] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:02.104] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:02.357] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:02.616] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:02.817] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:03.024] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:03.241] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:03.453] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:03.709] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:03.969] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:04.190] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:04.446] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:04.706] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:04.925] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:05.179] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:05.440] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:05.631] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:05.883] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:06.140] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:06.354] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:13.751] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:34:13.751] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:34:44.024] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:34:44.110] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:34:44.640] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:34:44.725] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:34:45.076] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:34:46.824] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:34:46.824] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:34:46.824] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:34:46.824] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:34:47.405] Browser LOG     🎨 defaultFormValues computed:
+[01:34:47.405] Browser LOG        initialData: undefined
+[01:34:47.405] Browser LOG        operationMode: add
+[01:34:47.405] Browser LOG        ℹ️ No initialData - using defaults
+[01:34:47.405] Browser LOG     🎨 defaultFormValues computed:
+[01:34:47.405] Browser LOG        initialData: undefined
+[01:34:47.405] Browser LOG        operationMode: add
+[01:34:47.405] Browser LOG        ℹ️ No initialData - using defaults
+[01:34:47.755] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:47.993] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:48.253] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:48.544] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:48.840] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:49.086] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:49.387] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:49.688] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:49.922] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:50.212] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:50.506] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:50.743] Server  LOG     [Stats:PB] resolve account: {}
+[01:34:51.034] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:34:51.329] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:34:51.565] Server  LOG     [Stats:PB] resolve account: {}
+[01:37:59.143] Browser LOG     🎨 defaultFormValues computed:
+[01:37:59.143] Browser LOG        initialData: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","tag":"2026-01","target_account_id":"918bn7qgqsrray1","type":"repayment"}
+[01:37:59.143] Browser LOG        operationMode: edit
+[01:37:59.143] Browser LOG        ✅ Using initialData values: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":null,"tag":"2026-01","target_account_id":"918bn7qgqsrray1","type":"repayment","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:37:59.143] Browser LOG     🎨 defaultFormValues computed:
+[01:37:59.143] Browser LOG        initialData: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","tag":"2026-01","target_account_id":"918bn7qgqsrray1","type":"repayment"}
+[01:37:59.143] Browser LOG        operationMode: edit
+[01:37:59.143] Browser LOG        ✅ Using initialData values: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":null,"tag":"2026-01","target_account_id":"918bn7qgqsrray1","type":"repayment","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:37:59.143] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"single":true}
+[01:37:59.143] Browser LOG     🔍 TransactionSlideV2 Schema Check: {"bulk":true,"initialData":true,"single":true}
+[01:37:59.143] Browser LOG     🔄 TransactionSlideV2 RESET TRIGGERED
+[01:37:59.144] Browser LOG        - operationMode: edit
+[01:37:59.144] Browser LOG        - initialData present: true
+[01:37:59.144] Browser LOG        - reset values: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":null,"tag":"2026-01","target_account_id":"918bn7qgqsrray1","type":"repayment","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:37:59.144] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:37:59.144] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[01:37:59.982] Server  LOG     [CLIENT-LOG] TransactionSlideV2 Open - Schema Check "{\n  \"single\": true,\n  \"bulk\": true,\n  \"initialData\": true\n}"
+[01:38:16.023] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:17.783] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:18.052] Browser LOG     ✅ onSingleSubmit triggered: {"account_id":"918bn7qgqsrray1","amount":765000,"category_id":"h2gze8dxdxluypm","mode":"edit","target_account_id":null,"type":"debt"}
+[01:38:18.052] Browser LOG     ✅ onSingleSubmit called - Form validation PASSED
+[01:38:18.053] Browser LOG     📋 Form data raw: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":0,"category_id":"h2gze8dxdxluypm","is_installment":false,"metadata":{"source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","participants":[],"person_id":"4wxl4cpp7u4adbb","service_fee":null,"shop_id":"zdw5nnr7n36j4pb","source_account_id":"918bn7qgqsrray1","tag":"2026-01","target_account_id":null,"type":"debt","ui_is_cashback_expanded":false,"ui_market_price":null,"ui_quantity":null}
+[01:38:18.053] Browser LOG     🎯 Operation: edit | editingId: xw8ku6squ0jcika
+[01:38:18.053] Browser LOG     🔀 Will call: updateTransaction()
+[01:38:18.053] Browser LOG     🚀 Mapped Payload for Service: {"amount":765000,"cashback_mode":"none_back","cashback_share_fixed":0,"cashback_share_percent":null,"category_id":"h2gze8dxdxluypm","debt_cycle_tag":"2026-01","is_installment":false,"metadata":{"debt_cycle_tag":"2026-01","persisted_cycle_tag":"2026-01","source_category_id":"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99","source_id":"ca13ecfa-4c1f-4d61-b445-1239455c1c1d"},"note":"Zakka: B3+Tricky (Vpbank -150k)","occurred_at":"2026-01-14T17:00:00.000Z","persisted_cycle_tag":"2026-01","person_id":"4wxl4cpp7u4adbb","shop_id":"zdw5nnr7n36j4pb","source_account_id":"918bn7qgqsrray1","statement_cycle_tag":"2026-01","tag":"2026-01","target_account_id":null,"type":"debt"}
+[01:38:18.257] Server  LOG     [DB:PB] transactions.update {}
+[01:38:18.561] Server  LOG     [DB:PB] POST https://api-db.reiwarden.io.vn/api/collections/transaction_history/records
+[01:38:18.561] Server  LOG     [DB:PB] body: "{\"id\":\"q1kifz2u9xgyt57\",\"transaction_id\":\"xw8ku6squ0jcika\",\"change_type\":\"edit\",\"snapshot_before\":{\"id\":\"xw8ku6squ0jcika\",\"occurred_at\":\"2026-01-14 17:00:00.000Z\",\"date\":\"2026-01-14 17:00:00.000Z\",\"note\":\"Zakka: B3+Tricky (Vpbank -150k)\",\"type\":\"repayment\",\"status\":\"posted\",\"amount\":765000,\"original_amount\":765000,\"final_price\":765000,\"account_id\":\"918bn7qgqsrray1\",\"target_account_id\":\"\",\"person_id\":\"4wxl4cpp7u4adbb\",\"category_id\":\"h2gze8dxdxluypm\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"cashback_mode\":\"no"
+[01:38:18.846] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/pvl_txn_001/records/xw8ku6squ0jcika
+[01:38:18.847] Server  LOG     [DB:PB] body: "{\"occurred_at\":\"2026-01-14T17:00:00.000Z\",\"note\":\"Zakka: B3+Tricky (Vpbank -150k)\",\"type\":\"debt\",\"amount\":765000,\"account_id\":\"918bn7qgqsrray1\",\"target_account_id\":null,\"to_account_id\":null,\"category_id\":\"h2gze8dxdxluypm\",\"person_id\":\"4wxl4cpp7u4adbb\",\"shop_id\":\"zdw5nnr7n36j4pb\",\"tag\":\"2026-01\",\"debt_cycle_tag\":\"2026-01\",\"persisted_cycle_tag\":\"2026-01\",\"statement_cycle_tag\":\"2026-01\",\"status\":\"posted\",\"metadata\":{\"source_category_id\":\"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a99\",\"source_id\":\"ca13ecfa-4"
+[01:38:19.672] Server  LOG     [DB:PB] accounts.recalcBalance {}
+[01:38:20.237] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/accounts/records/918bn7qgqsrray1
+[01:38:20.238] Server  LOG     [DB:PB] body: "{\"current_balance\":58151906.16,\"total_in\":68850237.66,\"total_out\":-10698331.5}"
+[01:38:20.787] Server  LOG     [Sheet] Profile lookup result {}
+[01:38:21.373] Server  LOG     [syncTransactionToSheet] Person sheet preferences: {}
+[01:38:21.643] Server  LOG     [Sheet Sync] Sending payload to 4wxl4cpp7u4adbb: {}
+[01:38:37.355] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:38:37.511] Browser LOG     🎉 Submit success: true
+[01:38:37.511] Browser LOG     🎨 defaultFormValues computed:
+[01:38:37.511] Browser LOG        initialData: undefined
+[01:38:37.511] Browser LOG        operationMode: edit
+[01:38:37.511] Browser LOG        ℹ️ No initialData - using defaults
+[01:38:37.511] Browser LOG     🎨 defaultFormValues computed:
+[01:38:37.511] Browser LOG        initialData: undefined
+[01:38:37.511] Browser LOG        operationMode: edit
+[01:38:37.511] Browser LOG        ℹ️ No initialData - using defaults
+[01:38:37.651] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:38:38.021] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:38:38.292] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:38:38.507] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:38:38.621] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:38:38.878] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:38:39.127] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:38:39.725] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:38:40.055] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:38:42.114] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:42.330] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:42.500] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:38:42.500] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:38:42.500] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:38:42.500] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:38:42.500] Browser LOG     🎨 defaultFormValues computed:
+[01:38:42.500] Browser LOG        initialData: undefined
+[01:38:42.500] Browser LOG        operationMode: edit
+[01:38:42.500] Browser LOG        ℹ️ No initialData - using defaults
+[01:38:42.500] Browser LOG     🎨 defaultFormValues computed:
+[01:38:42.500] Browser LOG        initialData: undefined
+[01:38:42.500] Browser LOG        operationMode: edit
+[01:38:42.500] Browser LOG        ℹ️ No initialData - using defaults
+[01:38:42.541] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:42.828] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:38:43.110] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:38:43.311] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:43.593] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:38:43.891] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:38:44.097] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:44.380] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:38:44.667] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:38:44.884] Server  LOG     [Stats:PB] resolve account: {}
+[01:38:45.166] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:38:45.449] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:38:45.662] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:37.897] Server  INFO    [ManageSheet API] request:start {}
+[01:39:38.319] Server  INFO    [ManageSheet API] request {}
+[01:39:38.320] Server  INFO    [ManageSheet API] target {}
+[01:39:38.623] Server  INFO    [ManageSheet API] person_cycle_sheets (PocketBase) lookup: {}
+[01:39:38.624] Server  INFO    [ManageSheet API] existing {}
+[01:39:38.625] Server  LOG     [DB:PB] PATCH https://api-db.reiwarden.io.vn/api/collections/person_cycle_sheets/records/060mjcundcmc7d6
+[01:39:38.625] Server  LOG     [DB:PB] body: "{\"updated_at\":\"2026-04-01T06:36:57.710Z\"}"
+[01:39:39.526] Server  LOG     [Sheet] Profile lookup result {}
+[01:39:39.529] Server  LOG     [syncCycleTransactions] Mapped rows diagnostics: {}
+[01:39:39.530] Server  LOG     [Sheet Sync] Sending 11 mapped transactions to 4wxl4cpp7u4adbb for cycle 2026-01
+[01:39:40.114] Server  LOG     [syncCycleTransactions] Person sheet preferences: {}
+[01:39:40.115] Server  LOG     [syncCycleTransactions] Final payload: {}
+[01:39:51.504] Server  INFO    [ManageSheet API] sync result {}
+[01:39:52.725] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:39:53.003] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:39:53.294] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:39:53.620] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:39:53.938] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:39:56.300] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:56.541] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:56.891] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:39:56.891] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:39:56.891] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:39:56.891] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:39:56.891] Browser LOG     🎨 defaultFormValues computed:
+[01:39:56.891] Browser LOG        initialData: undefined
+[01:39:56.891] Browser LOG        operationMode: edit
+[01:39:56.891] Browser LOG        ℹ️ No initialData - using defaults
+[01:39:56.891] Browser LOG     🎨 defaultFormValues computed:
+[01:39:56.891] Browser LOG        initialData: undefined
+[01:39:56.891] Browser LOG        operationMode: edit
+[01:39:56.891] Browser LOG        ℹ️ No initialData - using defaults
+[01:39:57.158] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:57.439] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:39:57.719] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:39:57.980] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:58.256] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:39:58.536] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:39:58.823] Server  LOG     [Stats:PB] resolve account: {}
+[01:39:59.121] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:39:59.412] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:39:59.947] Server  LOG     [Stats:PB] resolve account: {}
+[01:40:00.236] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[01:40:00.520] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[01:40:00.860] Server  LOG     [Stats:PB] resolve account: {}
+[01:55:08.066] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.066] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.066] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[01:55:08.066] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[01:55:08.519] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.519] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.519] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:08.519] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:08.971] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.971] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:08.971] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:55:08.971] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:55:10.987] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:10.987] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:10.987] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[01:55:10.987] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[01:55:11.187] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:11.187] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:11.187] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:11.187] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:11.430] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:11.430] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:11.430] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:55:11.430] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:55:12.171] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:12.171] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":0,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:12.171] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:12.171] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:12.737] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:12.737] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:12.737] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:12.737] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:32.834] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:55:32.860] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:55:33.077] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:55:33.092] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:55:33.403] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:55:33.464] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:55:33.627] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:55:33.644] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:55:33.946] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:55:34.036] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:55:35.999] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:35.999] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":1,"firstTag":"2026-04","historyYear":"2026"}
+[01:55:35.999] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:35.999] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":0}
+[01:55:35.999] Browser LOG     🎨 defaultFormValues computed:
+[01:55:35.999] Browser LOG        initialData: undefined
+[01:55:35.999] Browser LOG        operationMode: edit
+[01:55:35.999] Browser LOG        ℹ️ No initialData - using defaults
+[01:55:35.999] Browser LOG     🎨 defaultFormValues computed:
+[01:55:35.999] Browser LOG        initialData: undefined
+[01:55:35.999] Browser LOG        operationMode: edit
+[01:55:35.999] Browser LOG        ℹ️ No initialData - using defaults
+[01:55:35.999] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:55:35.999] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:56:19.216] Server  LOG      ✓ Compiled in 1441ms
+[01:56:49.561] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:56:49.705] Server  LOG     [people.service] Merge config for Lâm: {}
+[01:56:50.326] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:56:50.344] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[01:56:50.687] Server  LOG     [DB:PB] accounts.getAll
+[01:56:50.798] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[01:56:58.670] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:56:58.670] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[01:56:58.670] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:56:58.670] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[01:56:59.667] Browser LOG     🎨 defaultFormValues computed:
+[01:56:59.667] Browser LOG        initialData: undefined
+[01:56:59.667] Browser LOG        operationMode: add
+[01:56:59.667] Browser LOG        ℹ️ No initialData - using defaults
+[01:56:59.667] Browser LOG     🎨 defaultFormValues computed:
+[01:56:59.667] Browser LOG        initialData: undefined
+[01:56:59.667] Browser LOG        operationMode: add
+[01:56:59.667] Browser LOG        ℹ️ No initialData - using defaults
+[01:57:14.914] Browser LOG     🎨 defaultFormValues computed:
+[01:57:14.914] Browser LOG        initialData: null
+[01:57:14.914] Browser LOG        operationMode: add
+[01:57:14.914] Browser LOG        ℹ️ No initialData - using defaults
+[01:57:14.914] Browser LOG     🎨 defaultFormValues computed:
+[01:57:14.914] Browser LOG        initialData: null
+[01:57:14.914] Browser LOG        operationMode: add
+[01:57:14.914] Browser LOG        ℹ️ No initialData - using defaults
+[01:57:15.423] Server  LOG     [DB:PB] accounts.getAll
+[02:03:53.235] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:03:53.235] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:03:55.867] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:03:56.172] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:03:56.445] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:03:56.798] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:03:57.136] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:03:58.488] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:03:58.488] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:03:58.488] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:03:58.488] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:03:58.811] Browser LOG     🎨 defaultFormValues computed:
+[02:03:58.812] Browser LOG        initialData: undefined
+[02:03:58.812] Browser LOG        operationMode: add
+[02:03:58.812] Browser LOG        ℹ️ No initialData - using defaults
+[02:03:58.812] Browser LOG     🎨 defaultFormValues computed:
+[02:03:58.812] Browser LOG        initialData: undefined
+[02:03:58.812] Browser LOG        operationMode: add
+[02:03:58.812] Browser LOG        ℹ️ No initialData - using defaults
+[02:03:59.257] Server  LOG     [Stats:PB] resolve account: {}
+[02:03:59.536] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:03:59.818] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:04:00.338] Server  LOG     [Stats:PB] resolve account: {}
+[02:04:00.854] Server  LOG     [Stats:PB] resolve account: {}
+[02:04:01.139] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:04:01.422] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:04:01.934] Server  LOG     [Stats:PB] resolve account: {}
+[02:04:02.212] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:04:02.492] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:04:02.998] Server  LOG     [Stats:PB] resolve account: {}
+[02:04:03.634] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[02:04:03.634] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[02:04:13.438] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[02:04:13.438] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[02:05:13.823] Server  LOG      ✓ Compiled in 318ms
+[02:08:05.278] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:08:05.730] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:08:05.837] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:08:06.380] Server  LOG     [DB:PB] accounts.getAll
+[02:08:06.714] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:08:07.034] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:08:09.275] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:09.275] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:09.275] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:09.275] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:10.981] Browser LOG     🎨 defaultFormValues computed:
+[02:08:10.981] Browser LOG        initialData: undefined
+[02:08:10.981] Browser LOG        operationMode: add
+[02:08:10.981] Browser LOG        ℹ️ No initialData - using defaults
+[02:08:10.981] Browser LOG     🎨 defaultFormValues computed:
+[02:08:10.981] Browser LOG        initialData: undefined
+[02:08:10.981] Browser LOG        operationMode: add
+[02:08:10.981] Browser LOG        ℹ️ No initialData - using defaults
+[02:08:24.257] Browser LOG     🎨 defaultFormValues computed:
+[02:08:24.257] Browser LOG        initialData: null
+[02:08:24.257] Browser LOG        operationMode: add
+[02:08:24.257] Browser LOG        ℹ️ No initialData - using defaults
+[02:08:24.257] Browser LOG     🎨 defaultFormValues computed:
+[02:08:24.257] Browser LOG        initialData: null
+[02:08:24.257] Browser LOG        operationMode: add
+[02:08:24.257] Browser LOG        ℹ️ No initialData - using defaults
+[02:08:24.525] Server  LOG     [DB:PB] accounts.getAll
+[02:09:13.971] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:14.251] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:14.516] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:15.009] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:15.488] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:15.749] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:16.027] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:16.523] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:16.793] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:17.059] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:17.540] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:17.785] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:18.046] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:18.326] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:18.546] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:18.759] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:19.142] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:19.415] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:19.701] Server  LOG     [Stats:PB] resolve account: {}
+[02:09:19.974] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:09:20.238] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:09:20.470] Server  LOG     [Stats:PB] resolve account: {}
+[02:14:52.490] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:14:52.800] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:14:53.066] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:14:53.431] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:14:53.768] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:14:54.749] Server  LOG     [DB:PB] accounts.getAll
+[02:14:55.797] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:14:55.797] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:14:55.797] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:14:55.797] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:14:57.531] Browser LOG     🎨 defaultFormValues computed:
+[02:14:57.531] Browser LOG        initialData: undefined
+[02:14:57.531] Browser LOG        operationMode: add
+[02:14:57.531] Browser LOG        ℹ️ No initialData - using defaults
+[02:14:57.531] Browser LOG     🎨 defaultFormValues computed:
+[02:14:57.531] Browser LOG        initialData: undefined
+[02:14:57.531] Browser LOG        operationMode: add
+[02:14:57.531] Browser LOG        ℹ️ No initialData - using defaults
+[02:15:12.533] Browser LOG     🎨 defaultFormValues computed:
+[02:15:12.533] Browser LOG        initialData: null
+[02:15:12.533] Browser LOG        operationMode: add
+[02:15:12.533] Browser LOG        ℹ️ No initialData - using defaults
+[02:15:12.533] Browser LOG     🎨 defaultFormValues computed:
+[02:15:12.533] Browser LOG        initialData: null
+[02:15:12.533] Browser LOG        operationMode: add
+[02:15:12.533] Browser LOG        ℹ️ No initialData - using defaults
+[02:15:12.885] Server  LOG     [DB:PB] accounts.getAll
+[02:15:30.881] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:31.144] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:31.437] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:31.674] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:31.886] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:32.151] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:32.422] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:32.644] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:32.909] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:33.180] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:33.403] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:33.606] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:33.873] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:34.145] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:34.355] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:34.565] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:34.836] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:35.104] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:35.328] Server  LOG     [Stats:PB] resolve account: {}
+[02:15:35.596] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:15:35.871] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:15:36.084] Server  LOG     [Stats:PB] resolve account: {}
+[02:17:04.027] Server  LOG      ✓ Compiled in 414ms
+[02:22:54.632] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:22:54.791] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:22:55.505] Server  LOG     [DB:PB] accounts.getAll
+[02:22:55.535] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:22:55.586] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:22:56.143] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:22:59.187] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:22:59.188] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:22:59.188] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:22:59.188] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:23:01.350] Browser LOG     🎨 defaultFormValues computed:
+[02:23:01.350] Browser LOG        initialData: undefined
+[02:23:01.350] Browser LOG        operationMode: add
+[02:23:01.350] Browser LOG        ℹ️ No initialData - using defaults
+[02:23:01.350] Browser LOG     🎨 defaultFormValues computed:
+[02:23:01.350] Browser LOG        initialData: undefined
+[02:23:01.350] Browser LOG        operationMode: add
+[02:23:01.350] Browser LOG        ℹ️ No initialData - using defaults
+[02:23:16.409] Browser LOG     🎨 defaultFormValues computed:
+[02:23:16.409] Browser LOG        initialData: null
+[02:23:16.409] Browser LOG        operationMode: add
+[02:23:16.409] Browser LOG        ℹ️ No initialData - using defaults
+[02:23:16.409] Browser LOG     🎨 defaultFormValues computed:
+[02:23:16.409] Browser LOG        initialData: null
+[02:23:16.409] Browser LOG        operationMode: add
+[02:23:16.409] Browser LOG        ℹ️ No initialData - using defaults
+[02:23:16.784] Server  LOG     [DB:PB] accounts.getAll
+[02:23:37.366] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:37.668] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:37.978] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:38.698] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:39.210] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:39.513] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:39.825] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:40.330] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:40.631] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:40.939] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:41.472] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:41.695] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:42.000] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:42.305] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:42.531] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:42.765] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:43.068] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:43.369] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:43.599] Server  LOG     [Stats:PB] resolve account: {}
+[02:23:43.900] Server  LOG     [DB:PB] account spending stats: transaction query attempt {}
+[02:23:44.207] Server  LOG     [DB:PB] account spending stats: transaction query succeeded {}
+[02:23:44.429] Server  LOG     [Stats:PB] resolve account: {}
+[02:34:56.099] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"all"}
+[02:34:56.099] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":6,"firstTag":"2026-04","historyYear":"all"}
+[02:34:56.099] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[02:34:56.099] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":2}
+[02:35:02.746] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:35:03.207] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:35:03.331] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:35:03.948] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:35:04.431] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:35:09.062] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"all"}
+[02:35:09.062] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"all"}
+[02:35:09.062] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:35:09.062] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:35:10.241] Browser LOG     🎨 defaultFormValues computed:
+[02:35:10.241] Browser LOG        initialData: undefined
+[02:35:10.241] Browser LOG        operationMode: add
+[02:35:10.241] Browser LOG        ℹ️ No initialData - using defaults
+[02:35:10.241] Browser LOG     🎨 defaultFormValues computed:
+[02:35:10.241] Browser LOG        initialData: undefined
+[02:35:10.241] Browser LOG        operationMode: add
+[02:35:10.241] Browser LOG        ℹ️ No initialData - using defaults
+[02:35:10.241] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:35:10.241] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:35:10.241] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:35:10.241] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:38:15.515] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"all"}
+[02:38:15.515] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":4,"firstTag":"2026-04","historyYear":"all"}
+[02:38:15.515] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:38:15.515] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:39:42.616] Server  LOG      ✓ Compiled in 448ms
+[02:39:53.667] Server  LOG      ✓ Compiled in 277ms
+[02:40:05.753] Server  LOG      ✓ Compiled in 260ms
+[02:41:02.124] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:41:02.560] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:41:02.761] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:41:03.644] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:41:04.279] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:41:05.117] Server  LOG     [DB:PB] accounts.getAll
+[02:41:08.569] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":5,"firstTag":"2026-04","historyYear":"2026"}
+[02:41:08.569] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":5,"firstTag":"2026-04","historyYear":"2026"}
+[02:41:08.569] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:41:08.569] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:41:13.308] Browser LOG     🎨 defaultFormValues computed:
+[02:41:13.308] Browser LOG        initialData: undefined
+[02:41:13.308] Browser LOG        operationMode: add
+[02:41:13.308] Browser LOG        ℹ️ No initialData - using defaults
+[02:41:13.308] Browser LOG     🎨 defaultFormValues computed:
+[02:41:13.308] Browser LOG        initialData: undefined
+[02:41:13.308] Browser LOG        operationMode: add
+[02:41:13.308] Browser LOG        ℹ️ No initialData - using defaults
+[02:41:24.346] Browser LOG     🎨 defaultFormValues computed:
+[02:41:24.346] Browser LOG        initialData: null
+[02:41:24.346] Browser LOG        operationMode: add
+[02:41:24.346] Browser LOG        ℹ️ No initialData - using defaults
+[02:41:24.346] Browser LOG     🎨 defaultFormValues computed:
+[02:41:24.346] Browser LOG        initialData: null
+[02:41:24.346] Browser LOG        operationMode: add
+[02:41:24.346] Browser LOG        ℹ️ No initialData - using defaults
+[02:41:24.578] Server  LOG     [DB:PB] accounts.getAll
+[02:41:40.724] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:41:40.724] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026"],"groupedCount":1}
+[02:41:43.155] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:41:43.315] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
+[02:41:43.681] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:43.683] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:43.684] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:43.685] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:43.778] Server  LOG     [DB:PB] accounts.getRecentByTxns {}
+[02:41:43.854] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:41:44.301] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:44.302] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:44.304] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:44.305] Server  LOG     [DB:PB] accounts.getDetails {}
+[02:41:44.754] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:41:45.521] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:41:45.935] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:41:48.371] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":5,"firstTag":"2026-04","historyYear":"2026"}
+[02:41:48.371] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":5,"firstTag":"2026-04","historyYear":"2026"}
+[02:41:48.371] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:41:48.371] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:41:49.797] Browser LOG     🎨 defaultFormValues computed:
+[02:41:49.797] Browser LOG        initialData: undefined
+[02:41:49.797] Browser LOG        operationMode: add
+[02:41:49.797] Browser LOG        ℹ️ No initialData - using defaults
+[02:41:49.797] Browser LOG     🎨 defaultFormValues computed:
+[02:41:49.797] Browser LOG        initialData: undefined
+[02:41:49.797] Browser LOG        operationMode: add
+[02:41:49.797] Browser LOG        ℹ️ No initialData - using defaults
+[02:43:18.668] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:18.668] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:32.241] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:43:32.256] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:43:32.503] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:43:32.637] Server  LOG     [people.service] Merge config for Lâm: {}
+[02:43:32.820] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:43:32.864] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:43:33.069] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:43:33.324] Server  LOG     [getPeople] Filter for 4wxl4cpp7u4adbb: "(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void' && (person_id='4wxl4cpp7u4adbb' || (account_id='m9wc74ai0r7nbpj'))"
+[02:43:33.403] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:43:33.671] Server  LOG     [DB:PB] person-cycle-sheets.get person=4wxl4cpp7u4adbb
+[02:43:35.532] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:43:35.532] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:43:35.532] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:35.532] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:35.532] Browser LOG     🎨 defaultFormValues computed:
+[02:43:35.532] Browser LOG        initialData: undefined
+[02:43:35.532] Browser LOG        operationMode: add
+[02:43:35.532] Browser LOG        ℹ️ No initialData - using defaults
+[02:43:35.532] Browser LOG     🎨 defaultFormValues computed:
+[02:43:35.532] Browser LOG        initialData: undefined
+[02:43:35.532] Browser LOG        operationMode: add
+[02:43:35.532] Browser LOG        ℹ️ No initialData - using defaults
+[02:43:45.403] Server  LOG     [DB:PB] accounts.getAll
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":4,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     🎨 defaultFormValues computed:
+[02:43:51.517] Browser LOG        initialData: undefined
+[02:43:51.517] Browser LOG        operationMode: add
+[02:43:51.517] Browser LOG        ℹ️ No initialData - using defaults
+[02:43:51.517] Browser LOG     🎨 defaultFormValues computed:
+[02:43:51.517] Browser LOG        initialData: undefined
+[02:43:51.517] Browser LOG        operationMode: add
+[02:43:51.517] Browser LOG        ℹ️ No initialData - using defaults
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:43:51.517] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:44:06.179] Browser LOG     🎨 defaultFormValues computed:
+[02:44:06.179] Browser LOG        initialData: null
+[02:44:06.179] Browser LOG        operationMode: add
+[02:44:06.179] Browser LOG        ℹ️ No initialData - using defaults
+[02:44:06.179] Browser LOG     🎨 defaultFormValues computed:
+[02:44:06.179] Browser LOG        initialData: null
+[02:44:06.179] Browser LOG        operationMode: add
+[02:44:06.179] Browser LOG        ℹ️ No initialData - using defaults
+[02:44:06.614] Server  LOG     [DB:PB] accounts.getAll

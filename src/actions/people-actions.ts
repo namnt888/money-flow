@@ -64,7 +64,7 @@ export async function createPersonAction(payload: CreatePersonPayload) {
 
   if (result) {
     revalidatePath('/people')
-    return { success: true, profileId: result.profileId, debtAccountId: result.debtAccountId }
+    return { success: true, profileId: (result as any).profileId }
   } else {
     return { success: false, error: 'Failed to create person' }
   }
@@ -294,6 +294,7 @@ export async function rolloverDebtAction(
   await pocketbaseUpdate('transactions', openRes, { linked_transaction_id: settleRes });
 
   revalidatePath(`/people/${personId}`)
+  revalidatePath('/people')
   return { success: true, message: 'Debt rolled over successfully' }
 }
 

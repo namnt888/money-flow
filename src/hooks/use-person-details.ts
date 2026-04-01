@@ -180,16 +180,36 @@ export function usePersonDetails({
     const now = new Date();
     const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     groups.set(currentMonthTag, []);
-    if (urlTag && isYYYYMM(urlTag)) {
+
+    // Also ensure periodic tags are initialized as groups if relevant
+    if (urlTag === '3m' || urlTag === 'year' || urlTag === 'all') {
+      groups.set(urlTag, []);
+    } else if (urlTag && isYYYYMM(urlTag)) {
       groups.set(urlTag, []);
     }
 
     activeTransactions.forEach((txn) => {
       const tag = getTxnCycleTag(txn);
+      
+      // Standard grouping
       if (!groups.has(tag)) {
         groups.set(tag, []);
       }
       groups.get(tag)?.push(txn);
+
+      // Periodic Aggregation
+      const txnDate = new Date(txn.occurred_at || txn.created_at);
+      const daysDiff = (now.getTime() - txnDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (urlTag === '3m' && daysDiff <= 90) {
+        groups.get('3m')?.push(txn);
+      }
+      if (urlTag === 'year' && txnDate.getFullYear() === now.getFullYear()) {
+         groups.get('year')?.push(txn);
+      }
+      if (urlTag === 'all') {
+         groups.get('all')?.push(txn);
+      }
     });
 
     return Array.from(groups.entries())
@@ -348,10 +368,17 @@ export function usePersonDetails({
 
   // Current cycle info
   const currentCycle = useMemo(() => {
+    // 1. If urlTag is provided, try to find it first
+    if (urlTag) {
+      const match = debtCycles.find((c) => c.tag === urlTag);
+      if (match) return match;
+    }
+
+    // 2. Fallback to current month
     const now = new Date();
     const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     return debtCycles.find((c) => c.tag === currentTag) || debtCycles[0];
-  }, [debtCycles]);
+  }, [debtCycles, urlTag]);
 
   return {
     metrics,

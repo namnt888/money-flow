@@ -180,11 +180,11 @@ async function PeopleDetailContent({
       }
       return getUnifiedTransactions({
         personId: sourcePersonId,
-        limit: activeTag === 'all' ? 2005 : 1000,
+        limit: 2000, // Fetch more to ensure history coverage
         context: 'person',
         dateFrom: effectiveDateFrom,
         dateTo: effectiveDateTo,
-        tag: (activeTag === 'all' || activeTag === '3m' || activeTag === 'year') ? undefined : activeTag,
+        // Remove tag filtering here so usePersonDetails gets ALL transactions to group into cycles
         includeVoided: true,
       })
     })

@@ -182,12 +182,22 @@ export function ManageSheetButton({
   }, [cycleTag])
 
   const handleApply = () => {
-    if (onCycleChange && pendingCycleTag !== cycleTag) {
+    const isTagChanged = pendingCycleTag !== cycleTag;
+    const isYearSelectedChanged = historyYear !== (selectedYear || 'all');
+
+    if (onCycleChange && isTagChanged) {
       if (pendingCycleTag === 'all' && historyYear !== 'all' && onYearChange) {
         onYearChange(historyYear)
       } else {
         onCycleChange(pendingCycleTag)
       }
+      setShowPopover(false)
+    } else if (isYearSelectedChanged && onYearChange) {
+      onYearChange(historyYear === 'all' ? null : historyYear)
+      setShowPopover(false)
+    } else if (onCycleChange) {
+      // Force update if same tag and year but user clicked apply (ensures transition)
+      onCycleChange(pendingCycleTag)
       setShowPopover(false)
     }
   }
@@ -224,8 +234,15 @@ export function ManageSheetButton({
   })
 
   useEffect(() => {
-    setHistoryYear(historyYear)
-  }, [cycleYears])
+    // If props selectedYear changes, sync state
+    if (selectedYear) {
+      setHistoryYear(selectedYear)
+    } else if (!historyYear || historyYear === 'all') {
+       // Only default if not already set to something specific
+       const currentYear = new Date().getFullYear().toString()
+       if (cycleYears.includes(currentYear)) setHistoryYear(currentYear)
+    }
+  }, [selectedYear, cycleYears])
 
   const filteredCycles = React.useMemo(() => {
     let searchStr = historySearch.trim().toLowerCase()
@@ -235,9 +252,12 @@ export function ManageSheetButton({
       searchStr = searchStr.replace('-', '-0')
     }
 
-    return allCycles.filter((cycle) => {
+    const filtered = allCycles.filter((cycle) => {
       const tag = cycle.tag.toLowerCase()
       
+      // Always show current active or pending cycle
+      if (cycle.tag === cycleTag || cycle.tag === pendingCycleTag) return true;
+
       // Basic text matching
       const matchesSearch = !searchStr || 
                           tag.includes(searchStr) || 
@@ -254,15 +274,31 @@ export function ManageSheetButton({
       const matchesYear = historyYear === 'all' || tag.startsWith(`${historyYear}-`)
       return matchesYear
     })
+
+    console.log('[ManageSheetButton] filterDebug:', {
+      allCyclesCount: allCycles.length,
+      historyYear,
+      filteredCount: filtered.length,
+      firstTag: allCycles[0]?.tag
+    })
+
+    return filtered
   }, [allCycles, historySearch, historyYear])
 
   const groupedFilteredCycles = React.useMemo(() => {
-    return cycleYears
+    const grouped = cycleYears
       .map((year) => ({
         year,
-        cycles: filteredCycles.filter((cycle) => cycle.tag.startsWith(`${year}-`) && cycle.tag !== pendingCycleTag),
+        cycles: filteredCycles.filter((cycle) => cycle.tag.startsWith(`${year}-`)),
       }))
       .filter((group) => group.cycles.length > 0)
+
+    console.log('[ManageSheetButton] groupedDebug:', {
+      cycleYears,
+      groupedCount: grouped.length
+    })
+
+    return grouped
   }, [cycleYears, filteredCycles, pendingCycleTag])
 
 
@@ -508,10 +544,10 @@ export function ManageSheetButton({
           </PopoverTrigger>
         )}
 
-        <PopoverContent className="w-[700px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white" align={splitMode ? 'start' : 'end'} sideOffset={8}>
+        <PopoverContent className="w-[700px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white z-[100]" align={splitMode ? 'start' : 'end'} sideOffset={8}>
           <div className="flex flex-col max-h-[600px] bg-slate-50/10">
             {/* 1. COMPACT CONSOLIDATED STICKY HEADER */}
-            <div className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+            <div className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
               {/* Main Row: Title + All Button + Search + Filter */}
               <div className="px-5 py-3 flex items-center gap-3">
                 {/* Title Badge & All Switch */}
@@ -525,59 +561,58 @@ export function ManageSheetButton({
                       <button
                         className={cn(
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ml-0.5 group",
-                          (cycleTag === 'all' || cycleTag === '3m' || cycleTag === 'year') 
+                          (pendingCycleTag === 'all' || pendingCycleTag === '3m' || pendingCycleTag === 'year') 
                             ? "text-emerald-600 bg-emerald-50 shadow-sm" 
                             : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                         )}
                       >
-                        <Zap className={cn("h-3 w-3", (cycleTag === 'all' || cycleTag === '3m' || cycleTag === 'year') && "fill-emerald-600")} />
-                        {cycleTag === '3m' ? 'Last 3M' : cycleTag === 'year' ? 'This Yr' : 'All'}
+                        <Zap className={cn("h-3 w-3", (pendingCycleTag === 'all' || pendingCycleTag === '3m' || pendingCycleTag === 'year') && "fill-emerald-600")} />
+                        {pendingCycleTag === '3m' ? 'Last 3M' : pendingCycleTag === 'year' ? 'This Yr' : 'All'}
                         <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-[180px] p-1 rounded-2xl shadow-2xl border-slate-200">
+                    <DropdownMenuContent align="start" className="w-[180px] p-1 rounded-2xl shadow-2xl border-slate-200 z-[110]">
                       <DropdownMenuItem 
                         onClick={() => {
                           const now = new Date()
                           const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-                          onCycleChange?.(currentTag)
-                          setShowPopover(false)
+                          setPendingCycleTag(currentTag)
                         }}
                         className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                       >
                         Current Month
-                        {cycleTag !== 'all' && cycleTag !== '3m' && cycleTag !== 'year' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                        {pendingCycleTag === (new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')) && <Check className="h-3.5 w-3.5 text-emerald-500" />}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => {
-                          onCycleChange?.('3m')
-                          setShowPopover(false)
+                          setPendingCycleTag('3m')
+                          setHistoryYear('all')
                         }}
                         className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer"
                       >
                         Last 3 Months
-                        {cycleTag === '3m' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                        {pendingCycleTag === '3m' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => {
-                          onCycleChange?.('year')
-                          setShowPopover(false)
+                          setPendingCycleTag('year')
+                          setHistoryYear(new Date().getFullYear().toString())
                         }}
                         className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 cursor-pointer"
                       >
                         Entire Year
-                        {cycleTag === 'year' && <Check className="h-3.5 w-3.5 text-indigo-500" />}
+                        {pendingCycleTag === 'year' && <Check className="h-3.5 w-3.5 text-indigo-500" />}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-1 bg-slate-100" />
                       <DropdownMenuItem 
                         onClick={() => {
-                          onCycleChange?.('all')
-                          setShowPopover(false)
+                          setPendingCycleTag('all')
+                          setHistoryYear('all')
                         }}
                         className="flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
                       >
                         All-Time History
-                        {cycleTag === 'all' && <Check className="h-3.5 w-3.5 text-rose-500" />}
+                        {pendingCycleTag === 'all' && <Check className="h-3.5 w-3.5 text-rose-500" />}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -601,10 +636,10 @@ export function ManageSheetButton({
                     value={historyYear} 
                     onValueChange={(val) => setHistoryYear(val || 'all')}
                     items={[
-                      { value: 'all', label: 'All Yrs' },
+                      { value: 'all', label: 'All Time' },
                       ...cycleYears.map(y => ({ value: y, label: y }))
                     ]}
-                    className="h-9 w-[100px] bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 text-[10px] uppercase tracking-wider hover:bg-slate-100 transition-all border shrink-0"
+                    className="h-9 min-w-[110px] w-auto px-3 bg-slate-50 border-slate-100 rounded-xl font-black text-slate-700 text-[10px] uppercase tracking-wider hover:bg-slate-100 transition-all border shrink-0 whitespace-nowrap overflow-hidden"
                     placeholder="Year"
                   />
                 )}
@@ -613,13 +648,13 @@ export function ManageSheetButton({
               {/* Sub-header: Column Labels - Also Sticky */}
               <div className="px-5 py-2 bg-slate-50/30 border-t border-slate-50 flex items-center">
                 <div className="min-w-[100px] flex items-center">
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Time Cycle</span>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest">Time Cycle</span>
                 </div>
                 <div className="flex-1 grid grid-cols-4 items-center">
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Initial</span>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Back</span>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Repaid</span>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Result</span>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest text-center">Initial</span>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest text-center">Back</span>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest text-center">Repaid</span>
+                  <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest text-center">Result</span>
                 </div>
               </div>
             </div>
@@ -634,12 +669,7 @@ export function ManageSheetButton({
                   </div>
                 ) : (
                   groupedFilteredCycles.map((group) => (
-                    <div key={group.year} className="space-y-1.5">
-                      {/* Year Indicator within list */}
-                      <div className="px-2 py-1.5 flex items-center gap-3">
-                        <span className="text-[9px] font-black text-slate-300 tracking-[0.2em] uppercase">{group.year}</span>
-                        <div className="h-px flex-1 bg-slate-100/50" />
-                      </div>
+                    <div key={group.year} className="space-y-1.5 pt-1.5 border-t border-slate-50 first:border-0 first:pt-0">
                       
                       {group.cycles.map((cycle) => {
                         const isSelected = cycleTag === cycle.tag // This is the actual active cycle from props
@@ -655,14 +685,15 @@ export function ManageSheetButton({
                             key={cycle.tag}
                             type="button"
                             onClick={() => {
-                              onCycleChange?.(cycle.tag)
-                              setShowPopover(false)
+                              setPendingCycleTag(cycle.tag)
                             }}
                             className={cn(
                               "w-full text-left rounded-xl border transition-all duration-200 relative overflow-hidden flex h-12 items-center group/row",
-                              isSelected 
-                                ? "bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100/50" 
-                                : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50"
+                              pendingCycleTag === cycle.tag 
+                                ? "bg-amber-100 border-amber-300 shadow-md ring-2 ring-amber-400/20 scale-[1.01] z-10" 
+                                : isSelected
+                                  ? "bg-slate-50 border-slate-200 shadow-sm"
+                                  : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50"
                             )}
                           >
                             {/* Left: Cycle Section */}
@@ -676,10 +707,6 @@ export function ManageSheetButton({
                               )}>
                                 {cycle.tag}
                               </span>
-                              <span className={cn(
-                                "text-[8px] font-bold uppercase tracking-tight leading-none",
-                                isSelected ? "text-amber-500" : "text-slate-300"
-                              )}>CYCLE</span>
                             </div>
 
                             {/* Right: Data Sections */}
@@ -731,18 +758,41 @@ export function ManageSheetButton({
               </div>
             </div>
 
-            {/* 3. COMPACT FOOTER */}
-            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white text-[10px] font-bold text-slate-400">
-               <div className="flex items-center gap-2">
-                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                 <span className="uppercase tracking-widest">Active: {cycleTag}</span>
+            {/* 3. COMPACT FOOTER / APPLY ACTION */}
+            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white text-[10px] font-bold">
+               <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-2 text-slate-400">
+                   <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                   <span className="uppercase tracking-widest">Active: {cycleTag}</span>
+                 </div>
+                 {pendingCycleTag !== cycleTag && (
+                   <div className="flex items-center gap-2 text-amber-600 animate-in fade-in slide-in-from-left-2">
+                     <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                     <span className="uppercase tracking-widest">Selection: {pendingCycleTag}</span>
+                   </div>
+                 )}
                </div>
-               <button 
-                 onClick={() => setShowPopover(false)}
-                 className="px-4 py-1.5 rounded-lg hover:bg-slate-50 transition-colors uppercase tracking-widest text-slate-400 hover:text-slate-600"
-               >
-                 Close
-               </button>
+               
+               <div className="flex items-center gap-3">
+                 <button 
+                   onClick={() => {
+                     setPendingCycleTag(cycleTag)
+                     setShowPopover(false)
+                   }}
+                   className="px-4 py-1.5 rounded-lg hover:bg-slate-50 transition-colors uppercase tracking-widest text-slate-400 hover:text-slate-600"
+                 >
+                   Cancel
+                 </button>
+
+                 {pendingCycleTag !== cycleTag && (
+                   <Button
+                     onClick={handleApply}
+                     className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-6 font-black uppercase tracking-widest text-[9px] shadow-lg shadow-indigo-200 animate-in zoom-in-95"
+                   >
+                     Apply Change
+                   </Button>
+                 )}
+               </div>
             </div>
           </div>
         </PopoverContent>
