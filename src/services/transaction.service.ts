@@ -196,13 +196,16 @@ async function fetchHistoryCountMap(transactionIds: string[]): Promise<Map<strin
   const counts = new Map<string, number>();
   if (transactionIds.length === 0) return counts;
 
-  const chunks = chunkArray(transactionIds, 60);
+  // Optimized chunk size and parallelized requests
+  const chunkSize = 200;
+  const chunks = chunkArray(transactionIds, chunkSize);
 
-  for (const chunk of chunks) {
+  await Promise.all(chunks.map(async (chunk) => {
     const filter = chunk.map((id) => `transaction_id="${id}"`).join(" || ");
     let page = 1;
+    let totalPages = 1;
 
-    while (true) {
+    while (page <= totalPages) {
       const response = await pocketbaseList<any>("transaction_history", {
         filter,
         page,
@@ -216,11 +219,11 @@ async function fetchHistoryCountMap(transactionIds: string[]): Promise<Map<strin
         counts.set(txnId, (counts.get(txnId) ?? 0) + 1);
       }
 
-      const totalPages = Number(response.totalPages ?? 1);
+      totalPages = Number(response.totalPages ?? 1);
       if (page >= totalPages) break;
       page += 1;
     }
-  }
+  }));
 
   return counts;
 }
@@ -453,6 +456,9 @@ export async function loadTransactions(options: {
   limit?: number;
   context?: "person" | "account" | "general";
   includeVoided?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  tag?: string;
 }): Promise<TransactionWithDetails[]> {
   try {
     const filterParts: string[] = [];
@@ -476,35 +482,67 @@ export async function loadTransactions(options: {
     if (options.categoryId) filterParts.push(`category_id = '${toPocketBaseId(options.categoryId, "categories")}'`);
     if (options.installmentPlanId) filterParts.push(`installment_plan_id = '${toPocketBaseId(options.installmentPlanId, "installments")}'`);
 
+    if (options.tag) {
+      filterParts.push(`tag = '${options.tag}'`);
+    }
+
+    if (options.dateFrom) {
+      filterParts.push(`occurred_at >= '${options.dateFrom} 00:00:00'`);
+    }
+
+    if (options.dateTo) {
+      filterParts.push(`occurred_at <= '${options.dateTo} 23:59:59'`);
+    }
+
     const filter = filterParts.length > 0 ? filterParts.join(" && ") : undefined;
     const limit = options.limit || 100;
+    const perPage = 200;
+    
+    // Initial fetch to get first page and totalPages
+    const firstPageResponse = await pocketbaseList<any>("pvl_txn_001", {
+      sort: "-date",
+      filter,
+      page: 1,
+      perPage: Math.min(perPage, limit),
+    });
 
-    let records: FlatTransactionRow[] = [];
-    let page = 1;
-    let totalPages = 1;
+    let records: FlatTransactionRow[] = [...(firstPageResponse.items as unknown as FlatTransactionRow[])];
+    const totalPagesToFetch = Math.min(
+      Number(firstPageResponse.totalPages || 1),
+      Math.ceil(limit / perPage)
+    );
 
-    // PocketBase usually has a max perPage of 200-500. Using 200 to be safe and avoid 400 errors.
-    while (page <= totalPages && records.length < limit) {
-      const remaining = limit - records.length;
-      const perPage = Math.min(200, remaining);
-      
-      const response = await pocketbaseList<any>("pvl_txn_001", {
-        sort: "-date",
-        filter,
-        page,
-        perPage,
+    // Parallelize subsequent page fetches if needed
+    if (totalPagesToFetch > 1 && records.length < limit) {
+      const pagePromises = [];
+      for (let p = 2; p <= totalPagesToFetch; p++) {
+        pagePromises.push(
+          pocketbaseList<any>("pvl_txn_001", {
+            sort: "-date",
+            filter,
+            page: p,
+            perPage,
+          })
+        );
+      }
+      const results = await Promise.all(pagePromises);
+      results.forEach(res => {
+        records.push(...(res.items as unknown as FlatTransactionRow[]));
       });
+    }
 
-      records.push(...(response.items as unknown as FlatTransactionRow[]));
-      totalPages = Number(response.totalPages || 1);
-      if (page >= totalPages) break;
-      page += 1;
+    // Trim to exact limit
+    if (records.length > limit) {
+      records = records.slice(0, limit);
     }
 
     if (!records.length) return [];
 
-    const lookups = await fetchLookups(records);
-    const historyCountMap = await fetchHistoryCountMap(records.map((row) => row.id));
+    // Parallelize lookups and history counting
+    const [lookups, historyCountMap] = await Promise.all([
+      fetchLookups(records),
+      fetchHistoryCountMap(records.map((row) => row.id))
+    ]);
     
     return Promise.all(
       records.map((row) =>

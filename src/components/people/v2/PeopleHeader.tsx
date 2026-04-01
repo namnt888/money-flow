@@ -180,6 +180,9 @@ function MetricItem({
     prefix?: string,
     className?: string
 }) {
+    const isRemains = label.toLowerCase() === 'remains'
+    const isValueZero = typeof value === 'number' && Math.abs(value) < 100
+    
     return (
         <div className={cn("flex flex-col gap-0.5 justify-center", className)}>
             <div className="flex items-center gap-1">
@@ -187,10 +190,10 @@ function MetricItem({
                 {Icon && <Icon className="h-2.5 w-2.5 text-slate-300" />}
             </div>
             <span className={cn(
-                "text-lg font-bold tabular-nums leading-none tracking-tight whitespace-nowrap",
-                colorClass
+                "text-lg font-bold tabular-nums leading-none tracking-tight whitespace-nowrap uppercase",
+                isRemains && isValueZero ? "text-emerald-500 font-black text-sm" : colorClass
             )}>
-                {typeof value === 'number' ? `${prefix}${numberFormatter.format(Math.abs(value))}` : value}
+                {isRemains && isValueZero ? 'SETTLED' : (typeof value === 'number' ? `${prefix}${numberFormatter.format(Math.abs(value))}` : value)}
             </span>
         </div>
     )
@@ -237,8 +240,8 @@ export function PeopleHeader({
             <div className="flex items-center px-4 py-3 gap-3 overflow-x-auto scrollbar-hide">
                 
                 {/* 1. IDENTITY CARD */}
-                <div className="flex items-center gap-3 shrink-0 bg-white border border-slate-100 p-2 rounded-2xl shadow-sm min-w-[220px] h-[92px]">
-                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-emerald-50 shrink-0 border border-emerald-100 flex items-center justify-center">
+                <div className="flex items-center gap-3 shrink-0 bg-white border border-slate-100 p-2 rounded-none shadow-sm min-w-[220px] h-[92px]">
+                    <div className="h-14 w-14 rounded-none overflow-hidden bg-emerald-50 shrink-0 border border-emerald-100 flex items-center justify-center">
                         {person.image_url ? (
                             <img src={person.image_url} alt={person.name} className="h-full w-full object-contain rounded-none bg-white" />
                         ) : (
@@ -259,6 +262,16 @@ export function PeopleHeader({
                             <Calendar className="h-2.5 w-2.5 text-orange-600" />
                             <span className="text-[10px] font-bold text-orange-700 tracking-tight leading-none uppercase">
                                 {activeCycle?.tag || 'All Time'}
+                            </span>
+                        </div>
+                        {/* NET BALANCE INDICATOR */}
+                        <div className="mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 shadow-sm w-fit group cursor-help transition-all hover:scale-105 active:scale-95">
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">NET BAL</span>
+                            <span className={cn(
+                                "text-[11px] font-black tracking-tight leading-none",
+                                (person.balance || 0) > 100 ? "text-rose-400" : (person.balance || 0) < -100 ? "text-emerald-400" : "text-white"
+                            )}>
+                                {formatMoneyVND(person.balance || 0)}
                             </span>
                         </div>
                     </div>
@@ -296,32 +309,14 @@ export function PeopleHeader({
                                 receiveRollover={stats.receiveRollover}
                             >
                                 <button className="text-left hover:opacity-80 transition-opacity">
-                                    <MetricItem label="Remains" value={stats.remains} colorClass="text-rose-600" />
+                                    <MetricItem 
+                                        label="Remains" 
+                                        value={isSettled ? "SETTLED" : stats.remains} 
+                                        colorClass={isSettled ? "text-emerald-500" : "text-rose-600"} 
+                                    />
                                 </button>
                             </StatsPopover>
                         </div>
-                        
-                        {onOpenAudit && (
-                             <div className="flex items-center ml-4 pl-4 border-l border-slate-100">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                onClick={onOpenAudit}
-                                                className="h-10 w-10 rounded-xl border-slate-100 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 transition-all flex-shrink-0"
-                                            >
-                                                <RefreshCw className="h-5 w-5" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="bg-slate-900 border-none text-white z-[200]">
-                                            <p className="text-[10px] font-bold">Re-Align & Audit Ledger</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
                     </div>
 
                     {/* VERTICAL DIVIDER */}

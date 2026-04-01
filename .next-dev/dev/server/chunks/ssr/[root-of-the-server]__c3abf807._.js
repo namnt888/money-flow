@@ -1311,7 +1311,7 @@ function logSource(_source, _action, _details) {
 "[project]/src/services/pocketbase/people.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"0060849b4afd0280f20b3a73b928363ceca195123e":"getPocketBasePeople","4029131c4704fe751eb34b0bc8e9271e4dd8c2adcf":"resolvePocketBasePersonRecord","4060e6e3365a4f301a596519ac10510ee8d311e81d":"getPocketBasePersonDetails","40865143913815f3c89d12eab43d77edb7876e8d2a":"createPocketBasePerson","40b84732e343b82f0938570df95f4794839d3854bc":"getPocketBasePersonById","40f1fcaece782ed6c821bd255f90a0e3039cc5af91":"deletePocketBasePerson","60b49960c3a3edfae6ad6647087e3464a917451e55":"updatePocketBasePerson"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"006d1e9cc2d7bc1ee23a5e9c6051f33517ec04ecb8":"getPocketBasePeople","401994bca8f3d74ec8657d0a39a7d728ddcb88283f":"createPocketBasePerson","401ddd1557b3c5a760a7cf1ad74d609461643a5293":"resolvePocketBasePersonRecord","40a38f1ebcc96e5297dbf1917cfcefad94b3426508":"deletePocketBasePerson","40bddc209ba05f6a8db47c22b33ec683cc3b305c9a":"getPocketBasePersonDetails","40fcbba08963c7a110103c1e196942b7fc81e5c87b":"getPocketBasePersonById","6097a1dabd99ce313dd5da2307628d17e88acf2480":"updatePocketBasePerson"},"",""] */ __turbopack_context__.s([
     "createPocketBasePerson",
     ()=>createPocketBasePerson,
     "deletePocketBasePerson",
@@ -1362,23 +1362,28 @@ function mapPerson(record) {
 }
 async function resolvePocketBasePersonRecord(sourceOrPocketBaseId) {
     if (!sourceOrPocketBaseId) return null;
-    try {
-        return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_people_001', sourceOrPocketBaseId);
-    } catch  {
-    // continue
+    const isPbId = sourceOrPocketBaseId.length === 15 && !sourceOrPocketBaseId.includes('-');
+    const isUuidFormat = isUuid(sourceOrPocketBaseId);
+    // 1. Direct fetch if it looks like a PB ID
+    if (isPbId) {
+        try {
+            return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_people_001', sourceOrPocketBaseId);
+        } catch  {}
     }
+    // 2. Try as source_id / source ID
     try {
         const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(sourceOrPocketBaseId);
-        return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_people_001', pbId);
-    } catch  {
-    // continue
-    }
+        if (pbId !== sourceOrPocketBaseId) {
+            return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_people_001', pbId);
+        }
+    } catch  {}
+    // 3. Try lookup by slug
     try {
         const escapedId = sourceOrPocketBaseId.replace(/'/g, "\\'");
         const bySlug = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])('pvl_people_001', {
             perPage: 1,
             page: 1,
-            filter: `slug='${escapedId}'`
+            filter: `slug='${escapedId}' || name~'${escapedId}'`
         });
         return bySlug.items?.[0] ?? null;
     } catch  {
@@ -1515,18 +1520,18 @@ async function deletePocketBasePerson(sourceOrPocketBaseId) {
     updatePocketBasePerson,
     deletePocketBasePerson
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(resolvePocketBasePersonRecord, "4029131c4704fe751eb34b0bc8e9271e4dd8c2adcf", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePeople, "0060849b4afd0280f20b3a73b928363ceca195123e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePersonDetails, "4060e6e3365a4f301a596519ac10510ee8d311e81d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePersonById, "40b84732e343b82f0938570df95f4794839d3854bc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBasePerson, "40865143913815f3c89d12eab43d77edb7876e8d2a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBasePerson, "60b49960c3a3edfae6ad6647087e3464a917451e55", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBasePerson, "40f1fcaece782ed6c821bd255f90a0e3039cc5af91", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(resolvePocketBasePersonRecord, "401ddd1557b3c5a760a7cf1ad74d609461643a5293", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePeople, "006d1e9cc2d7bc1ee23a5e9c6051f33517ec04ecb8", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePersonDetails, "40bddc209ba05f6a8db47c22b33ec683cc3b305c9a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePersonById, "40fcbba08963c7a110103c1e196942b7fc81e5c87b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBasePerson, "401994bca8f3d74ec8657d0a39a7d728ddcb88283f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBasePerson, "6097a1dabd99ce313dd5da2307628d17e88acf2480", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBasePerson, "40a38f1ebcc96e5297dbf1917cfcefad94b3426508", null);
 }),
 "[project]/src/services/pocketbase/account-details.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00016fc040b04745d68e8e5df7030476962484ccad":"getPocketBaseAccounts","0030cdb137d594f2397ef27272e242a6c734fd9e76":"getPocketBaseShops","005422e11ad96ea6cd0ff0a7e08d1bae01ee56eb2d":"getPocketBasePeople","005c04998c7faa918aa8712a7e124c7ecfa6dec122":"getPocketBaseCategories","402f47172d44037b6c0af41d8c584780fd81d1ab54":"deletePocketBaseShop","4031bbc8cf5667e6a1a2e4d40d867677bc7d902923":"getPocketBaseInstallmentPlan","4037a679d5c5c90e02236e2bd41df6962a1f67ff74":"getPocketBaseAccountDetails","405392d43daf90218c185c1b7598ff98db60405ac1":"getPocketBaseUnifiedTransactions","406012c217d7e48f6ab6fdba99d03330cdc4ba95ff":"loadPocketBaseTransactions","406bea3751af4e721d1901eb379272ffc86c4e012a":"voidPocketBaseTransaction","40716972695a09aaba3158b22a2e490eabd3ef789c":"getPocketBaseTransactionsByPlan","4073812c271d58e7486dd66d372abb5c6f56c05ce7":"deletePocketBaseShopsBulk","40e07210a0c8d0c5c4367647b93a617f9ea42d2386":"deletePocketBaseCategoriesBulk","40e231d9adb369e537bfa06cde600486694460391d":"deletePocketBaseCategory","60038e3fe2e5dbd4251f64a04a5769fa1a23ea198f":"updatePocketBaseAccountConfig","6015b525aeff7a11ee1ffde8894c60361cb6fc6428":"getPocketBaseCycleTransactions","6016e377542a84264809476ad34c9e47ff88a0209f":"getPocketBaseAccountCycleOptions","60369b1d8cca27cf15a8397fa0479cd10028de086d":"createPocketBaseShop","60430b836e3ec58326661b82249396a1bae68e1078":"updatePocketBaseTransaction","6045725551edc2b44534c4c6843a49ef2e640bcd26":"updatePocketBasePerson","605352bd5850dee5f046ce446ae169cc9efb8b76ce":"updatePocketBaseAccountInfo","6075c7e375a524181b4f3cd1e2d28d47c952fa096c":"togglePocketBaseShopArchive","607816f947d32f4c0662cefe8926e9875a62e5ad5d":"togglePocketBaseShopsArchiveBulk","60805490de2f79faf431a2a3a7868972bad99b7f2e":"createPocketBaseAccount","6085d05b77b0479ba78e9dd304ea9b83d4290f62b9":"createPocketBaseTransaction","609b5636db00e19d72a0279a204cccbf366ae3c58d":"loadPocketBaseTransactionsForAccount","60a12232255f1d17e1a58371619e7b145735b70d46":"createPocketBasePerson","60ab1397131a0f94cef99093bec06741507e27b5a7":"createPocketBaseCategory","60b91491651f8694892818045640efebace1513eaa":"togglePocketBaseCategoryArchive","60f41475426ab1adcc092e9adf055d7f4b11645074":"togglePocketBaseCategoriesArchiveBulk","60fb680baaf9a489966a02c83c62e8e86d8ab785a7":"updatePocketBaseCategory","60ff0ee22378ca36b405908da6a16492f19edc47f5":"updatePocketBaseShop","70f8195f526d9545a9e2e95faf8a232e6a6915d57c":"getPocketBaseAccountSpendingStatsSnapshot"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"0002198770fd50b7768c7638d653d38d6a119a2d23":"getPocketBaseShops","0064a9cc7a129973fa18bf43d8f76108db9748dcae":"getPocketBaseAccounts","00a0f7a31cb733c3a63e0fbc7ed67333e9e159ad29":"getPocketBasePeople","00ea89b8e3d349226ea1cf76166c1b12c3fdeeeeba":"getPocketBaseCategories","40209423ebd1df8ff017aaafd9b66ee47b23be157a":"voidPocketBaseTransaction","405690f8a3b42f919b94d19582093bda78a932e62a":"getPocketBaseUnifiedTransactions","406442d29f9219c1e9669242fc40ee1e8af022cd51":"getPocketBaseAccountDetails","406c8b7b12981726e0a99e445b4d172846412d5a9f":"deletePocketBaseCategoriesBulk","4072c768721fff3626e17df67d9351ec64626b4c06":"loadPocketBaseTransactions","40b7e4de854ec85b7d3d2ce57b4c0a9a9eef423aac":"deletePocketBaseShopsBulk","40b931b83f7e3fa6ddd5d08cea7bc28fdbb36d70d9":"getPocketBaseInstallmentPlan","40c008e30fc4ed3e87d8c68a44762881a2875e8dba":"deletePocketBaseShop","40cdf129c1484892a41434b60aa1f71836e181c30c":"deletePocketBaseCategory","40e0f5f02c66ab35d70477c72c2723c6d0e31693d6":"getPocketBaseTransactionsByPlan","600109ecbff04033c0e8dac4d4297bd6cd23891999":"createPocketBaseCategory","600551bcf583b724e93c29143daafc23adf0a61915":"updatePocketBaseAccountConfig","6009c6de345c28f63f224189891fda5086b87b1d51":"updatePocketBaseShop","6013c8f2f2595d698ff54c65e28d29aba842a697fa":"togglePocketBaseShopArchive","601b7b10d320a5c38214610b791af1df9fbaac52c1":"createPocketBaseTransaction","601b7f84e617edcc51b3a766b95063890665d82ca7":"updatePocketBaseAccountInfo","6051867822d60261f2a852b60e263a777a90026c6d":"updatePocketBaseCategory","607d1e6a2245c18c4ad2d25319eea342c57a8cba37":"togglePocketBaseShopsArchiveBulk","6082d18ebc15026a30c7eed2aaa9a1191bdcf72b13":"getPocketBaseCycleTransactions","608e11b907e03d576a5ec25f5660ad7ce13dbf331a":"createPocketBaseAccount","60a061321fdaaa08d23206f570cea0c9146555031a":"loadPocketBaseTransactionsForAccount","60b86ddd94589dac1dc84867b76465461f15e6c5fb":"updatePocketBasePerson","60c753fe3fd189f607e33ab1cbf2be0a79b55825c4":"createPocketBaseShop","60c8a6f0a10e0502f15ad7796a30bb300ffd9346b2":"updatePocketBaseTransaction","60cb87adb8b84e1591d0a49c5a4c6fd3adc89112d5":"createPocketBasePerson","60edca9031feb56a198341f025e3c4f56cae52db87":"togglePocketBaseCategoryArchive","60f1fabe2a6303c14150df828fd5d669090a97dea0":"togglePocketBaseCategoriesArchiveBulk","60f5ec1fb46fcb8f04554671d7e8c644687823f467":"getPocketBaseAccountCycleOptions","701493980fcc0b23371062d60859b04c03fc37699e":"getPocketBaseAccountSpendingStatsSnapshot"},"",""] */ __turbopack_context__.s([
     "createPocketBaseAccount",
     ()=>createPocketBaseAccount,
     "createPocketBaseCategory",
@@ -1600,9 +1605,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$account$2d$bal
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$cycle$2d$utils$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/cycle-utils.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2f$policy$2d$resolver$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/services/cashback/policy-resolver.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/services/pocketbase/server.ts [app-rsc] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/month-tag.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/services/pocketbase/people.service.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$pocketbase$2f$fallback$2d$helpers$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/pocketbase/fallback-helpers.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._577207839b545f50e0fdb06bbee3ea77/node_modules/next/dist/build/webpack/loaders/next-flight-loader/action-validate.js [app-rsc] (ecmascript)");
+;
 ;
 ;
 ;
@@ -1867,25 +1874,41 @@ async function listAllRecords(collection, params = {}) {
     }
     return allItems;
 }
+// Request-level cache for account record resolution to avoid redundant DB hits
+const accountRecordCache = new Map();
 async function resolvePocketBaseAccountRecord(sourceOrPocketBaseId) {
-    try {
-        return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])("accounts", sourceOrPocketBaseId);
-    } catch  {
-    // fallthrough: id may be source UUID, not PB id
+    if (accountRecordCache.has(sourceOrPocketBaseId)) {
+        return accountRecordCache.get(sourceOrPocketBaseId) ?? null;
     }
-    const hashedPocketBaseId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(sourceOrPocketBaseId, "accounts");
-    if (hashedPocketBaseId !== sourceOrPocketBaseId) {
+    const fetchAndCache = async ()=>{
         try {
-            return await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])("accounts", hashedPocketBaseId);
+            const record = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])("accounts", sourceOrPocketBaseId);
+            if (record) return record;
         } catch  {
         // fallthrough
         }
-    }
-    const bySlug = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("accounts", {
-        perPage: 1,
-        filter: `slug='${sourceOrPocketBaseId}'`
-    });
-    return bySlug.items?.[0] ?? null;
+        const hashedPocketBaseId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(sourceOrPocketBaseId, "accounts");
+        if (hashedPocketBaseId !== sourceOrPocketBaseId) {
+            if (accountRecordCache.has(hashedPocketBaseId)) {
+                return accountRecordCache.get(hashedPocketBaseId) ?? null;
+            }
+            try {
+                const record = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])("accounts", hashedPocketBaseId);
+                if (record) return record;
+            } catch  {
+            // fallthrough
+            }
+        }
+        const bySlug = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("accounts", {
+            perPage: 1,
+            filter: `slug='${sourceOrPocketBaseId}'`
+        });
+        return bySlug.items?.[0] ?? null;
+    };
+    const result = await fetchAndCache();
+    accountRecordCache.set(sourceOrPocketBaseId, result);
+    if (result?.id) accountRecordCache.set(result.id, result);
+    return result;
 }
 async function getPocketBaseCategories() {
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$pocketbase$2f$fallback$2d$helpers$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["executeWithFallback"])(async ()=>{
@@ -2366,14 +2389,14 @@ async function getPocketBaseAccountSpendingStatsSnapshot(sourceAccountId, date, 
     const queryAttempts = [
         {
             // Primary attempt: filter by cycle tag directly in DB for high performance
-            filter: resolvedCycleTag ? `account_id='${pocketBaseAccountId}' && (persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')` : `account_id='${pocketBaseAccountId}'`,
+            filter: resolvedCycleTag ? `account_id='${pocketBaseAccountId}' && (debt_cycle_tag='${resolvedCycleTag}' || persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')` : `account_id='${pocketBaseAccountId}'`,
             sort: "-date,id",
-            fields: "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag"
+            fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag"
         },
         {
             // Fallback: search by date range if tag filter yields nothing or tag is missing
             filter: `account_id='${pocketBaseAccountId}'`,
-            fields: "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag"
+            fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag"
         }
     ];
     for(let attemptIdx = 0; attemptIdx < queryAttempts.length; attemptIdx++){
@@ -2390,7 +2413,14 @@ async function getPocketBaseAccountSpendingStatsSnapshot(sourceAccountId, date, 
             for (const tx of fetchedResults){
                 if (tx.id) uniqueMap.set(tx.id, tx);
             }
-            rawTransactions = Array.from(uniqueMap.values());
+            // Post-filter to ensure strict 'Truth' tag matching
+            // If a transaction was moved to another tag (T4), but DB still has old persisted_tag (T3),
+            // the fetch above might find it. We MUST exclude it here to keep the balance correct.
+            rawTransactions = Array.from(uniqueMap.values()).filter((tx)=>{
+                const metadata = tx.metadata && typeof tx.metadata === 'object' ? tx.metadata : {};
+                const truthTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(tx.debt_cycle_tag || tx.tag || metadata.debt_cycle_tag || metadata.tag || "");
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(truthTag || "") === (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(resolvedCycleTag || "");
+            });
             console.log("[DB:PB] account spending stats: transaction query succeeded", {
                 attempt: attemptIdx + 1,
                 count: rawTransactions.length
@@ -2415,8 +2445,10 @@ async function getPocketBaseAccountSpendingStatsSnapshot(sourceAccountId, date, 
     const cycleEndTime = cycleRange?.end ? cycleRange.end.getTime() : null;
     const cycleTransactions = rawTransactions.filter((tx)=>{
         const metadata = tx.metadata && typeof tx.metadata === "object" ? tx.metadata : {};
-        const txCycleTag = tx.persisted_cycle_tag || tx.statement_cycle_tag || tx.tag || metadata?.persisted_cycle_tag || metadata?.statement_cycle_tag || null;
-        if (resolvedCycleTag && txCycleTag) return String(txCycleTag) === resolvedCycleTag;
+        const txCycleTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(tx.debt_cycle_tag || tx.tag || metadata?.debt_cycle_tag || metadata?.tag || tx.persisted_cycle_tag || tx.statement_cycle_tag) || tx.persisted_cycle_tag || tx.statement_cycle_tag || null;
+        if (resolvedCycleTag) {
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(txCycleTag) === (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(resolvedCycleTag);
+        }
         const txDateRaw = tx.occurred_at || tx.date;
         const txDate = txDateRaw ? new Date(txDateRaw) : null;
         if (!txDate || Number.isNaN(txDate.getTime())) return false;
@@ -3071,39 +3103,39 @@ async function getPocketBaseUnifiedTransactions(options = {}) {
     voidPocketBaseTransaction,
     getPocketBaseUnifiedTransactions
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseCategories, "005c04998c7faa918aa8712a7e124c7ecfa6dec122", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseCategory, "60ab1397131a0f94cef99093bec06741507e27b5a7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseCategory, "60fb680baaf9a489966a02c83c62e8e86d8ab785a7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseCategoryArchive, "60b91491651f8694892818045640efebace1513eaa", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseCategory, "40e231d9adb369e537bfa06cde600486694460391d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseCategoriesArchiveBulk, "60f41475426ab1adcc092e9adf055d7f4b11645074", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseCategoriesBulk, "40e07210a0c8d0c5c4367647b93a617f9ea42d2386", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePeople, "005422e11ad96ea6cd0ff0a7e08d1bae01ee56eb2d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseShops, "0030cdb137d594f2397ef27272e242a6c734fd9e76", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseInstallmentPlan, "4031bbc8cf5667e6a1a2e4d40d867677bc7d902923", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseTransactionsByPlan, "40716972695a09aaba3158b22a2e490eabd3ef789c", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseShop, "60369b1d8cca27cf15a8397fa0479cd10028de086d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseShop, "60ff0ee22378ca36b405908da6a16492f19edc47f5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseShopArchive, "6075c7e375a524181b4f3cd1e2d28d47c952fa096c", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseShop, "402f47172d44037b6c0af41d8c584780fd81d1ab54", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseShopsArchiveBulk, "607816f947d32f4c0662cefe8926e9875a62e5ad5d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseShopsBulk, "4073812c271d58e7486dd66d372abb5c6f56c05ce7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBasePerson, "60a12232255f1d17e1a58371619e7b145735b70d46", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBasePerson, "6045725551edc2b44534c4c6843a49ef2e640bcd26", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseAccount, "60805490de2f79faf431a2a3a7868972bad99b7f2e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseAccountInfo, "605352bd5850dee5f046ce446ae169cc9efb8b76ce", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseAccountConfig, "60038e3fe2e5dbd4251f64a04a5769fa1a23ea198f", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccounts, "00016fc040b04745d68e8e5df7030476962484ccad", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountSpendingStatsSnapshot, "70f8195f526d9545a9e2e95faf8a232e6a6915d57c", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountDetails, "4037a679d5c5c90e02236e2bd41df6962a1f67ff74", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadPocketBaseTransactionsForAccount, "609b5636db00e19d72a0279a204cccbf366ae3c58d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadPocketBaseTransactions, "406012c217d7e48f6ab6fdba99d03330cdc4ba95ff", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountCycleOptions, "6016e377542a84264809476ad34c9e47ff88a0209f", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseCycleTransactions, "6015b525aeff7a11ee1ffde8894c60361cb6fc6428", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseTransaction, "6085d05b77b0479ba78e9dd304ea9b83d4290f62b9", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseTransaction, "60430b836e3ec58326661b82249396a1bae68e1078", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidPocketBaseTransaction, "406bea3751af4e721d1901eb379272ffc86c4e012a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseUnifiedTransactions, "405392d43daf90218c185c1b7598ff98db60405ac1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseCategories, "00ea89b8e3d349226ea1cf76166c1b12c3fdeeeeba", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseCategory, "600109ecbff04033c0e8dac4d4297bd6cd23891999", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseCategory, "6051867822d60261f2a852b60e263a777a90026c6d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseCategoryArchive, "60edca9031feb56a198341f025e3c4f56cae52db87", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseCategory, "40cdf129c1484892a41434b60aa1f71836e181c30c", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseCategoriesArchiveBulk, "60f1fabe2a6303c14150df828fd5d669090a97dea0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseCategoriesBulk, "406c8b7b12981726e0a99e445b4d172846412d5a9f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBasePeople, "00a0f7a31cb733c3a63e0fbc7ed67333e9e159ad29", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseShops, "0002198770fd50b7768c7638d653d38d6a119a2d23", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseInstallmentPlan, "40b931b83f7e3fa6ddd5d08cea7bc28fdbb36d70d9", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseTransactionsByPlan, "40e0f5f02c66ab35d70477c72c2723c6d0e31693d6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseShop, "60c753fe3fd189f607e33ab1cbf2be0a79b55825c4", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseShop, "6009c6de345c28f63f224189891fda5086b87b1d51", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseShopArchive, "6013c8f2f2595d698ff54c65e28d29aba842a697fa", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseShop, "40c008e30fc4ed3e87d8c68a44762881a2875e8dba", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(togglePocketBaseShopsArchiveBulk, "607d1e6a2245c18c4ad2d25319eea342c57a8cba37", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePocketBaseShopsBulk, "40b7e4de854ec85b7d3d2ce57b4c0a9a9eef423aac", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBasePerson, "60cb87adb8b84e1591d0a49c5a4c6fd3adc89112d5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBasePerson, "60b86ddd94589dac1dc84867b76465461f15e6c5fb", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseAccount, "608e11b907e03d576a5ec25f5660ad7ce13dbf331a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseAccountInfo, "601b7f84e617edcc51b3a766b95063890665d82ca7", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseAccountConfig, "600551bcf583b724e93c29143daafc23adf0a61915", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccounts, "0064a9cc7a129973fa18bf43d8f76108db9748dcae", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountSpendingStatsSnapshot, "701493980fcc0b23371062d60859b04c03fc37699e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountDetails, "406442d29f9219c1e9669242fc40ee1e8af022cd51", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadPocketBaseTransactionsForAccount, "60a061321fdaaa08d23206f570cea0c9146555031a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadPocketBaseTransactions, "4072c768721fff3626e17df67d9351ec64626b4c06", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseAccountCycleOptions, "60f5ec1fb46fcb8f04554671d7e8c644687823f467", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseCycleTransactions, "6082d18ebc15026a30c7eed2aaa9a1191bdcf72b13", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPocketBaseTransaction, "601b7b10d320a5c38214610b791af1df9fbaac52c1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePocketBaseTransaction, "60c8a6f0a10e0502f15ad7796a30bb300ffd9346b2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidPocketBaseTransaction, "40209423ebd1df8ff017aaafd9b66ee47b23be157a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPocketBaseUnifiedTransactions, "405690f8a3b42f919b94d19582093bda78a932e62a", null);
 }),
 "[project]/src/services/pocketbase/mappers.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -3153,7 +3185,7 @@ function mapPocketBaseAccountRow(record) {
 "[project]/src/services/account.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00849fcb4b933bec895a76dc3f35f32af26b6afd82":"getAccounts","400bee513142a9e94e80b098283b904e1d28793c3e":"getAccountStats","40505fcaf33b669b909c05a4a342d47ddd7475b698":"recalculateBalance","4095ae6d389d17569a0b681367deb3d4953f20ae8a":"getAccountDetails","40bf4e72701202808b69c3bcbb2835d6dff518fd5a":"deleteAccount","40e66b18391376afeaf8e81c4429b4ac787e5505a9":"getRecentAccountsByTransactions","606827d43be9b2550403feaa12d0aabdcbcb947050":"getAccountTransactions","60b80434695115ed4fda0d963b0916c17a912da10e":"updateAccountStatus","60b85cbdeab8758bef6c50e8ae4c2f0a2500321787":"updateAccountConfig"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00a9935267a76ac90c646ef5f7cb524cbe49227b64":"getAccounts","401d2e5e32d551cea249bb118bdb29b206590dd216":"getRecentAccountsByTransactions","404099e69215220cee5890cfde50a848e230ca34b7":"getAccountStats","40620b053dcb11d19fa21e6d7d1ff9b5b28a376e4d":"deleteAccount","40e87f1a5f4c3f21335006423672957f9a72591602":"getAccountDetails","40f7a61b26eae2150806832e69b1cc78e14a34fdc2":"recalculateBalance","60676eb4ffdb421973579b327d5767f96a927836cd":"getAccountTransactions","609e2041182472ba5e7d6ad42b213694fc7924f6b4":"updateAccountStatus","60a51d7af14ed4346215b903ed9dadd8d51a92d17e":"updateAccountConfig"},"",""] */ __turbopack_context__.s([
     "deleteAccount",
     ()=>deleteAccount,
     "getAccountDetails",
@@ -3619,20 +3651,20 @@ async function getRecentAccountsByTransactions(limit = 5) {
     updateAccountStatus,
     getRecentAccountsByTransactions
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccounts, "00849fcb4b933bec895a76dc3f35f32af26b6afd82", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountDetails, "4095ae6d389d17569a0b681367deb3d4953f20ae8a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountTransactions, "606827d43be9b2550403feaa12d0aabdcbcb947050", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountConfig, "60b85cbdeab8758bef6c50e8ae4c2f0a2500321787", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountStats, "400bee513142a9e94e80b098283b904e1d28793c3e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recalculateBalance, "40505fcaf33b669b909c05a4a342d47ddd7475b698", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteAccount, "40bf4e72701202808b69c3bcbb2835d6dff518fd5a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountStatus, "60b80434695115ed4fda0d963b0916c17a912da10e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentAccountsByTransactions, "40e66b18391376afeaf8e81c4429b4ac787e5505a9", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccounts, "00a9935267a76ac90c646ef5f7cb524cbe49227b64", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountDetails, "40e87f1a5f4c3f21335006423672957f9a72591602", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountTransactions, "60676eb4ffdb421973579b327d5767f96a927836cd", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountConfig, "60a51d7af14ed4346215b903ed9dadd8d51a92d17e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountStats, "404099e69215220cee5890cfde50a848e230ca34b7", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recalculateBalance, "40f7a61b26eae2150806832e69b1cc78e14a34fdc2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteAccount, "40620b053dcb11d19fa21e6d7d1ff9b5b28a376e4d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountStatus, "609e2041182472ba5e7d6ad42b213694fc7924f6b4", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentAccountsByTransactions, "401d2e5e32d551cea249bb118bdb29b206590dd216", null);
 }),
 "[project]/src/actions/ai-reminder-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"005c306212ad001330746076b1cb1c0a94f44c39fa":"getAccountRemindersAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00f81387626360a80508e83a60b6f87225744d325d":"getAccountRemindersAction"},"",""] */ __turbopack_context__.s([
     "getAccountRemindersAction",
     ()=>getAccountRemindersAction
 ]);
@@ -3707,7 +3739,7 @@ async function getAccountRemindersAction() {
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
     getAccountRemindersAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountRemindersAction, "005c306212ad001330746076b1cb1c0a94f44c39fa", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountRemindersAction, "00f81387626360a80508e83a60b6f87225744d325d", null);
 }),
 "[externals]/stream [external] (stream, cjs)", ((__turbopack_context__, module, exports) => {
 
@@ -4390,7 +4422,7 @@ function getAIRouter() {
 "[project]/src/actions/ai-actions-v2.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"0076c5c128c6310a160c94dc277a94d06cc7c2196a":"getAIProviderStatusAction","6064c20d9f07fbd236cbda88777db76bc40b6c0b0e":"parseTransactionV2Action"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"008522e245a0c0ba8821e6a8f0a7871633c2159923":"getAIProviderStatusAction","606c8762373051e4572c396a74eee3e17b66e3d65f":"parseTransactionV2Action"},"",""] */ __turbopack_context__.s([
     "getAIProviderStatusAction",
     ()=>getAIProviderStatusAction,
     "parseTransactionV2Action",
@@ -4443,13 +4475,13 @@ async function getAIProviderStatusAction() {
     parseTransactionV2Action,
     getAIProviderStatusAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(parseTransactionV2Action, "6064c20d9f07fbd236cbda88777db76bc40b6c0b0e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAIProviderStatusAction, "0076c5c128c6310a160c94dc277a94d06cc7c2196a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(parseTransactionV2Action, "606c8762373051e4572c396a74eee3e17b66e3d65f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAIProviderStatusAction, "008522e245a0c0ba8821e6a8f0a7871633c2159923", null);
 }),
 "[project]/src/services/sheet.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"4000e4520e5abbe1105be209cf34e92a7278e31abc":"syncAllTransactions","4020d7ee4dda3ff53bc8fee97e6c87365957f70789":"createTestSheet","40a8f1d24a7acad975286b00f76000c804b39212aa":"testConnection","6086c3ef099b4c91838ae7360a0feb6ae4c91a7f45":"autoSyncCycleSheetIfNeeded","60e3693371e3d44445479a0097063ff1cacb989fe3":"createCycleSheet","70bf2a521fc9f96fc2256a2e49125cc291b0cdda88":"syncTransactionToSheet","70e793649d62cbe62d556528b7be6bb6be026e9afc":"syncCycleTransactions"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"40204e19135aae5d71b0f16217678c9ab4a6f2001d":"syncAllTransactions","404bf47e280c6f3b5d67a54af2e4a262928b4c28de":"createTestSheet","409327174926611fa35d6f3cc13a8dfe29afdd60ec":"testConnection","6097685b38234fe246c528d8259663e1aa30ac4af7":"autoSyncCycleSheetIfNeeded","60f32e86e79018af06244bad36128a3dd169fcca5a":"createCycleSheet","7058c54b52d7b0f84f0d23b9613341adc42661cecd":"syncTransactionToSheet","7068ec43b21ff73631fe852b454d777c70921352d4":"syncCycleTransactions"},"",""] */ __turbopack_context__.s([
     "autoSyncCycleSheetIfNeeded",
     ()=>autoSyncCycleSheetIfNeeded,
     "createCycleSheet",
@@ -4796,23 +4828,28 @@ async function syncTransactionToSheet(personId, txn, action = 'create') {
                 }
             }
         }
+        let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at ?? txn.date ?? null);
+        if (personData.is_master_sheet_enabled && cycleTag && (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["isYYYYMM"])(cycleTag)) {
+            cycleTag = cycleTag.split('-')[0]; // '2026-03' -> '2026'
+        }
         const payload = {
             ...buildPayload({
                 ...txn,
+                tag: cycleTag,
                 shop_name: resolvedShopName
             }, action),
             person_id: personId,
-            cycle_tag: resolveCycleTagForSheet(txn.tag, txn.occurred_at ?? txn.date ?? null),
+            cycle_tag: cycleTag,
             bank_account: showBankAccount ? resolvedBankInfo : '',
             img: showQrImage && qrImageUrl ? qrImageUrl : '' // Send empty to clear if disabled
         };
         console.log(`[Sheet Sync] Sending payload to ${personId}:`, {
             action: payload.action,
             id: payload.id,
+            cycle_tag: payload.cycle_tag,
             shop: payload.shop,
             amount: payload.amount,
             note: payload.note,
-            notes: payload.notes,
             type: payload.type
         });
         const result = await postToSheet(sheetLink, payload);
@@ -4967,7 +5004,10 @@ async function syncAllTransactions(personId) {
         // Group transactions by cycle tag
         const cycleMap = new Map();
         for (const txn of eligibleRows){
-            const cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at);
+            let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at);
+            if (personData?.is_master_sheet_enabled && cycleTag && (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["isYYYYMM"])(cycleTag)) {
+                cycleTag = cycleTag.split('-')[0];
+            }
             if (!cycleMap.has(cycleTag)) {
                 cycleMap.set(cycleTag, []);
             }
@@ -5334,13 +5374,13 @@ async function autoSyncCycleSheetIfNeeded(personId, cycleTag) {
     syncCycleTransactions,
     autoSyncCycleSheetIfNeeded
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncTransactionToSheet, "70bf2a521fc9f96fc2256a2e49125cc291b0cdda88", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(testConnection, "40a8f1d24a7acad975286b00f76000c804b39212aa", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllTransactions, "4000e4520e5abbe1105be209cf34e92a7278e31abc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTestSheet, "4020d7ee4dda3ff53bc8fee97e6c87365957f70789", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createCycleSheet, "60e3693371e3d44445479a0097063ff1cacb989fe3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncCycleTransactions, "70e793649d62cbe62d556528b7be6bb6be026e9afc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(autoSyncCycleSheetIfNeeded, "6086c3ef099b4c91838ae7360a0feb6ae4c91a7f45", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncTransactionToSheet, "7058c54b52d7b0f84f0d23b9613341adc42661cecd", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(testConnection, "409327174926611fa35d6f3cc13a8dfe29afdd60ec", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllTransactions, "40204e19135aae5d71b0f16217678c9ab4a6f2001d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTestSheet, "404bf47e280c6f3b5d67a54af2e4a262928b4c28de", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createCycleSheet, "60f32e86e79018af06244bad36128a3dd169fcca5a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncCycleTransactions, "7068ec43b21ff73631fe852b454d777c70921352d4", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(autoSyncCycleSheetIfNeeded, "6097685b38234fe246c528d8259663e1aa30ac4af7", null);
 }),
 "[project]/src/lib/tag.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -5544,7 +5584,7 @@ const REFUND_PENDING_ACCOUNT_ID = '99999999-9999-9999-9999-999999999999';
 "[project]/src/services/pocketbase/cashback-sync.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"40815b9c2d8930c01a4b065f8341c02f65f43df828":"upsertPocketBaseTransactionCashback","4095c5b9a5ad64476a6046264389e173b84c38f823":"recomputePocketBaseCashbackCycle","6042a3d4c92cddf3a56da8aa0323b045b522e54498":"removePocketBaseTransactionCashback","70a499f97de19d3178865e0ef8ca98b13514e21a4b":"ensurePocketBaseCycle"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"4082968cb2943ee3ebe3672110c9ad46399e670f5f":"recomputePocketBaseCashbackCycle","40c2799832bd39aec5e5e83772bc8779c5e2652feb":"upsertPocketBaseTransactionCashback","60aa8eab5d9461f619f53c5043a8b066644f375198":"removePocketBaseTransactionCashback","70ecbdb018eaf4944ef5db0db69dbd35fed0f744c9":"ensurePocketBaseCycle"},"",""] */ __turbopack_context__.s([
     "ensurePocketBaseCycle",
     ()=>ensurePocketBaseCycle,
     "recomputePocketBaseCashbackCycle",
@@ -5777,15 +5817,15 @@ async function removePocketBaseTransactionCashback(sourceAccountId, cycleTag) {
     upsertPocketBaseTransactionCashback,
     removePocketBaseTransactionCashback
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensurePocketBaseCycle, "70a499f97de19d3178865e0ef8ca98b13514e21a4b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputePocketBaseCashbackCycle, "4095c5b9a5ad64476a6046264389e173b84c38f823", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertPocketBaseTransactionCashback, "40815b9c2d8930c01a4b065f8341c02f65f43df828", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(removePocketBaseTransactionCashback, "6042a3d4c92cddf3a56da8aa0323b045b522e54498", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensurePocketBaseCycle, "70ecbdb018eaf4944ef5db0db69dbd35fed0f744c9", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputePocketBaseCashbackCycle, "4082968cb2943ee3ebe3672110c9ad46399e670f5f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertPocketBaseTransactionCashback, "40c2799832bd39aec5e5e83772bc8779c5e2652feb", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(removePocketBaseTransactionCashback, "60aa8eab5d9461f619f53c5043a8b066644f375198", null);
 }),
 "[project]/src/services/transaction.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"4004d830a832c5fbdbd917b639ab3bfe5952512b7b":"createTransaction","400ac29deecd5783c8c4010580b81c8d4670c3d5a1":"deleteTransaction","400c34959357db8b69f957b96d2cca171bc2c5be37":"getRecentTransactions","4072cf04bc22a9efa3ec89e72c2f854f3a5fcbdd35":"getPendingRefunds","407385b3b205fe36dcb962ea71fd31509f312fb049":"loadTransactions","40a401e0d8770795773074f41775c266c240c70703":"voidTransaction","40bbff12de3409aaf3011874825c07faadb4be6f60":"deleteTransactionCascade","6040a0435560169f12c7b708d3ab95f11c393843db":"normalizeAmountForType","604202c3178caa5cfd999853bcc2487c48e2bbdd54":"loadAccountTransactionsV2","607e812829651f17a619306ee0c9560c8ec2df124d":"getTransactionById","60901ddf44ae660129a8132a11dac6a2fcafd45ac4":"updateTransaction","60defc535d1001b8b951192af3f6365ecca5264d57":"confirmRefund","60fafe6e6dd5f6d1a15122df3192ad2d6381925b5a":"mapTransactionRow","708c1535efe27f925cf6ac60a1a18fe6b1a0c54807":"getTransactionsByPeople","7fb7e2b161fd7f3fdb3913806b309be45b23c6615e":"getUnifiedTransactions"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"402338384beb9e88fd6929928eba49882422af05a1":"loadTransactions","4041c9c5208e1b3f4b1d828bb085a54c45d330fd75":"createTransaction","405156174d4eb4074fe69fa0415e892c6b6080b5b9":"getRecentTransactions","40697269a31854856a5cf6992c68019965c2d3af5d":"voidTransaction","407a125db837b2103cf56b690a5c87a2c0cee9b0f3":"deleteTransactionCascade","40ba390a1b32fb27de3a2b50052545fee40ba3ce77":"getPendingRefunds","40cd057eafdcca6c9a941fc198de750a1b8acbb741":"deleteTransaction","6010a0877368d62abafdac1c87529819678bb1a529":"getTransactionById","6032d2b204dba8a3583f08ea6a9158dc1cfd732597":"normalizeAmountForType","60340f82efeee3dcace8de1d33fb40fca1c5713a0a":"loadAccountTransactionsV2","60b0bcbe83fa250d9f88dcbf7c804da6091632c828":"updateTransaction","60e88248d5bf416aee1ae41c1925ac049ff0f6617a":"confirmRefund","60f9d0898c23352894df2c366ac65b2486712c977a":"mapTransactionRow","7079dc9269713418feed688130a6031ec5b4224298":"getTransactionsByPeople","7f4e44168d33d8c31a8e510c3c815a0844668f818f":"getUnifiedTransactions"},"",""] */ __turbopack_context__.s([
     "confirmRefund",
     ()=>confirmRefund,
     "createTransaction",
@@ -5889,11 +5929,14 @@ function chunkArray(items, size) {
 async function fetchHistoryCountMap(transactionIds) {
     const counts = new Map();
     if (transactionIds.length === 0) return counts;
-    const chunks = chunkArray(transactionIds, 60);
-    for (const chunk of chunks){
+    // Optimized chunk size and parallelized requests
+    const chunkSize = 200;
+    const chunks = chunkArray(transactionIds, chunkSize);
+    await Promise.all(chunks.map(async (chunk)=>{
         const filter = chunk.map((id)=>`transaction_id="${id}"`).join(" || ");
         let page = 1;
-        while(true){
+        let totalPages = 1;
+        while(page <= totalPages){
             const response = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("transaction_history", {
                 filter,
                 page,
@@ -5905,11 +5948,11 @@ async function fetchHistoryCountMap(transactionIds) {
                 if (!txnId) continue;
                 counts.set(txnId, (counts.get(txnId) ?? 0) + 1);
             }
-            const totalPages = Number(response.totalPages ?? 1);
+            totalPages = Number(response.totalPages ?? 1);
             if (page >= totalPages) break;
             page += 1;
         }
-    }
+    }));
     return counts;
 }
 function revalidatePersonPaths(personId) {
@@ -6117,29 +6160,55 @@ async function loadTransactions(options) {
         if (options.shopId) filterParts.push(`shop_id = '${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(options.shopId, "shops")}'`);
         if (options.categoryId) filterParts.push(`category_id = '${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(options.categoryId, "categories")}'`);
         if (options.installmentPlanId) filterParts.push(`installment_plan_id = '${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(options.installmentPlanId, "installments")}'`);
+        if (options.tag) {
+            filterParts.push(`tag = '${options.tag}'`);
+        }
+        if (options.dateFrom) {
+            filterParts.push(`occurred_at >= '${options.dateFrom} 00:00:00'`);
+        }
+        if (options.dateTo) {
+            filterParts.push(`occurred_at <= '${options.dateTo} 23:59:59'`);
+        }
         const filter = filterParts.length > 0 ? filterParts.join(" && ") : undefined;
         const limit = options.limit || 100;
-        let records = [];
-        let page = 1;
-        let totalPages = 1;
-        // PocketBase usually has a max perPage of 200-500. Using 200 to be safe and avoid 400 errors.
-        while(page <= totalPages && records.length < limit){
-            const remaining = limit - records.length;
-            const perPage = Math.min(200, remaining);
-            const response = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("pvl_txn_001", {
-                sort: "-date",
-                filter,
-                page,
-                perPage
+        const perPage = 200;
+        // Initial fetch to get first page and totalPages
+        const firstPageResponse = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("pvl_txn_001", {
+            sort: "-date",
+            filter,
+            page: 1,
+            perPage: Math.min(perPage, limit)
+        });
+        let records = [
+            ...firstPageResponse.items
+        ];
+        const totalPagesToFetch = Math.min(Number(firstPageResponse.totalPages || 1), Math.ceil(limit / perPage));
+        // Parallelize subsequent page fetches if needed
+        if (totalPagesToFetch > 1 && records.length < limit) {
+            const pagePromises = [];
+            for(let p = 2; p <= totalPagesToFetch; p++){
+                pagePromises.push((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("pvl_txn_001", {
+                    sort: "-date",
+                    filter,
+                    page: p,
+                    perPage
+                }));
+            }
+            const results = await Promise.all(pagePromises);
+            results.forEach((res)=>{
+                records.push(...res.items);
             });
-            records.push(...response.items);
-            totalPages = Number(response.totalPages || 1);
-            if (page >= totalPages) break;
-            page += 1;
+        }
+        // Trim to exact limit
+        if (records.length > limit) {
+            records = records.slice(0, limit);
         }
         if (!records.length) return [];
-        const lookups = await fetchLookups(records);
-        const historyCountMap = await fetchHistoryCountMap(records.map((row)=>row.id));
+        // Parallelize lookups and history counting
+        const [lookups, historyCountMap] = await Promise.all([
+            fetchLookups(records),
+            fetchHistoryCountMap(records.map((row)=>row.id))
+        ]);
         return Promise.all(records.map((row)=>mapTransactionRow(row, {
                 lookups,
                 contextAccountId: options.accountId,
@@ -6584,26 +6653,26 @@ async function confirmRefund(pendingTransactionId, targetAccountId) {
     getPendingRefunds,
     confirmRefund
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadAccountTransactionsV2, "604202c3178caa5cfd999853bcc2487c48e2bbdd54", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionsByPeople, "708c1535efe27f925cf6ac60a1a18fe6b1a0c54807", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getUnifiedTransactions, "7fb7e2b161fd7f3fdb3913806b309be45b23c6615e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionById, "607e812829651f17a619306ee0c9560c8ec2df124d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteTransaction, "400ac29deecd5783c8c4010580b81c8d4670c3d5a1", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(normalizeAmountForType, "6040a0435560169f12c7b708d3ab95f11c393843db", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(mapTransactionRow, "60fafe6e6dd5f6d1a15122df3192ad2d6381925b5a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadTransactions, "407385b3b205fe36dcb962ea71fd31509f312fb049", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTransaction, "4004d830a832c5fbdbd917b639ab3bfe5952512b7b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransaction, "60901ddf44ae660129a8132a11dac6a2fcafd45ac4", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidTransaction, "40a401e0d8770795773074f41775c266c240c70703", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteTransactionCascade, "40bbff12de3409aaf3011874825c07faadb4be6f60", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentTransactions, "400c34959357db8b69f957b96d2cca171bc2c5be37", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPendingRefunds, "4072cf04bc22a9efa3ec89e72c2f854f3a5fcbdd35", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmRefund, "60defc535d1001b8b951192af3f6365ecca5264d57", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadAccountTransactionsV2, "60340f82efeee3dcace8de1d33fb40fca1c5713a0a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionsByPeople, "7079dc9269713418feed688130a6031ec5b4224298", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getUnifiedTransactions, "7f4e44168d33d8c31a8e510c3c815a0844668f818f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionById, "6010a0877368d62abafdac1c87529819678bb1a529", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteTransaction, "40cd057eafdcca6c9a941fc198de750a1b8acbb741", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(normalizeAmountForType, "6032d2b204dba8a3583f08ea6a9158dc1cfd732597", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(mapTransactionRow, "60f9d0898c23352894df2c366ac65b2486712c977a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(loadTransactions, "402338384beb9e88fd6929928eba49882422af05a1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTransaction, "4041c9c5208e1b3f4b1d828bb085a54c45d330fd75", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransaction, "60b0bcbe83fa250d9f88dcbf7c804da6091632c828", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidTransaction, "40697269a31854856a5cf6992c68019965c2d3af5d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteTransactionCascade, "407a125db837b2103cf56b690a5c87a2c0cee9b0f3", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentTransactions, "405156174d4eb4074fe69fa0415e892c6b6080b5b9", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPendingRefunds, "40ba390a1b32fb27de3a2b50052545fee40ba3ce77", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmRefund, "60e88248d5bf416aee1ae41c1925ac049ff0f6617a", null);
 }),
 "[project]/src/actions/transaction-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"403a51004fe7b378a46b4c3204a283be7985cbce06":"restoreTransaction","4048bbf905fc5c7a399de06e57e828b052d5b76ca6":"voidTransactionAction","40970a81f37088799f7817e1e4cc349523b36c4ca2":"getOriginalAccount","40ac47472b29acdafe3eec4d0a8e79cdc0565331cc":"cancelOrder","40da9fd2d8a19fb9de97a1d5a51513d5d64c4c18ac":"createTransaction","40e2b3123eb7b337d039f98c2fb09973199a8a0bcc":"deleteSplitBillAction","60111f8b2c6c04a478ebcea52c23ad2dc8985305b8":"updateTransaction","604d995fbd2ed9fb7862f0427fc794fdf346b3a670":"updateTransactionMetadata","6072c8058e3c72b3ae3e1339bdea6aeee59e7247c9":"bulkMoveTransactionsToCategory","609c0cf5f4ec4b177bf8872d176c9b676604428324":"updateSplitBillAction","60a4f8dba6895313bbfd359d0c4e63d5c9ea10c1ac":"bulkMoveToCategory","60fa6672a0b6c090712ed33864b48ef8ffb77ace70":"confirmRefundAction","707ea558b1db1e70ab6d90db853fdb60e16cf74796":"requestRefund"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"401f1e823c94ce9554382a43dad869a5c1b7081c47":"deleteSplitBillAction","406ed95480903eceb71405faf96f7796a54dc9a513":"createTransaction","408143a8ca61733bb718d8adb73e05edfdd0a6b421":"voidTransactionAction","408c335828a24275022af0ebdfeaa05cca7e7800d5":"getOriginalAccount","40c27acd3d07b6d7defdb5a34722a40cf5bd8e0ee1":"restoreTransaction","40e12f2b3729389e6e1701182843ead7a6a3ab9c0f":"cancelOrder","60409e2420f1cf40038e0a8f4ce5ac5c626195a9a8":"updateTransaction","6052fcbfb405cecdfd9786525c062edd5b556afeff":"bulkMoveToCategory","6083099faae5d88f7a4278d9d533286f7fedcd10d3":"confirmRefundAction","60904be4f32dca28dcad1df25455ed243012933928":"bulkMoveTransactionsToCategory","609866070d7907140aa847afbb07db939049981f09":"updateTransactionMetadata","60e4af908a6f0328ecf0f19c0020959e9806793080":"updateSplitBillAction","7032bb5e91fa7599d24b59ad708adc9a5851dd1723":"requestRefund"},"",""] */ __turbopack_context__.s([
     "bulkMoveToCategory",
     ()=>bulkMoveToCategory,
     "bulkMoveTransactionsToCategory",
@@ -6655,28 +6724,45 @@ async function createTransaction(input) {
     }
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
+    if (input.person_id) {
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${input.person_id}`);
+    }
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/txn/v2');
     return transactionId;
 }
 async function updateTransaction(id, input) {
     const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(id, 'pvl_txn_001');
+    // Get existing for revalidation of old person if changed
+    const existing = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_txn_001', pbId);
     // 1. PB-PRIMARY Write (+ sheet sync handled inside service)
     const success = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransaction"])(pbId, input);
     if (!success) return false;
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
+    // Revalidate both old and new person
+    if (existing?.person_id) {
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${existing.person_id}`);
+    }
+    if (input.person_id && input.person_id !== existing?.person_id) {
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${input.person_id}`);
+    }
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/txn/v2');
     return true;
 }
 async function voidTransactionAction(id) {
     const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(id, 'pvl_txn_001');
+    // Need to get the person_id before voiding to revalidate their page
+    const existing = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('pvl_txn_001', pbId);
     // Sheet sync is handled inside service layer.
     const success = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidTransaction"])(pbId);
     if (success) {
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/');
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
+        if (existing?.person_id) {
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${existing.person_id}`);
+        }
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/txn/v2');
     }
@@ -6727,6 +6813,10 @@ async function restoreTransaction(id) {
             }, 'create').catch((err)=>console.error('Sheet Sync Error (Restore):', err));
         }
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
+        if (existing?.person_id) {
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${existing.person_id}`);
+        }
         return true;
     } catch (error) {
         console.error('[DB:PB] restoreTransaction failed:', error);
@@ -6757,6 +6847,10 @@ async function updateTransactionMetadata(id, metadata) {
             metadata: newMetadata
         });
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
+        if (existing?.person_id) {
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])(`/people/${existing.person_id}`);
+        }
         return true;
     } catch (error) {
         console.error('[DB:PB] updateTransactionMetadata failed:', error);
@@ -6786,6 +6880,7 @@ async function deleteSplitBillAction(baseTransactionId) {
         });
         deletedCount++;
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
         return {
             success: true,
             deletedCount
@@ -6808,6 +6903,7 @@ async function bulkMoveTransactionsToCategory(transactionIds, categoryId) {
             });
         }
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
         return {
             success: true
         };
@@ -6876,6 +6972,7 @@ async function updateSplitBillAction(baseTransactionId, data) {
             }
         }
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
         return {
             success: true
         };
@@ -6897,6 +6994,7 @@ async function bulkMoveToCategory(transactionIds, categoryId) {
             });
         }
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/transactions');
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/people');
         return {
             success: true
         };
@@ -7052,19 +7150,19 @@ async function cancelOrder(transactionId) {
     requestRefund,
     cancelOrder
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTransaction, "40da9fd2d8a19fb9de97a1d5a51513d5d64c4c18ac", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransaction, "60111f8b2c6c04a478ebcea52c23ad2dc8985305b8", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidTransactionAction, "4048bbf905fc5c7a399de06e57e828b052d5b76ca6", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(restoreTransaction, "403a51004fe7b378a46b4c3204a283be7985cbce06", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmRefundAction, "60fa6672a0b6c090712ed33864b48ef8ffb77ace70", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransactionMetadata, "604d995fbd2ed9fb7862f0427fc794fdf346b3a670", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteSplitBillAction, "40e2b3123eb7b337d039f98c2fb09973199a8a0bcc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkMoveTransactionsToCategory, "6072c8058e3c72b3ae3e1339bdea6aeee59e7247c9", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateSplitBillAction, "609c0cf5f4ec4b177bf8872d176c9b676604428324", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkMoveToCategory, "60a4f8dba6895313bbfd359d0c4e63d5c9ea10c1ac", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getOriginalAccount, "40970a81f37088799f7817e1e4cc349523b36c4ca2", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(requestRefund, "707ea558b1db1e70ab6d90db853fdb60e16cf74796", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(cancelOrder, "40ac47472b29acdafe3eec4d0a8e79cdc0565331cc", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createTransaction, "406ed95480903eceb71405faf96f7796a54dc9a513", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransaction, "60409e2420f1cf40038e0a8f4ce5ac5c626195a9a8", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(voidTransactionAction, "408143a8ca61733bb718d8adb73e05edfdd0a6b421", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(restoreTransaction, "40c27acd3d07b6d7defdb5a34722a40cf5bd8e0ee1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmRefundAction, "6083099faae5d88f7a4278d9d533286f7fedcd10d3", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateTransactionMetadata, "609866070d7907140aa847afbb07db939049981f09", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteSplitBillAction, "401f1e823c94ce9554382a43dad869a5c1b7081c47", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkMoveTransactionsToCategory, "60904be4f32dca28dcad1df25455ed243012933928", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateSplitBillAction, "60e4af908a6f0328ecf0f19c0020959e9806793080", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkMoveToCategory, "6052fcbfb405cecdfd9786525c062edd5b556afeff", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getOriginalAccount, "408c335828a24275022af0ebdfeaa05cca7e7800d5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(requestRefund, "7032bb5e91fa7599d24b59ad708adc9a5851dd1723", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(cancelOrder, "40e12f2b3729389e6e1701182843ead7a6a3ab9c0f", null);
 }),
 "[project]/src/lib/supabase/server.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -7119,7 +7217,7 @@ function createClient() {
 "[project]/src/actions/ai-learn-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00df32ca1d15a842d8c22e4d90dca06ed31ec681df":"getLearnedPatternsAction","6035e907917bd1b415a348341bb0119d067a1c1be0":"learnPatternAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00d68c934ffa31437613a6b82a4f748ca68cab00f3":"getLearnedPatternsAction","60207122b7bf24f3a12f09bca5bb3c8de22b66b968":"learnPatternAction"},"",""] */ __turbopack_context__.s([
     "getLearnedPatternsAction",
     ()=>getLearnedPatternsAction,
     "learnPatternAction",
@@ -7173,13 +7271,13 @@ async function getLearnedPatternsAction() {
     learnPatternAction,
     getLearnedPatternsAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(learnPatternAction, "6035e907917bd1b415a348341bb0119d067a1c1be0", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLearnedPatternsAction, "00df32ca1d15a842d8c22e4d90dca06ed31ec681df", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(learnPatternAction, "60207122b7bf24f3a12f09bca5bb3c8de22b66b968", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLearnedPatternsAction, "00d68c934ffa31437613a6b82a4f748ca68cab00f3", null);
 }),
 "[project]/src/actions/account-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00be54fa41b510875a636b1d4af5a57efdd81d1652":"getAccountsAction","00cf4b4fc30ae70c79d670ccf0cb343305da811eec":"syncAllAccountsCashbackAction","00d153f01f2454b7490120fa39f90c32d73c89d3d1":"getLastTransactionAccountId","00ddb6725215c654afd6b855414e9888a3d5ae3b76":"getLastTransactionPersonId","400d0bafa24611cfb8685bb2d9bd0606b63f7a9763":"syncAccountCashbackAction","4035df48bbf9b3eb8988e25ad397ed1edcdf663550":"updateAccountConfigAction","40c8f0475391045352135c5d652dbc5cb5736670ab":"createAccount","40ec7545a8418b49f29f737d0ce80c84413435ff80":"getRecentAccountsAction","6049ca7615a001453d4797a93d28425b33eb8275d7":"updateAccountInfo"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"003ae2eaa765f5040a0d2a77fee232381065a561c4":"getLastTransactionAccountId","00aa32c8d2918f902cba5d650f0ab532b6a667e18d":"getAccountsAction","00ac6905e7275d737ac69d431104cf661758637c7a":"syncAllAccountsCashbackAction","00b050084f9664adbf563ec6e8f2e79fcd57e160c0":"getLastTransactionPersonId","400e69688b9239a5a545f1b468f94f3abc7639bd6d":"createAccount","40f27deb345266e0df8035456861e35d9941de0487":"updateAccountConfigAction","40f2e2f01d5c126f03c588f348ce84c7d43df6380a":"syncAccountCashbackAction","40f729992987a46a49b7975305dc087a51bbc850b2":"getRecentAccountsAction","60665a4fa4d3cc379d596e7eb6a41d4aa1e81cb2bf":"updateAccountInfo"},"",""] */ __turbopack_context__.s([
     "createAccount",
     ()=>createAccount,
     "getAccountsAction",
@@ -7476,20 +7574,20 @@ async function getRecentAccountsAction(limit = 5) {
     syncAllAccountsCashbackAction,
     getRecentAccountsAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createAccount, "40c8f0475391045352135c5d652dbc5cb5736670ab", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountInfo, "6049ca7615a001453d4797a93d28425b33eb8275d7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountsAction, "00be54fa41b510875a636b1d4af5a57efdd81d1652", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountConfigAction, "4035df48bbf9b3eb8988e25ad397ed1edcdf663550", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLastTransactionPersonId, "00ddb6725215c654afd6b855414e9888a3d5ae3b76", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLastTransactionAccountId, "00d153f01f2454b7490120fa39f90c32d73c89d3d1", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAccountCashbackAction, "400d0bafa24611cfb8685bb2d9bd0606b63f7a9763", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllAccountsCashbackAction, "00cf4b4fc30ae70c79d670ccf0cb343305da811eec", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentAccountsAction, "40ec7545a8418b49f29f737d0ce80c84413435ff80", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createAccount, "400e69688b9239a5a545f1b468f94f3abc7639bd6d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountInfo, "60665a4fa4d3cc379d596e7eb6a41d4aa1e81cb2bf", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountsAction, "00aa32c8d2918f902cba5d650f0ab532b6a667e18d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateAccountConfigAction, "40f27deb345266e0df8035456861e35d9941de0487", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLastTransactionPersonId, "00b050084f9664adbf563ec6e8f2e79fcd57e160c0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getLastTransactionAccountId, "003ae2eaa765f5040a0d2a77fee232381065a561c4", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAccountCashbackAction, "40f2e2f01d5c126f03c588f348ce84c7d43df6380a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllAccountsCashbackAction, "00ac6905e7275d737ac69d431104cf661758637c7a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentAccountsAction, "40f729992987a46a49b7975305dc087a51bbc850b2", null);
 }),
 "[project]/src/services/people.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"404b60ae409b8a5bf370fde4943f508272c403ae33":"getPeople","4086e2139e717cb03997a4c1cafbd3febdca0edc55":"getPersonCycleSheets","40b29f6e0dbccf0342754e9dcfaebc2c998021e02a":"getPersonWithSubs","40e7410a5536fc66b43e7ac441fe993e80bb2d0b23":"getRecentPeopleByTransactions","602adc73c2c17001c3b525ec9672719631532b3b5f":"updatePerson","60906e773f2d5f1c960b9151d993200b74824aeaf6":"ensureDebtAccount","7ce6aa0272f5b6813a4328215e8da812a9713392b4":"createPerson"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"40c343ecc34aff9686c700c78197c10f8cb1f40de5":"getPeople","40c66423082636cc0047b59290fc03cfd01629ab40":"getPersonCycleSheets","40c92c9d109f0bb6983b85f0eb2ec34ccff4adaac8":"getPersonWithSubs","40d03bb88ed73a18243f7ce5beab76eaf05836eeca":"getRecentPeopleByTransactions","60542768ec9496022a2f316f83544b08d03afa2070":"updatePerson","60f6c6a7cb29cc9c7fe0a0fb6c3a0f36992ad65082":"ensureDebtAccount","7c23b858a0874709f27dd6ef4a3addbd88cf59210e":"createPerson"},"",""] */ __turbopack_context__.s([
     "createPerson",
     ()=>createPerson,
     "ensureDebtAccount",
@@ -7549,26 +7647,41 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 }
 async function getPeople(options) {
     const includeArchived = Boolean(options?.includeArchived);
+    const targetPersonId = options?.targetPersonId;
     try {
-        const people = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"])();
-        const activePeople = includeArchived ? people : people.filter((p)=>!p.is_archived);
+        let activePeople = [];
+        if (targetPersonId) {
+            const p = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePersonDetails"])(targetPersonId);
+            if (p) activePeople = [
+                p
+            ];
+        } else {
+            const people = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"])();
+            activePeople = includeArchived ? people : people.filter((p)=>!p.is_archived);
+        }
         const personIds = activePeople.map((p)=>p.id);
         if (personIds.length === 0) return [];
         const now = new Date();
         const currentMonthTag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toYYYYMMFromDate"])(now);
         // 1. Setup Maps
         const debtAccountsRes = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("accounts", {
-            filter: `type='debt' && is_active=true`,
+            filter: `type='debt' && is_active=true${targetPersonId ? ` && owner_id='${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(targetPersonId)}'` : ''}`,
             perPage: 500
         });
         const debtAccountToPersonMap = new Map();
         debtAccountsRes.items.forEach((acc)=>{
             if (acc.owner_id) debtAccountToPersonMap.set(acc.id, acc.owner_id);
         });
+        // Reverse map for faster filtering if we have targetPersonId
+        const personToDebtAccountIds = new Set();
+        if (targetPersonId) {
+            debtAccountsRes.items.forEach((acc)=>personToDebtAccountIds.add(acc.id));
+        }
         const personCycleData = new Map();
         personIds.forEach((id)=>personCycleData.set(id, new Map()));
-        // 2. Fetch Sync Summaries
+        // 2. Fetch Sync Summaries (The "Settled" authority)
         const syncedCycles = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("people_debt_cycles", {
+            filter: targetPersonId ? `person_id='${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(targetPersonId)}'` : '',
             perPage: 2000
         });
         syncedCycles.items.forEach((c)=>{
@@ -7584,19 +7697,26 @@ async function getPeople(options) {
             const initial = Number(c.initial_amount || c.base_lend || 0);
             const back = Number(c.back_amount || c.cashback || 0);
             const repay = Number(c.repay_net || c.repay || 0);
+            const updated = new Date(c.updated || c.created || 0).getTime();
             current.sync = {
                 initial,
                 back,
                 repay,
                 balance: initial - back - repay,
-                status: c.status
+                status: c.status,
+                updatedAt: updated
             };
             cycles.set(tag, current);
         });
-        // 3. Fetch Deep Raw Transactions
+        // 3. Fetch Raw Transactions (The "Deep" authority)
+        // Optimization: If targetPersonId is set, filter by person_id or debt accounts directly
+        const txFilter = `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void'${targetPersonId ? ` && (person_id='${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(targetPersonId)}'${Array.from(personToDebtAccountIds).length > 0 ? ` || (${Array.from(personToDebtAccountIds).map((id)=>`account_id='${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(id)}'`).join(' || ')})` : ''})` : ''}`;
+        if (targetPersonId) {
+            console.log(`[getPeople] Filter for ${targetPersonId}:`, txFilter);
+        }
         const txnsRes = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseList"])("pvl_txn_001", {
-            filter: `(type='debt' || type='expense' || type='repayment' || type='income' || type='transfer' || type='cashback') && status!='void'`,
-            perPage: 10000,
+            filter: txFilter,
+            perPage: targetPersonId ? 5000 : 10000,
             sort: "-date"
         });
         txnsRes.items.forEach((txn)=>{
@@ -7607,7 +7727,9 @@ async function getPeople(options) {
                 if (accId && debtAccountToPersonMap.has(accId)) pId = debtAccountToPersonMap.get(accId) || null;
             }
             if (!pId || !isPersonalDebt(txn)) return;
-            const tag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(txn.debt_cycle_tag || txn.tag || txn.metadata?.tag) || "";
+            const metadata = txn.metadata && typeof txn.metadata === 'object' ? txn.metadata : {};
+            const tagStr = String(txn.debt_cycle_tag || txn.tag || metadata.debt_cycle_tag || metadata.tag || "");
+            const tag = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$month$2d$tag$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeMonthTag"])(tagStr) || tagStr;
             if (!tag) return;
             const cycles = personCycleData.get(pId);
             const current = cycles.get(tag) || {
@@ -7643,7 +7765,7 @@ async function getPeople(options) {
             current.raw.balance += effective;
             cycles.set(tag, current);
         });
-        // 4. Transform to Final Output
+        // 4. Final Aggregation
         return activePeople.map((person)=>{
             const cycles = personCycleData.get(person.id);
             const stats = {
@@ -7680,6 +7802,11 @@ async function getPeople(options) {
                         back = sync.back;
                         repay = sync.repay;
                         balance = syncBal;
+                    } else {
+                        initial = raw?.baseLend || 0;
+                        back = raw?.cashback || 0;
+                        repay = raw?.repaid || 0;
+                        balance = rawBal;
                     }
                 }
                 stats.totalBalance += balance;
@@ -7728,9 +7855,10 @@ async function getPeople(options) {
 }
 async function getPersonWithSubs(id) {
     const people = await getPeople({
-        includeArchived: true
+        includeArchived: true,
+        targetPersonId: id
     });
-    return people.find((p)=>p.id === id) || null;
+    return people.find((p)=>p.id === id || p.pocketbase_id === id) || null;
 }
 async function createPerson(name, image_url, sheet_link, subscriptionIds, options = {}) {
     try {
@@ -7740,8 +7868,9 @@ async function createPerson(name, image_url, sheet_link, subscriptionIds, option
             sheet_link,
             ...options
         });
-        if (subscriptionIds?.length) await updatePersonSubs(p.id, subscriptionIds);
-        await ensureDebtAccount(p.id, name);
+        const pId = p.id;
+        if (subscriptionIds?.length) await updatePersonSubs(pId, subscriptionIds);
+        await ensureDebtAccount(pId, name);
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])("/people");
         return {
             success: true,
@@ -7849,18 +7978,18 @@ async function getPersonCycleSheets(id) {
     ensureDebtAccount,
     getPersonCycleSheets
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeople, "404b60ae409b8a5bf370fde4943f508272c403ae33", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonWithSubs, "40b29f6e0dbccf0342754e9dcfaebc2c998021e02a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPerson, "7ce6aa0272f5b6813a4328215e8da812a9713392b4", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePerson, "602adc73c2c17001c3b525ec9672719631532b3b5f", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentPeopleByTransactions, "40e7410a5536fc66b43e7ac441fe993e80bb2d0b23", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensureDebtAccount, "60906e773f2d5f1c960b9151d993200b74824aeaf6", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonCycleSheets, "4086e2139e717cb03997a4c1cafbd3febdca0edc55", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeople, "40c343ecc34aff9686c700c78197c10f8cb1f40de5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonWithSubs, "40c92c9d109f0bb6983b85f0eb2ec34ccff4adaac8", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPerson, "7c23b858a0874709f27dd6ef4a3addbd88cf59210e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePerson, "60542768ec9496022a2f316f83544b08d03afa2070", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentPeopleByTransactions, "40d03bb88ed73a18243f7ce5beab76eaf05836eeca", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensureDebtAccount, "60f6c6a7cb29cc9c7fe0a0fb6c3a0f36992ad65082", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonCycleSheets, "40c66423082636cc0047b59290fc03cfd01629ab40", null);
 }),
 "[project]/src/services/debt.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00879207250fb85fe5583d61fd115e8636b3f97094":"getDebtAccounts","4016a4f22e3d107a0c66cde44abf4620225e2bc826":"getPersonDebt","4072a6a17703cff5da2852e315162734b9aaa30f40":"getPersonDetails","40b840eb51321f8d7131df720bf03388b3802d2f33":"syncAllPersonDebtCycles","601a334a4d92d4a0be4a5bf40068b48a8abb353672":"getOutstandingDebts","60534219d617da43bf558db7258aa53f40eb230675":"syncPersonDebtCycle","60b2b868803fda3a67c0ee3f2050dcd2c0072b94f5":"getDebtByTags","60b37bd6608b91fe99c77c3e93bf37c8aa1ed65b77":"computeDebtFromTransactions","7e9e8b510db9f332597d523ea5ec94986a91d70a32":"settleDebt"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00a85b331b4dfc559686bf50478effcff3fb14fcb9":"getDebtAccounts","40155fc647664a7c30184f9a9eae8f3260a18fe983":"getPersonDetails","4078eb9a6432659b692d8492c5c4bc09389b90beba":"syncAllPersonDebtCycles","40d43d07b3ff91056fae9f53d6d97939b5e5c83c52":"getPersonDebt","60125c18133ff3613599096fc99e23edc4a1282ee6":"getOutstandingDebts","602f1b4aff1f56e9a0ce1d74bbba672658a9c0f751":"syncPersonDebtCycle","605e83907b04683a7271f699b003586fcb55224680":"computeDebtFromTransactions","60a2835ba73406474568e8477eb017678d2b01af15":"getDebtByTags","7eda8fd99594522044e2c5ec3caf594803875810ee":"settleDebt"},"",""] */ __turbopack_context__.s([
     "computeDebtFromTransactions",
     ()=>computeDebtFromTransactions,
     "getDebtAccounts",
@@ -8530,20 +8659,20 @@ async function syncAllPersonDebtCycles(personId) {
     syncPersonDebtCycle,
     syncAllPersonDebtCycles
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(computeDebtFromTransactions, "60b37bd6608b91fe99c77c3e93bf37c8aa1ed65b77", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonDebt, "4016a4f22e3d107a0c66cde44abf4620225e2bc826", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getDebtAccounts, "00879207250fb85fe5583d61fd115e8636b3f97094", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonDetails, "4072a6a17703cff5da2852e315162734b9aaa30f40", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getDebtByTags, "60b2b868803fda3a67c0ee3f2050dcd2c0072b94f5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(settleDebt, "7e9e8b510db9f332597d523ea5ec94986a91d70a32", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getOutstandingDebts, "601a334a4d92d4a0be4a5bf40068b48a8abb353672", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncPersonDebtCycle, "60534219d617da43bf558db7258aa53f40eb230675", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPersonDebtCycles, "40b840eb51321f8d7131df720bf03388b3802d2f33", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(computeDebtFromTransactions, "605e83907b04683a7271f699b003586fcb55224680", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonDebt, "40d43d07b3ff91056fae9f53d6d97939b5e5c83c52", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getDebtAccounts, "00a85b331b4dfc559686bf50478effcff3fb14fcb9", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonDetails, "40155fc647664a7c30184f9a9eae8f3260a18fe983", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getDebtByTags, "60a2835ba73406474568e8477eb017678d2b01af15", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(settleDebt, "7eda8fd99594522044e2c5ec3caf594803875810ee", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getOutstandingDebts, "60125c18133ff3613599096fc99e23edc4a1282ee6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncPersonDebtCycle, "602f1b4aff1f56e9a0ce1d74bbba672658a9c0f751", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPersonDebtCycles, "4078eb9a6432659b692d8492c5c4bc09389b90beba", null);
 }),
 "[project]/src/services/category.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00cc33eb99254da5667c7a0c41e8fbbba4e0ae741e":"getCategories","4057c0e1ce0e8f27c43041182b6a372b8d4c7ea8a6":"getCategoryStats","406a31e73725fc37647f949ef1160efdb06c3e20ca":"createCategory","40f9defe051194ec86b1f9d3aa058ab6dd1da3c818":"getCategoryById","601fabecbd273d56e9c6d96eb52ba761705d73f189":"updateCategory","602dc04e91d0d6434657d02b2d6cacb5e0325ee72e":"deleteCategory","60319b84f30aa8dc063b06abd5d61454989b742526":"archiveCategory","6043bb67ae07d21d0575e0652e48b31a0a184fffd7":"deleteCategoriesBulk","60bc0b48e88fdc094818ae468d73385dbb9f088520":"toggleCategoriesArchiveBulk","60ca549dcb437750929c0a77f3fff82e4aab9a99c3":"toggleCategoryArchive"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00a0c166be588b54aae5db510ede5b1406bf47aa8c":"getCategories","4004692694e9dc7772f74d34abd5e0f9eb21d80d07":"getCategoryStats","401aa97fd5200cae6cfc9558c545efac5ca7fa8910":"createCategory","40fa8eb19375e38f5f0c2683f253d5bbf8a3e974ea":"getCategoryById","60352005aaf86b6dfb425d4048abdc2cb96ca7c4a3":"toggleCategoryArchive","604a6766748e16496e170abd92cb76126c98df8a42":"archiveCategory","6067cf375a96123000f295a26fc6e054e0f3ed5fe2":"deleteCategoriesBulk","60bd0c68721f499bbbb25aa22e6a92262b53fcedaa":"deleteCategory","60bfa8be5d6d8aa1d26fea5f6c7760afc8c976217e":"toggleCategoriesArchiveBulk","60d18e36be07d9c0d2bc63d81594ba360ec40a58ea":"updateCategory"},"",""] */ __turbopack_context__.s([
     "archiveCategory",
     ()=>archiveCategory,
     "createCategory",
@@ -8870,21 +8999,21 @@ async function archiveCategory(id, targetId) {
     deleteCategoriesBulk,
     archiveCategory
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategories, "00cc33eb99254da5667c7a0c41e8fbbba4e0ae741e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createCategory, "406a31e73725fc37647f949ef1160efdb06c3e20ca", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateCategory, "601fabecbd273d56e9c6d96eb52ba761705d73f189", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategoryById, "40f9defe051194ec86b1f9d3aa058ab6dd1da3c818", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategoryStats, "4057c0e1ce0e8f27c43041182b6a372b8d4c7ea8a6", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleCategoryArchive, "60ca549dcb437750929c0a77f3fff82e4aab9a99c3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteCategory, "602dc04e91d0d6434657d02b2d6cacb5e0325ee72e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleCategoriesArchiveBulk, "60bc0b48e88fdc094818ae468d73385dbb9f088520", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteCategoriesBulk, "6043bb67ae07d21d0575e0652e48b31a0a184fffd7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(archiveCategory, "60319b84f30aa8dc063b06abd5d61454989b742526", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategories, "00a0c166be588b54aae5db510ede5b1406bf47aa8c", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createCategory, "401aa97fd5200cae6cfc9558c545efac5ca7fa8910", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateCategory, "60d18e36be07d9c0d2bc63d81594ba360ec40a58ea", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategoryById, "40fa8eb19375e38f5f0c2683f253d5bbf8a3e974ea", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategoryStats, "4004692694e9dc7772f74d34abd5e0f9eb21d80d07", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleCategoryArchive, "60352005aaf86b6dfb425d4048abdc2cb96ca7c4a3", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteCategory, "60bd0c68721f499bbbb25aa22e6a92262b53fcedaa", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleCategoriesArchiveBulk, "60bfa8be5d6d8aa1d26fea5f6c7760afc8c976217e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteCategoriesBulk, "6067cf375a96123000f295a26fc6e054e0f3ed5fe2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(archiveCategory, "604a6766748e16496e170abd92cb76126c98df8a42", null);
 }),
 "[project]/src/services/shop.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00d3140e389e72054822d802afa1c754b0130368e4":"getShops","4074dbee27b0787de9deb0b5890f782a3a75f5d952":"createShop","407c1e9958dcdcef6fb610077cab9abbe8499b0d6e":"getShopById","40fffee6d2a23e666fa4bd189f52ebdde66e89cbc6":"getShopStats","605d46075655aedae7b12e771f4cfee2da4ca52460":"toggleShopArchive","606ec1bbc88188bf7a206fbf757e82f046ccf3825a":"deleteShopsBulk","60a08f3b55ac811f4210afb6bd28726b8515b0a18b":"toggleShopsArchiveBulk","60a1cc56cbb8d02fac691a8ecb9b25a7600547d032":"archiveShop","60cb363543e5aa08b46b76161f69c41750a2103719":"updateShop","60d7541ecd00cc2c342bf7f6ceeb62ec136325a6d3":"deleteShop"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00764f7ad08fe5ef40a0c6e4022ac40fd8792f4ecf":"getShops","400a75b6ee22daf8b144bd099db063db906fcaf7bf":"getShopById","4093284dc8e28f867199118a92b5b54a17dae67e76":"getShopStats","40d72e5d18cef368be2ff8581051bf978f5e6f3f29":"createShop","602f65824bb8e62d41304c3a1f86452eeaaae67d5b":"toggleShopsArchiveBulk","6036b30feb7d1825f66e8478140533989e19bb2dc6":"updateShop","605c4afdb5a516080d7b70ac2e53433b39b505bbae":"toggleShopArchive","60bbeeb94a8646340a79c51edff0f5cc82cfade2a0":"deleteShopsBulk","60c4368f3018d1ce8b92c38eded7e74ffca3bab59b":"archiveShop","60d1a594b8ebb8782fceec2b8f38ecfcbc4ad82b8b":"deleteShop"},"",""] */ __turbopack_context__.s([
     "archiveShop",
     ()=>archiveShop,
     "createShop",
@@ -9183,16 +9312,16 @@ async function getShopStats(year) {
     archiveShop,
     getShopStats
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShops, "00d3140e389e72054822d802afa1c754b0130368e4", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShopById, "407c1e9958dcdcef6fb610077cab9abbe8499b0d6e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createShop, "4074dbee27b0787de9deb0b5890f782a3a75f5d952", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateShop, "60cb363543e5aa08b46b76161f69c41750a2103719", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleShopArchive, "605d46075655aedae7b12e771f4cfee2da4ca52460", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteShop, "60d7541ecd00cc2c342bf7f6ceeb62ec136325a6d3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleShopsArchiveBulk, "60a08f3b55ac811f4210afb6bd28726b8515b0a18b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteShopsBulk, "606ec1bbc88188bf7a206fbf757e82f046ccf3825a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(archiveShop, "60a1cc56cbb8d02fac691a8ecb9b25a7600547d032", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShopStats, "40fffee6d2a23e666fa4bd189f52ebdde66e89cbc6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShops, "00764f7ad08fe5ef40a0c6e4022ac40fd8792f4ecf", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShopById, "400a75b6ee22daf8b144bd099db063db906fcaf7bf", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createShop, "40d72e5d18cef368be2ff8581051bf978f5e6f3f29", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateShop, "6036b30feb7d1825f66e8478140533989e19bb2dc6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleShopArchive, "605c4afdb5a516080d7b70ac2e53433b39b505bbae", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteShop, "60d1a594b8ebb8782fceec2b8f38ecfcbc4ad82b8b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(toggleShopsArchiveBulk, "602f65824bb8e62d41304c3a1f86452eeaaae67d5b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteShopsBulk, "60bbeeb94a8646340a79c51edff0f5cc82cfade2a0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(archiveShop, "60c4368f3018d1ce8b92c38eded7e74ffca3bab59b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getShopStats, "4093284dc8e28f867199118a92b5b54a17dae67e76", null);
 }),
 "[project]/src/lib/constants.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -9252,7 +9381,7 @@ const ASSET_TYPES = [
 "[project]/src/services/service-manager.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"001ba35ad62974257b6eec7d8f1836c9ef782b8995":"getServices","400b4fe6c38d711107ff524def7fea96c760293a0d":"deleteService","402075e53b3c20f23ae15a0685af66754ba5ed93b5":"getServiceById","4026248d585dda5a2e5773de1ffe5a8a531961b5ad":"getServiceBotConfig","40ac77cabe9dd67dddc819a09726a1f6e51d53bb3e":"recallServiceDistribution","60115dca75c00ef276e0b359732711bc5f56b2a99d":"upsertService","601537500b2521ce0c5a79fde827b30e26d8f38ee5":"updateServiceMembers","60ce854aff69e53fdab910db433573239df2aef4a2":"saveServiceBotConfig","781287b98d44575ae13a4a72490f11e5223c3c07cc":"distributeAllServices","7cf646e32d4d656e79df699f427f13e3a65113f94e":"distributeService"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"0056bd4ecfed5bc5a49b8322ee6c9d853307233567":"getServices","402e64772ecea5e115ed645f27fb5e5384c0771aa1":"deleteService","403f14368728a34a7df37a83ce2cda398ad2b3782a":"getServiceById","40abf972fe3acb9f1a8d03545b08646dc052778003":"getServiceBotConfig","40e6e3067b3ebf015efcc060b7ae14bafd522d62a9":"recallServiceDistribution","605fa6b8168868299feebbf1c5d8377314f006e372":"upsertService","6075b6fd1f4b4e3ec64e187a8d988ab4ea34d83ea6":"updateServiceMembers","60fc522187b7d4fe5b09364ac9e759c52380abb41b":"saveServiceBotConfig","7864971240a578bb1e5a5b2a489cee73ab8dfae3c8":"distributeAllServices","7cd98e752315262b95422897400606a60ab3de6341":"distributeService"},"",""] */ __turbopack_context__.s([
     "deleteService",
     ()=>deleteService,
     "distributeAllServices",
@@ -9745,21 +9874,21 @@ async function recallServiceDistribution(monthTag) {
     distributeAllServices,
     recallServiceDistribution
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertService, "60115dca75c00ef276e0b359732711bc5f56b2a99d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeService, "7cf646e32d4d656e79df699f427f13e3a65113f94e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServices, "001ba35ad62974257b6eec7d8f1836c9ef782b8995", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteService, "400b4fe6c38d711107ff524def7fea96c760293a0d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateServiceMembers, "601537500b2521ce0c5a79fde827b30e26d8f38ee5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceById, "402075e53b3c20f23ae15a0685af66754ba5ed93b5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceBotConfig, "4026248d585dda5a2e5773de1ffe5a8a531961b5ad", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveServiceBotConfig, "60ce854aff69e53fdab910db433573239df2aef4a2", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeAllServices, "781287b98d44575ae13a4a72490f11e5223c3c07cc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recallServiceDistribution, "40ac77cabe9dd67dddc819a09726a1f6e51d53bb3e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertService, "605fa6b8168868299feebbf1c5d8377314f006e372", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeService, "7cd98e752315262b95422897400606a60ab3de6341", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServices, "0056bd4ecfed5bc5a49b8322ee6c9d853307233567", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteService, "402e64772ecea5e115ed645f27fb5e5384c0771aa1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateServiceMembers, "6075b6fd1f4b4e3ec64e187a8d988ab4ea34d83ea6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceById, "403f14368728a34a7df37a83ce2cda398ad2b3782a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceBotConfig, "40abf972fe3acb9f1a8d03545b08646dc052778003", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveServiceBotConfig, "60fc522187b7d4fe5b09364ac9e759c52380abb41b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeAllServices, "7864971240a578bb1e5a5b2a489cee73ab8dfae3c8", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recallServiceDistribution, "40e6e3067b3ebf015efcc060b7ae14bafd522d62a9", null);
 }),
 "[project]/src/actions/people-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00207ea87f6fa7170d484a3816cb57204774437c6a":"syncAllPeopleSheetsAction","00a2d6a28427598cd16a4574a8e5aca6c6bbe65393":"syncAllPeopleDebtCyclesAction","00ec21527ab955a02e777eb64d620ee2ba3f571bab":"getPeopleAction","40611414e9654fbc966cd123ecb1dc55df75f4f353":"testSheetConnectionAction","4064a94fb68c29fa0c2a184e9f674790ed07f22c52":"syncAllSheetDataAction","4089ea0eb4119e285cc500da2bb6d6122124583417":"createPersonAction","40acc14083cfeca8dfa6528af65ef98ce0603c0d4d":"getPeoplePageData","40f9a23924b51c87c5b7df93273734fe3e191712cf":"getRecentPeopleAction","603f32e4961f45d13c5e44fbc619e99523850d23c1":"syncPeopleDebtAction","6049fc8781964b00b9980db279896403898fb0a462":"rolloverDebtAction","60955a1ae38b2abf532b77fb75a50c74ea8c816e59":"updatePersonAction","60c95e2e97e491232f16cb15dcce8c4289bfb8e390":"ensureDebtAccountAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"004427e0349bb1c57a2aa2600a2b062da2c114b7ed":"getPeopleAction","0064d930a042eef9527da2a7933d3ba8ac7ffae83b":"syncAllPeopleDebtCyclesAction","00e491ad421f2ac2cbb07304a482cab27d6a2e9985":"syncAllPeopleSheetsAction","400b79a03fb7c9fadc7640219831e83338c53fba9b":"getPeoplePageData","4012e9016136ad0f76bca185a47f7231514c974387":"getRecentPeopleAction","406af4f56d2de1240001ccf9b17bdd2a418ceb45bc":"testSheetConnectionAction","409324d88af77ee1eb1e576e36ca70b7eb2124e22c":"syncAllSheetDataAction","40c85f6f23a92e4af76f65e6ecedfe4597cdbbdb71":"createPersonAction","6007093b01ac7295f20656421ff1d4f9e89e3fdfdb":"syncPeopleDebtAction","606f95e135bcdefe2148943e3f7628711dc0651706":"updatePersonAction","6090f445faf4195a78f721fc172a2e99c33763b2e6":"rolloverDebtAction","60ef3de5787fe265b0c8e98ef73fb1a5e30537348b":"ensureDebtAccountAction"},"",""] */ __turbopack_context__.s([
     "createPersonAction",
     ()=>createPersonAction,
     "ensureDebtAccountAction",
@@ -10099,23 +10228,23 @@ async function getRecentPeopleAction(limit = 5) {
     syncAllPeopleDebtCyclesAction,
     getRecentPeopleAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPersonAction, "4089ea0eb4119e285cc500da2bb6d6122124583417", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensureDebtAccountAction, "60c95e2e97e491232f16cb15dcce8c4289bfb8e390", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePersonAction, "60955a1ae38b2abf532b77fb75a50c74ea8c816e59", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeoplePageData, "40acc14083cfeca8dfa6528af65ef98ce0603c0d4d", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(testSheetConnectionAction, "40611414e9654fbc966cd123ecb1dc55df75f4f353", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllSheetDataAction, "4064a94fb68c29fa0c2a184e9f674790ed07f22c52", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPeopleSheetsAction, "00207ea87f6fa7170d484a3816cb57204774437c6a", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(rolloverDebtAction, "6049fc8781964b00b9980db279896403898fb0a462", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeopleAction, "00ec21527ab955a02e777eb64d620ee2ba3f571bab", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncPeopleDebtAction, "603f32e4961f45d13c5e44fbc619e99523850d23c1", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPeopleDebtCyclesAction, "00a2d6a28427598cd16a4574a8e5aca6c6bbe65393", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentPeopleAction, "40f9a23924b51c87c5b7df93273734fe3e191712cf", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createPersonAction, "40c85f6f23a92e4af76f65e6ecedfe4597cdbbdb71", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(ensureDebtAccountAction, "60ef3de5787fe265b0c8e98ef73fb1a5e30537348b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePersonAction, "606f95e135bcdefe2148943e3f7628711dc0651706", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeoplePageData, "400b79a03fb7c9fadc7640219831e83338c53fba9b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(testSheetConnectionAction, "406af4f56d2de1240001ccf9b17bdd2a418ceb45bc", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllSheetDataAction, "409324d88af77ee1eb1e576e36ca70b7eb2124e22c", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPeopleSheetsAction, "00e491ad421f2ac2cbb07304a482cab27d6a2e9985", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(rolloverDebtAction, "6090f445faf4195a78f721fc172a2e99c33763b2e6", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPeopleAction, "004427e0349bb1c57a2aa2600a2b062da2c114b7ed", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncPeopleDebtAction, "6007093b01ac7295f20656421ff1d4f9e89e3fdfdb", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(syncAllPeopleDebtCyclesAction, "0064d930a042eef9527da2a7933d3ba8ac7ffae83b", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentPeopleAction, "4012e9016136ad0f76bca185a47f7231514c974387", null);
 }),
 "[project]/src/actions/bulk-transaction-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"40fe643557eeee72ab74bf9cdb9fec7633ab7dc20e":"bulkCreateTransactions"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"40e6683239bf9220ad96318853fd94569b76892950":"bulkCreateTransactions"},"",""] */ __turbopack_context__.s([
     "bulkCreateTransactions",
     ()=>bulkCreateTransactions
 ]);
@@ -10178,12 +10307,12 @@ async function bulkCreateTransactions(data) {
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
     bulkCreateTransactions
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkCreateTransactions, "40fe643557eeee72ab74bf9cdb9fec7633ab7dc20e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(bulkCreateTransactions, "40e6683239bf9220ad96318853fd94569b76892950", null);
 }),
 "[project]/src/actions/log-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"60638df77f1a3aa1fa7599512439d98b47d42a1cd0":"logToServer","60b203bbd169d6c94d36c0d0988b3da3b0ad0ec47e":"logErrorToServer"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"6027a5caa939314354e79116ce9af7b0975f16c609":"logErrorToServer","60c8c9d51ffcb96493fa99eba4120338aadf8671da":"logToServer"},"",""] */ __turbopack_context__.s([
     "logErrorToServer",
     ()=>logErrorToServer,
     "logToServer",
@@ -10203,13 +10332,13 @@ async function logErrorToServer(message, error) {
     logToServer,
     logErrorToServer
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logToServer, "60638df77f1a3aa1fa7599512439d98b47d42a1cd0", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logErrorToServer, "60b203bbd169d6c94d36c0d0988b3da3b0ad0ec47e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logToServer, "60c8c9d51ffcb96493fa99eba4120338aadf8671da", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logErrorToServer, "6027a5caa939314354e79116ce9af7b0975f16c609", null);
 }),
 "[project]/src/actions/cascade-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"40170ccd1887153eff7f1d1d2bd9b22a647b363b14":"getRecentShopIdsByCategoryId","40352e558359479864e95d1b47077ff021b59c26c5":"getRecentShopByCategoryId","40bf6b671b212ae5af028d8f4a17ee6ac01a4dd1bd":"getRecentCategoryShopByAccountId","40e69719a994f1d9dcce62e78f57652d410aec4df2":"getRecentCategoriesByShopId"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"40027e439e620b381865b3428b90a84e36cf08d075":"getRecentShopIdsByCategoryId","402dc79c034e520e539ee528f869edde0097c4026a":"getRecentCategoriesByShopId","40cb599d7e02773ee6de245824d3cbd5e1f2c23fc5":"getRecentShopByCategoryId","40fdf9be49b3c09295ca60ee2017c5f57b893ab301":"getRecentCategoryShopByAccountId"},"",""] */ __turbopack_context__.s([
     "getRecentCategoriesByShopId",
     ()=>getRecentCategoriesByShopId,
     "getRecentCategoryShopByAccountId",
@@ -10296,15 +10425,15 @@ async function getRecentCategoryShopByAccountId(accountId) {
     getRecentCategoriesByShopId,
     getRecentCategoryShopByAccountId
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentShopByCategoryId, "40352e558359479864e95d1b47077ff021b59c26c5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentShopIdsByCategoryId, "40170ccd1887153eff7f1d1d2bd9b22a647b363b14", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentCategoriesByShopId, "40e69719a994f1d9dcce62e78f57652d410aec4df2", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentCategoryShopByAccountId, "40bf6b671b212ae5af028d8f4a17ee6ac01a4dd1bd", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentShopByCategoryId, "40cb599d7e02773ee6de245824d3cbd5e1f2c23fc5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentShopIdsByCategoryId, "40027e439e620b381865b3428b90a84e36cf08d075", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentCategoriesByShopId, "402dc79c034e520e539ee528f869edde0097c4026a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getRecentCategoryShopByAccountId, "40fdf9be49b3c09295ca60ee2017c5f57b893ab301", null);
 }),
 "[project]/src/services/installment.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"0057486f56a6c4694fd071bbad8f4b6658c7e39646":"getAccountsWithActiveInstallments","0059177e418dc1371033b3be7b203b2ca2096833e8":"getActiveInstallments","00987a409ded035543e5c0a54845a88237cb036a3e":"getCompletedInstallments","00b5fc4b1cb6c25e9da08e536f279e53ec3c3710cb":"getInstallments","00ecf078be80f4fe59143df405e8a0daaa9c5eebe3":"getPendingInstallmentTransactions","4027da6925bffd071dda7e817ebcdc4b3b98357626":"processBatchInstallments","402889a45e8bf5fb226d51b48acda9c05dd90eb099":"createManualInstallment","402fcd8e9268e3c5ecb1bcf001b352241aec248672":"getInstallmentById","40398a231ac7f84c8afd6d46c41fe13da3273860df":"checkAndAutoSettleInstallment","403bd749d15ce4fcd541864c8315e7c852c74ac628":"getInstallmentRepayments","40836a416a7d6ccd40517f8053070dbcd2a7daf61f":"convertTransactionToInstallment","40ff803b4e863f962d7da891b64245c14675dfac91":"settleEarly","60fadb6e3f19234da1f601ed7c7c0eaedbcbfa5e97":"processMonthlyPayment"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"0003c989aebb0738dfc55928b88b77473a33a93f32":"getCompletedInstallments","000f45f8a7f48306d908501cbf4613965420da3e72":"getInstallments","00388b33173e921417121c4f2ffe1e7b29bae4f33f":"getAccountsWithActiveInstallments","00f2a77e6c63f0e8a5853bd114d997b064a3339b3c":"getActiveInstallments","00f95b151a002059f0a52d0d45c3298154d66351af":"getPendingInstallmentTransactions","4025b2853741eba0dd6d9132a07312dbe3c8728a95":"settleEarly","4026234411c3a3a539732ebaa49cc10597a1ab7bf0":"createManualInstallment","40624fc304d11eff648d44878d709ea38de2884348":"convertTransactionToInstallment","4070f72390c597f11ac8e8a080baa5891692657a5f":"processBatchInstallments","40c679cc5bb910a5edaadeab8f980b2d59b2ff9968":"getInstallmentRepayments","40d66004871d0210aa45e59d24e8ac0bbce3d16faa":"checkAndAutoSettleInstallment","40e7306dbbde7ccb07ce944fa19c37cef255a36427":"getInstallmentById","60b547b53d0aa55418490a1f2467a160747da2554e":"processMonthlyPayment"},"",""] */ __turbopack_context__.s([
     "checkAndAutoSettleInstallment",
     ()=>checkAndAutoSettleInstallment,
     "convertTransactionToInstallment",
@@ -10672,24 +10801,24 @@ async function getInstallmentRepayments(planId) {
     processBatchInstallments,
     getInstallmentRepayments
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallments, "00b5fc4b1cb6c25e9da08e536f279e53ec3c3710cb", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallmentById, "402fcd8e9268e3c5ecb1bcf001b352241aec248672", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getActiveInstallments, "0059177e418dc1371033b3be7b203b2ca2096833e8", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountsWithActiveInstallments, "0057486f56a6c4694fd071bbad8f4b6658c7e39646", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCompletedInstallments, "00987a409ded035543e5c0a54845a88237cb036a3e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPendingInstallmentTransactions, "00ecf078be80f4fe59143df405e8a0daaa9c5eebe3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(checkAndAutoSettleInstallment, "40398a231ac7f84c8afd6d46c41fe13da3273860df", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(convertTransactionToInstallment, "40836a416a7d6ccd40517f8053070dbcd2a7daf61f", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createManualInstallment, "402889a45e8bf5fb226d51b48acda9c05dd90eb099", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(processMonthlyPayment, "60fadb6e3f19234da1f601ed7c7c0eaedbcbfa5e97", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(settleEarly, "40ff803b4e863f962d7da891b64245c14675dfac91", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(processBatchInstallments, "4027da6925bffd071dda7e817ebcdc4b3b98357626", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallmentRepayments, "403bd749d15ce4fcd541864c8315e7c852c74ac628", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallments, "000f45f8a7f48306d908501cbf4613965420da3e72", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallmentById, "40e7306dbbde7ccb07ce944fa19c37cef255a36427", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getActiveInstallments, "00f2a77e6c63f0e8a5853bd114d997b064a3339b3c", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountsWithActiveInstallments, "00388b33173e921417121c4f2ffe1e7b29bae4f33f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCompletedInstallments, "0003c989aebb0738dfc55928b88b77473a33a93f32", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPendingInstallmentTransactions, "00f95b151a002059f0a52d0d45c3298154d66351af", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(checkAndAutoSettleInstallment, "40d66004871d0210aa45e59d24e8ac0bbce3d16faa", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(convertTransactionToInstallment, "40624fc304d11eff648d44878d709ea38de2884348", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(createManualInstallment, "4026234411c3a3a539732ebaa49cc10597a1ab7bf0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(processMonthlyPayment, "60b547b53d0aa55418490a1f2467a160747da2554e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(settleEarly, "4025b2853741eba0dd6d9132a07312dbe3c8728a95", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(processBatchInstallments, "4070f72390c597f11ac8e8a080baa5891692657a5f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getInstallmentRepayments, "40c679cc5bb910a5edaadeab8f980b2d59b2ff9968", null);
 }),
 "[project]/src/actions/service-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00cc671ca19a5a03418efc0cc0dbeeefbb15e4516e":"getServicesAction","4024033ca9752335f89b2694d2e6c355b388c4e4ae":"upsertServiceAction","404b6a5d8441a2fa944d2b5224468846f3732da4d4":"getServiceBotConfigAction","4059e73b1adb03b2dd6c744a42280f9d7afe040458":"deleteServiceAction","4078110e244a1ac5533a9a37228d46e587eb25cc6b":"recallServiceDistributionAction","60051f6e12764eef1f0530f8dc18f958e03d012395":"getServicePaymentStatusAction","600d8b3a36af0526686ffe0fbe73f4cd8c677d40d7":"runAllServiceDistributionsAction","6045d6aa8edc4f6fd61f290133a10731d35da649d5":"saveServiceBotConfigAction","605a37df51568a64da4466cf092236cb4e45b1450e":"updateServiceMembersAction","783976d166d917bccc6a254658aa60f3b353d960f0":"distributeServiceAction","7c9a3669cce76414a95480ee803552c919c2f0835e":"confirmServicePaymentAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"004c6dc665d35246a70b7da24d6d135169fce86bf1":"getServicesAction","4018d0d2f00db5e141f6a9ac23db714c51636287b2":"recallServiceDistributionAction","4019f52682fcc2c0539b810931a73a95ab64e4c219":"deleteServiceAction","406c89ac684c70b47419796507b785100ca2ec67f1":"upsertServiceAction","40b81b0e02df2db9e62a3aa96d3f1397803931ee3e":"getServiceBotConfigAction","6009f6a1ec807df9115a7616d0363cdfc53ad0fe42":"getServicePaymentStatusAction","6014c9af6b73eac32ab4d5b2363cd2cb0ef541b58a":"saveServiceBotConfigAction","6077848579d2c08cb2b7ff9b9715d7b132c30c9195":"updateServiceMembersAction","60f498ea2e97369608d00c73d53406911756eef7be":"runAllServiceDistributionsAction","788a9fdc02689c0c50fbde3e0ded443aa73804cd42":"distributeServiceAction","7c40d50bd5b9ce366fac6ac5c1b01fab90142d09af":"confirmServicePaymentAction"},"",""] */ __turbopack_context__.s([
     "confirmServicePaymentAction",
     ()=>confirmServicePaymentAction,
     "deleteServiceAction",
@@ -10938,17 +11067,17 @@ async function getServicesAction() {
     recallServiceDistributionAction,
     getServicesAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateServiceMembersAction, "605a37df51568a64da4466cf092236cb4e45b1450e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertServiceAction, "4024033ca9752335f89b2694d2e6c355b388c4e4ae", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeServiceAction, "783976d166d917bccc6a254658aa60f3b353d960f0", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteServiceAction, "4059e73b1adb03b2dd6c744a42280f9d7afe040458", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceBotConfigAction, "404b6a5d8441a2fa944d2b5224468846f3732da4d4", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveServiceBotConfigAction, "6045d6aa8edc4f6fd61f290133a10731d35da649d5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmServicePaymentAction, "7c9a3669cce76414a95480ee803552c919c2f0835e", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServicePaymentStatusAction, "60051f6e12764eef1f0530f8dc18f958e03d012395", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(runAllServiceDistributionsAction, "600d8b3a36af0526686ffe0fbe73f4cd8c677d40d7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recallServiceDistributionAction, "4078110e244a1ac5533a9a37228d46e587eb25cc6b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServicesAction, "00cc671ca19a5a03418efc0cc0dbeeefbb15e4516e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateServiceMembersAction, "6077848579d2c08cb2b7ff9b9715d7b132c30c9195", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertServiceAction, "406c89ac684c70b47419796507b785100ca2ec67f1", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(distributeServiceAction, "788a9fdc02689c0c50fbde3e0ded443aa73804cd42", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteServiceAction, "4019f52682fcc2c0539b810931a73a95ab64e4c219", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServiceBotConfigAction, "40b81b0e02df2db9e62a3aa96d3f1397803931ee3e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveServiceBotConfigAction, "6014c9af6b73eac32ab4d5b2363cd2cb0ef541b58a", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(confirmServicePaymentAction, "7c40d50bd5b9ce366fac6ac5c1b01fab90142d09af", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServicePaymentStatusAction, "6009f6a1ec807df9115a7616d0363cdfc53ad0fe42", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(runAllServiceDistributionsAction, "60f498ea2e97369608d00c73d53406911756eef7be", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recallServiceDistributionAction, "4018d0d2f00db5e141f6a9ac23db714c51636287b2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getServicesAction, "004c6dc665d35246a70b7da24d6d135169fce86bf1", null);
 }),
 "[project]/src/types/settings.types.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -11044,7 +11173,7 @@ async function trackPersonUsage(personId, type) {
 "[project]/src/actions/settings-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00adbd5d1b604159f0bd5972b2320b4fc900ef69ee":"getQuickPeopleConfigAction","400a95f7d0ac2f6f1f714015027c5451bbefc59121":"saveQuickPeopleConfigAction","6077aa9acaa20df4cac950423e5bb024ac9355b913":"updateQuickPeopleUsageAction"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"0021b26ea7d838c23f23e8ddf52f558546093b9737":"getQuickPeopleConfigAction","4060c4b5f9b5a8428a4c35d9a266f6dff8442a8f66":"saveQuickPeopleConfigAction","6002d4c9ecf603ab93da7f9fa1483b28c57247c468":"updateQuickPeopleUsageAction"},"",""] */ __turbopack_context__.s([
     "getQuickPeopleConfigAction",
     ()=>getQuickPeopleConfigAction,
     "saveQuickPeopleConfigAction",
@@ -11111,14 +11240,14 @@ async function getQuickPeopleConfigAction() {
     saveQuickPeopleConfigAction,
     getQuickPeopleConfigAction
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateQuickPeopleUsageAction, "6077aa9acaa20df4cac950423e5bb024ac9355b913", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveQuickPeopleConfigAction, "400a95f7d0ac2f6f1f714015027c5451bbefc59121", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getQuickPeopleConfigAction, "00adbd5d1b604159f0bd5972b2320b4fc900ef69ee", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateQuickPeopleUsageAction, "6002d4c9ecf603ab93da7f9fa1483b28c57247c468", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveQuickPeopleConfigAction, "4060c4b5f9b5a8428a4c35d9a266f6dff8442a8f66", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getQuickPeopleConfigAction, "0021b26ea7d838c23f23e8ddf52f558546093b9737", null);
 }),
 "[project]/src/services/person-cycle-sheet.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"40d36d07a443b729b6a55b5d71868265c7d63681fb":"getPersonCycleSheets"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"40de39773fc210455f26348295cab9c8a620b8a175":"getPersonCycleSheets"},"",""] */ __turbopack_context__.s([
     "getPersonCycleSheets",
     ()=>getPersonCycleSheets
 ]);
@@ -11146,7 +11275,7 @@ async function getPersonCycleSheets(personId) {
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
     getPersonCycleSheets
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonCycleSheets, "40d36d07a443b729b6a55b5d71868265c7d63681fb", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPersonCycleSheets, "40de39773fc210455f26348295cab9c8a620b8a175", null);
 }),
 "[project]/src/lib/cashback-policy.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -11235,7 +11364,7 @@ function formatPolicyLabel(metadata, currencyFormatter, fallback = null) {
 "[project]/src/services/cashback.service.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"402dc7fb9aa02635d6f1e7fa79721365d541796abe":"getTransactionsForCycle","4033111aed9c52ac3b34e7f0fde96c38bd315716e8":"simulateCashback","4040543183410aa90a0d2b7bacef0afe3c3dfee6dc":"upsertTransactionCashback","408972d90e4042101bfec8b11fd3ccad52c44a4a15":"removeTransactionCashback","4096cf218e3260371bb2537e55c987fd06d066eac5":"getTransactionCashbackPolicyExplanation","4097bd067fd24eaabe487a307bdc18879104efb6cd":"getAccountCycles","409b5bc116dfbed2f5ef284cae7df2c21c2b1da1bb":"getCashbackYearAnalytics","40cc06de419683ffc356a2918fdaea0d2dbe7626de":"getAllCashbackHistory","6027c8e051f74f84155dd91b00bdcc8414176939b5":"recomputeCashbackCycle","605bd137b9a788bc7920904b36d9e43cd5780e19b7":"recomputeAccountCashback","60c3d1bd3f9aac540c478e53cddb1d55f502763b00":"getCashbackCycleOptions","700c7099aed11239d6629e7069cb0884ba4166d854":"getMonthlyCashbackTransactions","78510fa185d10f913142a4093fbe4315ed3c4fa414":"getAccountSpendingStatsSnapshot","788f7e208bbd2db7f06256f6c429c93649d4580ad3":"getAccountSpendingStats","78d8a519642e04c9bebc653102821a772d416be7ba":"getCashbackProgress"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"4000a42a0620687750bd0a455f805859a763e3a95c":"getAllCashbackHistory","402105624a25b9aed286150d942fe16ad8bc1f64c5":"getTransactionsForCycle","404210c03639a785bf0b4c65170b3e9839115707b0":"getAccountCycles","4044e117d64e56679d359ff31a0ba5264acf217348":"removeTransactionCashback","40804e82d69fb5eff42375c5e9fb38b1e5d423c91d":"simulateCashback","408e727da9bd2afe3b6c9f33492d1bb96a5a4f9e91":"getTransactionCashbackPolicyExplanation","40ae6659b2764c29f6626353ec28981c0fca9fdba8":"upsertTransactionCashback","40f8450155a02fddf79371e8bc1a7a01297e4372e2":"getCashbackYearAnalytics","602bb3609f1ee638e09daa208d33cdbbb73c36b38f":"recomputeAccountCashback","6058977303246685778c1803680610b74865c3e8cc":"recomputeCashbackCycle","60a52490cbdb05cf083c54c41265526441d4c49c05":"getCashbackCycleOptions","7015663c7e4fcce9c26b5bf6b4f1e8df092ec60a5e":"getMonthlyCashbackTransactions","7884bb4b1e99e02c26e46f75f7b8d1f68d8cfe9af3":"getAccountSpendingStats","789be1470c53ac737d001df1ffa32e59647e9ace23":"getCashbackProgress","78fb5ce5154f7990c371e9b599479c677cdb853f8e":"getAccountSpendingStatsSnapshot"},"",""] */ __turbopack_context__.s([
     "getAccountCycles",
     ()=>getAccountCycles,
     "getAccountSpendingStats",
@@ -12707,26 +12836,26 @@ async function getTransactionsForCycle(cycleId) {
     getAccountCycles,
     getTransactionsForCycle
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertTransactionCashback, "4040543183410aa90a0d2b7bacef0afe3c3dfee6dc", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputeCashbackCycle, "6027c8e051f74f84155dd91b00bdcc8414176939b5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(removeTransactionCashback, "408972d90e4042101bfec8b11fd3ccad52c44a4a15", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountSpendingStatsSnapshot, "78510fa185d10f913142a4093fbe4315ed3c4fa414", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountSpendingStats, "788f7e208bbd2db7f06256f6c429c93649d4580ad3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackProgress, "78d8a519642e04c9bebc653102821a772d416be7ba", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionCashbackPolicyExplanation, "4096cf218e3260371bb2537e55c987fd06d066eac5", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(simulateCashback, "4033111aed9c52ac3b34e7f0fde96c38bd315716e8", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAllCashbackHistory, "40cc06de419683ffc356a2918fdaea0d2dbe7626de", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputeAccountCashback, "605bd137b9a788bc7920904b36d9e43cd5780e19b7", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackCycleOptions, "60c3d1bd3f9aac540c478e53cddb1d55f502763b00", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackYearAnalytics, "409b5bc116dfbed2f5ef284cae7df2c21c2b1da1bb", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getMonthlyCashbackTransactions, "700c7099aed11239d6629e7069cb0884ba4166d854", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountCycles, "4097bd067fd24eaabe487a307bdc18879104efb6cd", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionsForCycle, "402dc7fb9aa02635d6f1e7fa79721365d541796abe", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(upsertTransactionCashback, "40ae6659b2764c29f6626353ec28981c0fca9fdba8", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputeCashbackCycle, "6058977303246685778c1803680610b74865c3e8cc", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(removeTransactionCashback, "4044e117d64e56679d359ff31a0ba5264acf217348", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountSpendingStatsSnapshot, "78fb5ce5154f7990c371e9b599479c677cdb853f8e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountSpendingStats, "7884bb4b1e99e02c26e46f75f7b8d1f68d8cfe9af3", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackProgress, "789be1470c53ac737d001df1ffa32e59647e9ace23", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionCashbackPolicyExplanation, "408e727da9bd2afe3b6c9f33492d1bb96a5a4f9e91", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(simulateCashback, "40804e82d69fb5eff42375c5e9fb38b1e5d423c91d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAllCashbackHistory, "4000a42a0620687750bd0a455f805859a763e3a95c", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(recomputeAccountCashback, "602bb3609f1ee638e09daa208d33cdbbb73c36b38f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackCycleOptions, "60a52490cbdb05cf083c54c41265526441d4c49c05", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCashbackYearAnalytics, "40f8450155a02fddf79371e8bc1a7a01297e4372e2", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getMonthlyCashbackTransactions, "7015663c7e4fcce9c26b5bf6b4f1e8df092ec60a5e", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAccountCycles, "404210c03639a785bf0b4c65170b3e9839115707b0", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionsForCycle, "402105624a25b9aed286150d942fe16ad8bc1f64c5", null);
 }),
 "[project]/src/actions/history-actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"402f6b12647b401319450a46134ba01ca46c5b7dd3":"getTransactionHistory","408e243ce9560263f50de86f0c2f2e39d62647f890":"hasTransactionHistory"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"402f29fffc7dd210fc1ae6ccfcdabd6d7420fcb622":"getTransactionHistory","40d906cb250324621b35260edd94b3870509c30f6c":"hasTransactionHistory"},"",""] */ __turbopack_context__.s([
     "getTransactionHistory",
     ()=>getTransactionHistory,
     "hasTransactionHistory",
@@ -13011,8 +13140,8 @@ async function hasTransactionHistory(transactionId) {
     getTransactionHistory,
     hasTransactionHistory
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionHistory, "402f6b12647b401319450a46134ba01ca46c5b7dd3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(hasTransactionHistory, "408e243ce9560263f50de86f0c2f2e39d62647f890", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getTransactionHistory, "402f29fffc7dd210fc1ae6ccfcdabd6d7420fcb622", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(hasTransactionHistory, "40d906cb250324621b35260edd94b3870509c30f6c", null);
 }),
 "[project]/.next-internal/server/app/people/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/ai-reminder-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/ai-actions-v2.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/actions/transaction-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/actions/ai-learn-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/actions/account-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/actions/people-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/actions/bulk-transaction-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/actions/log-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/services/transaction.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/services/category.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/services/shop.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/actions/cascade-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/services/installment.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE13 => \"[project]/src/services/account.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE14 => \"[project]/src/actions/service-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE15 => \"[project]/src/actions/settings-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE16 => \"[project]/src/services/pocketbase/account-details.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE17 => \"[project]/src/services/pocketbase/people.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE18 => \"[project]/src/services/debt.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE19 => \"[project]/src/services/person-cycle-sheet.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE20 => \"[project]/src/services/people.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE21 => \"[project]/src/services/service-manager.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE22 => \"[project]/src/services/pocketbase/cashback-sync.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE23 => \"[project]/src/services/sheet.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE24 => \"[project]/src/services/cashback.service.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE25 => \"[project]/src/actions/history-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript) <locals>", ((__turbopack_context__) => {
 "use strict";
@@ -13242,341 +13371,341 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$history$2d
 "use strict";
 
 __turbopack_context__.s([
-    "00016fc040b04745d68e8e5df7030476962484ccad",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccounts"],
-    "001ba35ad62974257b6eec7d8f1836c9ef782b8995",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServices"],
-    "0030cdb137d594f2397ef27272e242a6c734fd9e76",
+    "0002198770fd50b7768c7638d653d38d6a119a2d23",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseShops"],
-    "005422e11ad96ea6cd0ff0a7e08d1bae01ee56eb2d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"],
-    "0059177e418dc1371033b3be7b203b2ca2096833e8",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getActiveInstallments"],
-    "005c04998c7faa918aa8712a7e124c7ecfa6dec122",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseCategories"],
-    "005c306212ad001330746076b1cb1c0a94f44c39fa",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$reminder$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountRemindersAction"],
-    "0060849b4afd0280f20b3a73b928363ceca195123e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"],
-    "00849fcb4b933bec895a76dc3f35f32af26b6afd82",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccounts"],
-    "00879207250fb85fe5583d61fd115e8636b3f97094",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getDebtAccounts"],
-    "00adbd5d1b604159f0bd5972b2320b4fc900ef69ee",
+    "0021b26ea7d838c23f23e8ddf52f558546093b9737",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$settings$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getQuickPeopleConfigAction"],
-    "00be54fa41b510875a636b1d4af5a57efdd81d1652",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountsAction"],
-    "00cc33eb99254da5667c7a0c41e8fbbba4e0ae741e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCategories"],
-    "00cc671ca19a5a03418efc0cc0dbeeefbb15e4516e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$service$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServicesAction"],
-    "00cf4b4fc30ae70c79d670ccf0cb343305da811eec",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllAccountsCashbackAction"],
-    "00d153f01f2454b7490120fa39f90c32d73c89d3d1",
+    "003ae2eaa765f5040a0d2a77fee232381065a561c4",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getLastTransactionAccountId"],
-    "00d3140e389e72054822d802afa1c754b0130368e4",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getShops"],
-    "00ddb6725215c654afd6b855414e9888a3d5ae3b76",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getLastTransactionPersonId"],
-    "00ec21527ab955a02e777eb64d620ee2ba3f571bab",
+    "004427e0349bb1c57a2aa2600a2b062da2c114b7ed",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPeopleAction"],
-    "4000e4520e5abbe1105be209cf34e92a7278e31abc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllTransactions"],
-    "4004d830a832c5fbdbd917b639ab3bfe5952512b7b",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTransaction"],
-    "400a95f7d0ac2f6f1f714015027c5451bbefc59121",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$settings$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["saveQuickPeopleConfigAction"],
-    "400ac29deecd5783c8c4010580b81c8d4670c3d5a1",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteTransaction"],
-    "400b4fe6c38d711107ff524def7fea96c760293a0d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteService"],
-    "400bee513142a9e94e80b098283b904e1d28793c3e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountStats"],
-    "400c34959357db8b69f957b96d2cca171bc2c5be37",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentTransactions"],
-    "400d0bafa24611cfb8685bb2d9bd0606b63f7a9763",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAccountCashbackAction"],
-    "4016a4f22e3d107a0c66cde44abf4620225e2bc826",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonDebt"],
-    "40170ccd1887153eff7f1d1d2bd9b22a647b363b14",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentShopIdsByCategoryId"],
-    "402075e53b3c20f23ae15a0685af66754ba5ed93b5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServiceById"],
-    "4020d7ee4dda3ff53bc8fee97e6c87365957f70789",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTestSheet"],
-    "4026248d585dda5a2e5773de1ffe5a8a531961b5ad",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServiceBotConfig"],
-    "402889a45e8bf5fb226d51b48acda9c05dd90eb099",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createManualInstallment"],
-    "4029131c4704fe751eb34b0bc8e9271e4dd8c2adcf",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["resolvePocketBasePersonRecord"],
-    "402dc7fb9aa02635d6f1e7fa79721365d541796abe",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsForCycle"],
-    "402f47172d44037b6c0af41d8c584780fd81d1ab54",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseShop"],
-    "402f6b12647b401319450a46134ba01ca46c5b7dd3",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$history$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionHistory"],
-    "4031bbc8cf5667e6a1a2e4d40d867677bc7d902923",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseInstallmentPlan"],
-    "4033111aed9c52ac3b34e7f0fde96c38bd315716e8",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["simulateCashback"],
-    "40352e558359479864e95d1b47077ff021b59c26c5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentShopByCategoryId"],
-    "4035df48bbf9b3eb8988e25ad397ed1edcdf663550",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountConfigAction"],
-    "4037a679d5c5c90e02236e2bd41df6962a1f67ff74",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccountDetails"],
-    "403a51004fe7b378a46b4c3204a283be7985cbce06",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["restoreTransaction"],
-    "4040543183410aa90a0d2b7bacef0afe3c3dfee6dc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertTransactionCashback"],
-    "4048bbf905fc5c7a399de06e57e828b052d5b76ca6",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidTransactionAction"],
-    "404b60ae409b8a5bf370fde4943f508272c403ae33",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPeople"],
-    "40505fcaf33b669b909c05a4a342d47ddd7475b698",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recalculateBalance"],
-    "405392d43daf90218c185c1b7598ff98db60405ac1",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseUnifiedTransactions"],
-    "406012c217d7e48f6ab6fdba99d03330cdc4ba95ff",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadPocketBaseTransactions"],
-    "4060e6e3365a4f301a596519ac10510ee8d311e81d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePersonDetails"],
-    "406a31e73725fc37647f949ef1160efdb06c3e20ca",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createCategory"],
-    "406bea3751af4e721d1901eb379272ffc86c4e012a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidPocketBaseTransaction"],
-    "40716972695a09aaba3158b22a2e490eabd3ef789c",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseTransactionsByPlan"],
-    "4072a6a17703cff5da2852e315162734b9aaa30f40",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonDetails"],
-    "4072cf04bc22a9efa3ec89e72c2f854f3a5fcbdd35",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPendingRefunds"],
-    "4073812c271d58e7486dd66d372abb5c6f56c05ce7",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseShopsBulk"],
-    "407385b3b205fe36dcb962ea71fd31509f312fb049",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadTransactions"],
-    "4074dbee27b0787de9deb0b5890f782a3a75f5d952",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createShop"],
-    "40815b9c2d8930c01a4b065f8341c02f65f43df828",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertPocketBaseTransactionCashback"],
-    "40836a416a7d6ccd40517f8053070dbcd2a7daf61f",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["convertTransactionToInstallment"],
-    "40865143913815f3c89d12eab43d77edb7876e8d2a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBasePerson"],
-    "4086e2139e717cb03997a4c1cafbd3febdca0edc55",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonCycleSheets"],
-    "408972d90e4042101bfec8b11fd3ccad52c44a4a15",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["removeTransactionCashback"],
-    "4089ea0eb4119e285cc500da2bb6d6122124583417",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPersonAction"],
-    "4095ae6d389d17569a0b681367deb3d4953f20ae8a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountDetails"],
-    "4095c5b9a5ad64476a6046264389e173b84c38f823",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputePocketBaseCashbackCycle"],
-    "4096cf218e3260371bb2537e55c987fd06d066eac5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionCashbackPolicyExplanation"],
-    "40970a81f37088799f7817e1e4cc349523b36c4ca2",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getOriginalAccount"],
-    "4097bd067fd24eaabe487a307bdc18879104efb6cd",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountCycles"],
-    "409b5bc116dfbed2f5ef284cae7df2c21c2b1da1bb",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCashbackYearAnalytics"],
-    "40a401e0d8770795773074f41775c266c240c70703",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidTransaction"],
-    "40a8f1d24a7acad975286b00f76000c804b39212aa",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["testConnection"],
-    "40ac47472b29acdafe3eec4d0a8e79cdc0565331cc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["cancelOrder"],
-    "40ac77cabe9dd67dddc819a09726a1f6e51d53bb3e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recallServiceDistribution"],
-    "40b29f6e0dbccf0342754e9dcfaebc2c998021e02a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonWithSubs"],
-    "40b840eb51321f8d7131df720bf03388b3802d2f33",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllPersonDebtCycles"],
-    "40b84732e343b82f0938570df95f4794839d3854bc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePersonById"],
-    "40bbff12de3409aaf3011874825c07faadb4be6f60",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteTransactionCascade"],
-    "40bf4e72701202808b69c3bcbb2835d6dff518fd5a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteAccount"],
-    "40bf6b671b212ae5af028d8f4a17ee6ac01a4dd1bd",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentCategoryShopByAccountId"],
-    "40c8f0475391045352135c5d652dbc5cb5736670ab",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createAccount"],
-    "40cc06de419683ffc356a2918fdaea0d2dbe7626de",
+    "004c6dc665d35246a70b7da24d6d135169fce86bf1",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$service$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServicesAction"],
+    "0056bd4ecfed5bc5a49b8322ee6c9d853307233567",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServices"],
+    "0064a9cc7a129973fa18bf43d8f76108db9748dcae",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccounts"],
+    "006d1e9cc2d7bc1ee23a5e9c6051f33517ec04ecb8",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"],
+    "00764f7ad08fe5ef40a0c6e4022ac40fd8792f4ecf",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getShops"],
+    "00a0c166be588b54aae5db510ede5b1406bf47aa8c",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCategories"],
+    "00a0f7a31cb733c3a63e0fbc7ed67333e9e159ad29",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"],
+    "00a85b331b4dfc559686bf50478effcff3fb14fcb9",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getDebtAccounts"],
+    "00a9935267a76ac90c646ef5f7cb524cbe49227b64",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccounts"],
+    "00aa32c8d2918f902cba5d650f0ab532b6a667e18d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountsAction"],
+    "00ac6905e7275d737ac69d431104cf661758637c7a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllAccountsCashbackAction"],
+    "00b050084f9664adbf563ec6e8f2e79fcd57e160c0",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getLastTransactionPersonId"],
+    "00ea89b8e3d349226ea1cf76166c1b12c3fdeeeeba",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseCategories"],
+    "00f2a77e6c63f0e8a5853bd114d997b064a3339b3c",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getActiveInstallments"],
+    "00f81387626360a80508e83a60b6f87225744d325d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$reminder$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountRemindersAction"],
+    "4000a42a0620687750bd0a455f805859a763e3a95c",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllCashbackHistory"],
-    "40d36d07a443b729b6a55b5d71868265c7d63681fb",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$person$2d$cycle$2d$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonCycleSheets"],
-    "40da9fd2d8a19fb9de97a1d5a51513d5d64c4c18ac",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTransaction"],
-    "40e07210a0c8d0c5c4367647b93a617f9ea42d2386",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseCategoriesBulk"],
-    "40e231d9adb369e537bfa06cde600486694460391d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseCategory"],
-    "40e2b3123eb7b337d039f98c2fb09973199a8a0bcc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteSplitBillAction"],
-    "40e66b18391376afeaf8e81c4429b4ac787e5505a9",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentAccountsByTransactions"],
-    "40e69719a994f1d9dcce62e78f57652d410aec4df2",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentCategoriesByShopId"],
-    "40e7410a5536fc66b43e7ac441fe993e80bb2d0b23",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentPeopleByTransactions"],
-    "40ec7545a8418b49f29f737d0ce80c84413435ff80",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentAccountsAction"],
-    "40f1fcaece782ed6c821bd255f90a0e3039cc5af91",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBasePerson"],
-    "40f9a23924b51c87c5b7df93273734fe3e191712cf",
+    "40027e439e620b381865b3428b90a84e36cf08d075",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentShopIdsByCategoryId"],
+    "400e69688b9239a5a545f1b468f94f3abc7639bd6d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createAccount"],
+    "4012e9016136ad0f76bca185a47f7231514c974387",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentPeopleAction"],
-    "40fe643557eeee72ab74bf9cdb9fec7633ab7dc20e",
+    "40155fc647664a7c30184f9a9eae8f3260a18fe983",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonDetails"],
+    "401994bca8f3d74ec8657d0a39a7d728ddcb88283f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBasePerson"],
+    "401aa97fd5200cae6cfc9558c545efac5ca7fa8910",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createCategory"],
+    "401d2e5e32d551cea249bb118bdb29b206590dd216",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentAccountsByTransactions"],
+    "401ddd1557b3c5a760a7cf1ad74d609461643a5293",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["resolvePocketBasePersonRecord"],
+    "401f1e823c94ce9554382a43dad869a5c1b7081c47",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteSplitBillAction"],
+    "40204e19135aae5d71b0f16217678c9ab4a6f2001d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllTransactions"],
+    "40209423ebd1df8ff017aaafd9b66ee47b23be157a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidPocketBaseTransaction"],
+    "402105624a25b9aed286150d942fe16ad8bc1f64c5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsForCycle"],
+    "402338384beb9e88fd6929928eba49882422af05a1",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadTransactions"],
+    "4026234411c3a3a539732ebaa49cc10597a1ab7bf0",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createManualInstallment"],
+    "402dc79c034e520e539ee528f869edde0097c4026a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentCategoriesByShopId"],
+    "402e64772ecea5e115ed645f27fb5e5384c0771aa1",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteService"],
+    "402f29fffc7dd210fc1ae6ccfcdabd6d7420fcb622",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$history$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionHistory"],
+    "403f14368728a34a7df37a83ce2cda398ad2b3782a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServiceById"],
+    "404099e69215220cee5890cfde50a848e230ca34b7",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountStats"],
+    "4041c9c5208e1b3f4b1d828bb085a54c45d330fd75",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTransaction"],
+    "404210c03639a785bf0b4c65170b3e9839115707b0",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountCycles"],
+    "4044e117d64e56679d359ff31a0ba5264acf217348",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["removeTransactionCashback"],
+    "404bf47e280c6f3b5d67a54af2e4a262928b4c28de",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTestSheet"],
+    "405156174d4eb4074fe69fa0415e892c6b6080b5b9",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentTransactions"],
+    "405690f8a3b42f919b94d19582093bda78a932e62a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseUnifiedTransactions"],
+    "4060c4b5f9b5a8428a4c35d9a266f6dff8442a8f66",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$settings$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["saveQuickPeopleConfigAction"],
+    "40620b053dcb11d19fa21e6d7d1ff9b5b28a376e4d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteAccount"],
+    "40624fc304d11eff648d44878d709ea38de2884348",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["convertTransactionToInstallment"],
+    "406442d29f9219c1e9669242fc40ee1e8af022cd51",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccountDetails"],
+    "40697269a31854856a5cf6992c68019965c2d3af5d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidTransaction"],
+    "406c8b7b12981726e0a99e445b4d172846412d5a9f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseCategoriesBulk"],
+    "406ed95480903eceb71405faf96f7796a54dc9a513",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createTransaction"],
+    "4072c768721fff3626e17df67d9351ec64626b4c06",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadPocketBaseTransactions"],
+    "4078eb9a6432659b692d8492c5c4bc09389b90beba",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAllPersonDebtCycles"],
+    "407a125db837b2103cf56b690a5c87a2c0cee9b0f3",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteTransactionCascade"],
+    "40804e82d69fb5eff42375c5e9fb38b1e5d423c91d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["simulateCashback"],
+    "408143a8ca61733bb718d8adb73e05edfdd0a6b421",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["voidTransactionAction"],
+    "4082968cb2943ee3ebe3672110c9ad46399e670f5f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputePocketBaseCashbackCycle"],
+    "408c335828a24275022af0ebdfeaa05cca7e7800d5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getOriginalAccount"],
+    "408e727da9bd2afe3b6c9f33492d1bb96a5a4f9e91",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionCashbackPolicyExplanation"],
+    "409327174926611fa35d6f3cc13a8dfe29afdd60ec",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["testConnection"],
+    "40a38f1ebcc96e5297dbf1917cfcefad94b3426508",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBasePerson"],
+    "40abf972fe3acb9f1a8d03545b08646dc052778003",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServiceBotConfig"],
+    "40ae6659b2764c29f6626353ec28981c0fca9fdba8",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertTransactionCashback"],
+    "40b7e4de854ec85b7d3d2ce57b4c0a9a9eef423aac",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseShopsBulk"],
+    "40b931b83f7e3fa6ddd5d08cea7bc28fdbb36d70d9",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseInstallmentPlan"],
+    "40ba390a1b32fb27de3a2b50052545fee40ba3ce77",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPendingRefunds"],
+    "40bddc209ba05f6a8db47c22b33ec683cc3b305c9a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePersonDetails"],
+    "40c008e30fc4ed3e87d8c68a44762881a2875e8dba",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseShop"],
+    "40c2799832bd39aec5e5e83772bc8779c5e2652feb",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertPocketBaseTransactionCashback"],
+    "40c27acd3d07b6d7defdb5a34722a40cf5bd8e0ee1",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["restoreTransaction"],
+    "40c343ecc34aff9686c700c78197c10f8cb1f40de5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPeople"],
+    "40c66423082636cc0047b59290fc03cfd01629ab40",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonCycleSheets"],
+    "40c85f6f23a92e4af76f65e6ecedfe4597cdbbdb71",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPersonAction"],
+    "40c92c9d109f0bb6983b85f0eb2ec34ccff4adaac8",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonWithSubs"],
+    "40cb599d7e02773ee6de245824d3cbd5e1f2c23fc5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentShopByCategoryId"],
+    "40cd057eafdcca6c9a941fc198de750a1b8acbb741",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deleteTransaction"],
+    "40cdf129c1484892a41434b60aa1f71836e181c30c",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePocketBaseCategory"],
+    "40d03bb88ed73a18243f7ce5beab76eaf05836eeca",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentPeopleByTransactions"],
+    "40d43d07b3ff91056fae9f53d6d97939b5e5c83c52",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonDebt"],
+    "40d72e5d18cef368be2ff8581051bf978f5e6f3f29",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createShop"],
+    "40de39773fc210455f26348295cab9c8a620b8a175",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$person$2d$cycle$2d$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonCycleSheets"],
+    "40e0f5f02c66ab35d70477c72c2723c6d0e31693d6",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseTransactionsByPlan"],
+    "40e12f2b3729389e6e1701182843ead7a6a3ab9c0f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["cancelOrder"],
+    "40e6683239bf9220ad96318853fd94569b76892950",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$bulk$2d$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["bulkCreateTransactions"],
-    "60038e3fe2e5dbd4251f64a04a5769fa1a23ea198f",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseAccountConfig"],
-    "60111f8b2c6c04a478ebcea52c23ad2dc8985305b8",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransaction"],
-    "60115dca75c00ef276e0b359732711bc5f56b2a99d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertService"],
-    "601537500b2521ce0c5a79fde827b30e26d8f38ee5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateServiceMembers"],
-    "6015b525aeff7a11ee1ffde8894c60361cb6fc6428",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseCycleTransactions"],
-    "6016e377542a84264809476ad34c9e47ff88a0209f",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccountCycleOptions"],
-    "601a334a4d92d4a0be4a5bf40068b48a8abb353672",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getOutstandingDebts"],
-    "601fabecbd273d56e9c6d96eb52ba761705d73f189",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateCategory"],
-    "6027c8e051f74f84155dd91b00bdcc8414176939b5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputeCashbackCycle"],
-    "602adc73c2c17001c3b525ec9672719631532b3b5f",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePerson"],
-    "6035e907917bd1b415a348341bb0119d067a1c1be0",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$learn$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["learnPatternAction"],
-    "60369b1d8cca27cf15a8397fa0479cd10028de086d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseShop"],
-    "603f32e4961f45d13c5e44fbc619e99523850d23c1",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncPeopleDebtAction"],
-    "6040a0435560169f12c7b708d3ab95f11c393843db",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeAmountForType"],
-    "604202c3178caa5cfd999853bcc2487c48e2bbdd54",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadAccountTransactionsV2"],
-    "6042a3d4c92cddf3a56da8aa0323b045b522e54498",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["removePocketBaseTransactionCashback"],
-    "60430b836e3ec58326661b82249396a1bae68e1078",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseTransaction"],
-    "6045725551edc2b44534c4c6843a49ef2e640bcd26",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBasePerson"],
-    "6049ca7615a001453d4797a93d28425b33eb8275d7",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountInfo"],
-    "6049fc8781964b00b9980db279896403898fb0a462",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["rolloverDebtAction"],
-    "604d995fbd2ed9fb7862f0427fc794fdf346b3a670",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransactionMetadata"],
-    "60534219d617da43bf558db7258aa53f40eb230675",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncPersonDebtCycle"],
-    "605352bd5850dee5f046ce446ae169cc9efb8b76ce",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseAccountInfo"],
-    "605bd137b9a788bc7920904b36d9e43cd5780e19b7",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputeAccountCashback"],
-    "60638df77f1a3aa1fa7599512439d98b47d42a1cd0",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$log$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logToServer"],
-    "6064c20d9f07fbd236cbda88777db76bc40b6c0b0e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$actions$2d$v2$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["parseTransactionV2Action"],
-    "606827d43be9b2550403feaa12d0aabdcbcb947050",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountTransactions"],
-    "6072c8058e3c72b3ae3e1339bdea6aeee59e7247c9",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["bulkMoveTransactionsToCategory"],
-    "6075c7e375a524181b4f3cd1e2d28d47c952fa096c",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseShopArchive"],
-    "607816f947d32f4c0662cefe8926e9875a62e5ad5d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseShopsArchiveBulk"],
-    "607e812829651f17a619306ee0c9560c8ec2df124d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionById"],
-    "60805490de2f79faf431a2a3a7868972bad99b7f2e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseAccount"],
-    "6085d05b77b0479ba78e9dd304ea9b83d4290f62b9",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseTransaction"],
-    "6086c3ef099b4c91838ae7360a0feb6ae4c91a7f45",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["autoSyncCycleSheetIfNeeded"],
-    "60901ddf44ae660129a8132a11dac6a2fcafd45ac4",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransaction"],
-    "60906e773f2d5f1c960b9151d993200b74824aeaf6",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureDebtAccount"],
-    "60955a1ae38b2abf532b77fb75a50c74ea8c816e59",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePersonAction"],
-    "609b5636db00e19d72a0279a204cccbf366ae3c58d",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadPocketBaseTransactionsForAccount"],
-    "609c0cf5f4ec4b177bf8872d176c9b676604428324",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateSplitBillAction"],
-    "60a12232255f1d17e1a58371619e7b145735b70d46",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBasePerson"],
-    "60a4f8dba6895313bbfd359d0c4e63d5c9ea10c1ac",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["bulkMoveToCategory"],
-    "60ab1397131a0f94cef99093bec06741507e27b5a7",
+    "40e6e3067b3ebf015efcc060b7ae14bafd522d62a9",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recallServiceDistribution"],
+    "40e87f1a5f4c3f21335006423672957f9a72591602",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountDetails"],
+    "40f27deb345266e0df8035456861e35d9941de0487",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountConfigAction"],
+    "40f2e2f01d5c126f03c588f348ce84c7d43df6380a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncAccountCashbackAction"],
+    "40f729992987a46a49b7975305dc087a51bbc850b2",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentAccountsAction"],
+    "40f7a61b26eae2150806832e69b1cc78e14a34fdc2",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recalculateBalance"],
+    "40f8450155a02fddf79371e8bc1a7a01297e4372e2",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCashbackYearAnalytics"],
+    "40fcbba08963c7a110103c1e196942b7fc81e5c87b",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePersonById"],
+    "40fdf9be49b3c09295ca60ee2017c5f57b893ab301",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getRecentCategoryShopByAccountId"],
+    "600109ecbff04033c0e8dac4d4297bd6cd23891999",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseCategory"],
-    "60b203bbd169d6c94d36c0d0988b3da3b0ad0ec47e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$log$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logErrorToServer"],
-    "60b2b868803fda3a67c0ee3f2050dcd2c0072b94f5",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getDebtByTags"],
-    "60b37bd6608b91fe99c77c3e93bf37c8aa1ed65b77",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["computeDebtFromTransactions"],
-    "60b49960c3a3edfae6ad6647087e3464a917451e55",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBasePerson"],
-    "60b80434695115ed4fda0d963b0916c17a912da10e",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountStatus"],
-    "60b85cbdeab8758bef6c50e8ae4c2f0a2500321787",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountConfig"],
-    "60b91491651f8694892818045640efebace1513eaa",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseCategoryArchive"],
-    "60c3d1bd3f9aac540c478e53cddb1d55f502763b00",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCashbackCycleOptions"],
-    "60cb363543e5aa08b46b76161f69c41750a2103719",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateShop"],
-    "60ce854aff69e53fdab910db433573239df2aef4a2",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["saveServiceBotConfig"],
-    "60defc535d1001b8b951192af3f6365ecca5264d57",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["confirmRefund"],
-    "60e3693371e3d44445479a0097063ff1cacb989fe3",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createCycleSheet"],
-    "60f41475426ab1adcc092e9adf055d7f4b11645074",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseCategoriesArchiveBulk"],
-    "60fa6672a0b6c090712ed33864b48ef8ffb77ace70",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["confirmRefundAction"],
-    "60fafe6e6dd5f6d1a15122df3192ad2d6381925b5a",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["mapTransactionRow"],
-    "60fb680baaf9a489966a02c83c62e8e86d8ab785a7",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseCategory"],
-    "60ff0ee22378ca36b405908da6a16492f19edc47f5",
+    "600551bcf583b724e93c29143daafc23adf0a61915",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseAccountConfig"],
+    "6007093b01ac7295f20656421ff1d4f9e89e3fdfdb",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncPeopleDebtAction"],
+    "6009c6de345c28f63f224189891fda5086b87b1d51",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseShop"],
-    "700c7099aed11239d6629e7069cb0884ba4166d854",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getMonthlyCashbackTransactions"],
-    "707ea558b1db1e70ab6d90db853fdb60e16cf74796",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["requestRefund"],
-    "708c1535efe27f925cf6ac60a1a18fe6b1a0c54807",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsByPeople"],
-    "70a499f97de19d3178865e0ef8ca98b13514e21a4b",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensurePocketBaseCycle"],
-    "70bf2a521fc9f96fc2256a2e49125cc291b0cdda88",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncTransactionToSheet"],
-    "70e793649d62cbe62d556528b7be6bb6be026e9afc",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncCycleTransactions"],
-    "70f8195f526d9545a9e2e95faf8a232e6a6915d57c",
+    "6010a0877368d62abafdac1c87529819678bb1a529",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionById"],
+    "60125c18133ff3613599096fc99e23edc4a1282ee6",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getOutstandingDebts"],
+    "6013c8f2f2595d698ff54c65e28d29aba842a697fa",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseShopArchive"],
+    "601b7b10d320a5c38214610b791af1df9fbaac52c1",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseTransaction"],
+    "601b7f84e617edcc51b3a766b95063890665d82ca7",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseAccountInfo"],
+    "60207122b7bf24f3a12f09bca5bb3c8de22b66b968",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$learn$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["learnPatternAction"],
+    "6027a5caa939314354e79116ce9af7b0975f16c609",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$log$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logErrorToServer"],
+    "602bb3609f1ee638e09daa208d33cdbbb73c36b38f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputeAccountCashback"],
+    "602f1b4aff1f56e9a0ce1d74bbba672658a9c0f751",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncPersonDebtCycle"],
+    "6032d2b204dba8a3583f08ea6a9158dc1cfd732597",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["normalizeAmountForType"],
+    "60340f82efeee3dcace8de1d33fb40fca1c5713a0a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadAccountTransactionsV2"],
+    "6036b30feb7d1825f66e8478140533989e19bb2dc6",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateShop"],
+    "60409e2420f1cf40038e0a8f4ce5ac5c626195a9a8",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransaction"],
+    "6051867822d60261f2a852b60e263a777a90026c6d",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseCategory"],
+    "6052fcbfb405cecdfd9786525c062edd5b556afeff",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["bulkMoveToCategory"],
+    "60542768ec9496022a2f316f83544b08d03afa2070",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePerson"],
+    "6058977303246685778c1803680610b74865c3e8cc",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["recomputeCashbackCycle"],
+    "605e83907b04683a7271f699b003586fcb55224680",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["computeDebtFromTransactions"],
+    "605fa6b8168868299feebbf1c5d8377314f006e372",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["upsertService"],
+    "60665a4fa4d3cc379d596e7eb6a41d4aa1e81cb2bf",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountInfo"],
+    "60676eb4ffdb421973579b327d5767f96a927836cd",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountTransactions"],
+    "606c8762373051e4572c396a74eee3e17b66e3d65f",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$ai$2d$actions$2d$v2$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["parseTransactionV2Action"],
+    "606f95e135bcdefe2148943e3f7628711dc0651706",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePersonAction"],
+    "6075b6fd1f4b4e3ec64e187a8d988ab4ea34d83ea6",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateServiceMembers"],
+    "607d1e6a2245c18c4ad2d25319eea342c57a8cba37",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseShopsArchiveBulk"],
+    "6082d18ebc15026a30c7eed2aaa9a1191bdcf72b13",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseCycleTransactions"],
+    "6083099faae5d88f7a4278d9d533286f7fedcd10d3",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["confirmRefundAction"],
+    "608e11b907e03d576a5ec25f5660ad7ce13dbf331a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseAccount"],
+    "60904be4f32dca28dcad1df25455ed243012933928",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["bulkMoveTransactionsToCategory"],
+    "6090f445faf4195a78f721fc172a2e99c33763b2e6",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["rolloverDebtAction"],
+    "6097685b38234fe246c528d8259663e1aa30ac4af7",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["autoSyncCycleSheetIfNeeded"],
+    "6097a1dabd99ce313dd5da2307628d17e88acf2480",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBasePerson"],
+    "609866070d7907140aa847afbb07db939049981f09",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransactionMetadata"],
+    "609e2041182472ba5e7d6ad42b213694fc7924f6b4",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountStatus"],
+    "60a061321fdaaa08d23206f570cea0c9146555031a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["loadPocketBaseTransactionsForAccount"],
+    "60a2835ba73406474568e8477eb017678d2b01af15",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getDebtByTags"],
+    "60a51d7af14ed4346215b903ed9dadd8d51a92d17e",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateAccountConfig"],
+    "60a52490cbdb05cf083c54c41265526441d4c49c05",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCashbackCycleOptions"],
+    "60aa8eab5d9461f619f53c5043a8b066644f375198",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["removePocketBaseTransactionCashback"],
+    "60b0bcbe83fa250d9f88dcbf7c804da6091632c828",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateTransaction"],
+    "60b86ddd94589dac1dc84867b76465461f15e6c5fb",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBasePerson"],
+    "60c753fe3fd189f607e33ab1cbf2be0a79b55825c4",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBaseShop"],
+    "60c8a6f0a10e0502f15ad7796a30bb300ffd9346b2",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePocketBaseTransaction"],
+    "60c8c9d51ffcb96493fa99eba4120338aadf8671da",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$log$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logToServer"],
+    "60cb87adb8b84e1591d0a49c5a4c6fd3adc89112d5",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPocketBasePerson"],
+    "60d18e36be07d9c0d2bc63d81594ba360ec40a58ea",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateCategory"],
+    "60e4af908a6f0328ecf0f19c0020959e9806793080",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updateSplitBillAction"],
+    "60e88248d5bf416aee1ae41c1925ac049ff0f6617a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["confirmRefund"],
+    "60edca9031feb56a198341f025e3c4f56cae52db87",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseCategoryArchive"],
+    "60f1fabe2a6303c14150df828fd5d669090a97dea0",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["togglePocketBaseCategoriesArchiveBulk"],
+    "60f32e86e79018af06244bad36128a3dd169fcca5a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createCycleSheet"],
+    "60f5ec1fb46fcb8f04554671d7e8c644687823f467",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccountCycleOptions"],
+    "60f6c6a7cb29cc9c7fe0a0fb6c3a0f36992ad65082",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureDebtAccount"],
+    "60f9d0898c23352894df2c366ac65b2486712c977a",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["mapTransactionRow"],
+    "60fc522187b7d4fe5b09364ac9e759c52380abb41b",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["saveServiceBotConfig"],
+    "701493980fcc0b23371062d60859b04c03fc37699e",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccountSpendingStatsSnapshot"],
-    "781287b98d44575ae13a4a72490f11e5223c3c07cc",
+    "7015663c7e4fcce9c26b5bf6b4f1e8df092ec60a5e",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getMonthlyCashbackTransactions"],
+    "7032bb5e91fa7599d24b59ad708adc9a5851dd1723",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["requestRefund"],
+    "7058c54b52d7b0f84f0d23b9613341adc42661cecd",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncTransactionToSheet"],
+    "7068ec43b21ff73631fe852b454d777c70921352d4",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["syncCycleTransactions"],
+    "7079dc9269713418feed688130a6031ec5b4224298",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsByPeople"],
+    "70ecbdb018eaf4944ef5db0db69dbd35fed0f744c9",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensurePocketBaseCycle"],
+    "7864971240a578bb1e5a5b2a489cee73ab8dfae3c8",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["distributeAllServices"],
-    "78510fa185d10f913142a4093fbe4315ed3c4fa414",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountSpendingStatsSnapshot"],
-    "788f7e208bbd2db7f06256f6c429c93649d4580ad3",
+    "7884bb4b1e99e02c26e46f75f7b8d1f68d8cfe9af3",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountSpendingStats"],
-    "78d8a519642e04c9bebc653102821a772d416be7ba",
+    "789be1470c53ac737d001df1ffa32e59647e9ace23",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCashbackProgress"],
-    "7ce6aa0272f5b6813a4328215e8da812a9713392b4",
+    "78fb5ce5154f7990c371e9b599479c677cdb853f8e",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAccountSpendingStatsSnapshot"],
+    "7c23b858a0874709f27dd6ef4a3addbd88cf59210e",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["createPerson"],
-    "7cf646e32d4d656e79df699f427f13e3a65113f94e",
+    "7cd98e752315262b95422897400606a60ab3de6341",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["distributeService"],
-    "7e9e8b510db9f332597d523ea5ec94986a91d70a32",
+    "7eda8fd99594522044e2c5ec3caf594803875810ee",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["settleDebt"],
-    "7fb7e2b161fd7f3fdb3913806b309be45b23c6615e",
+    "7f4e44168d33d8c31a8e510c3c815a0844668f818f",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnifiedTransactions"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$people$2f5b$id$5d2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$ai$2d$reminder$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE1__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$ai$2d$actions$2d$v2$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE2__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE3__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$ai$2d$learn$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE4__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$account$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE5__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$people$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE6__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$bulk$2d$transaction$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE7__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$log$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE8__$3d3e$__$225b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE9__$3d3e$__$225b$project$5d2f$src$2f$services$2f$category$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE10__$3d3e$__$225b$project$5d2f$src$2f$services$2f$shop$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE11__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$cascade$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE12__$3d3e$__$225b$project$5d2f$src$2f$services$2f$installment$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE13__$3d3e$__$225b$project$5d2f$src$2f$services$2f$account$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE14__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$service$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE15__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$settings$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE16__$3d3e$__$225b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE17__$3d3e$__$225b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE18__$3d3e$__$225b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE19__$3d3e$__$225b$project$5d2f$src$2f$services$2f$person$2d$cycle$2d$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE20__$3d3e$__$225b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE21__$3d3e$__$225b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE22__$3d3e$__$225b$project$5d2f$src$2f$services$2f$pocketbase$2f$cashback$2d$sync$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE23__$3d3e$__$225b$project$5d2f$src$2f$services$2f$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE24__$3d3e$__$225b$project$5d2f$src$2f$services$2f$cashback$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE25__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$history$2d$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/people/[id]/page/actions.js { ACTIONS_MODULE0 => "[project]/src/actions/ai-reminder-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE1 => "[project]/src/actions/ai-actions-v2.ts [app-rsc] (ecmascript)", ACTIONS_MODULE2 => "[project]/src/actions/transaction-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE3 => "[project]/src/actions/ai-learn-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE4 => "[project]/src/actions/account-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE5 => "[project]/src/actions/people-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE6 => "[project]/src/actions/bulk-transaction-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE7 => "[project]/src/actions/log-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE8 => "[project]/src/services/transaction.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE9 => "[project]/src/services/category.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE10 => "[project]/src/services/shop.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE11 => "[project]/src/actions/cascade-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE12 => "[project]/src/services/installment.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE13 => "[project]/src/services/account.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE14 => "[project]/src/actions/service-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE15 => "[project]/src/actions/settings-actions.ts [app-rsc] (ecmascript)", ACTIONS_MODULE16 => "[project]/src/services/pocketbase/account-details.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE17 => "[project]/src/services/pocketbase/people.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE18 => "[project]/src/services/debt.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE19 => "[project]/src/services/person-cycle-sheet.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE20 => "[project]/src/services/people.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE21 => "[project]/src/services/service-manager.ts [app-rsc] (ecmascript)", ACTIONS_MODULE22 => "[project]/src/services/pocketbase/cashback-sync.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE23 => "[project]/src/services/sheet.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE24 => "[project]/src/services/cashback.service.ts [app-rsc] (ecmascript)", ACTIONS_MODULE25 => "[project]/src/actions/history-actions.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');

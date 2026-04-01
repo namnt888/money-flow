@@ -220,36 +220,59 @@ async function PeopleDetailContent({ params, searchParams }) {
     }
     // Fetch person details
     const person = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonWithSubs"])(personId);
-    if (!person) {
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["notFound"])();
-    }
+    if (!person) (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["notFound"])();
+    const resolvedSearchParams = await searchParams;
+    const { tag, dateFrom, dateTo } = resolvedSearchParams;
+    const now = new Date();
+    const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const activeTag = tag || currentMonthTag;
     const sourcePersonId = isUuid(person.id) ? person.id : canonicalSourcePersonId && isUuid(canonicalSourcePersonId) ? canonicalSourcePersonId : person.id;
     const sheetProfileId = sourcePersonId;
+    // Custom Date range calculation for shorthand tags
+    let effectiveDateFrom = dateFrom;
+    let effectiveDateTo = dateTo;
+    if (activeTag === '3m') {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 2); // Current + prev 2
+        d.setDate(1);
+        effectiveDateFrom = d.toISOString().split('T')[0];
+    } else if (activeTag === 'year') {
+        const d = new Date();
+        effectiveDateFrom = `${d.getFullYear()}-01-01`;
+    }
+    // Preparation for transaction fetch
+    const profileRecordPromise = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"])().then((people)=>people.find((item)=>item.id === sheetProfileId));
     // Fetch all required data in parallel
-    const [accounts, categories, people, shops, debtTags, cycleSheets, subscriptions] = await Promise.all([
+    const [accounts, categories, people, shops, debtTags, cycleSheets, subscriptions, transactions] = await Promise.all([
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseAccounts"])(),
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseCategories"])(),
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"])(),
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$account$2d$details$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBaseShops"])(),
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$debt$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getDebtByTags"])(sourcePersonId),
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$person$2d$cycle$2d$sheet$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPersonCycleSheets"])(sheetProfileId),
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServices"])()
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$service$2d$manager$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getServices"])(),
+        profileRecordPromise.then(async (profileRecord)=>{
+            const isGroupProfile = Boolean(profileRecord?.is_group);
+            if (isGroupProfile) {
+                const peopleList = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$people$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPocketBasePeople"])();
+                const groupMemberIds = peopleList.filter((member)=>member.group_parent_id === sheetProfileId).map((member)=>member.id);
+                const groupPersonIds = Array.from(new Set([
+                    sheetProfileId,
+                    ...groupMemberIds
+                ]));
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsByPeople"])(groupPersonIds, 2000, true);
+            }
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnifiedTransactions"])({
+                personId: sourcePersonId,
+                limit: activeTag === 'all' ? 2005 : 1000,
+                context: 'person',
+                dateFrom: effectiveDateFrom,
+                dateTo: effectiveDateTo,
+                tag: activeTag === 'all' || activeTag === '3m' || activeTag === 'year' ? undefined : activeTag,
+                includeVoided: true
+            });
+        })
     ]);
-    // Handle group profiles
-    const profileRecord = people.find((item)=>item.id === sheetProfileId);
-    const isGroupProfile = Boolean(profileRecord?.is_group);
-    const groupMemberIds = isGroupProfile ? people.filter((member)=>member.group_parent_id === sheetProfileId).map((member)=>member.id) : [];
-    const groupPersonIds = isGroupProfile ? Array.from(new Set([
-        sheetProfileId,
-        ...groupMemberIds
-    ])) : [];
-    // Fetch transactions
-    const transactions = isGroupProfile ? await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getTransactionsByPeople"])(groupPersonIds, 2000, true) : await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$transaction$2e$service$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnifiedTransactions"])({
-        personId: sourcePersonId,
-        limit: 2000,
-        context: 'person',
-        includeVoided: true
-    });
     const balance = person.balance ?? 0;
     const balanceLabel = balance > 0 ? 'They owe you' : balance < 0 ? 'You owe them' : 'Settled';
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$context$2f$tag$2d$filter$2d$context$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["TagFilterProvider"], {
@@ -267,12 +290,12 @@ async function PeopleDetailContent({ params, searchParams }) {
             subscriptions: subscriptions
         }, void 0, false, {
             fileName: "[project]/src/app/people/[id]/page.tsx",
-            lineNumber: 169,
+            lineNumber: 198,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/people/[id]/page.tsx",
-        lineNumber: 168,
+        lineNumber: 197,
         columnNumber: 5
     }, this);
 }

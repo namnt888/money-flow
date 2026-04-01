@@ -28,6 +28,10 @@ import { toast } from 'sonner'
 
 type PickerMode = 'month' | 'range' | 'date' | 'all' | 'year' | 'cycle'
 
+const numberFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+})
+
 interface UnifiedSmartDatePickerProps {
   date: Date
   dateRange: DateRange | undefined
@@ -430,136 +434,177 @@ export function UnifiedSmartDatePicker({
               <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
               <span className="text-sm font-medium">Loading technical data...</span>
             </div>
-          ) : filteredCycles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
-              <Search className="h-12 w-12 opacity-10" />
-              <span className="text-sm font-medium">No cycles discovered for this year</span>
-            </div>
           ) : (
             <div className="space-y-4 pt-2">
-              <AnimatePresence mode="popLayout">
-                {filteredCycles.map((cycle: any, idx: number) => {
-                  const isSelected = localCycle === cycle.value
-                  const isSettled = cycle.stats?.isSettled || false
-                  const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
-                  const reallySettled = isSettled || Math.abs(Number(remains)) < 100
-
-                    return (
-                      <motion.div
-                        key={cycle.value}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2, delay: idx * 0.02 }}
-                        layout
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setLocalCycle(cycle.value)}
-                          className={cn(
-                            "w-full text-left rounded-xl border transition-all duration-200 relative overflow-hidden group/item",
-                            isSelected 
-                              ? "bg-indigo-50/40 border-indigo-200 shadow-sm ring-1 ring-indigo-100" 
-                              : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50"
-                          )}
+                {/* A. FIXED SPECIAL CYCLES SECTION */}
+                <div className="space-y-1.5">
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Fixed Shortcuts</span>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button 
+                            onClick={() => { setLocalCycle('all'); setLocalMode('all'); onModeChange('all'); onYearSelect?.(null); setOpen(false); }}
+                            className={cn(
+                                "flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-xs font-bold",
+                                mode === 'all' && !selectedYearValue ? "bg-amber-100 border-amber-300 text-amber-900 shadow-sm" : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
+                            )}
                         >
-                          <div className="flex h-[48px] items-center">
-                            {/* Cycle Label (Left) */}
-                            <div className="min-w-[100px] px-3 py-2 flex flex-col justify-center border-r border-slate-50 h-[70%] my-auto">
-                              <span className={cn(
-                                "text-sm font-black tracking-tight leading-none mb-0.5",
-                                isSelected ? "text-indigo-600" : "text-slate-900"
-                              )}>
-                                {cycle.value}
-                              </span>
-                              <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight">CYCLE</span>
-                            </div>
+                            <History className="h-3.5 w-3.5" /> All History
+                        </button>
+                        {/* Current Month Shortcut */}
+                        {(() => {
+                            const nowTag = new Date().toISOString().slice(0, 7);
+                            const isCurrentSelected = localCycle === nowTag;
+                            return (
+                                <button 
+                                    onClick={() => setLocalCycle(nowTag)}
+                                    className={cn(
+                                        "flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-xs font-bold",
+                                        isCurrentSelected ? "bg-amber-100 border-amber-300 text-amber-900 shadow-sm" : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <TrendingUp className="h-3.5 w-3.5" /> This Month
+                                </button>
+                            );
+                        })()}
+                    </div>
+                </div>
 
-                            {/* Data Grid (Right) */}
-                            <div className="flex-1 grid grid-cols-4 items-center h-full">
-                              {statType === 'debt' ? (
-                                <>
-                                  {/* Initial */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-slate-400 mb-0.5 uppercase tracking-tighter">Initial</span>
-                                    <span className="text-sm font-bold text-slate-700 tabular-nums truncate w-full text-center">
-                                      {new Intl.NumberFormat('en-US').format(cycle.stats?.initial || 0)}
+                {/* B. DYNAMIC CYCLE HISTORY */}
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Cycle History</span>
+                        <span className="text-[10px] font-bold text-slate-400 tabular-nums">{filteredCycles.filter(c => c.value !== 'all').length} Cycles</span>
+                    </div>
+                    
+                    {/* Header */}
+                    <div className="flex h-6 items-center px-4 mb-1">
+                      <div className="min-w-[100px] flex items-center">
+                        <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest italic">Tag</span>
+                      </div>
+                      <div className="flex-1 grid grid-cols-4 items-center">
+                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Base</span>
+                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">C.Back</span>
+                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Repaid</span>
+                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Status</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <AnimatePresence mode="popLayout">
+                        {filteredCycles.filter(c => c.value !== 'all').map((cycle: any, idx: number) => {
+                          const isSelected = localCycle === cycle.value
+                          const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
+                          const isSettled = cycle.stats?.isSettled || Math.abs(Number(remains)) < 100
+
+                          return (
+                            <motion.div
+                              key={cycle.value}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.2, delay: idx * 0.02 }}
+                              layout
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setLocalCycle(cycle.value)}
+                                className={cn(
+                                  "w-full text-left rounded-xl border transition-all duration-200 relative overflow-hidden group/item",
+                                  isSelected 
+                                    ? "bg-amber-50/50 border-amber-200 shadow-sm ring-1 ring-amber-100" 
+                                    : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50"
+                                )}
+                              >
+                                <div className="flex h-[48px] items-center">
+                                  {/* Cycle Label (Left) */}
+                                  <div className="min-w-[100px] px-3 py-2 flex flex-col justify-center border-r border-slate-50 h-[70%] my-auto">
+                                    <span className={cn(
+                                      "text-sm font-black tracking-tight leading-none mb-0.5",
+                                      isSelected ? "text-amber-700" : "text-slate-900"
+                                    )}>
+                                      {cycle.value}
                                     </span>
+                                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight">CYCLE</span>
                                   </div>
-                                  {/* Cashback */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-orange-400 mb-0.5 uppercase tracking-tighter">Cashback</span>
-                                    <span className="text-sm font-bold text-orange-500 tabular-nums truncate w-full text-center text-[11px]">
-                                      {Number(cycle.stats?.cashback || 0) > 0 ? `-${new Intl.NumberFormat('en-US').format(Number(cycle.stats?.cashback))}` : '0'}
-                                    </span>
-                                  </div>
-                                  {/* Repaid */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-emerald-500 mb-0.5 uppercase tracking-tighter">Repaid</span>
-                                    <span className="text-sm font-bold text-emerald-600 tabular-nums truncate w-full text-center">
-                                      {new Intl.NumberFormat('en-US').format(cycle.stats?.repay || 0)}
-                                    </span>
-                                  </div>
-                                  {/* Status */}
-                                  <div className="h-full flex items-center justify-center px-2">
-                                    {reallySettled ? (
-                                      <div className="h-7 px-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0 w-full hover:bg-emerald-100 transition-colors">
-                                        <span className="text-[9px] font-black uppercase tracking-widest">SETTLED</span>
-                                      </div>
+
+                                  {/* Data Grid (Right) */}
+                                  <div className="flex-1 grid grid-cols-4 items-center h-full">
+                                    {statType === 'debt' ? (
+                                      <>
+                                        {/* Initial */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-slate-700 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(cycle.stats?.initial || 0))}
+                                          </span>
+                                        </div>
+                                        {/* Cashback */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-orange-500 tabular-nums truncate w-full text-center">
+                                            {Number(cycle.stats?.cashback || 0) > 0 ? `-${numberFormatter.format(Math.round(Number(cycle.stats?.cashback)))}` : '0'}
+                                          </span>
+                                        </div>
+                                        {/* Repaid */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(cycle.stats?.repay || 0))}
+                                          </span>
+                                        </div>
+                                        {/* Status */}
+                                        <div className="h-full flex items-center justify-center px-2">
+                                          {isSettled ? (
+                                            <div className="h-7 px-3 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0 w-fit hover:bg-emerald-100 transition-colors">
+                                              <span className="text-[8px] font-black uppercase tracking-widest">SETTLED</span>
+                                            </div>
+                                          ) : (
+                                            <div className="flex flex-col items-center justify-center py-1 px-3 rounded-lg bg-rose-50 border border-rose-100 shrink-0 w-fit min-w-[70px] hover:bg-rose-100 transition-colors group/profit">
+                                              <span className="text-[12px] font-black text-rose-600 tabular-nums">
+                                                {numberFormatter.format(Math.abs(Math.round(remains)))}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </>
                                     ) : (
-                                      <div className="flex flex-col items-center justify-center py-1 px-2 rounded bg-rose-50 border border-rose-100 shrink-0 w-full hover:bg-rose-100 transition-colors group/profit">
-                                        <span className="text-[8px] font-black text-rose-300 uppercase tracking-tighter mb-0.5 group-hover/profit:text-rose-400 transition-colors">REMAINS</span>
-                                        <span className="text-[11px] font-black text-rose-600 tabular-nums">
-                                          {new Intl.NumberFormat('en-US').format(remains)}
-                                        </span>
-                                      </div>
+                                      <>
+                                        {/* Spent */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-slate-700 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(cycle.stats?.spent || 0))}
+                                          </span>
+                                        </div>
+                                        {/* Earned */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(cycle.stats?.earned || 0))}
+                                          </span>
+                                        </div>
+                                        {/* Shared */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-amber-600 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(cycle.stats?.shared || 0))}
+                                          </span>
+                                        </div>
+                                        {/* Profit */}
+                                        <div className="h-full flex items-center justify-center px-2">
+                                          <div className={cn(
+                                             "flex flex-col items-center justify-center py-1 px-3 rounded-lg border shrink-0 min-w-[80px] hover:bg-opacity-80 transition-all",
+                                             isSelected ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" : "bg-indigo-50/50 border-indigo-100 text-indigo-600"
+                                          )}>
+                                            <span className={cn("text-[13px] font-black tabular-nums")}>
+                                              {numberFormatter.format(Math.round(remains))}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </>
                                     )}
                                   </div>
-                                </>
-                              ) : (
-                                <>
-                                  {/* Spent */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Spent</span>
-                                    <span className="text-sm font-bold text-slate-700 tabular-nums truncate w-full text-center">
-                                      {new Intl.NumberFormat('en-US').format(cycle.stats?.spent || 0)}
-                                    </span>
-                                  </div>
-                                  {/* Earned */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-tighter mb-0.5">Earned</span>
-                                    <span className="text-sm font-bold text-emerald-600 tabular-nums truncate w-full text-center">
-                                      {new Intl.NumberFormat('en-US').format(cycle.stats?.earned || 0)}
-                                    </span>
-                                  </div>
-                                  {/* Shared */}
-                                  <div className="flex flex-col items-center justify-center h-[60%] border-r border-slate-50 px-1 overflow-hidden">
-                                    <span className="text-[8px] font-bold text-amber-500 uppercase tracking-tighter mb-0.5">Shared</span>
-                                    <span className="text-sm font-bold text-amber-600 tabular-nums truncate w-full text-center">
-                                      {new Intl.NumberFormat('en-US').format(cycle.stats?.shared || 0)}
-                                    </span>
-                                  </div>
-                                  {/* Profit */}
-                                  <div className="h-full flex items-center justify-center px-2">
-                                    <div className={cn(
-                                       "flex flex-col items-center justify-center py-1.5 px-2 rounded border shrink-0 w-full hover:bg-opacity-80 transition-all group/profit",
-                                       isSelected ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" : "bg-indigo-50/50 border-indigo-100"
-                                    )}>
-                                      <span className={cn("text-[9px] font-black uppercase tracking-wider mb-0.5", isSelected ? "text-indigo-200" : "text-slate-400 group-hover/profit:text-indigo-500")}>PROFIT</span>
-                                      <span className={cn("text-[12px] font-black tabular-nums", isSelected ? "text-white" : "text-indigo-600")}>
-                                        {new Intl.NumberFormat('en-US').format(remains)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      </motion.div>
-                    )
-                })}
-              </AnimatePresence>
+                                </div>
+                              </button>
+                            </motion.div>
+                          )
+                        })}
+                      </AnimatePresence>
+                    </div>
+                </div>
             </div>
           )}
         </div>

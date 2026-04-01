@@ -1,8 +1,8 @@
 (globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
     script: typeof document === "object" ? document.currentScript : undefined,
     chunks: [
-  "static/chunks/src_617367ff._.js",
-  "static/chunks/src_actions_5d0a8d34._.js",
+  "static/chunks/src_0ff0f3fc._.js",
+  "static/chunks/src_actions_e0a14d11._.js",
   "static/chunks/src_components_moneyflow_unified-transaction-table_tsx_05e87207._.js",
   "static/chunks/src_components_moneyflow_0c506e5a._.js",
   "static/chunks/src_components_people_split-bill-row_tsx_03fb62a7._.js",
@@ -10,15 +10,15 @@
   "static/chunks/src_components_people_v2_5ac5bf4c._.js",
   "static/chunks/src_components_people_manage-sheet-button_tsx_23c33971._.js",
   "static/chunks/src_components_people_99380ca8._.js",
-  "static/chunks/src_components_ui_2c300981._.js",
+  "static/chunks/src_components_ui_8c9582d0._.js",
   "static/chunks/src_components_transactions-v2_d2eeeb1e._.js",
   "static/chunks/src_components_transaction_slide-v2_efb00308._.js",
   "static/chunks/src_components_accounts_v2_db9e5266._.js",
   "static/chunks/src_components_8a5446bc._.js",
-  "static/chunks/src_services_105080ed._.js",
+  "static/chunks/src_services_d030c932._.js",
   "static/chunks/src_22a37836._.js",
   "static/chunks/50d1e_date-fns_a78a2d81._.js",
-  "static/chunks/6e028_lucide-react_dist_esm_icons_f0deadde._.js",
+  "static/chunks/6e028_lucide-react_dist_esm_icons_dc0840a0._.js",
   "static/chunks/5013f_html2canvas_dist_html2canvas_2bd6da66.js",
   "static/chunks/8cc68_next_4c769536._.js",
   "static/chunks/a7ae1_@dnd-kit_core_dist_core_esm_38fb149e.js",
@@ -28,7 +28,7 @@
   "static/chunks/44636_react-day-picker_dist_esm_797c2380._.js",
   "static/chunks/35311_motion-dom_dist_es_9fdc1774._.js",
   "static/chunks/98be8_framer-motion_dist_es_32c1e5a3._.js",
-  "static/chunks/node_modules__pnpm_8afbec2b._.js"
+  "static/chunks/node_modules__pnpm_8ecb10eb._.js"
 ],
     source: "dynamic"
 });

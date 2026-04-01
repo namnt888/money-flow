@@ -1,40 +1,70 @@
------ MY
-Date	ID	Type	Tag	Amount	Cashback	FinalPrice	Sum	Note
-2026-01-02 07:10:00.000Z	f1cj6mriex12uj5	debt	2026-01	41000	0	41000	41000	2026-01 iCloud Slot: 1 - 246,000/6
-2026-01-02 17:00:00.000Z	4qh5pq0gr33xqvl	debt	2026-01	560000	0	560000	601000	1.6% của 35
-2026-01-02 17:00:00.000Z	0c1yt25bgj51hxa	debt	2026-01	35000000	0	35000000	35601000	Bank M 35tr T1
-2026-01-12 17:00:00.000Z	5sclr36zot8s6mz	debt	2026-01	79700	0	79700	35680700	Phúc Long
-2026-02-07 12:07:42.000Z	64lo7u7wjzv8ma9	debt	2026-02	41000	0	41000	35721700	2026-02 iCloud Slot: 1 - 246,000/6
-2026-02-14 10:28:24.274Z	mlkbz7mbc5rw93a	debt	2026-02	200000	0	200000	35921700	Phí 200k đắp đơn ip
-2026-03-01 02:00:00.000Z	7h9tea69syacp1h	debt	2026-03	41000	0	41000	35962700	My 2026-03 Slot: 1 (41,000)/6
----------LÂM
-Date	ID	Type	Tag	Amount	Cashback	FinalPrice	Sum	Note
-2025-12-20 05:00:00.000Z	swv9s8kl181w1zl	debt	2026-01	1654000	0	1654000	1654000	Derma giảm 50k Mbb
-2025-12-31 00:00:00.000Z	ae9e2x2tqzbhw6k	debt	2026-01	405700	0	405700	2059700	Rollover from 2025-12
-2026-01-02 07:09:46.000Z	13nfbqv5xd40vty	debt	2026-01	55333.33	0	55333.33	2115033.33	2026-01 Youtube Slot: 2 - 166,000/6
-2026-01-02 07:10:00.000Z	s5bxi31qye2cmpn	debt	2026-01	82000	0	82000	2197033.33	2026-01 iCloud Slot: 2 - 246,000/6
-2026-01-05 15:18:22.932Z	o8brc7p1mtqku8z	debt	2026-01	1806749	72269.95999999996	1734479.04	3931512.37	Điện T11 (1,769,588)
-2026-01-06 07:11:08.750Z	pvx75sl8lm6t4r2	debt	2026-01	1500000	0	1500000	5431512.37	Cream
-2026-01-14 17:00:00.000Z	xw8ku6squ0jcika	repayment	2026-01	765000	0	765000	4666512.37	Zakka: B3+Tricky (Vpbank -150k)
-2026-01-14 17:00:00.000Z	kgphg2bxut1m54v	debt	2026-01	1294780	103582.3999999999	1191197.6	5857709.970000001	Derma: 2 Rescuer (992.200) + 1 Zakka probi (302.580) 
-2026-01-14 17:00:00.000Z	8ao1cui54rvavx5	debt	2026-01	533600	0	533600	6391309.970000001	Derma: 2 Fairy (Vpb-100k)
-2026-01-15 04:19:08.025Z	kh5xfa4idah6wow	debt	2026-01	572000	45760	526240	6917549.970000001	Derma: 1 Roug + 1 Vic C 
-2026-01-24 17:00:00.000Z	dxissl5ldwxrcaj	debt	2026-01	526679	0	526679	7444228.970000001	Derma: 1 B5: (281.463) + 10 Bông TT (245.216)  -150k vpb
-2026-02-01 12:06:12.000Z	2vb88jq6xw80049	debt	2026-02	55333.33	0	55333.33	7499562.300000001	2026-02 Youtube Slot: 2 - 166,000/6
-2026-02-01 12:07:42.000Z	bmxk43ydsem5hwm	debt	2026-02	82000	0	82000	7581562.300000001	2026-02 iCloud Slot: 2 - 246,000/6
-2026-02-03 15:21:14.394Z	erhsxuum04lg15r	debt	2026-02	1741954	69678.15999999992	1672275.84	9253838.14	Điện T1 [1.076.033 fee 35.921]
-2026-02-04 16:00:26.147Z	c0xq4w9y4cbkhes	debt	2026-02	991420	0	991420	10245258.14	Derma: 1 HA B5 + 1 B3 -100k MSB
-2026-02-07 12:02:11.396Z	bw9xfaz8jf31hq6	debt	2026-02	504400	0	504400	10749658.14	Derma: 2 Vit C -50k Mb
-2026-02-19 04:12:11.860Z	cpp86r6e8l79f0b	repayment	2026-01	7320229	0	7320229	3429429.1400000006	Bank T1
-2026-02-25 03:48:18.817Z	p9i7mbwzgeagycb	debt	2026-03	707088	0	707088	4136517.1400000006	Derma: 1 B5 + 1 VitC, 3 Colgates [-50k Mb]
-2026-02-26 03:09:49.491Z	4rcviop8z29brw9	repayment	2026-02	18180000	0	18180000	-14043482.86	Bank PNJ
-2026-02-26 11:08:50.994Z	ona8dkddkr96b7m	debt	2026-02	18480000	300000	18180000	4136517.1400000006	PNJ
-2026-03-01 02:00:00.000Z	09zz6t4w4foopad	debt	2026-03	55333.333333333336	0	55333.333333333336	4191850.473333334	Lâm 2026-03 Slot: 2 (27,667)/6
-2026-03-01 02:00:00.000Z	9bdjy9thj4da8au	debt	2026-03	82000	0	82000	4273850.473333335	Lâm 2026-03 Slot: 2 (41,000)/6
-2026-03-02 10:22:50.667Z	047wzzcb4dzzadu	debt	2026-03	14500	0	14500	4288350.473333335	Shopee VIP T3 #Fee=29.000
-2026-03-03 00:30:12.127Z	jbkmi0t694awffd	debt	2026-03	918060	73444.80000000005	844615.2	5132965.673333335	Derma: 2 HA B5 + 1 AHA 
-2026-03-03 10:16:40.567Z	qy9xuxfos1n1afq	debt	2026-03	1623796	64951.840000000084	1558844.16	6691809.833333335	Điện T2 #Fee=33.604
-2026-03-04 00:43:52.590Z	my3lthps04yx0ug	debt	2026-03	1138956	91116.47999999998	1047839.52	7739649.353333335	Zakka: 2 SRM + Derma: 1 Rescuer
-2026-03-11 12:25:29.835Z	1c0zp342njjpc0h	debt	2026-03	191250	15300	175950	7915599.353333335	Bielende
-2026-03-12 12:00:57.201Z	4nqrzlhgye33az0	repayment	2026-02	4012517	0	4012517	3903082.3533333354	Bank T2-2026
-2026-03-12 12:40:23.720Z	o8d9fbtd91ul2xm	debt	2026-03	297000	23760	273240	4176322.3533333354	Derma: 1 toner HA B5
+## Error Type
+Console TypeError
+
+## Error Message
+Cannot read properties of null (reading 'baseLend')
+
+
+    at <anonymous> (src\services\people.service.ts:273:26)
+    at Array.forEach (<anonymous>:1:22)
+    at <anonymous> (src\services\people.service.ts:272:35)
+    at Array.map (<anonymous>:1:18)
+    at getPeople (src\services\people.service.ts:246:25)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
+
+## Code Frame
+  271 |       let dbLend = 0, dbBack = 0, dbRepay = 0;
+  272 |       Array.from(cycles.values()).forEach(c => {
+> 273 |          dbLend += c.raw.baseLend;
+      |                          ^
+  274 |          dbBack += c.raw.cashback;
+  275 |          dbRepay += c.raw.repaid;
+  276 |       });
+
+Next.js version: 16.0.10 (Turbopack)
+## Error Type
+Console Error
+
+## Error Message
+C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__3e8392ac._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+
+
+    at getPeople (src\services\people.service.ts:354:27)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
+
+## Code Frame
+  352 |       };
+  353 |     });
+> 354 |   } catch (err) { console.error("[PB] getPeople Error:", err); return []; }
+      |                           ^
+  355 | }
+  356 |
+  357 | export async function getPersonWithSubs(id: string): Promise<Person | null> {
+
+Next.js version: 16.0.10 (Turbopack)
+## Error Type
+Console Error
+
+## Error Message
+C:\Users\nam.thanhnguyen\Personal_Project\money-flow-3\.next-dev\dev\server\chunks\ssr\[root-of-the-server]__03ed81c3._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+
+
+    at getPeople (src\services\people.service.ts:354:27)
+    at Promise.all (<anonymous>:1:20)
+    at PeopleV2Page (src\app\people\page.tsx:18:66)
+    at PeopleV2Page (<anonymous>:null:null)
+
+## Code Frame
+  352 |       };
+  353 |     });
+> 354 |   } catch (err) { console.error("[PB] getPeople Error:", err); return []; }
+      |                           ^
+  355 | }
+  356 |
+  357 | export async function getPersonWithSubs(id: string): Promise<Person | null> {
+
+Next.js version: 16.0.10 (Turbopack)

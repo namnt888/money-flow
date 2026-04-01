@@ -117,18 +117,50 @@ async function PeopleDetailContent({
 
   // Fetch person details
   const person = await getPersonWithSubs(personId)
+  if (!person) notFound()
 
-  if (!person) {
-    notFound()
-  }
+  const resolvedSearchParams = await searchParams
+  const { tag, dateFrom, dateTo } = resolvedSearchParams as any
+  
+  const now = new Date()
+  const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const activeTag = tag || currentMonthTag
 
   const sourcePersonId = isUuid(person.id)
     ? person.id
     : (canonicalSourcePersonId && isUuid(canonicalSourcePersonId) ? canonicalSourcePersonId : person.id)
   const sheetProfileId = sourcePersonId
 
+  // Custom Date range calculation for shorthand tags
+  let effectiveDateFrom = dateFrom as string | undefined
+  let effectiveDateTo = dateTo as string | undefined
+
+  if (activeTag === '3m') {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 2) // Current + prev 2
+    d.setDate(1)
+    effectiveDateFrom = d.toISOString().split('T')[0]
+  } else if (activeTag === 'year') {
+    const d = new Date()
+    effectiveDateFrom = `${d.getFullYear()}-01-01`
+  }
+
+  // Preparation for transaction fetch
+  const profileRecordPromise = getPocketBasePeople().then(people => 
+    people.find((item: any) => item.id === sheetProfileId)
+  )
+
   // Fetch all required data in parallel
-  const [accounts, categories, people, shops, debtTags, cycleSheets, subscriptions] = await Promise.all([
+  const [
+    accounts, 
+    categories, 
+    people, 
+    shops, 
+    debtTags, 
+    cycleSheets, 
+    subscriptions,
+    transactions
+  ] = await Promise.all([
     getPocketBaseAccounts(),
     getPocketBaseCategories(),
     getPocketBasePeople(),
@@ -136,30 +168,27 @@ async function PeopleDetailContent({
     getDebtByTags(sourcePersonId),
     getPersonCycleSheets(sheetProfileId),
     getServices(),
-  ]) as any
-
-  // Handle group profiles
-  const profileRecord = people.find((item: any) => item.id === sheetProfileId)
-  const isGroupProfile = Boolean(profileRecord?.is_group)
-  const groupMemberIds = isGroupProfile
-    ? people
-      .filter((member: any) => member.group_parent_id === sheetProfileId)
-      .map((member: any) => member.id)
-    : []
-
-  const groupPersonIds = isGroupProfile
-    ? Array.from(new Set([sheetProfileId, ...groupMemberIds]))
-    : []
-
-  // Fetch transactions
-  const transactions = isGroupProfile
-    ? await getTransactionsByPeople(groupPersonIds, 2000, true)
-    : await getUnifiedTransactions({
-      personId: sourcePersonId,
-      limit: 2000,
-      context: 'person',
-      includeVoided: true,
+    profileRecordPromise.then(async (profileRecord) => {
+      const isGroupProfile = Boolean(profileRecord?.is_group)
+      if (isGroupProfile) {
+        const peopleList = await getPocketBasePeople()
+        const groupMemberIds = peopleList
+          .filter((member: any) => member.group_parent_id === sheetProfileId)
+          .map((member: any) => member.id)
+        const groupPersonIds = Array.from(new Set([sheetProfileId, ...groupMemberIds]))
+        return getTransactionsByPeople(groupPersonIds, 2000, true)
+      }
+      return getUnifiedTransactions({
+        personId: sourcePersonId,
+        limit: activeTag === 'all' ? 2005 : 1000,
+        context: 'person',
+        dateFrom: effectiveDateFrom,
+        dateTo: effectiveDateTo,
+        tag: (activeTag === 'all' || activeTag === '3m' || activeTag === 'year') ? undefined : activeTag,
+        includeVoided: true,
+      })
     })
+  ]) as any
 
   const balance = person.balance ?? 0
   const balanceLabel = balance > 0 ? 'They owe you' : balance < 0 ? 'You owe them' : 'Settled'

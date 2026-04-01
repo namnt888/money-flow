@@ -98,6 +98,12 @@ export function PeopleDirectoryV2({
   }, [people]);
 
   // Statistics
+  // Sync selected person with fresh data from people prop to avoid stale headers
+  const activePerson = useMemo(() => {
+    if (!selectedPerson) return null;
+    return people.find(p => p.id === selectedPerson.id) || selectedPerson;
+  }, [people, selectedPerson]);
+
   const stats = useMemo(() => {
     return {
       activeCount: people.filter(
@@ -370,8 +376,11 @@ export function PeopleDirectoryV2({
 
       <PeopleSlideV2
         open={isSlideOpen}
-        onOpenChange={setIsSlideOpen}
-        person={selectedPerson}
+        onOpenChange={(open) => {
+          setIsSlideOpen(open);
+          if (!open) setSelectedPerson(null);
+        }}
+        person={activePerson}
         subscriptions={subscriptions}
         accounts={accounts}
         defaultTab={personSlideTab}

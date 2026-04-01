@@ -24,6 +24,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 
 interface DebtCycle {
   tag: string
@@ -503,252 +510,139 @@ export function ManageSheetButton({
 
         <PopoverContent className="w-[700px] p-0 overflow-hidden shadow-2xl border border-slate-200 rounded-3xl bg-white" align={splitMode ? 'start' : 'end'} sideOffset={8}>
           <div className="flex flex-col max-h-[600px] bg-slate-50/10">
-            {/* Header with Tabs */}
-            <div className="px-8 pt-6 pb-6 bg-slate-50 border-b border-slate-200/60">
-              <div className="flex bg-slate-200/50 p-1.5 rounded-2xl w-fit">
-                <button
-                  type="button"
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all bg-white text-indigo-600 shadow-sm ring-1 ring-black/[0.03]"
-                >
-                  <History className="h-4 w-4" /> Debt History
-                </button>
-              </div>
-            </div>
-
-            {/* Filter Bar */}
-            <div className="px-8 py-5 flex items-center gap-4 bg-white sticky top-0 z-30 border-b border-slate-100 flex-nowrap overflow-x-auto scrollbar-hide">
-              <div className="relative flex-1 min-w-[200px] group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search dates (YYYY-MM)..."
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl pl-11 pr-4 h-12 text-[13px] font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all placeholder:text-slate-400"
-                />
-              </div>
-              <Select 
-                value={historyYear} 
-                onValueChange={(val) => setHistoryYear(val || 'all')}
-                items={[
-                  { value: 'all', label: 'All Years' },
-                  ...cycleYears.map(y => ({ value: y, label: y }))
-                ]}
-                className="h-12 w-32 bg-slate-50 border-slate-100 rounded-2xl font-bold text-slate-700 text-[11px] uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm border shrink-0"
-                placeholder="Year"
-              />
-            </div>
-
-            {/* Filter Summary Indicator */}
-            <div className="px-8 py-2.5 bg-slate-50/50 border-y border-slate-100 flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    {historySearch ? `Results for "${historySearch}"` : historyYear === 'all' ? 'All History Trace' : `${historyYear} History`}
-                </span>
-            </div>
-
-            {/* Cycles List */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-              {/* CURRENT SELECTION AT TOP */}
-              <div className="space-y-4">
-                <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-1 z-10 flex items-center gap-4">
-                  <span className="text-[10px] font-black text-indigo-500 tracking-[0.3em] uppercase">Selection</span>
-                  <div className="h-px flex-1 bg-indigo-100/50" />
-                </div>
-                
-                {pendingCycleTag === 'all' ? (
-                  <div className={cn(
-                    "group flex items-center p-0 rounded-[1.5rem] transition-all border text-left relative overflow-hidden h-[60px] bg-white border-blue-400 shadow-[0_10px_30px_rgba(59,130,246,0.1)] ring-1 ring-blue-50",
-                    activeCycleResolved?.tag === '' && "border-emerald-400 ring-emerald-50 shadow-emerald-500/10"
-                  )}>
-                    <div className="flex-1 h-full flex items-center px-6 gap-4">
-                        <div className={cn(
-                          "h-10 w-10 rounded-xl flex items-center justify-center shadow-md",
-                          activeCycleResolved?.tag === '' ? "bg-emerald-600 text-white" : "bg-blue-600 text-white"
-                        )}>
-                          <History className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-black tracking-tight text-slate-900 uppercase">
-                             {historyYear === 'all' ? 'All Time History' : `All History ${historyYear}`}
-                          </span>
-                          {activeCycleResolved?.tag === '' && <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Active View</span>}
-                        </div>
-                    </div>
-                    
-                    {activeCycleResolved?.tag !== '' ? (
-                      <div className="w-[120px] h-full border-l border-slate-100 bg-blue-50/20 flex items-stretch">
-                        <button
-                          onClick={() => {
-                            if (historyYear === 'all') {
-                                onCycleChange?.('all')
-                            } else {
-                                // If a specific year is chosen, we switch to All of that year
-                                if (onYearChange) onYearChange(historyYear)
-                                else onCycleChange?.('all')
-                            }
-                            setShowPopover(false)
-                          }}
-                          className="flex-1 flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-slate-900 text-white transition-all shadow-md active:scale-95 group/btn"
-                        >
-                          <Zap className="h-4 w-4 transition-transform group-hover/btn:scale-125" />
-                          <span className="text-[10px] font-black uppercase tracking-widest leading-none">Switch</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-[80px] h-full border-l border-slate-100 bg-emerald-50/20 flex items-center justify-center">
-                        <div className="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-500">
-                          <Check className="h-5 w-5" strokeWidth={3} />
-                        </div>
-                      </div>
-                    )}
+            {/* 1. COMPACT CONSOLIDATED STICKY HEADER */}
+            <div className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+              {/* Main Row: Title + All Button + Search + Filter */}
+              <div className="px-5 py-3 flex items-center gap-3">
+                {/* Title Badge & All Switch */}
+                <div className="flex items-center bg-slate-100/80 p-0.5 rounded-xl shrink-0">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all bg-white text-indigo-600 shadow-sm ring-1 ring-black/[0.03] uppercase tracking-wider">
+                    <History className="h-3.5 w-3.5" /> History
                   </div>
-                ) : (() => {
-                  const selectedCycle = allCycles.find(c => c.tag === pendingCycleTag)
-                  if (!selectedCycle) return null
                   
-                  const settled = selectedCycle.remains <= 100 // Threshold for settled
-                  const stats = selectedCycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
-                  const initial = stats.originalLend || 0
-                  const cashback = stats.cashback || 0
-                  const repaid = stats.repay || 0
-                  const remains = selectedCycle.remains
-
-                  const isCurrentlyActive = activeCycleResolved?.tag === pendingCycleTag
-
-                  return (
-                    <div className={cn(
-                      "group flex items-center p-0 rounded-[1.5rem] transition-all border text-left relative overflow-hidden h-[80px] bg-white ring-1",
-                      isCurrentlyActive ? "border-emerald-400 ring-emerald-50 shadow-emerald-500/10" : "border-indigo-400 ring-indigo-50 shadow-[0_15px_40px_rgba(79,70,229,0.12)]"
-                    )}>
-                      {/* Left: Cycle Section */}
-                      <div className={cn(
-                        "w-[100px] h-full flex flex-col items-center justify-center border-r border-slate-100/80 transition-colors shrink-0",
-                        isCurrentlyActive ? "bg-emerald-50/50" : "bg-indigo-50/50"
-                      )}>
-                        <span className={cn(
-                          "text-lg font-black tracking-tight tabular-nums",
-                          isCurrentlyActive ? "text-emerald-600" : "text-indigo-600"
-                        )}>
-                          {selectedCycle.tag}
-                        </span>
-                        {isCurrentlyActive && (
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">Active</span>
-                          </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ml-0.5 group",
+                          (cycleTag === 'all' || cycleTag === '3m' || cycleTag === 'year') 
+                            ? "text-emerald-600 bg-emerald-50 shadow-sm" 
+                            : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                         )}
-                      </div>
+                      >
+                        <Zap className={cn("h-3 w-3", (cycleTag === 'all' || cycleTag === '3m' || cycleTag === 'year') && "fill-emerald-600")} />
+                        {cycleTag === '3m' ? 'Last 3M' : cycleTag === 'year' ? 'This Yr' : 'All'}
+                        <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[180px] p-1 rounded-2xl shadow-2xl border-slate-200">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          const now = new Date()
+                          const currentTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+                          onCycleChange?.(currentTag)
+                          setShowPopover(false)
+                        }}
+                        className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                      >
+                        Current Month
+                        {cycleTag !== 'all' && cycleTag !== '3m' && cycleTag !== 'year' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          onCycleChange?.('3m')
+                          setShowPopover(false)
+                        }}
+                        className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                      >
+                        Last 3 Months
+                        {cycleTag === '3m' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          onCycleChange?.('year')
+                          setShowPopover(false)
+                        }}
+                        className="flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 cursor-pointer"
+                      >
+                        Entire Year
+                        {cycleTag === 'year' && <Check className="h-3.5 w-3.5 text-indigo-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          onCycleChange?.('all')
+                          setShowPopover(false)
+                        }}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
+                      >
+                        All-Time History
+                        {cycleTag === 'all' && <Check className="h-3.5 w-3.5 text-rose-500" />}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-                      {/* Right Data: 4 Column Grid */}
-                      <div className="flex-1 h-full flex items-stretch overflow-hidden">
-                        <div className="flex-1 grid grid-cols-4 px-2 min-w-0">
-                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 pr-3">
-                            <span className="text-[9px] font-bold text-slate-400 tracking-tight leading-none mb-1 uppercase">Initial</span>
-                            <span className="text-[13px] font-bold text-slate-700 tabular-nums">
-                              {numberFormatter.format(initial)}
-                            </span>
-                          </div>
-                          <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
-                            <span className="text-[9px] font-bold text-orange-400 tracking-tight leading-none mb-1 uppercase">Back</span>
-                            <span className="text-[12px] font-black text-orange-500 tabular-nums">
-                              -{numberFormatter.format(cashback)}
-                            </span>
-                          </div>
-                          <div className={cn("flex flex-col justify-center items-end text-right border-r border-slate-100 px-3", settled && "border-r-0")}>
-                            <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1 uppercase">Repaid</span>
-                            <span className="text-[12px] font-black text-emerald-600 tabular-nums">
-                              {numberFormatter.format(repaid)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-end pl-3">
-                            {settled ? (
-                              <div className="flex flex-col justify-center items-end text-right w-full">
-                                  <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1 uppercase">Status</span>
-                                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none font-black text-[10px] uppercase tracking-wider py-0.5">Settled</Badge>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col justify-center items-end text-right w-full">
-                                <span className="text-[9px] font-bold text-rose-400 tracking-tight leading-none mb-1 uppercase">Remains</span>
-                                <span className={cn("text-[13px] font-black tabular-nums transition-colors text-rose-600")}>
-                                  {numberFormatter.format(remains)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                {/* Search Bar - Shrinked */}
+                <div className="relative flex-1 group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Search YYYY-MM..."
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    className="w-full bg-slate-50/80 border border-slate-100 rounded-xl pl-9 pr-3 h-9 text-[12px] font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all placeholder:text-slate-400"
+                  />
+                </div>
 
-                        {/* Action Column */}
-                        <div className={cn(
-                          "w-[100px] border-l border-slate-100 flex items-stretch shrink-0",
-                          isCurrentlyActive ? "bg-emerald-50/20" : "bg-indigo-50/20"
-                        )}>
-                          {!isCurrentlyActive ? (
-                             <button
-                               onClick={() => onCycleChange?.(pendingCycleTag)}
-                               className="flex-1 flex flex-col items-center justify-center gap-1 bg-indigo-600 hover:bg-slate-900 text-white transition-all shadow-md active:scale-95 group/btn"
-                             >
-                                <Zap className="h-4 w-4 transition-transform group-hover/btn:scale-125" />
-                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Switch</span>
-                             </button>
-                          ) : (
-                            <div className="flex-1 flex items-center justify-center">
-                              <div className={cn(
-                                "h-10 w-10 rounded-full text-white flex items-center justify-center shadow-lg animate-in zoom-in-50 duration-500",
-                                settled ? "bg-emerald-500 shadow-emerald-500/20" : "bg-emerald-400 shadow-emerald-400/20"
-                              )}>
-                                <Check className="h-5 w-5" strokeWidth={3} />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
+                {/* Year Selection - Smaller */}
+                {cycleYears.length > 0 && (
+                  <Select 
+                    value={historyYear} 
+                    onValueChange={(val) => setHistoryYear(val || 'all')}
+                    items={[
+                      { value: 'all', label: 'All Yrs' },
+                      ...cycleYears.map(y => ({ value: y, label: y }))
+                    ]}
+                    className="h-9 w-[100px] bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 text-[10px] uppercase tracking-wider hover:bg-slate-100 transition-all border shrink-0"
+                    placeholder="Year"
+                  />
+                )}
               </div>
 
-              {pendingCycleTag !== 'all' && (
-                <div className="space-y-4">
-                   <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-1 z-10 flex items-center gap-4">
-                    <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">Actions</span>
-                    <div className="h-px flex-1 bg-slate-100/80" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPendingCycleTag('all')}
-                    className="group flex flex-col px-6 rounded-3xl transition-all border text-left relative overflow-hidden bg-white border-slate-100 hover:border-slate-300 shadow-sm h-14 justify-center"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-xl flex items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                          <History className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-bold tracking-tight text-slate-500 group-hover:text-slate-900 transition-colors">
-                          SWITCH TO ALL TIME VIEW
-                        </span>
-                      </div>
-                    </div>
-                  </button>
+              {/* Sub-header: Column Labels - Also Sticky */}
+              <div className="px-5 py-2 bg-slate-50/30 border-t border-slate-50 flex items-center">
+                <div className="min-w-[100px] flex items-center">
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Time Cycle</span>
                 </div>
-              )}
+                <div className="flex-1 grid grid-cols-4 items-center">
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Initial</span>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Back</span>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Repaid</span>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Result</span>
+                </div>
+              </div>
+            </div>
 
-              {groupedFilteredCycles.length === 0 ? (
-                <div className="py-24 text-center flex flex-col items-center">
-                  <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                    <Search className="h-10 w-10 text-slate-200" />
+            {/* 2. SCROLLABLE CYCLES LIST */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              <div className="space-y-1.5">
+                {groupedFilteredCycles.length === 0 ? (
+                  <div className="py-24 text-center flex flex-col items-center">
+                    <Search className="h-10 w-10 text-slate-200 mb-4" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No cycles found</p>
                   </div>
-                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">No other cycles found</p>
-                </div>
-              ) : (
-                groupedFilteredCycles.map((group) => (
-                  <div key={group.year} className="space-y-4">
-                    <div className="px-2 sticky top-0 bg-white/95 backdrop-blur-sm py-2.5 z-10 flex items-center gap-4">
-                      <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">{group.year}</span>
-                      <div className="h-px flex-1 bg-slate-100/80" />
-                    </div>
-                    <div className="grid gap-6">
+                ) : (
+                  groupedFilteredCycles.map((group) => (
+                    <div key={group.year} className="space-y-1.5">
+                      {/* Year Indicator within list */}
+                      <div className="px-2 py-1.5 flex items-center gap-3">
+                        <span className="text-[9px] font-black text-slate-300 tracking-[0.2em] uppercase">{group.year}</span>
+                        <div className="h-px flex-1 bg-slate-100/50" />
+                      </div>
+                      
                       {group.cycles.map((cycle) => {
+                        const isSelected = cycleTag === cycle.tag // This is the actual active cycle from props
                         const settled = Math.abs(cycle.remains) <= 100
                         const stats = cycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
                         const initial = stats.originalLend || 0
@@ -760,77 +654,95 @@ export function ManageSheetButton({
                           <button
                             key={cycle.tag}
                             type="button"
-                            onClick={() => setPendingCycleTag(cycle.tag)}
-                            className="group flex items-center p-0 rounded-[1.5rem] transition-all border border-slate-100 hover:border-slate-200 hover:shadow-md text-left relative overflow-hidden h-[80px] bg-white"
+                            onClick={() => {
+                              onCycleChange?.(cycle.tag)
+                              setShowPopover(false)
+                            }}
+                            className={cn(
+                              "w-full text-left rounded-xl border transition-all duration-200 relative overflow-hidden flex h-12 items-center group/row",
+                              isSelected 
+                                ? "bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100/50" 
+                                : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/50"
+                            )}
                           >
                             {/* Left: Cycle Section */}
-                            <div className="min-w-[100px] h-full flex items-center justify-center border-r border-slate-100/80 bg-slate-50/30">
-                              <span className="text-lg font-bold tracking-tight tabular-nums text-slate-800">
+                            <div className={cn(
+                                "min-w-[100px] px-3 py-2 flex flex-col justify-center border-r h-[70%] my-auto",
+                                isSelected ? "border-amber-100" : "border-slate-50"
+                            )}>
+                              <span className={cn(
+                                "text-sm font-black tracking-tight leading-none mb-0.5",
+                                isSelected ? "text-amber-700" : "text-slate-900"
+                              )}>
                                 {cycle.tag}
                               </span>
+                              <span className={cn(
+                                "text-[8px] font-bold uppercase tracking-tight leading-none",
+                                isSelected ? "text-amber-500" : "text-slate-300"
+                              )}>CYCLE</span>
                             </div>
 
                             {/* Right: Data Sections */}
-                            <div className="flex-1 h-full grid grid-cols-4 px-2">
-                              <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 pr-3">
-                                <span className="text-[9px] font-bold text-slate-400 tracking-tight leading-none mb-1">Initial</span>
-                                <span className="text-[13px] font-bold text-slate-700 tabular-nums">
-                                  {numberFormatter.format(initial)}
+                            <div className="flex-1 h-full grid grid-cols-4 items-center">
+                              <div className={cn("flex flex-col items-center justify-center h-full border-r px-1 overflow-hidden", isSelected ? "border-amber-100/50" : "border-slate-50")}>
+                                <span className={cn("text-[13px] font-bold tabular-nums truncate w-full text-center", isSelected ? "text-amber-900" : "text-slate-700")}>
+                                  {numberFormatter.format(Math.round(initial))}
                                 </span>
                               </div>
-                              <div className="flex flex-col justify-center items-end text-right border-r border-slate-100 px-3">
-                                <span className="text-[9px] font-bold text-orange-400 tracking-tight leading-none mb-1">Total Back</span>
-                                <span className="text-[13px] font-bold text-orange-500 tabular-nums">
-                                  -{numberFormatter.format(cashback)}
+                              <div className={cn("flex flex-col items-center justify-center h-full border-r px-1 overflow-hidden", isSelected ? "border-amber-100/50" : "border-slate-50")}>
+                                <span className="text-[13px] font-bold text-orange-500 tabular-nums truncate w-full text-center">
+                                  {cashback > 0 ? `-${numberFormatter.format(Math.round(cashback))}` : '0'}
                                 </span>
                               </div>
-                              <div className={cn("flex flex-col justify-center items-end text-right px-3", !settled && "border-r border-slate-100")}>
-                                <span className="text-[9px] font-bold text-emerald-400 tracking-tight leading-none mb-1">Repaid</span>
-                                <span className="text-[13px] font-bold text-emerald-600 tabular-nums">
-                                  {numberFormatter.format(repaid)}
+                              <div className={cn("flex flex-col items-center justify-center h-full border-r px-1 overflow-hidden", isSelected ? "border-amber-100/50" : "border-slate-50")}>
+                                <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
+                                  {numberFormatter.format(Math.round(repaid))}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-end pl-3">
+                              <div className="h-full flex items-center justify-center px-2 min-w-0">
                                 {settled ? (
-                                  <div className="h-full w-full py-2 flex items-center justify-center">
-                                    <div className="bg-emerald-500 text-white rounded-xl w-full h-[80%] flex flex-col items-center justify-center shadow-lg">
-                                      <span className="text-[9px] font-bold tracking-widest leading-none mb-0.5">Status</span>
-                                      <span className="text-[11px] font-bold leading-none">Settled</span>
-                                    </div>
+                                  <div className={cn(
+                                    "h-7 px-3 rounded-lg flex items-center justify-center shrink-0 w-fit",
+                                    isSelected ? "bg-emerald-500 text-white shadow-sm" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                  )}>
+                                    <span className="text-[8px] font-black uppercase tracking-widest leading-none">SETTLED</span>
                                   </div>
                                 ) : (
-                                  <div className="flex flex-col justify-center items-end text-right w-full">
-                                    <span className="text-[9px] font-bold text-rose-400 tracking-tight leading-none mb-1">Remains</span>
-                                    <div className="bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
-                                      <span className="text-[13px] font-bold text-rose-600 tabular-nums">
-                                        {numberFormatter.format(remains)}
-                                      </span>
-                                    </div>
+                                  <div className={cn(
+                                    "flex flex-col items-center justify-center py-1 px-3 rounded-lg shrink-0 w-fit min-w-[70px]",
+                                    isSelected ? "bg-rose-500 text-white shadow-sm" : "bg-rose-50 border border-rose-100"
+                                  )}>
+                                    <span className={cn("text-[12px] font-black tabular-nums", isSelected ? "text-white" : "text-rose-600")}>
+                                      {numberFormatter.format(Math.abs(Math.round(remains)))}
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             </div>
+
+                            {/* Hover Switch Indicator */}
+                            <div className="absolute right-0 top-0 h-full w-1 bg-indigo-500 opacity-0 group-hover/row:opacity-100 transition-opacity" />
                           </button>
                         )
                       })}
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
 
-            {/* Action Bar */}
-            <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
-              <Button
-                size="lg"
-                className="flex-1 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-[0.98] shadow-2xl shadow-slate-200 disabled:opacity-30"
-                disabled={!pendingCycleTag || (pendingCycleTag === cycleTag && (pendingCycleTag !== 'all' || historyYear === selectedYear))}
-                onClick={handleApply}
-              >
-                Switch to {pendingCycleTag === 'all' 
-                  ? (historyYear === 'all' ? 'All History' : `History ${historyYear}`)
-                  : (pendingCycleTag?.toUpperCase() || 'Cycle')}
-              </Button>
+            {/* 3. COMPACT FOOTER */}
+            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white text-[10px] font-bold text-slate-400">
+               <div className="flex items-center gap-2">
+                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                 <span className="uppercase tracking-widest">Active: {cycleTag}</span>
+               </div>
+               <button 
+                 onClick={() => setShowPopover(false)}
+                 className="px-4 py-1.5 rounded-lg hover:bg-slate-50 transition-colors uppercase tracking-widest text-slate-400 hover:text-slate-600"
+               >
+                 Close
+               </button>
             </div>
           </div>
         </PopoverContent>

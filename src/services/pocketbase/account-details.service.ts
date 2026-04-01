@@ -28,6 +28,7 @@ import {
   pocketbaseRequest,
   toPocketBaseId,
 } from "./server";
+import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolvePocketBasePersonRecord } from "./people.service";
 import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
 
@@ -383,36 +384,55 @@ async function listAllRecords(
   return allItems;
 }
 
+// Request-level cache for account record resolution to avoid redundant DB hits
+const accountRecordCache = new Map<string, PocketBaseRecord | null>();
+
 async function resolvePocketBaseAccountRecord(
   sourceOrPocketBaseId: string,
 ): Promise<PocketBaseRecord | null> {
-  try {
-    return await pocketbaseGetById<PocketBaseRecord>(
-      "accounts",
-      sourceOrPocketBaseId,
-    );
-  } catch {
-    // fallthrough: id may be source UUID, not PB id
+  if (accountRecordCache.has(sourceOrPocketBaseId)) {
+    return accountRecordCache.get(sourceOrPocketBaseId) ?? null;
   }
 
-  const hashedPocketBaseId = toPocketBaseId(sourceOrPocketBaseId, "accounts");
-  if (hashedPocketBaseId !== sourceOrPocketBaseId) {
+  const fetchAndCache = async () => {
     try {
-      return await pocketbaseGetById<PocketBaseRecord>(
+      const record = await pocketbaseGetById<PocketBaseRecord>(
         "accounts",
-        hashedPocketBaseId,
+        sourceOrPocketBaseId,
       );
+      if (record) return record;
     } catch {
       // fallthrough
     }
-  }
 
-  const bySlug = await pocketbaseList<PocketBaseRecord>("accounts", {
-    perPage: 1,
-    filter: `slug='${sourceOrPocketBaseId}'`,
-  });
+    const hashedPocketBaseId = toPocketBaseId(sourceOrPocketBaseId, "accounts");
+    if (hashedPocketBaseId !== sourceOrPocketBaseId) {
+      if (accountRecordCache.has(hashedPocketBaseId)) {
+        return accountRecordCache.get(hashedPocketBaseId) ?? null;
+      }
+      try {
+        const record = await pocketbaseGetById<PocketBaseRecord>(
+          "accounts",
+          hashedPocketBaseId,
+        );
+        if (record) return record;
+      } catch {
+        // fallthrough
+      }
+    }
 
-  return bySlug.items?.[0] ?? null;
+    const bySlug = await pocketbaseList<PocketBaseRecord>("accounts", {
+      perPage: 1,
+      filter: `slug='${sourceOrPocketBaseId}'`,
+    });
+
+    return bySlug.items?.[0] ?? null;
+  };
+
+  const result = await fetchAndCache();
+  accountRecordCache.set(sourceOrPocketBaseId, result);
+  if (result?.id) accountRecordCache.set(result.id, result);
+  return result;
 }
 
 export async function getPocketBaseCategories(): Promise<Category[]> {
@@ -1148,17 +1168,15 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     {
       // Primary attempt: filter by cycle tag directly in DB for high performance
       filter: resolvedCycleTag 
-        ? `account_id='${pocketBaseAccountId}' && (persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')`
+        ? `account_id='${pocketBaseAccountId}' && (debt_cycle_tag='${resolvedCycleTag}' || persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')`
         : `account_id='${pocketBaseAccountId}'`,
       sort: "-date,id",
-      fields:
-        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
+      fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag",
     },
     {
       // Fallback: search by date range if tag filter yields nothing or tag is missing
       filter: `account_id='${pocketBaseAccountId}'`,
-      fields:
-        "id,amount,type,category_id,cashback_amount,cashback_share_percent,cashback_share_fixed,metadata,date,occurred_at,note,description,tag,persisted_cycle_tag,statement_cycle_tag",
+      fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag",
     },
   ];
 
@@ -1177,7 +1195,15 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       for (const tx of fetchedResults) {
         if (tx.id) uniqueMap.set(tx.id, tx);
       }
-      rawTransactions = Array.from(uniqueMap.values());
+
+      // Post-filter to ensure strict 'Truth' tag matching
+      // If a transaction was moved to another tag (T4), but DB still has old persisted_tag (T3),
+      // the fetch above might find it. We MUST exclude it here to keep the balance correct.
+      rawTransactions = Array.from(uniqueMap.values()).filter((tx: any) => {
+        const metadata = tx.metadata && typeof tx.metadata === 'object' ? tx.metadata : {};
+        const truthTag = normalizeMonthTag(tx.debt_cycle_tag || tx.tag || metadata.debt_cycle_tag || metadata.tag || "");
+        return normalizeMonthTag(truthTag || "") === normalizeMonthTag(resolvedCycleTag || "");
+      });
 
       console.log(
         "[DB:PB] account spending stats: transaction query succeeded",
@@ -1216,13 +1242,14 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     const metadata =
       tx.metadata && typeof tx.metadata === "object" ? tx.metadata : {};
     const txCycleTag =
+      normalizeMonthTag(tx.debt_cycle_tag || tx.tag || metadata?.debt_cycle_tag || metadata?.tag || tx.persisted_cycle_tag || tx.statement_cycle_tag) || 
       tx.persisted_cycle_tag ||
       tx.statement_cycle_tag ||
-      tx.tag ||
-      metadata?.persisted_cycle_tag ||
-      metadata?.statement_cycle_tag ||
       null;
-    if (resolvedCycleTag && txCycleTag) return String(txCycleTag) === resolvedCycleTag;
+
+    if (resolvedCycleTag) {
+        return normalizeMonthTag(txCycleTag) === normalizeMonthTag(resolvedCycleTag);
+    }
 
     const txDateRaw = tx.occurred_at || tx.date;
     const txDate = txDateRaw ? new Date(txDateRaw) : null;

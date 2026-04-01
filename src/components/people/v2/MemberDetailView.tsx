@@ -10,7 +10,7 @@ import { SimpleTransactionTableSkeleton } from '@/components/people/v2/SimpleTra
 import { PaidTransactionsModal } from '@/components/people/paid-transactions-modal'
 import { PeopleHeader } from '@/components/people/v2/PeopleHeader'
 import { TransactionControlBar } from '@/components/people/v2/TransactionControlBar'
-import { isYYYYMM, normalizeMonthTag, toYYYYMMFromDate } from '@/lib/month-tag'
+import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
 import { useRecentItems } from '@/hooks/use-recent-items'
 import { useBreadcrumbs } from '@/context/breadcrumb-context'
 import { TransactionSlideV2 } from '@/components/transaction/slide-v2/transaction-slide-v2'
@@ -62,8 +62,7 @@ export function MemberDetailView({
     const urlTag = searchParams.get('tag')
     const dateFrom = searchParams.get('dateFrom') || ''
     const dateTo = searchParams.get('dateTo') || ''
-    const currentMonthTag = toYYYYMMFromDate(new Date())
-
+    
     const [activeTab, setActiveTab] = useState<'timeline' | 'split-bill'>('timeline')
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
@@ -129,6 +128,11 @@ export function MemberDetailView({
 
     // Derive active month/year from URL (Single Source of Truth)
     const urlYear = searchParams.get('year')
+    const currentMonthTag = useMemo(() => {
+        const d = new Date()
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    }, [])
+
     const activeCycleTag = useMemo(() => {
         if (urlTag) {
             return urlTag
@@ -175,6 +179,8 @@ export function MemberDetailView({
         }
         return new Date().getFullYear().toString()
     }, [urlTag, urlYear, activeCycleTag, person.is_master_sheet_enabled])
+    
+    const isFilteredByYear = !!selectedYear && selectedYear !== 'all'
 
     // Data Hooks
     const { debtCycles, availableYears, currentCycle } = usePersonDetails({
@@ -354,7 +360,8 @@ export function MemberDetailView({
 
     const handleClearDateRange = () => {
         const params = new URLSearchParams(searchParams.toString())
-        params.set('tag', 'all')
+        // Default to current month for performance
+        params.set('tag', currentMonthTag)
         params.delete('year')
         params.delete('dateFrom')
         params.delete('dateTo')
@@ -401,7 +408,8 @@ export function MemberDetailView({
         if (!value) {
             const params = new URLSearchParams(searchParams.toString())
             params.delete('accountId')
-            if (!urlTag) params.set('tag', 'all')
+            // Per user request: back to current month when clearing filters
+            params.set('tag', currentMonthTag)
             params.delete('year')
             params.delete('dateFrom')
             params.delete('dateTo')
@@ -463,9 +471,6 @@ export function MemberDetailView({
 
     // Calculate stats for Header based on Selected Cycle, Year or All Time
     const headerStats = useMemo(() => {
-        const now = new Date()
-        const currentMonthTag = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-        
         let originalLend = 0
         let cashback = 0
         let netLend = 0
@@ -489,9 +494,8 @@ export function MemberDetailView({
                 cashback += c.stats.cashback || 0
                 netLend += c.stats.lend || 0
                 repay += c.stats.repay || 0
-                // Calculate net remains and treat negative (surplus) as 0
                 const cycleNet = (c.stats.lend || 0) - (c.stats.repay || 0)
-                remains += (cycleNet > 0 ? cycleNet : 0)
+                remains += cycleNet
                 paidRollover += c.stats.paidRollover || 0
                 receiveRollover += c.stats.receiveRollover || 0
             })
@@ -505,21 +509,18 @@ export function MemberDetailView({
                 netLend = cycle.stats.lend || 0
                 repay = cycle.stats.repay || 0
                 
-                // Requirement: Remains is calculated for entire year (or all time)
-                // Filter only cycles from 2026 onwards for the running total
-                const cycleYear = parseInt(effectiveTag.split('-')[0])
-                
-                if (cycleYear >= 2026) {
+                // If single cycle is selected, Header MUST only show that cycle's remains
+                if (urlTag !== 'all' || (activeCycleTag !== 'all' && !isFilteredByYear)) {
+                    remains = (cycle.stats.lend || 0) - (cycle.stats.repay || 0)
+                } else {
+                    // Filter only cycles from current context's year for the running total
                     const currentYearStr = effectiveTag.split('-')[0]
                     const yearCycles = debtCycles.filter(c => c.tag.startsWith(currentYearStr))
+                    
                     remains = yearCycles.reduce((sum, c) => {
                         const net = (c.stats.lend || 0) - (c.stats.repay || 0)
-                        return sum + (net > 0 ? net : 0)
+                        return sum + net
                     }, 0)
-                } else {
-                    // For legacy years, just show its own remains to avoid confusion
-                    const cycleNet = (cycle.stats.lend || 0) - (cycle.stats.repay || 0)
-                    remains = cycleNet > 0 ? cycleNet : 0
                 }
                 
                 paidRollover = cycle.stats.paidRollover || 0
@@ -531,13 +532,15 @@ export function MemberDetailView({
         // Requirement from task.md: "SOURCE OF TRUTH: If an Account filter is active, the Reward section MUST display Global Account Data"
         // Also "RE-CALCULATE "Remains": Remains = Original Spend - Correct Cashback."
         if (selectedAccountId && accountGlobalCashbackStatus) {
+            // Note: If account spending query failed (Returned null or 0 spend)
+            // AND we have local debtCycle data showing Initial > 0, we check if we should override.
+            // Requirement says OVERRIDE, so we trust the Spending Stats truth.
             originalLend = accountGlobalCashbackStatus.currentSpend || 0
             cashback = accountGlobalCashbackStatus.earnedSoFar || 0
-            // Naming from task.md: Remains = Original Spend - Correct Cashback
-            remains = originalLend - cashback
             
-            // keep repay and rollovers from local person context if we still want to show them 
-            // in the StatsPopover, but for the main summary cards, we use global spend/cashback.
+            // Fix: If an account is selected, we should still subtract the REPAID amount from the person's context
+            // to show the REAL remains the person still owes for that account's spending.
+            remains = Math.max(0, originalLend - cashback - repay)
         }
 
         return { originalLend, cashback, netLend, repay, remains, paidRollover, receiveRollover }
@@ -1021,12 +1024,13 @@ export function MemberDetailView({
                         onToggleCycleTag={setIsCycleTagVisible}
                     />
                     <div className="flex-1 overflow-y-auto px-4 py-3 relative">
-                        {(isSubmitting || isGlobalLoading) && (
+                        {(isSubmitting || isGlobalLoading || isPending) && (
                             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[120] pointer-events-none">
                                 <div className="flex items-center gap-3 bg-slate-900/95 shadow-2xl border border-slate-800 px-6 py-3 rounded-full text-white animate-in fade-in slide-in-from-bottom-4 duration-200">
                                     <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
                                     <span className="text-[11px] font-black uppercase tracking-widest leading-none">
                                         {isGlobalLoading ? (loadingMessage || 'Executing...') :
+                                          isPending ? 'Refreshing Data...' :
                                             slideMode === 'edit' ? 'Updating...' :
                                                 slideMode === 'duplicate' ? 'Cloning...' :
                                                     'Saving...'}

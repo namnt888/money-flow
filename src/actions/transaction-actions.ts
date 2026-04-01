@@ -50,6 +50,9 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   revalidatePath('/');
   revalidatePath('/people');
+  if (input.person_id) {
+    revalidatePath(`/people/${input.person_id}`);
+  }
   revalidatePath('/transactions');
   revalidatePath('/txn/v2');
   return transactionId;
@@ -58,12 +61,24 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 export async function updateTransaction(id: string, input: CreateTransactionInput): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'pvl_txn_001');
   
+  // Get existing for revalidation of old person if changed
+  const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+  
   // 1. PB-PRIMARY Write (+ sheet sync handled inside service)
   const success = await updatePBTransaction(pbId, input as any);
   if (!success) return false;
 
   revalidatePath('/');
   revalidatePath('/people');
+  
+  // Revalidate both old and new person
+  if (existing?.person_id) {
+    revalidatePath(`/people/${existing.person_id}`);
+  }
+  if (input.person_id && input.person_id !== existing?.person_id) {
+    revalidatePath(`/people/${input.person_id}`);
+  }
+  
   revalidatePath('/transactions');
   revalidatePath('/txn/v2');
   return true;
@@ -71,11 +86,18 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
 
 export async function voidTransactionAction(id: string): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'pvl_txn_001');
+  
+  // Need to get the person_id before voiding to revalidate their page
+  const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+  
   // Sheet sync is handled inside service layer.
   const success = await voidPBTransaction(pbId);
   if (success) {
     revalidatePath('/');
     revalidatePath('/people');
+    if (existing?.person_id) {
+      revalidatePath(`/people/${existing.person_id}`);
+    }
     revalidatePath('/transactions');
     revalidatePath('/txn/v2');
   }
@@ -142,6 +164,10 @@ export async function restoreTransaction(id: string): Promise<boolean> {
     }
 
     revalidatePath('/transactions');
+    revalidatePath('/people');
+    if (existing?.person_id) {
+        revalidatePath(`/people/${existing.person_id}`);
+    }
     return true;
   } catch (error) {
     console.error('[DB:PB] restoreTransaction failed:', error);
@@ -174,6 +200,10 @@ export async function updateTransactionMetadata(id: string, metadata: any): Prom
 
     await pocketbaseUpdate('pvl_txn_001', pbId, { metadata: newMetadata });
     revalidatePath('/transactions');
+    revalidatePath('/people');
+    if (existing?.person_id) {
+        revalidatePath(`/people/${existing.person_id}`);
+    }
     return true;
   } catch (error) {
     console.error('[DB:PB] updateTransactionMetadata failed:', error);
@@ -205,6 +235,7 @@ export async function deleteSplitBillAction(baseTransactionId: string): Promise<
     deletedCount++;
 
     revalidatePath('/transactions');
+    revalidatePath('/people');
     return { success: true, deletedCount };
   } catch (error: any) {
     console.error('[DB:PB] deleteSplitBillAction failed:', error);
@@ -222,6 +253,7 @@ export async function bulkMoveTransactionsToCategory(transactionIds: string[], c
     }
 
     revalidatePath('/transactions');
+    revalidatePath('/people');
     return { success: true };
   } catch (error: any) {
     console.error('[DB:PB] bulkMoveTransactionsToCategory failed:', error);
@@ -300,6 +332,7 @@ export async function updateSplitBillAction(
     }
 
     revalidatePath('/transactions');
+    revalidatePath('/people');
     return { success: true };
   } catch (error: any) {
     console.error('[DB:PB] updateSplitBillAction failed:', error);
@@ -315,6 +348,7 @@ export async function bulkMoveToCategory(transactionIds: string[], categoryId: s
       await pocketbaseUpdate('pvl_txn_001', pbId, { category_id: pbCatId });
     }
     revalidatePath('/transactions');
+    revalidatePath('/people');
     return { success: true };
   } catch (error: any) {
     console.error('[DB:PB] bulkMoveToCategory failed:', error);

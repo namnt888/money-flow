@@ -220,21 +220,6 @@ export function PeopleTableHeaderV2({
                 <span className="hidden lg:inline">Sheets</span>
             </Button>
 
-            {/* Re-align All Cycles Button */}
-            <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                    "h-10 px-3 gap-2 border-slate-200 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-700 font-bold shadow-sm transition-all whitespace-nowrap",
-                    isRealigningAll && "opacity-50 cursor-not-allowed"
-                )}
-                onClick={onRealignAll}
-                disabled={isRealigningAll}
-                title="Re-calculate all debt cycles in database"
-            >
-                <RefreshCw className={cn("h-4 w-4", isRealigningAll && "animate-spin")} />
-                <span className="hidden lg:inline">Re-align</span>
-            </Button>
 
             {/* Reset Sort Button */}
             {canResetSort && (

@@ -1,11 +1,5 @@
 {
-  "/accounts/[id]/page": "app/accounts/[id]/page.js",
-  "/api/batch/pending-items/route": "app/api/batch/pending-items/route.js",
-  "/api/cashback/cycle-options/route": "app/api/cashback/cycle-options/route.js",
-  "/api/people/audit/route": "app/api/people/audit/route.js",
-  "/api/refunds/pending/route": "app/api/refunds/pending/route.js",
   "/api/sidebar/search/route": "app/api/sidebar/search/route.js",
   "/people/[id]/page": "app/people/[id]/page.js",
-  "/people/page": "app/people/page.js",
-  "/transactions/page": "app/transactions/page.js"
+  "/people/page": "app/people/page.js"
 }

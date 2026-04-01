@@ -407,24 +407,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-// Validate ../../../src/app/api/batch/[id]/check-duplicate/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/batch/[id]/check-duplicate">> = Specific
-  const handler = {} as typeof import("../../../src/app/api/batch/[id]/check-duplicate/route.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
-// Validate ../../../src/app/api/batch/[id]/import/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/batch/[id]/import">> = Specific
-  const handler = {} as typeof import("../../../src/app/api/batch/[id]/import/route.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
 // Validate ../../../src/app/api/batch/confirm-item/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/batch/confirm-item">> = Specific
@@ -663,6 +645,33 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/auth/callback">> = Specific
   const handler = {} as typeof import("../../../src/app/auth/callback/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+
+
+
+
+// Validate ../../../src/app/categories/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/categories">> = Specific
+  const handler = {} as typeof import("../../../src/app/categories/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/">> = Specific
+  const handler = {} as typeof import("../../../src/app/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+/../src/app/auth/callback/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
