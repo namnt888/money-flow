@@ -107,6 +107,7 @@ export async function pocketbaseRequest<T>(
     method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
     params?: Record<string, string | number | boolean | undefined>
     body?: unknown
+    silent?: boolean
   },
 ): Promise<T> {
   const token = await getAuthToken()
@@ -139,7 +140,9 @@ export async function pocketbaseRequest<T>(
 
     if (!response.ok) {
       const text = await response.text()
-      console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
+      if (!options?.silent) {
+        console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
+      }
       throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
     }
 
@@ -163,13 +166,14 @@ export async function pocketbaseList<T>(
   })
 }
 
-export async function pocketbaseGetById<T>(collection: string, id: string, expand?: string, fields?: string): Promise<T> {
+export async function pocketbaseGetById<T>(collection: string, id: string, expand?: string, fields?: string, silent?: boolean): Promise<T> {
   return pocketbaseRequest<T>(`/api/collections/${collection}/records/${id}`, {
     method: 'GET',
     params: {
       expand,
       fields,
     },
+    silent,
   })
 }
 

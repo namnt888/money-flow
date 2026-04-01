@@ -353,9 +353,27 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                                         className="rounded-lg h-10 border-slate-200"
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 col-span-2">
                                     <Label className="text-slate-600">Note Template</Label>
-                                    <Input value={botNoteTemplate} onChange={(e) => setBotNoteTemplate(e.target.value)} className="font-mono text-sm rounded-lg h-10 border-slate-200" placeholder="{service} {date}..." />
+                                    <Input 
+                                        value={botNoteTemplate} 
+                                        onChange={(e) => setBotNoteTemplate(e.target.value)} 
+                                        className="font-mono text-sm rounded-lg h-10 border-slate-200" 
+                                        placeholder="{service} {date}..." 
+                                    />
+                                    <div className="mt-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Real-time Preview</p>
+                                        <p className="text-xs font-mono text-slate-600 break-all">
+                                            {botNoteTemplate
+                                                .replace(/{service}/g, name || 'Service')
+                                                .replace(/{date}/g, monthTag)
+                                                .replace(/{slots}/g, '1')
+                                                .replace(/{price}/g, (price || 0).toLocaleString())
+                                                .replace(/{{slots}}/g, '1')
+                                                .replace(/{{price}}/g, (price || 0).toLocaleString())
+                                            }
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="space-y-2 col-span-2">
                                     <Label className="text-slate-600">Service Image URL</Label>

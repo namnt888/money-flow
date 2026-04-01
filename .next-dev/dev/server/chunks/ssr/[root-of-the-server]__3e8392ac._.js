@@ -1160,7 +1160,9 @@ async function pocketbaseRequest(path, options) {
         });
         if (!response.ok) {
             const text = await response.text();
-            console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text);
+            if (!options?.silent) {
+                console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text);
+            }
             throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`);
         }
         if (response.status === 204) {
@@ -1177,13 +1179,14 @@ async function pocketbaseList(collection, params) {
         params
     });
 }
-async function pocketbaseGetById(collection, id, expand, fields) {
+async function pocketbaseGetById(collection, id, expand, fields, silent) {
     return pocketbaseRequest(`/api/collections/${collection}/records/${id}`, {
         method: 'GET',
         params: {
             expand,
             fields
-        }
+        },
+        silent
     });
 }
 function toPocketBaseId(sourceId, fallbackPrefix = 'mf3') {
@@ -4633,7 +4636,7 @@ async function getProfileSheetLink(personId) {
     const pbId = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["toPocketBaseId"])(personId, 'people');
     let profile = null;
     try {
-        profile = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('people', pbId);
+        profile = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('people', pbId, undefined, undefined, true);
     } catch  {
         profile = null;
     }
@@ -4651,7 +4654,7 @@ async function getProfileSheetLink(personId) {
     // Fallback: Check if it's a debt account (which also has owner_id)
     // Actually, people should be enough.
     try {
-        const account = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('accounts', pbId);
+        const account = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('accounts', pbId, undefined, undefined, true);
         if (account && account.owner_id) {
             const owner = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('people', account.owner_id);
             if (owner?.sheet_link) {
@@ -4783,7 +4786,7 @@ async function syncTransactionToSheet(personId, txn, action = 'create') {
         let resolvedBankInfo = manualBankInfo;
         if (showBankAccount && linkedBankId) {
             try {
-                const acc = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('accounts', linkedBankId);
+                const acc = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$pocketbase$2f$server$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pocketbaseGetById"])('accounts', linkedBankId, undefined, undefined, true);
                 if (acc) {
                     const parts = [
                         acc.name,
@@ -4816,7 +4819,8 @@ async function syncTransactionToSheet(personId, txn, action = 'create') {
                 resolvedShopName = '';
             }
         }
-        // Repayment rows often have no shop; fallback to target bank name for sheet column K.
+        // Repayment/Service rows: ensuring shop_name stays as is if provided.
+        // If not provided, fallback to target bank name for sheet column K.
         if (!resolvedShopName) {
             const fallbackAccountId = txn.type === 'repayment' ? txn.target_account_id || txn.to_account_id || txn.destination_account_id || txn.account_id || null : txn.account_id || null;
             if (fallbackAccountId) {
@@ -9807,11 +9811,12 @@ async function distributeAllServices(customDate, force = false, noteSuffix = '',
                 const isNotDueYet = !force && (checkDay < dueDay || checkDay === dueDay && (checkHour < dueHour || checkHour === dueHour && checkMinute < dueMinute));
                 if (isNotDueYet) {
                     skippedCount++;
-                    console.error(`  - [${service.name}] Skipped: Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`);
+                    const reason = `Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`;
+                    console.warn(`  - [${service.name}] Skipped: Not yet due (${reason})`);
                     reports.push({
                         name: service.name,
                         status: 'skipped',
-                        reason: `Due at day ${dueDay} time ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`
+                        reason
                     });
                     continue;
                 }

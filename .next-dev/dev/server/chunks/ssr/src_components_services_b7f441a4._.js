@@ -978,7 +978,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "space-y-2",
+                                                className: "space-y-2 col-span-2",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
                                                         className: "text-slate-600",
@@ -997,6 +997,31 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
                                                         lineNumber: 358,
                                                         columnNumber: 37
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "mt-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-[10px] font-bold text-slate-400 uppercase mb-1",
+                                                                children: "Real-time Preview"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/services/service-details-sheet.tsx",
+                                                                lineNumber: 365,
+                                                                columnNumber: 41
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs font-mono text-slate-600 break-all",
+                                                                children: botNoteTemplate.replace(/{service}/g, name || 'Service').replace(/{date}/g, monthTag).replace(/{slots}/g, '1').replace(/{price}/g, (price || 0).toLocaleString()).replace(/{{slots}}/g, '1').replace(/{{price}}/g, (price || 0).toLocaleString())
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/services/service-details-sheet.tsx",
+                                                                lineNumber: 366,
+                                                                columnNumber: 41
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/services/service-details-sheet.tsx",
+                                                        lineNumber: 364,
+                                                        columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
@@ -1012,7 +1037,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                         children: "Service Image URL"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 361,
+                                                        lineNumber: 379,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1025,26 +1050,26 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                 placeholder: "Paste image link here..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 363,
+                                                                lineNumber: 381,
                                                                 columnNumber: 41
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Image$3e$__["Image"], {
                                                                 className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 369,
+                                                                lineNumber: 387,
                                                                 columnNumber: 41
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 362,
+                                                        lineNumber: 380,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 360,
+                                                lineNumber: 378,
                                                 columnNumber: 33
                                             }, this)
                                         ]
@@ -1068,12 +1093,12 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     className: "h-5 w-5 text-blue-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 378,
+                                                                    lineNumber: 396,
                                                                     columnNumber: 45
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 377,
+                                                                lineNumber: 395,
                                                                 columnNumber: 41
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1083,7 +1108,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                         children: "Auto Distribute"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 381,
+                                                                        lineNumber: 399,
                                                                         columnNumber: 45
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1091,19 +1116,19 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                         children: "Enable automatic bot distribution monthly"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 382,
+                                                                        lineNumber: 400,
                                                                         columnNumber: 45
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 380,
+                                                                lineNumber: 398,
                                                                 columnNumber: 41
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 376,
+                                                        lineNumber: 394,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$switch$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Switch"], {
@@ -1111,13 +1136,13 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                         onCheckedChange: setIsBotEnabled
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 385,
+                                                        lineNumber: 403,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 375,
+                                                lineNumber: 393,
                                                 columnNumber: 33
                                             }, this),
                                             isBotEnabled && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1128,7 +1153,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                             className: "h-5 w-5 text-blue-600 shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 392,
+                                                            lineNumber: 410,
                                                             columnNumber: 49
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1139,7 +1164,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     children: "Using Global Schedule"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 394,
+                                                                    lineNumber: 412,
                                                                     columnNumber: 53
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1153,19 +1178,19 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 395,
+                                                                    lineNumber: 413,
                                                                     columnNumber: 53
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 393,
+                                                            lineNumber: 411,
                                                             columnNumber: 49
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                    lineNumber: 391,
+                                                    lineNumber: 409,
                                                     columnNumber: 45
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "grid grid-cols-2 gap-4 pt-2",
@@ -1178,7 +1203,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     children: "Run Day (1-31)"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 403,
+                                                                    lineNumber: 421,
                                                                     columnNumber: 53
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1193,13 +1218,13 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     className: "rounded-lg h-10 border-slate-200 bg-white"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 404,
+                                                                    lineNumber: 422,
                                                                     columnNumber: 53
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 402,
+                                                            lineNumber: 420,
                                                             columnNumber: 49
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1210,7 +1235,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     children: "Run Hour (0-23)"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 417,
+                                                                    lineNumber: 435,
                                                                     columnNumber: 53
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1225,26 +1250,26 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     className: "rounded-lg h-10 border-slate-200 bg-white"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 418,
+                                                                    lineNumber: 436,
                                                                     columnNumber: 53
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 416,
+                                                            lineNumber: 434,
                                                             columnNumber: 49
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                    lineNumber: 401,
+                                                    lineNumber: 419,
                                                     columnNumber: 45
                                                 }, this)
                                             }, void 0, false)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                        lineNumber: 374,
+                                        lineNumber: 392,
                                         columnNumber: 29
                                     }, this)
                                 ]
@@ -1269,14 +1294,14 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                 className: "h-4 w-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 442,
+                                                                lineNumber: 460,
                                                                 columnNumber: 41
                                                             }, this),
                                                             "Member Management"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 441,
+                                                        lineNumber: 459,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1284,13 +1309,13 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                         children: maxSlots > 0 ? `${totalSlots} / ${maxSlots} slots occupied` : `${watchedMembers.length} active members`
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 445,
+                                                        lineNumber: 463,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 440,
+                                                lineNumber: 458,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1303,20 +1328,20 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                         className: "h-4 w-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 455,
+                                                        lineNumber: 473,
                                                         columnNumber: 37
                                                     }, this),
                                                     "Add Member"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 449,
+                                                lineNumber: 467,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                        lineNumber: 439,
+                                        lineNumber: 457,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1328,12 +1353,12 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                 children: "No members added yet"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 463,
+                                                lineNumber: 481,
                                                 columnNumber: 41
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                            lineNumber: 462,
+                                            lineNumber: 480,
                                             columnNumber: 37
                                         }, this) : watchedMembers.map((member)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 hover:shadow-md transition-all group",
@@ -1350,12 +1375,12 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     className: "h-full w-full object-cover rounded-none"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 476,
+                                                                    lineNumber: 494,
                                                                     columnNumber: 57
                                                                 }, this) : member.person?.name?.substring(0, 1).toUpperCase() || '?'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 473,
+                                                                lineNumber: 491,
                                                                 columnNumber: 49
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1370,13 +1395,13 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                                 children: "Payer"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                                lineNumber: 484,
+                                                                                lineNumber: 502,
                                                                                 columnNumber: 77
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 482,
+                                                                        lineNumber: 500,
                                                                         columnNumber: 53
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1387,19 +1412,19 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 486,
+                                                                        lineNumber: 504,
                                                                         columnNumber: 53
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 481,
+                                                                lineNumber: 499,
                                                                 columnNumber: 49
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 472,
+                                                        lineNumber: 490,
                                                         columnNumber: 45
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1414,7 +1439,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                         children: "Slots"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 491,
+                                                                        lineNumber: 509,
                                                                         columnNumber: 53
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1426,13 +1451,13 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                             })
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                        lineNumber: 492,
+                                                                        lineNumber: 510,
                                                                         columnNumber: 53
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 490,
+                                                                lineNumber: 508,
                                                                 columnNumber: 49
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1444,35 +1469,35 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     className: "h-4 w-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 505,
+                                                                    lineNumber: 523,
                                                                     columnNumber: 53
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 499,
+                                                                lineNumber: 517,
                                                                 columnNumber: 49
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                        lineNumber: 489,
+                                                        lineNumber: 507,
                                                         columnNumber: 45
                                                     }, this)
                                                 ]
                                             }, member.id || member.person_id, true, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 467,
+                                                lineNumber: 485,
                                                 columnNumber: 41
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                        lineNumber: 460,
+                                        lineNumber: 478,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                lineNumber: 438,
+                                lineNumber: 456,
                                 columnNumber: 25
                             }, this)
                         ]
@@ -1498,14 +1523,14 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                     className: "animate-spin h-5 w-5 mr-2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                    lineNumber: 522,
+                                    lineNumber: 540,
                                     columnNumber: 44
                                 }, this) : null,
                                 "Save Settings"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                            lineNumber: 517,
+                            lineNumber: 535,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1517,24 +1542,24 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                 className: "animate-spin h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                lineNumber: 531,
+                                lineNumber: 549,
                                 columnNumber: 39
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"], {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                lineNumber: 531,
+                                lineNumber: 549,
                                 columnNumber: 86
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                            lineNumber: 525,
+                            lineNumber: 543,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                    lineNumber: 516,
+                    lineNumber: 534,
                     columnNumber: 17
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -1552,19 +1577,19 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                             className: "h-5 w-5 text-blue-600"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                            lineNumber: 540,
+                                            lineNumber: 558,
                                             columnNumber: 33
                                         }, this),
                                         "Add New Member"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                    lineNumber: 539,
+                                    lineNumber: 557,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                lineNumber: 538,
+                                lineNumber: 556,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1578,7 +1603,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                         autoFocus: true
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                        lineNumber: 545,
+                                        lineNumber: 563,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1596,12 +1621,12 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                 className: "h-full w-full object-cover rounded-none"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                lineNumber: 566,
+                                                                lineNumber: 584,
                                                                 columnNumber: 53
                                                             }, this) : person.name.substring(0, 1).toUpperCase()
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 564,
+                                                            lineNumber: 582,
                                                             columnNumber: 45
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1612,7 +1637,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     children: person.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 572,
+                                                                    lineNumber: 590,
                                                                     columnNumber: 49
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1620,26 +1645,26 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                                     children: person.email || 'No email defined'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                                    lineNumber: 573,
+                                                                    lineNumber: 591,
                                                                     columnNumber: 49
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 571,
+                                                            lineNumber: 589,
                                                             columnNumber: 45
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$554$2e$0_react$40$19$2e$2$2e$4$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                                             className: "h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                            lineNumber: 575,
+                                                            lineNumber: 593,
                                                             columnNumber: 45
                                                         }, this)
                                                     ]
                                                 }, person.id, true, {
                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                    lineNumber: 559,
+                                                    lineNumber: 577,
                                                     columnNumber: 41
                                                 }, this)),
                                             allPeople.filter((p)=>!watchedMembers.some((m)=>m.person_id === p.id) && (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))).length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1653,35 +1678,35 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                    lineNumber: 583,
+                                                    lineNumber: 601,
                                                     columnNumber: 45
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                                lineNumber: 582,
+                                                lineNumber: 600,
                                                 columnNumber: 41
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                        lineNumber: 552,
+                                        lineNumber: 570,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                                lineNumber: 544,
+                                lineNumber: 562,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                        lineNumber: 537,
+                        lineNumber: 555,
                         columnNumber: 21
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                    lineNumber: 536,
+                    lineNumber: 554,
                     columnNumber: 17
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$services$2f$service$2d$payment$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ServicePaymentDialog"], {
@@ -1694,7 +1719,7 @@ function ServiceDetailsSheet({ open, onOpenChange, service, members, allPeople }
                     }
                 }, void 0, false, {
                     fileName: "[project]/src/components/services/service-details-sheet.tsx",
-                    lineNumber: 591,
+                    lineNumber: 609,
                     columnNumber: 17
                 }, this)
             ]
@@ -3045,7 +3070,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$ne
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._577207839b545f50e0fdb06bbee3ea77/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._577207839b545f50e0fdb06bbee3ea77/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$services$2f$service$2d$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/services/service-form.tsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$05c958__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:05c958 [app-ssr] (ecmascript) <text/javascript>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$96d268__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__ = __turbopack_context__.i("[project]/src/services/data:96d268 [app-ssr] (ecmascript) <text/javascript>");
 'use client';
 ;
 ;
@@ -3067,7 +3092,7 @@ function ServiceCreateDialog({ trigger, open: controlledOpen, onOpenChange: setC
         event.stopPropagation();
     };
     const handleSubmit = async (values)=>{
-        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$05c958__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["upsertService"])(values, []);
+        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$data$3a$96d268__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$text$2f$javascript$3e$__["upsertService"])(values, []);
         handleSuccess();
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {

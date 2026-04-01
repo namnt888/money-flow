@@ -195,7 +195,7 @@ async function getProfileSheetLink(personId: string): Promise<string | null> {
   let profile: Person | null = null
 
   try {
-    profile = await pocketbaseGetById<Person>('people', pbId)
+    profile = await pocketbaseGetById<Person>('people', pbId, undefined, undefined, true)
   } catch {
     profile = null
   }
@@ -215,7 +215,7 @@ async function getProfileSheetLink(personId: string): Promise<string | null> {
   // Fallback: Check if it's a debt account (which also has owner_id)
   // Actually, people should be enough.
   try {
-    const account = await pocketbaseGetById<Account>('accounts', pbId)
+    const account = await pocketbaseGetById<Account>('accounts', pbId, undefined, undefined, true)
     if (account && account.owner_id) {
       const owner = await pocketbaseGetById<Person>('people', account.owner_id as string)
       if (owner?.sheet_link) {
@@ -364,7 +364,7 @@ export async function syncTransactionToSheet(
     let resolvedBankInfo = manualBankInfo
     if (showBankAccount && linkedBankId) {
       try {
-        const acc = await pocketbaseGetById<Account>('accounts', linkedBankId)
+        const acc = await pocketbaseGetById<Account>('accounts', linkedBankId, undefined, undefined, true)
         if (acc) {
           const parts = [
             acc.name,

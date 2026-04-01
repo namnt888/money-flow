@@ -1339,3 +1339,172 @@ Import traces:
 [01:21:10.741] Server  LOG     [DB:PB] people.list → 27 "records"
 [01:21:11.897] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
 [01:21:11.897] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[02:08:25.367] Server  LOG      ✓ Compiled in 228ms
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:08:29.648] Browser LOG     🎨 defaultFormValues computed:
+[02:08:29.648] Browser LOG        initialData: undefined
+[02:08:29.648] Browser LOG        operationMode: add
+[02:08:29.648] Browser LOG        ℹ️ No initialData - using defaults
+[02:08:29.648] Browser LOG     🎨 defaultFormValues computed:
+[02:08:29.648] Browser LOG        initialData: undefined
+[02:08:29.648] Browser LOG        operationMode: add
+[02:08:29.648] Browser LOG        ℹ️ No initialData - using defaults
+[02:09:31.743] Server  LOG      ✓ Compiled in 304ms
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     🎨 defaultFormValues computed:
+[02:09:33.336] Browser LOG        initialData: undefined
+[02:09:33.336] Browser LOG        operationMode: add
+[02:09:33.336] Browser LOG        ℹ️ No initialData - using defaults
+[02:09:33.336] Browser LOG     🎨 defaultFormValues computed:
+[02:09:33.336] Browser LOG        initialData: undefined
+[02:09:33.336] Browser LOG        operationMode: add
+[02:09:33.336] Browser LOG        ℹ️ No initialData - using defaults
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:33.336] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:46.755] Server  LOG      ✓ Compiled in 271ms
+[02:09:48.725] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:09:48.726] Browser LOG     🎨 defaultFormValues computed:
+[02:09:48.726] Browser LOG        initialData: undefined
+[02:09:48.726] Browser LOG        operationMode: add
+[02:09:48.726] Browser LOG        ℹ️ No initialData - using defaults
+[02:09:48.726] Browser LOG     🎨 defaultFormValues computed:
+[02:09:48.726] Browser LOG        initialData: undefined
+[02:09:48.726] Browser LOG        operationMode: add
+[02:09:48.726] Browser LOG        ℹ️ No initialData - using defaults
+[02:28:24.431] Server  LOG      ✓ Compiled in 175ms
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     🎨 defaultFormValues computed:
+[02:28:25.917] Browser LOG        initialData: undefined
+[02:28:25.917] Browser LOG        operationMode: add
+[02:28:25.917] Browser LOG        ℹ️ No initialData - using defaults
+[02:28:25.917] Browser LOG     🎨 defaultFormValues computed:
+[02:28:25.917] Browser LOG        initialData: undefined
+[02:28:25.917] Browser LOG        operationMode: add
+[02:28:25.917] Browser LOG        ℹ️ No initialData - using defaults
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:25.917] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:54.834] Server  LOG      ✓ Compiled in 221ms
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":3,"firstTag":"2026-03","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":6,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] filterDebug: {"allCyclesCount":5,"filteredCount":4,"firstTag":"2026-04","historyYear":"2026"}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     [ManageSheetButton] groupedDebug: {"cycleYears":["2026","2025"],"groupedCount":1}
+[02:28:56.035] Browser LOG     🎨 defaultFormValues computed:
+[02:28:56.035] Browser LOG        initialData: undefined
+[02:28:56.035] Browser LOG        operationMode: add
+[02:28:56.036] Browser LOG        ℹ️ No initialData - using defaults
+[02:28:56.036] Browser LOG     🎨 defaultFormValues computed:
+[02:28:56.036] Browser LOG        initialData: undefined
+[02:28:56.036] Browser LOG        operationMode: add
+[02:28:56.036] Browser LOG        ℹ️ No initialData - using defaults
