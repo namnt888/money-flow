@@ -395,10 +395,9 @@ export async function distributeAllServices(
 
     // Get all services to handle null is_active if needed
     const servicesRes = await pocketbaseList<any>('services', { sort: 'name' });
-    console.error(`🔴 [DistributeAll] Fetched ${servicesRes.items.length} total services from PB`);
-    
     const services = servicesRes.items.filter(s => s.is_active !== false); // Active or null
-    console.error(`🔴 [DistributeAll] ${services.length} services after 'is_active !== false' filter`);
+    
+    console.error(`🔴 [DistributeAll] Found ${services.length} active services. (Now: ${vnNow.toISOString()}, checkDay: ${activeDate.getDate()})`);
     
     if (services.length === 0) {
       console.error('🔴 [DistributeAll] No active services found. Returning early.');
@@ -415,15 +414,15 @@ export async function distributeAllServices(
 
         if (!force && checkDay < dueDay) {
           skippedCount++;
-          console.error(`  - Skipped: Due on day ${dueDay} (current: ${checkDay})`);
-          reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay}` });
+          console.error(`  - [${service.name}] Skipped: Due on day ${dueDay} (current: ${checkDay})`);
+          reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay} (current: ${checkDay})` });
           continue;
         }
 
         const currentPrice = service.price ?? service.amount ?? 0;
         if (currentPrice === 0) {
           skippedCount++;
-          console.error(`  - Skipped: Zero Price`);
+          console.error(`  - [${service.name}] Skipped: Zero Price`);
           reports.push({ name: service.name, status: 'skipped', reason: 'Zero Price' });
           continue;
         }
@@ -437,26 +436,29 @@ export async function distributeAllServices(
 
         if (existingTx.items.length > 0) {
           skippedCount++;
-          console.error(`  - Skipped: Already distributed for ${monthTag} (found transaction ${existingTx.items[0].id})`);
+          console.error(`  - [${service.name}] Skipped: Already distributed for ${monthTag} (Txn: ${existingTx.items[0].id})`);
           reports.push({ name: service.name, status: 'skipped', reason: `Already distributed for ${monthTag}` });
           continue;
         }
 
-        console.error(`🔴 [DistributeAll] Triggering distributeService`);        // Standard distribution logic
+        console.error(`🔴 [DistributeAll] Processing: ${service.name} (Amount: ${currentPrice})`);
         const result = await distributeService(service.id, customDate, undefined, noteSuffix, options);
         if (result.transactions?.length > 0) {
           successCount++;
+          console.error(`  - [${service.name}] SUCCESS: ${result.transactions.length} transactions created`);
           reports.push({ name: service.name, status: 'success', count: result.transactions.length });
           for (const personId of result.personIds) {
             await autoSyncCycleSheetIfNeeded(personId, monthTag);
           }
         } else {
           skippedCount++;
-          reports.push({ name: service.name, status: 'skipped', reason: 'No members' });
+          console.error(`  - [${service.name}] Skipped: No members assigned`);
+          reports.push({ name: service.name, status: 'skipped', reason: 'No members assigned' });
         }
-      } catch (err) {
+      } catch (err: any) {
         failedCount++;
-        reports.push({ name: service.name, status: 'failed', reason: (err as any).message });
+        console.error(`  - [${service.name}] FAILED: ${err.message}`);
+        reports.push({ name: service.name, status: 'failed', reason: err.message });
       }
     }
     return { success: successCount, failed: failedCount, skipped: skippedCount, total: services.length, reports };
