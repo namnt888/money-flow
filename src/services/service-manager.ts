@@ -464,12 +464,9 @@ export async function distributeAllServices(
 
         if (isNotDueYet) {
           skippedCount++;
-          console.error(`  - [${service.name}] Skipped: Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`);
-          reports.push({ 
-            name: service.name, 
-            status: 'skipped', 
-            reason: `Due at day ${dueDay} time ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})` 
-          });
+          const reason = `Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`;
+          console.warn(`  - [${service.name}] Skipped: Not yet due (${reason})`);
+          reports.push({ name: service.name, status: 'skipped', reason });
           continue;
         }
 
