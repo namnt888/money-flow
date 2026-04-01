@@ -25,7 +25,8 @@ import {
     getServiceBotConfigAction,
     saveServiceBotConfigAction,
     getServicePaymentStatusAction,
-    upsertServiceAction
+    upsertServiceAction,
+    getGlobalServiceBotConfigAction
 } from '@/actions/service-actions'
 import { toast } from 'sonner'
 import { Trash2, CreditCard, Loader2, Bot, CheckCircle2, Users, UserPlus, Settings, Check, Send, Plus, Image as ImageIcon } from 'lucide-react'
@@ -70,6 +71,7 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
     const [botRunHour, setBotRunHour] = useState(9)
     const [botNoteTemplate, setBotNoteTemplate] = useState('')
     const [isBotLoading, setIsBotLoading] = useState(false)
+    const [globalConfig, setGlobalConfig] = useState<any>(null)
 
     // Payment Status State
     const [paymentStatus, setPaymentStatus] = useState<{ confirmed: boolean, amount: number }>({ confirmed: false, amount: 0 })
@@ -129,6 +131,12 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
         } finally {
             setIsBotLoading(false)
         }
+        
+        // Load Global Config
+        try {
+            const gConfig = await getGlobalServiceBotConfigAction()
+            setGlobalConfig(gConfig?.is_enabled ? gConfig.config : null)
+        } catch (e) {}
     }
 
     function formatVNDLabel(value: number) {
@@ -376,37 +384,52 @@ export function ServiceDetailsSheet({ open, onOpenChange, service, members, allP
                                     </div>
                                     <Switch checked={isBotEnabled} onCheckedChange={setIsBotEnabled} />
                                 </div>
+                                
                                 {isBotEnabled && (
-                                    <div className="grid grid-cols-2 gap-4 pt-2">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-xs font-semibold text-slate-600 uppercase">Run Day (1-31)</Label>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                max={31}
-                                                value={botRunDay || ''}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value)
-                                                    setBotRunDay(isNaN(val) ? 0 : val)
-                                                }}
-                                                className="rounded-lg h-10 border-slate-200 bg-white"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-xs font-semibold text-slate-600 uppercase">Run Hour (0-23)</Label>
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                max={23}
-                                                value={botRunHour === 0 ? 0 : (botRunHour || '')}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value)
-                                                    setBotRunHour(isNaN(val) ? 0 : val)
-                                                }}
-                                                className="rounded-lg h-10 border-slate-200 bg-white"
-                                            />
-                                        </div>
-                                    </div>
+                                    <>
+                                        {globalConfig ? (
+                                            <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
+                                                <Bot className="h-5 w-5 text-blue-600 shrink-0" />
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">Using Global Schedule</p>
+                                                    <p className="text-xs text-slate-500">
+                                                        Day {globalConfig.runDay}, {globalConfig.runHour?.toString().padStart(2, '0')}:00
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-semibold text-slate-600 uppercase">Run Day (1-31)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min={1}
+                                                        max={31}
+                                                        value={botRunDay || ''}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value)
+                                                            setBotRunDay(isNaN(val) ? 0 : val)
+                                                        }}
+                                                        className="rounded-lg h-10 border-slate-200 bg-white"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-semibold text-slate-600 uppercase">Run Hour (0-23)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        max={23}
+                                                        value={botRunHour === 0 ? 0 : (botRunHour || '')}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value)
+                                                            setBotRunHour(isNaN(val) ? 0 : val)
+                                                        }}
+                                                        className="rounded-lg h-10 border-slate-200 bg-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

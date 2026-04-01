@@ -351,6 +351,30 @@ export async function getServiceBotConfig(serviceId: string) {
   return res.items[0] || null;
 }
 
+export async function getGlobalServiceBotConfig() {
+  const key = 'global_service_bot';
+  const res = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
+  return res.items[0] || null;
+}
+
+export async function saveGlobalServiceBotConfig(config: any) {
+  const key = 'global_service_bot';
+  const payload = {
+    key: key,
+    name: 'Global Service Distribution Bot',
+    is_enabled: config.isEnabled,
+    config: config
+  };
+
+  const existing = await pocketbaseList<any>('bot_configs', { filter: `key="${key}"`, perPage: 1 });
+  if (existing.items.length > 0) {
+    await pocketbaseUpdate('bot_configs', existing.items[0].id, payload);
+  } else {
+    await pocketbaseCreate('bot_configs', payload);
+  }
+  return true;
+}
+
 export async function saveServiceBotConfig(serviceId: string, config: any) {
   const context = `saveServiceBotConfig:${serviceId}`;
   logSource('PB', context);
@@ -395,10 +419,9 @@ export async function distributeAllServices(
 
     // Get all services to handle null is_active if needed
     const servicesRes = await pocketbaseList<any>('services', { sort: 'name' });
-    console.error(`🔴 [DistributeAll] Fetched ${servicesRes.items.length} total services from PB`);
-    
     const services = servicesRes.items.filter(s => s.is_active !== false); // Active or null
-    console.error(`🔴 [DistributeAll] ${services.length} services after 'is_active !== false' filter`);
+    
+    console.error(`🔴 [DistributeAll] Found ${services.length} active services. (Now: ${vnNow.toISOString()}, checkDay: ${activeDate.getDate()})`);
     
     if (services.length === 0) {
       console.error('🔴 [DistributeAll] No active services found. Returning early.');
@@ -408,22 +431,52 @@ export async function distributeAllServices(
     let successCount = 0, skippedCount = 0, failedCount = 0;
     const reports: any[] = [];
 
+    // 1. Get Global Config
+    const globalConfigRes = await getGlobalServiceBotConfig();
+    const globalConfig = globalConfigRes?.is_enabled ? globalConfigRes.config : null;
+    
+    if (globalConfig) {
+      console.error(`🔴 [DistributeAll] Using GLOBAL schedule: Day ${globalConfig.runDay}, Time ${globalConfig.runHour}:${globalConfig.runMinute || 0}`);
+    }
+
     for (const service of services) {
       try {
-        const dueDay = service.due_day || service.billing_day || 1;
-        const checkDay = activeDate.getDate();
+        const globalRunDay = globalConfig?.runDay;
+        const globalRunHour = globalConfig?.runHour || 0;
+        const globalRunMinute = globalConfig?.runMinute || 0;
+        
+        const serviceDueDay = service.due_day || service.billing_day || 1;
+        
+        // Priority to global if globalConfig exists
+        const dueDay = globalConfig ? globalRunDay : serviceDueDay;
+        const dueHour = globalConfig ? globalRunHour : 0;
+        const dueMinute = globalConfig ? globalRunMinute : 0;
 
-        if (!force && checkDay < dueDay) {
+        const checkDay = activeDate.getDate();
+        const checkHour = activeDate.getHours();
+        const checkMinute = activeDate.getMinutes();
+
+        // Skip if not yet due (Day, Hour, Minute)
+        const isNotDueYet = !force && (
+          checkDay < dueDay || 
+          (checkDay === dueDay && (checkHour < dueHour || (checkHour === dueHour && checkMinute < dueMinute)))
+        );
+
+        if (isNotDueYet) {
           skippedCount++;
-          console.error(`  - Skipped: Due on day ${dueDay} (current: ${checkDay})`);
-          reports.push({ name: service.name, status: 'skipped', reason: `Due on day ${dueDay}` });
+          console.error(`  - [${service.name}] Skipped: Due at ${dueDay} ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})`);
+          reports.push({ 
+            name: service.name, 
+            status: 'skipped', 
+            reason: `Due at day ${dueDay} time ${dueHour}:${dueMinute} (current: ${checkDay} ${checkHour}:${checkMinute})` 
+          });
           continue;
         }
 
         const currentPrice = service.price ?? service.amount ?? 0;
         if (currentPrice === 0) {
           skippedCount++;
-          console.error(`  - Skipped: Zero Price`);
+          console.error(`  - [${service.name}] Skipped: Zero Price`);
           reports.push({ name: service.name, status: 'skipped', reason: 'Zero Price' });
           continue;
         }
@@ -437,26 +490,29 @@ export async function distributeAllServices(
 
         if (existingTx.items.length > 0) {
           skippedCount++;
-          console.error(`  - Skipped: Already distributed for ${monthTag} (found transaction ${existingTx.items[0].id})`);
+          console.error(`  - [${service.name}] Skipped: Already distributed for ${monthTag} (Txn: ${existingTx.items[0].id})`);
           reports.push({ name: service.name, status: 'skipped', reason: `Already distributed for ${monthTag}` });
           continue;
         }
 
-        console.error(`🔴 [DistributeAll] Triggering distributeService`);        // Standard distribution logic
+        console.error(`🔴 [DistributeAll] Processing: ${service.name} (Amount: ${currentPrice})`);
         const result = await distributeService(service.id, customDate, undefined, noteSuffix, options);
         if (result.transactions?.length > 0) {
           successCount++;
+          console.error(`  - [${service.name}] SUCCESS: ${result.transactions.length} transactions created`);
           reports.push({ name: service.name, status: 'success', count: result.transactions.length });
           for (const personId of result.personIds) {
             await autoSyncCycleSheetIfNeeded(personId, monthTag);
           }
         } else {
           skippedCount++;
-          reports.push({ name: service.name, status: 'skipped', reason: 'No members' });
+          console.error(`  - [${service.name}] Skipped: No members assigned`);
+          reports.push({ name: service.name, status: 'skipped', reason: 'No members assigned' });
         }
-      } catch (err) {
+      } catch (err: any) {
         failedCount++;
-        reports.push({ name: service.name, status: 'failed', reason: (err as any).message });
+        console.error(`  - [${service.name}] FAILED: ${err.message}`);
+        reports.push({ name: service.name, status: 'failed', reason: err.message });
       }
     }
     return { success: successCount, failed: failedCount, skipped: skippedCount, total: services.length, reports };

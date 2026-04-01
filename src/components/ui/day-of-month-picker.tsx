@@ -11,6 +11,7 @@ interface DayOfMonthPickerProps {
     onChange: (day: number | null) => void
     placeholder?: string
     className?: string
+    contentClassName?: string
     disabled?: boolean
 }
 
@@ -19,6 +20,7 @@ export function DayOfMonthPicker({
     onChange,
     placeholder = 'DD',
     className,
+    contentClassName,
     disabled
 }: DayOfMonthPickerProps) {
     const [isOpen, setIsOpen] = React.useState(false)
@@ -41,7 +43,7 @@ export function DayOfMonthPicker({
                     <Calendar className="h-4 w-4 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" align="start">
+            <PopoverContent className={cn("w-64 p-3", contentClassName)} align="start">
                 <div className="grid grid-cols-7 gap-1">
                     {days.map((day) => (
                         <Button

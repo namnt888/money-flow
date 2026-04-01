@@ -2707,7 +2707,7 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-function DayOfMonthPicker({ value, onChange, placeholder = 'DD', className, disabled }) {
+function DayOfMonthPicker({ value, onChange, placeholder = 'DD', className, contentClassName, disabled }) {
     _s();
     const [isOpen, setIsOpen] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
     const days = Array.from({
@@ -2729,22 +2729,22 @@ function DayOfMonthPicker({ value, onChange, placeholder = 'DD', className, disa
                             className: "h-4 w-4 opacity-50"
                         }, void 0, false, {
                             fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                            lineNumber: 41,
+                            lineNumber: 43,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                    lineNumber: 31,
+                    lineNumber: 33,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                lineNumber: 30,
+                lineNumber: 32,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PopoverContent"], {
-                className: "w-64 p-3",
+                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-64 p-3", contentClassName),
                 align: "start",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2759,12 +2759,12 @@ function DayOfMonthPicker({ value, onChange, placeholder = 'DD', className, disa
                                 children: day
                             }, day, false, {
                                 fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                                lineNumber: 47,
+                                lineNumber: 49,
                                 columnNumber: 25
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                        lineNumber: 45,
+                        lineNumber: 47,
                         columnNumber: 17
                     }, this),
                     value && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_577207839b545f50e0fdb06bbee3ea77$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2779,24 +2779,24 @@ function DayOfMonthPicker({ value, onChange, placeholder = 'DD', className, disa
                             children: "Clear Selection"
                         }, void 0, false, {
                             fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                            lineNumber: 65,
+                            lineNumber: 67,
                             columnNumber: 25
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                        lineNumber: 64,
+                        lineNumber: 66,
                         columnNumber: 21
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-                lineNumber: 44,
+                lineNumber: 46,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/ui/day-of-month-picker.tsx",
-        lineNumber: 29,
+        lineNumber: 31,
         columnNumber: 9
     }, this);
 }
