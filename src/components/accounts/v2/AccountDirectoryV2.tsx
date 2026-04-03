@@ -70,6 +70,7 @@ export function AccountDirectoryV2({
     // CRUD state (Account)
     const [isAccountSlideOpen, setIsAccountSlideOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [isCloneMode, setIsCloneMode] = useState(false);
     const [editStack, setEditStack] = useState<Account[]>([]);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
@@ -230,6 +231,14 @@ export function AccountDirectoryV2({
     // --- Account Handlers ---
     const handleAddAccount = () => {
         setSelectedAccount(null);
+        setIsCloneMode(false);
+        setEditStack([]);
+        setIsAccountSlideOpen(true);
+    };
+
+    const handleCloneAccount = (account: Account) => {
+        setSelectedAccount(account);
+        setIsCloneMode(true);
         setEditStack([]);
         setIsAccountSlideOpen(true);
     };
@@ -241,6 +250,7 @@ export function AccountDirectoryV2({
             setEditStack([]);
         }
         setSelectedAccount(account);
+        setIsCloneMode(false); // Reset clone mode when switching to edit
         setIsAccountSlideOpen(true);
     };
 
@@ -249,8 +259,10 @@ export function AccountDirectoryV2({
             const previous = editStack[editStack.length - 1];
             setEditStack(prev => prev.slice(0, -1));
             setSelectedAccount(previous);
+            setIsCloneMode(false); // Stack currently only supports edits
         } else {
             setIsAccountSlideOpen(false);
+            setIsCloneMode(false);
         }
     };
 
@@ -354,6 +366,7 @@ export function AccountDirectoryV2({
                     <AccountTableV2
                         accounts={filteredAccounts}
                         onEdit={handleEditAccount}
+                        onClone={handleCloneAccount}
                         onLend={handleLend}
                         onRepay={handleRepay}
                         onPay={handlePay}
@@ -367,6 +380,7 @@ export function AccountDirectoryV2({
                     <AccountGridView
                         accounts={filteredAccounts}
                         onEdit={handleEditAccount}
+                        onClone={handleCloneAccount}
                         onDelete={handleDeleteClick}
                     />
                 )}
@@ -377,6 +391,7 @@ export function AccountDirectoryV2({
                 open={isAccountSlideOpen}
                 onOpenChange={setIsAccountSlideOpen}
                 account={selectedAccount}
+                isClone={isCloneMode}
                 allAccounts={initialAccounts}
                 categories={categories}
                 existingAccountNumbers={Array.from(new Set(initialAccounts.map(a => a.account_number).filter(Boolean))) as string[]}

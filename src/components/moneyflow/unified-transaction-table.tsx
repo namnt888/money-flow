@@ -4059,6 +4059,51 @@ export const UnifiedTransactionTable = React.forwardRef<
                                         </div>
                                       </CustomTooltip>
 
+                                      {/* Hover actions - Copy ID, Open in New Tab, Open DB */}
+                                      <div className="opacity-0 group-hover/pill:opacity-100 flex items-center gap-1 transition-opacity px-1.5 border-l border-slate-200 bg-white/50 backdrop-blur-sm self-stretch shrink-0 h-full">
+                                        <CustomTooltip content={copiedId === txn.id ? "Copied!" : "Copy Transaction ID"}>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              copyToClipboard(txn.id).then((ok) => {
+                                                if (ok) {
+                                                  setCopiedId(txn.id);
+                                                  setTimeout(() => setCopiedId(null), 2000);
+                                                }
+                                              });
+                                            }}
+                                            className="p-1 hover:bg-emerald-50 rounded text-slate-400 hover:text-emerald-600 transition-colors"
+                                          >
+                                            {copiedId === txn.id ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                          </button>
+                                        </CustomTooltip>
+                                        
+                                        <CustomTooltip content="Open in new tab">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.open(`/transactions/${txn.id}`, "_blank");
+                                            }}
+                                            className="p-1 hover:bg-blue-50 rounded text-slate-400 hover:text-blue-600 transition-colors"
+                                          >
+                                            <ExternalLink className="h-3 w-3" />
+                                          </button>
+                                        </CustomTooltip>
+
+                                        <CustomTooltip content="Open Database Record">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid`;
+                                              window.open(url, "_blank", "noopener,noreferrer");
+                                            }}
+                                            className="p-1 hover:bg-amber-50 rounded text-slate-400 hover:text-amber-600 transition-colors"
+                                          >
+                                            <Database className="h-3 w-3" />
+                                          </button>
+                                        </CustomTooltip>
+                                      </div>
+
                                       {/* Badge area */}
                                       {badgeToDisplay && (
                                         <div className="ml-auto shrink-0 self-stretch flex items-stretch">
@@ -4199,6 +4244,51 @@ export const UnifiedTransactionTable = React.forwardRef<
                                     </div>
                                   </div>
                                 </CustomTooltip>
+
+                                {/* Hover actions - Copy ID, Open in New Tab, Open DB */}
+                                <div className="opacity-0 group-hover/pill:opacity-100 flex items-center gap-1 transition-opacity px-1.5 border-l border-slate-200 bg-white/50 backdrop-blur-sm self-stretch shrink-0 h-full">
+                                  <CustomTooltip content={copiedId === txn.id ? "Copied!" : "Copy Transaction ID"}>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        copyToClipboard(txn.id).then((ok) => {
+                                          if (ok) {
+                                            setCopiedId(txn.id);
+                                            setTimeout(() => setCopiedId(null), 2000);
+                                          }
+                                        });
+                                      }}
+                                      className="p-1 hover:bg-emerald-50 rounded text-slate-400 hover:text-emerald-600 transition-colors"
+                                    >
+                                      {copiedId === txn.id ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                    </button>
+                                  </CustomTooltip>
+                                  
+                                  <CustomTooltip content="Open in new tab">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`/transactions/${txn.id}`, "_blank");
+                                      }}
+                                      className="p-1 hover:bg-blue-50 rounded text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </button>
+                                  </CustomTooltip>
+
+                                  <CustomTooltip content="Open Database Record">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid`;
+                                        window.open(url, "_blank", "noopener,noreferrer");
+                                      }}
+                                      className="p-1 hover:bg-amber-50 rounded text-slate-400 hover:text-amber-600 transition-colors"
+                                    >
+                                      <Database className="h-3 w-3" />
+                                    </button>
+                                  </CustomTooltip>
+                                </div>
 
                                 {/* Badges area */}
                                 {badges.length > 0 && (

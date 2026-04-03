@@ -120,7 +120,7 @@ function parseConfigCandidate(raw: Record<string, unknown> | null, source: strin
   };
 
   const rateValue = program ? program.defaultRate : Number(getVal(['rate']) ?? 0);
-  const parsedRate = Number.isFinite(rateValue) ? rateValue : 0;
+  const parsedRate = normalizeRate(rateValue);
 
   const rawMax = program ? program.maxBudget : getVal(['max_amt', 'maxAmount', 'max_amount']);
   const maxAmount = (rawMax !== undefined && rawMax !== null) ? Number(rawMax) : null;
@@ -182,11 +182,11 @@ function parseConfigCandidate(raw: Record<string, unknown> | null, source: strin
 
 export const normalizeRate = (val: any): number => {
   const r = Number(val ?? 0);
-  // Smart heuristic: In this project, rates >= 0.3 are almost certainly percentages (0.5 for 0.5%, 5 for 5%)
-  // while rates < 0.3 are almost certainly decimals (0.003 for 0.3%, 0.15 for 15%)
-  // We choose 0.3 because 30% is a common max for high-cat cashback (0.3), 
-  // and 0.5 is a common base rate (0.5).
-  if (r >= 0.3) return r / 100;
+  // Smart heuristic: In this project:
+  // - Rates between 0.2 and 1.0 are likely already decimals (e.g. 0.3 = 30%, 0.15 = 15%)
+  // - Rates >= 1.0 are definitely percentages (e.g. 5 = 5%, 1.2 = 1.2%)
+  // - Rates < 0.2 are definitely decimals (e.g. 0.003 = 0.3%)
+  if (r >= 1.0) return r / 100;
   return r;
 };
 
@@ -442,11 +442,22 @@ export function calculateBankCashback(
           earnedRate = applicableTier.categories[categoryKey].rate
         } else if (applicableTier.defaultRate !== undefined) {
           earnedRate = applicableTier.defaultRate
+        } else {
+          // If a tier matched but no cat rule, cap legacy base rate to sane level (max 2%)
+          earnedRate = Math.min(earnedRate, 0.02)
         }
       } else if (applicableTier.defaultRate !== undefined) {
         earnedRate = applicableTier.defaultRate
+      } else {
+         // Cap legacy base rate to sane level (max 2%)
+         earnedRate = Math.min(earnedRate, 0.02)
       }
     }
+  } else if (categoryName) {
+      // If NO tiers/rules exist but a category is specified, 
+      // legacy cards shouldn't get their high 'default' rate applied to everything.
+      // Cap at 2% for unknown category spend on cards with NO rules.
+      earnedRate = Math.min(earnedRate, 0.02)
   }
 
   return { amount: amount * earnedRate, rate: earnedRate }

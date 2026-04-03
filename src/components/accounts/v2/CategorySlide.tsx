@@ -4,7 +4,22 @@ import { useState, useEffect, KeyboardEvent } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, X, Plus, Hash, ArrowLeft, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, TrendingUp, PiggyBank } from "lucide-react"
+import { 
+  Loader2, 
+  X, 
+  Plus, 
+  Hash, 
+  Tag, 
+  ArrowLeft, 
+  ArrowDownLeft, 
+  ArrowUpRight, 
+  ArrowRightLeft, 
+  TrendingUp, 
+  PiggyBank,
+  Brain,
+  Zap,
+  Info
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -38,6 +53,7 @@ const formSchema = z.object({
     icon: z.string().optional(),
     image_url: z.string().optional(),
     kind: z.enum(["internal", "external"]),
+    keywords: z.array(z.string()).optional(),
 })
 
 interface CategorySlideProps {
@@ -70,6 +86,8 @@ export function CategorySlide({
     const [pendingCloseAction, setPendingCloseAction] = useState<"close" | "back" | null>(null)
     const [mccCodes, setMccCodes] = useState<string[]>([])
     const [mccInput, setMccInput] = useState("")
+    const [keywords, setKeywords] = useState<string[]>([])
+    const [keywordInput, setKeywordInput] = useState("")
 
     const [isShopSlideOpen, setIsShopSlideOpen] = useState(false)
 
@@ -84,7 +102,12 @@ export function CategorySlide({
         },
     })
 
-    const hasChanges = form.formState.isDirty || mccCodes.length > (category?.mcc_codes?.length || 0) || (category && JSON.stringify(mccCodes) !== JSON.stringify(category.mcc_codes)) || mccInput !== ""
+    const hasChanges = form.formState.isDirty || 
+        mccCodes.length !== (category?.mcc_codes?.length || 0) || 
+        keywords.length !== (category?.keywords?.length || 0) ||
+        (category && JSON.stringify(mccCodes) !== JSON.stringify(category.mcc_codes || [])) || 
+        (category && JSON.stringify(keywords) !== JSON.stringify(category.keywords || [])) ||
+        mccInput !== "" || keywordInput !== ""
 
     const handleBack = () => {
         if (hasChanges) {
@@ -125,6 +148,7 @@ export function CategorySlide({
                     kind: (category.kind as any) || (category.type === 'transfer' ? 'internal' : 'external'),
                 })
                 setMccCodes(Array.isArray(category.mcc_codes) ? category.mcc_codes : [])
+                setKeywords(Array.isArray(category.keywords) ? category.keywords : [])
             } else {
                 form.reset({
                     name: "",
@@ -134,8 +158,10 @@ export function CategorySlide({
                     kind: defaultKind || (defaultType === 'transfer' ? 'internal' : 'external'),
                 })
                 setMccCodes([])
+                setKeywords([])
             }
             setMccInput("")
+            setKeywordInput("")
         }
     }, [category, defaultType, defaultKind, form, open])
 
@@ -160,12 +186,34 @@ export function CategorySlide({
         setMccCodes(mccCodes.filter(c => c !== code))
     }
 
+    const handleAddKeyword = () => {
+        const trimmed = keywordInput.trim()
+        if (trimmed && !keywords.includes(trimmed)) {
+            setKeywords([...keywords, trimmed])
+            setKeywordInput("")
+        } else {
+            setKeywordInput("")
+        }
+    }
+
+    const handleKeywordKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            handleAddKeyword()
+        }
+    }
+
+    const removeKeyword = (keyword: string) => {
+        setKeywords(keywords.filter(k => k !== keyword))
+    }
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
             const payload = {
                 ...values,
                 mcc_codes: mccCodes.length > 0 ? mccCodes : undefined,
+                keywords: keywords.length > 0 ? keywords : undefined,
             }
 
             if (category) {
@@ -456,6 +504,61 @@ export function CategorySlide({
                                     </div>
                                     <p className="text-[9px] text-slate-400 font-bold italic bg-slate-50 p-2 rounded-lg border border-slate-100">
                                         * TIP: These codes are used to automatically match credit card rewards tiers based on merchant codes.
+                                    </p>
+                                </div>
+
+                                {/* Keywords Section */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                                            <Tag className="h-3 w-3 text-slate-400" /> AI Keywords (Bot Training)
+                                        </FormLabel>
+                                        {keywords.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setKeywords([])}
+                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
+                                            >
+                                                Clear All
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white shadow-inner flex flex-wrap gap-2 content-start group focus-within:ring-4 focus-within:ring-emerald-500/10 focus-within:border-emerald-500 transition-all cursor-text border-dashed" onClick={() => document.getElementById('keyword-input')?.focus()}>
+                                        {keywords.map(k => (
+                                            <div
+                                                key={k}
+                                                onDoubleClick={() => {
+                                                    setKeywordInput(k);
+                                                    removeKeyword(k);
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-lg text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition-all hover:scale-105 active:scale-95 group/keyword cursor-pointer"
+                                            >
+                                                <span>{k}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); removeKeyword(k); }}
+                                                    className="text-emerald-300 hover:text-rose-500 transition-colors"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+
+                                        <div className="flex-1 min-w-[120px]">
+                                            <Input
+                                                id="keyword-input"
+                                                value={keywordInput}
+                                                onChange={(e) => setKeywordInput(e.target.value)}
+                                                onKeyDown={handleKeywordKeyDown}
+                                                onBlur={handleAddKeyword}
+                                                placeholder={keywords.length === 0 ? "Type keywords (e.g. mua thuốc) & Enter" : "..."}
+                                                className="h-7 border-none focus-visible:ring-0 px-0 text-[11px] font-bold placeholder:text-slate-300 bg-transparent"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 font-bold italic bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50">
+                                        * TIP: Add Vietnamese keywords to help the AI bot map user queries to this category correctly.
                                     </p>
                                 </div>
                             </form>

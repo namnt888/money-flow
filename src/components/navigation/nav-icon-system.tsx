@@ -16,6 +16,7 @@ import {
   Settings,
   Undo2,
   Sparkles,
+  MessageSquare,
   type LucideIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -177,6 +178,13 @@ export const coloredNavItems: NavItemConfig[] = [
     icon: Undo2,
     color: 'amber',
     description: 'Return management'
+  },
+  {
+    title: "Chatbot",
+    href: "/chatbot",
+    icon: MessageSquare,
+    color: 'indigo',
+    description: 'AI Financial Assistant'
   },
   {
     title: "AI Management",

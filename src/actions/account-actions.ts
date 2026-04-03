@@ -78,13 +78,32 @@ export async function createAccount(params: CreateAccountParams) {
   try {
     console.log('[DB:PB] accounts.create SENDING', { tempId, name: params.name, type: params.type, holder_person_id: params.holder_person_id })
     const result = await createPocketBaseAccount(tempId, {
-      ...params,
-      // Do NOT send owner_id for new accounts — PB validates it as a relation
-      // and 'SYSTEM_MIGRATED' is not a valid record ID
-      current_balance: 0,
-      is_active: true,
+      name: params.name,
+      type: params.type,
+      credit_limit: params.creditLimit,
+      cashback_config: params.cashbackConfig,
+      secured_by_account_id: params.securedByAccountId,
+      image_url: params.imageUrl,
+      annual_fee: params.annualFee,
+      annual_fee_waiver_target: params.annualFeeWaiverTarget,
+      parent_account_id: params.parentAccountId,
+      account_number: params.accountNumber,
+      receiver_name: params.receiverName,
       statement_day: params.statementDay,
       due_date: params.dueDate,
+      holder_type: params.holder_type,
+      holder_person_id: params.holder_person_id,
+      // Rebooted CB columns
+      cb_type: params.cb_type,
+      cb_base_rate: params.cb_base_rate,
+      cb_max_budget: params.cb_max_budget,
+      cb_is_unlimited: params.cb_is_unlimited,
+      cb_rules_json: params.cb_rules_json,
+      cb_min_spend: params.cb_min_spend,
+      cb_cycle_type: params.cb_cycle_type,
+      // Initial state
+      current_balance: 0,
+      is_active: true,
     } as any)
 
     if (!result.success) {
@@ -122,7 +141,7 @@ export async function updateAccountInfo(accountId: string, data: { account_numbe
 export async function getAccountsAction() {
   console.log('[DB:PB] accounts.getBatch')
   try {
-    const response = await pocketbaseList<any>('accounts', {
+    const response = await pocketbaseList<any>('pvl_acc_001', {
       perPage: 200,
       sort: 'name'
     })
@@ -246,12 +265,21 @@ export async function getLastTransactionAccountId(): Promise<string | null> {
  * Manual trigger for full cycle and transaction tag refresh.
  */
 export async function syncAccountCashbackAction(accountId: string) {
+  console.log(`[Action] syncAccountCashbackAction START for account: ${accountId}`);
   try {
     const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service');
-    const result = await refreshAccountCashback(accountId);
+    const { recalculateBalance } = await import('@/services/account.service');
+    
+    // 1. Refresh cashback metadata and cycle tags
+    await refreshAccountCashback(accountId);
+    
+    // 2. Recalculate actual currentBalance from transactions
+    await recalculateBalance(accountId);
     
     revalidatePath(`/accounts/${accountId}`);
-    return result;
+    revalidatePath('/accounts'); // Also update main list
+    
+    return { success: true };
   } catch (error) {
     console.error('[Action] syncAccountCashbackAction failed:', error);
     return { success: false, error: (error as any).message };
@@ -271,6 +299,7 @@ export async function syncAllAccountsCashbackAction() {
     
     const accounts = response.items;
     const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service');
+    const { recalculateBalance } = await import('@/services/account.service');
     
     let totalProcessed = 0;
     let totalCycles = 0;
@@ -278,6 +307,10 @@ export async function syncAllAccountsCashbackAction() {
     for (const acc of accounts) {
       console.log(`[Action] Syncing account: ${acc.name} (${acc.id})`);
       const res = await refreshAccountCashback(acc.id);
+      
+      // CRITICAL: Also recalculate the actual currentBalance from transactions
+      await recalculateBalance(acc.id);
+
       if (res.success) {
         totalProcessed++;
         totalCycles += (res.processedCycles || 0);

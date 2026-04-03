@@ -1231,6 +1231,7 @@ export function TransactionSlideV2({
                         <BasicInfoSection
                           people={people}
                           operationMode={operationMode}
+                          onAddNewPerson={onAddNewPerson}
                         />
 
                         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 space-y-6">

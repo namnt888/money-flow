@@ -7,7 +7,7 @@
 
 import { logSource } from '@/lib/pocketbase/fallback-helpers'
 
-const SHOPS_COLLECTION_ID = 'pvl_shop_001'
+const SHOPS_COLLECTION_ID = 'shops'
 
 /**
  * Map PocketBase shop record to Shop type

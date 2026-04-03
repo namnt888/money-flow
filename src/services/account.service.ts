@@ -16,6 +16,7 @@ import {
   pocketbaseUpdate,
   pocketbaseDelete
 } from "./pocketbase/server";
+import { PB_COLLECTIONS } from '@/lib/pocketbase/collections';
 import {
   parseCashbackConfig,
   normalizeCashbackConfig,
@@ -57,7 +58,7 @@ const fmtDate = (d: Date) => {
 
 async function getPocketBaseAccountRows(): Promise<AccountRow[]> {
   try {
-    const response = await pocketbaseList<any>('accounts', {
+    const response = await pocketbaseList<any>(PB_COLLECTIONS.ACCOUNTS, {
       perPage: 200,
       sort: 'name'
     });
@@ -118,7 +119,7 @@ async function getStatsForAccount(account: AccountRow): Promise<AccountStats | n
   const cycleTag = formatIsoCycleTag(tagDate)
 
   // Fetch Cycle from PB
-  const cycleResp = await pocketbaseList<any>('cashback_cycles', {
+  const cycleResp = await pocketbaseList<any>(PB_COLLECTIONS.CASHBACK_CYCLES, {
       filter: `account_id = "${account.id}" && cycle_tag = "${cycleTag}"`,
       perPage: 1
   });
@@ -130,7 +131,7 @@ async function getStatsForAccount(account: AccountRow): Promise<AccountStats | n
 
   // Fallback for real_awarded (Income)
   if (real_awarded === 0) {
-      const incomeResp = await pocketbaseList<any>('transactions', {
+      const incomeResp = await pocketbaseList<any>(PB_COLLECTIONS.TRANSACTIONS, {
           filter: `account_id = "${account.id}" && type = "income" && status = "posted" && persisted_cycle_tag = "${cycleTag}"`,
           perPage: 50
       });
@@ -319,7 +320,7 @@ export async function getAccountDetails(id: string): Promise<Account | null> {
   });
 
   try {
-    const record = await pocketbaseGetById<any>('accounts', id);
+    const record = await pocketbaseGetById<any>(PB_COLLECTIONS.ACCOUNTS, id);
     if (!record) return null;
     return mapAccountRowToDetails(mapPocketBaseAccountRow(record));
   } catch (err) {
@@ -344,8 +345,8 @@ async function fetchTransactions(
   limit: number,
 ): Promise<TransactionWithDetails[]> {
   try {
-    const pbAccountId = toPocketBaseId(accountId, 'accounts');
-    const response = await pocketbaseList<any>('transactions', {
+    const pbAccountId = toPocketBaseId(accountId, PB_COLLECTIONS.ACCOUNTS);
+    const response = await pocketbaseList<any>(PB_COLLECTIONS.TRANSACTIONS, {
       filter: `account_id = "${pbAccountId}" || target_account_id = "${pbAccountId}"`,
       sort: '-occurred_at',
       perPage: limit,
@@ -400,18 +401,18 @@ export async function updateAccountConfig(
   }
 ): Promise<boolean> {
   if (accountId === 'new') return false
-  const pbId = toPocketBaseId(accountId, 'accounts')
+  const pbId = toPocketBaseId(accountId, PB_COLLECTIONS.ACCOUNTS)
   console.log('[DB:PB] accounts.updateConfig', { id: pbId })
 
   try {
     const payload: any = { ...data }
     
     // MF5.3 Compatibility Mapping
-    if (data.secured_by_account_id) payload.secured_by_account_id = toPocketBaseId(data.secured_by_account_id, 'accounts')
-    if (data.parent_account_id) payload.parent_account_id = toPocketBaseId(data.parent_account_id, 'accounts')
+    if (data.secured_by_account_id) payload.secured_by_account_id = toPocketBaseId(data.secured_by_account_id, PB_COLLECTIONS.ACCOUNTS)
+    if (data.parent_account_id) payload.parent_account_id = toPocketBaseId(data.parent_account_id, PB_COLLECTIONS.ACCOUNTS)
     if (data.holder_person_id) payload.holder_person_id = toPocketBaseId(data.holder_person_id, 'people')
 
-    await pocketbaseUpdate('accounts', pbId, payload)
+    await pocketbaseUpdate(PB_COLLECTIONS.ACCOUNTS, pbId, payload)
     
     revalidatePath('/accounts')
     revalidatePath(`/accounts/${accountId}`)
@@ -423,39 +424,22 @@ export async function updateAccountConfig(
 }
 
 export async function getAccountStats(accountId: string) {
-  const { getAccountSpendingStatsSnapshot } = await import('@/services/cashback.service')
-  const stats = await getAccountSpendingStatsSnapshot(accountId, new Date())
-
-  if (!stats) {
-    return null
-  }
-
-  const rawPotential = stats.currentSpend * stats.rate
-  const cappedPotential =
-    typeof stats.maxCashback === 'number'
-      ? Math.min(rawPotential, stats.maxCashback)
-      : rawPotential
-
-  const potentialProfit =
-    typeof stats.potentialProfit === 'number' && Number.isFinite(stats.potentialProfit)
-      ? stats.potentialProfit
-      : cappedPotential - stats.sharedAmount
-
-  return {
-    ...stats,
-    potentialProfit,
-  }
+  const pbId = toPocketBaseId(accountId, PB_COLLECTIONS.ACCOUNTS)
+  const row = await pocketbaseGetById<any>(PB_COLLECTIONS.ACCOUNTS, pbId)
+  if (!row) return null;
+  const account = mapPocketBaseAccountRow(row)
+  return getStatsForAccount(account);
 }
 
 // getAccountTransactionDetails removed
 
 // New implementation of recalculateBalance using PocketBase
 export async function recalculateBalance(accountId: string): Promise<boolean> {
-  const pbAccountId = toPocketBaseId(accountId, 'accounts')
+  const pbAccountId = toPocketBaseId(accountId, PB_COLLECTIONS.ACCOUNTS)
   console.log('[DB:PB] accounts.recalcBalance', { accountId: pbAccountId })
 
   // 1. Get account type
-  const account = await pocketbaseGetById<any>('accounts', pbAccountId)
+  const account = await pocketbaseGetById<any>(PB_COLLECTIONS.ACCOUNTS, pbAccountId)
 
   if (!account) {
     console.warn('[PB:Recalc] Account not found:', pbAccountId)
@@ -465,7 +449,7 @@ export async function recalculateBalance(accountId: string): Promise<boolean> {
   // 2. Fetch all transactions for this account (posted, no parent)
   // PerPage=5000 as safety for now. 
   // We use filter for account_id and target_account_id (mapped by migrate to both names)
-  const txns = await pocketbaseList('transactions', {
+  const txns = await pocketbaseList(PB_COLLECTIONS.TRANSACTIONS, {
     filter: `status = "posted" && parent_transaction_id = "" && (account_id = "${pbAccountId}" || to_account_id = "${pbAccountId}")`,
     perPage: 5000
   })
@@ -478,7 +462,7 @@ export async function recalculateBalance(accountId: string): Promise<boolean> {
 
   // 3. Update PB
   try {
-    await pocketbaseUpdate('accounts', pbAccountId, {
+    await pocketbaseUpdate(PB_COLLECTIONS.ACCOUNTS, pbAccountId, {
         current_balance: currentBalance,
         total_in: totalIn,
         total_out: totalOut
@@ -494,11 +478,11 @@ export async function recalculateBalance(accountId: string): Promise<boolean> {
 // recalculateBalanceWithClient removed
 
 export async function deleteAccount(id: string): Promise<boolean> {
-  const pbId = toPocketBaseId(id, 'accounts')
+  const pbId = toPocketBaseId(id, PB_COLLECTIONS.ACCOUNTS)
   console.log('[DB:PB] accounts.delete', { id: pbId })
   
   try {
-    await pocketbaseDelete('accounts', pbId)
+    await pocketbaseDelete(PB_COLLECTIONS.ACCOUNTS, pbId)
     revalidatePath('/accounts')
     return true
   } catch (err) {
@@ -508,11 +492,11 @@ export async function deleteAccount(id: string): Promise<boolean> {
 }
 
 export async function updateAccountStatus(id: string, isActive: boolean): Promise<boolean> {
-  const pbId = toPocketBaseId(id, 'accounts')
+  const pbId = toPocketBaseId(id, PB_COLLECTIONS.ACCOUNTS)
   console.log('[DB:PB] accounts.updateStatus', { id: pbId, isActive })
 
   try {
-    await pocketbaseUpdate('accounts', pbId, { is_active: isActive })
+    await pocketbaseUpdate(PB_COLLECTIONS.ACCOUNTS, pbId, { is_active: isActive })
     revalidatePath('/accounts')
     return true
   } catch (error) {
@@ -524,7 +508,7 @@ export async function updateAccountStatus(id: string, isActive: boolean): Promis
 export async function getRecentAccountsByTransactions(limit: number = 5): Promise<Account[]> {
   console.log('[DB:PB] accounts.getRecentByTxns', { limit })
   try {
-    const txns = await pocketbaseList<any>('transactions', {
+    const txns = await pocketbaseList<any>(PB_COLLECTIONS.TRANSACTIONS, {
       sort: '-occurred_at',
       perPage: 50,
       fields: 'account_id'

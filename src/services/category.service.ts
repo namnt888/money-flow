@@ -47,6 +47,7 @@ export async function createCategory(category: Omit<Category, 'id'>): Promise<Ca
       image_url: category.image_url ?? null,
       kind: category.kind ?? null,
       mcc_codes: (category as any).mcc_codes ?? null,
+      keywords: (category as any).keywords ?? null,
     })
 
     if (!success) throw new Error('Failed to create category in PocketBase')
@@ -72,6 +73,7 @@ export async function updateCategory(id: string, updates: Partial<Category>): Pr
       image_url: updates.image_url ?? null,
       kind: updates.kind ?? null,
       mcc_codes: (updates as any).mcc_codes ?? null,
+      keywords: (updates as any).keywords ?? null,
     })
 
     if (!success) throw new Error('Failed to update category in PocketBase')
@@ -100,6 +102,7 @@ export async function getCategoryById(id: string): Promise<Category | null> {
       image_url: item.image_url,
       kind: item.kind,
       mcc_codes: item.mcc_codes,
+      keywords: item.keywords,
       is_archived: item.is_archived,
     }
   } catch (error) {

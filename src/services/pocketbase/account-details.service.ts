@@ -31,6 +31,7 @@ import {
 import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolvePocketBasePersonRecord } from "./people.service";
 import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
+import { PB_COLLECTIONS } from "@/lib/pocketbase/collections";
 
 type PocketBaseRecord = Record<string, any>;
 
@@ -103,6 +104,8 @@ function mapCategory(record: PocketBaseRecord): Category {
     type: (record.type || "expense").toLowerCase() as Category["type"],
     icon: record.icon || null,
     image_url: record.image_url || null,
+    mcc_codes: record.mcc_codes || null,
+    keywords: record.keywords || null,
     kind: record.kind || null,
     is_archived: Boolean(record.is_archived || false),
     slug: record.slug || null,
@@ -397,7 +400,7 @@ async function resolvePocketBaseAccountRecord(
   const fetchAndCache = async () => {
     try {
       const record = await pocketbaseGetById<PocketBaseRecord>(
-        "accounts",
+        PB_COLLECTIONS.ACCOUNTS,
         sourceOrPocketBaseId,
       );
       if (record) return record;
@@ -405,14 +408,14 @@ async function resolvePocketBaseAccountRecord(
       // fallthrough
     }
 
-    const hashedPocketBaseId = toPocketBaseId(sourceOrPocketBaseId, "accounts");
+    const hashedPocketBaseId = toPocketBaseId(sourceOrPocketBaseId, PB_COLLECTIONS.ACCOUNTS);
     if (hashedPocketBaseId !== sourceOrPocketBaseId) {
       if (accountRecordCache.has(hashedPocketBaseId)) {
         return accountRecordCache.get(hashedPocketBaseId) ?? null;
       }
       try {
         const record = await pocketbaseGetById<PocketBaseRecord>(
-          "accounts",
+          PB_COLLECTIONS.ACCOUNTS,
           hashedPocketBaseId,
         );
         if (record) return record;
@@ -421,7 +424,7 @@ async function resolvePocketBaseAccountRecord(
       }
     }
 
-    const bySlug = await pocketbaseList<PocketBaseRecord>("accounts", {
+    const bySlug = await pocketbaseList<PocketBaseRecord>(PB_COLLECTIONS.ACCOUNTS, {
       perPage: 1,
       filter: `slug='${sourceOrPocketBaseId}'`,
     });
@@ -439,7 +442,7 @@ export async function getPocketBaseCategories(): Promise<Category[]> {
   return executeWithFallback(
     async () => {
       logSource("PB", "categories.list");
-      const records = await listAllRecords("categories");
+      const records = await listAllRecords(PB_COLLECTIONS.CATEGORIES);
       return records
         .map(mapCategory)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -458,12 +461,13 @@ export async function createPocketBaseCategory(
     image_url?: string | null;
     kind?: Category["kind"] | null;
     mcc_codes?: string[] | null;
+    keywords?: string[] | null;
   },
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);
   try {
     await pocketbaseRequest<PocketBaseRecord>(
-      "/api/collections/categories/records",
+      `/api/collections/${PB_COLLECTIONS.CATEGORIES}/records`,
       {
         method: "POST",
         body: {
@@ -475,6 +479,7 @@ export async function createPocketBaseCategory(
           image_url: data.image_url ?? null,
           kind: data.kind ?? null,
           mcc_codes: data.mcc_codes ?? null,
+          keywords: data.keywords ?? null,
           is_archived: false,
         },
       },
@@ -495,12 +500,13 @@ export async function updatePocketBaseCategory(
     image_url: string | null;
     kind: Category["kind"] | null;
     mcc_codes: string[] | null;
+    keywords: string[] | null;
   }>,
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);
   try {
     await pocketbaseRequest<PocketBaseRecord>(
-      `/api/collections/categories/records/${pbId}`,
+      `/api/collections/${PB_COLLECTIONS.CATEGORIES}/records/${pbId}`,
       {
         method: "PATCH",
         body: data,
@@ -520,7 +526,7 @@ export async function togglePocketBaseCategoryArchive(
   const pbId = toPocketBaseId(supabaseId);
   console.log("[DB:PB] categories.toggleArchive", { pbId, isArchived });
   try {
-    await pocketbaseRequest(`/api/collections/categories/records/${pbId}`, {
+    await pocketbaseRequest(`/api/collections/${PB_COLLECTIONS.CATEGORIES}/records/${pbId}`, {
       method: "PATCH",
       body: { is_archived: isArchived },
     });
@@ -537,7 +543,7 @@ export async function deletePocketBaseCategory(
   const pbId = toPocketBaseId(supabaseId);
   console.log("[DB:PB] categories.delete", { pbId });
   try {
-    await pocketbaseRequest(`/api/collections/categories/records/${pbId}`, {
+    await pocketbaseRequest(`/api/collections/${PB_COLLECTIONS.CATEGORIES}/records/${pbId}`, {
       method: "DELETE",
     });
     return true;
@@ -558,7 +564,7 @@ export async function togglePocketBaseCategoriesArchiveBulk(
   const results = await Promise.allSettled(
     supabaseIds.map((sbId) =>
       pocketbaseRequest(
-        `/api/collections/categories/records/${toPocketBaseId(sbId)}`,
+        `/api/collections/${PB_COLLECTIONS.CATEGORIES}/records/${toPocketBaseId(sbId)}`,
         {
           method: "PATCH",
           body: { is_archived: isArchived },
@@ -576,7 +582,7 @@ export async function deletePocketBaseCategoriesBulk(
   const results = await Promise.allSettled(
     supabaseIds.map((sbId) =>
       pocketbaseRequest(
-        `/api/collections/categories/records/${toPocketBaseId(sbId)}`,
+        `/api/collections/${PB_COLLECTIONS.CATEGORIES}/records/${toPocketBaseId(sbId)}`,
         {
           method: "DELETE",
         },
@@ -589,7 +595,7 @@ export async function deletePocketBaseCategoriesBulk(
 export async function getPocketBasePeople(): Promise<Person[]> {
   // log removed for noise reduction
   // Removed sort parameter - PocketBase has issues with sorting, results sorted client-side anyway
-  const records = await listAllRecords("people");
+  const records = await listAllRecords(PB_COLLECTIONS.PEOPLE);
   const items = records
     .map(mapPerson)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -601,7 +607,7 @@ export async function getPocketBaseShops(): Promise<Shop[]> {
   return executeWithFallback(
     async () => {
       logSource("PB", "shops.list");
-      const records = await listAllRecords("shops");
+      const records = await listAllRecords(PB_COLLECTIONS.SHOPS);
       return records
         .map(mapShop)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -613,8 +619,8 @@ export async function getPocketBaseShops(): Promise<Shop[]> {
 
 export async function getPocketBaseInstallmentPlan(id: string): Promise<Installment | null> {
   try {
-    const pbId = toPocketBaseId(id, 'installments');
-    const record = await pocketbaseGetById<PocketBaseRecord>('installments', pbId, 
+    const pbId = toPocketBaseId(id, PB_COLLECTIONS.INSTALLMENTS);
+    const record = await pocketbaseGetById<PocketBaseRecord>(PB_COLLECTIONS.INSTALLMENTS, pbId, 
       'account_id,original_transaction_id,original_transaction_id.account_id,original_transaction_id.person_id'
     );
     return record ? mapInstallment(record) : null;
@@ -916,7 +922,7 @@ export async function createPocketBaseAccount(
   });
   try {
     const record = await pocketbaseRequest<Record<string, unknown>>(
-      "/api/collections/accounts/records",
+      "/api/collections/pvl_acc_001/records",
       {
         method: "POST",
         body: {
@@ -1008,7 +1014,7 @@ export async function updatePocketBaseAccountInfo(
   }
   try {
     await pocketbaseRequest<Record<string, unknown>>(
-      `/api/collections/accounts/records/${pbId}`,
+      `/api/collections/pvl_acc_001/records/${pbId}`,
       {
         method: "PATCH",
         body,
@@ -1066,7 +1072,7 @@ export async function updatePocketBaseAccountConfig(
   }
   try {
     const result = await pocketbaseRequest<Record<string, unknown>>(
-      `/api/collections/accounts/records/${pbId}`,
+      `/api/collections/pvl_acc_001/records/${pbId}`,
       {
         method: "PATCH",
         body,
@@ -1089,7 +1095,7 @@ export async function updatePocketBaseAccountConfig(
 export async function getPocketBaseAccounts(): Promise<Account[]> {
   // Note: removed sort parameter - PocketBase has issues with sorting on this collection
   // Results are sorted client-side anyway
-  const records = await listAllRecords("accounts");
+  const records = await listAllRecords("pvl_acc_001");
   const mapped = records
     .map(mapAccount)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -1667,12 +1673,12 @@ export async function loadPocketBaseTransactions(options: {
 }): Promise<TransactionWithDetails[]> {
   if (options.transactionId) {
     const inputId = options.transactionId;
-    const hashedId = toPocketBaseId(inputId, "pvl_txn_001");
+    const hashedId = toPocketBaseId(inputId, PB_COLLECTIONS.TRANSACTIONS);
     const candidateIds = hashedId !== inputId ? [inputId, hashedId] : [inputId];
 
     for (const candidateId of candidateIds) {
       try {
-        const records = await listAllRecords("transactions", {
+        const records = await listAllRecords(PB_COLLECTIONS.TRANSACTIONS, {
           perPage: 1,
           sort: "-date",
           expand:
@@ -1714,7 +1720,7 @@ export async function loadPocketBaseTransactions(options: {
           const resolvedRecord = resolvedPersonRecords[index];
           return [
             personId,
-            toPocketBaseId(personId, "people"),
+            toPocketBaseId(personId, PB_COLLECTIONS.PEOPLE),
             resolvedRecord?.id ? String(resolvedRecord.id) : null,
             resolvedRecord?.slug ? String(resolvedRecord.slug) : null,
           ].filter((value): value is string => Boolean(value));
@@ -1795,7 +1801,7 @@ export async function getPocketBaseAccountCycleOptions(
   const config = parseCashbackConfig(account.cashback_config, account.id);
 
   const cyclesResponse = await pocketbaseList<PocketBaseRecord>(
-    "cashback_cycles",
+    PB_COLLECTIONS.CASHBACK_CYCLES,
     {
       page: 1,
       perPage: Math.max(limit * 2, 24),
@@ -2034,7 +2040,7 @@ export async function updatePocketBaseTransaction(
     data.tag !== undefined
   ) {
     const current = await pocketbaseGetById<PocketBaseRecord>(
-      "transactions",
+      "pvl_txn_001",
       pbId,
     );
     const currentMetadata =
@@ -2061,7 +2067,7 @@ export async function updatePocketBaseTransaction(
     };
   }
   if (Object.keys(payload).length === 0) return;
-  await pocketbaseRequest(`/api/collections/transactions/records/${pbId}`, {
+  await pocketbaseRequest(`/api/collections/pvl_txn_001/records/${pbId}`, {
     method: "PATCH",
     body: payload,
   });
@@ -2072,7 +2078,7 @@ export async function voidPocketBaseTransaction(
 ): Promise<void> {
   console.log("[DB:PB] transactions.void", { id: supabaseId });
   const pbId = toPocketBaseId(supabaseId);
-  await pocketbaseRequest(`/api/collections/transactions/records/${pbId}`, {
+  await pocketbaseRequest(`/api/collections/pvl_txn_001/records/${pbId}`, {
     method: "PATCH",
     body: { status: "void" },
   });

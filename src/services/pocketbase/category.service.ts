@@ -7,7 +7,7 @@
 
 import { logSource } from '@/lib/pocketbase/fallback-helpers'
 
-const CATEGORIES_COLLECTION_ID = 'pvl_cat_001'
+const CATEGORIES_COLLECTION_ID = 'categories'
 
 /**
  * Map PocketBase category record to Category type

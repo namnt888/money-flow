@@ -54,6 +54,7 @@ interface AccountSlideV2Props {
     existingReceiverNames?: string[];
     onEditAccount?: (account: Account) => void;
     onBack?: () => void;
+    isClone?: boolean;
     zIndex?: number;
 }
 
@@ -487,10 +488,11 @@ export function AccountSlideV2({
     existingReceiverNames = [],
     onEditAccount,
     onBack,
+    isClone = false,
     zIndex = 500,
 }: AccountSlideV2Props & { categories?: Category[] }) {
     const router = useRouter();
-    const isEdit = !!account;
+    const isEdit = !!account && !isClone;
     const [loading, setLoading] = useState(false);
     // New fields
     const [annualFee, setAnnualFee] = useState<number>(0);
@@ -739,6 +741,10 @@ export function AccountSlideV2({
         const secured = acc.secured_by_account_id || "none";
         setSecuredById(secured);
         setIsCollateralLinked(secured !== "none");
+
+        if (isClone) {
+            setName(`${acc.name} (Copy)`);
+        }
     };
 
     // Initial load
@@ -1163,10 +1169,10 @@ export function AccountSlideV2({
                                 </div>
                                 <div>
                                     <SheetTitle className="text-xl font-black text-slate-900 leading-tight">
-                                        {isEdit ? "Edit Account" : "New Account"}
+                                        {isClone ? "Clone Account" : isEdit ? "Edit Account" : "New Account"}
                                     </SheetTitle>
                                     <SheetDescription className="text-xs font-medium text-slate-500">
-                                        {isEdit ? `Modifying details for ${account.name}` : "Add a new financial account to track your money flow."}
+                                        {isClone ? `Creating a copy of ${account?.name}` : isEdit ? `Modifying details for ${account?.name}` : "Add a new financial account to track your money flow."}
                                     </SheetDescription>
                                 </div>
                             </div>

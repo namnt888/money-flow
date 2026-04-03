@@ -9,6 +9,7 @@ interface AccountGroupHeaderProps {
     totalAmount: number | { debt: number; limit: number };
     isExpanded: boolean;
     onToggle: () => void;
+    colSpan?: number;
 }
 
 export function AccountGroupHeader({
@@ -18,6 +19,7 @@ export function AccountGroupHeader({
     totalAmount,
     isExpanded,
     onToggle,
+    colSpan = 13,
 }: AccountGroupHeaderProps) {
     const formatMoney = (amount: number) => {
         if (amount === 0) return '-';
@@ -36,7 +38,7 @@ export function AccountGroupHeader({
             )}
             onClick={onToggle}
         >
-            <td colSpan={13} className="px-3 py-2">
+            <td colSpan={colSpan} className="px-3 py-2">
                 <div className="flex items-center gap-3">
                     <div className={cn(
                         "flex items-center justify-center h-5 w-5 rounded transition-transform duration-200",

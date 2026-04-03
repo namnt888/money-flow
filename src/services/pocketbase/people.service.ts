@@ -11,6 +11,7 @@ import {
   pocketbaseUpdate,
   toPocketBaseId,
 } from './server'
+import { PB_COLLECTIONS } from '@/lib/pocketbase/collections'
 
 type PocketBaseRecord = Record<string, unknown>
 
@@ -68,7 +69,7 @@ export async function resolvePocketBasePersonRecord(sourceOrPocketBaseId: string
   // 1. Direct fetch if it looks like a PB ID
   if (isPbId) {
     try {
-      return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', sourceOrPocketBaseId)
+      return await pocketbaseGetById<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, sourceOrPocketBaseId)
     } catch { /* Probing next */ }
   }
 
@@ -76,14 +77,14 @@ export async function resolvePocketBasePersonRecord(sourceOrPocketBaseId: string
   try {
     const pbId = toPocketBaseId(sourceOrPocketBaseId)
     if (pbId !== sourceOrPocketBaseId) {
-        return await pocketbaseGetById<PocketBaseRecord>('pvl_people_001', pbId)
+        return await pocketbaseGetById<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, pbId)
     }
   } catch { /* Probing next */ }
 
   // 3. Try lookup by slug
   try {
     const escapedId = sourceOrPocketBaseId.replace(/'/g, "\\'")
-    const bySlug = await pocketbaseList<PocketBaseRecord>('pvl_people_001', {
+    const bySlug = await pocketbaseList<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, {
       perPage: 1,
       page: 1,
       filter: `slug='${escapedId}' || name~'${escapedId}'`,
@@ -98,7 +99,7 @@ export async function getPocketBasePeople(): Promise<Person[]> {
   return executeWithFallback(
     async () => {
       logSource('PB', 'people.list')
-      const response = await pocketbaseList<PocketBaseRecord>('pvl_people_001', {
+      const response = await pocketbaseList<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, {
         perPage: 500,
         page: 1,
       })
@@ -208,7 +209,7 @@ export async function createPocketBasePerson(
     group_parent_id: data.group_parent_id ? toPocketBaseId(data.group_parent_id) : null,
   }
   logSource('PB', 'people.create', { id: pbId, name: data.name })
-  return await pocketbaseCreate<PocketBaseRecord>('pvl_people_001', payload)
+  return await pocketbaseCreate<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, payload)
 }
 
 export async function updatePocketBasePerson(
@@ -225,7 +226,7 @@ export async function updatePocketBasePerson(
         body.group_parent_id = toPocketBaseId(body.group_parent_id)
       }
 
-      await pocketbaseUpdate<PocketBaseRecord>('pvl_people_001', String(record.id), body)
+      await pocketbaseUpdate<PocketBaseRecord>(PB_COLLECTIONS.PEOPLE, String(record.id), body)
       return true
     },
     async () => false, // Supabase fallback removed
@@ -238,7 +239,7 @@ export async function deletePocketBasePerson(sourceOrPocketBaseId: string): Prom
     async () => {
       const record = await resolvePocketBasePersonRecord(sourceOrPocketBaseId)
       if (!record?.id) return false
-      await pocketbaseDelete('pvl_people_001', String(record.id))
+      await pocketbaseDelete(PB_COLLECTIONS.PEOPLE, String(record.id))
       return true
     },
     async () => false, // Supabase fallback removed

@@ -5,7 +5,7 @@ import { Account } from "@/types/moneyflow.types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wallet, Edit, Trash2, HandCoins, Banknote, MoreVertical } from "lucide-react";
+import { Wallet, Edit, Trash2, HandCoins, Banknote, MoreVertical, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -17,10 +17,11 @@ import {
 interface AccountGridViewProps {
     accounts: Account[];
     onEdit: (account: Account) => void;
+    onClone: (account: Account) => void;
     onDelete: (id: string) => void;
 }
 
-export function AccountGridView({ accounts, onEdit, onDelete }: AccountGridViewProps) {
+export function AccountGridView({ accounts, onEdit, onClone, onDelete }: AccountGridViewProps) {
     const formatMoney = (amount: number) => {
         if (amount === 0) return '-';
         return new Intl.NumberFormat('vi-VN').format(amount);
@@ -81,6 +82,13 @@ export function AccountGridView({ accounts, onEdit, onDelete }: AccountGridViewP
                                         >
                                             <Edit className="h-3.5 w-3.5" />
                                             <span>Edit Account</span>
+                                        </button>
+                                        <button
+                                            onClick={() => onClone(account)}
+                                            className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                        >
+                                            <Copy className="h-3.5 w-3.5" />
+                                            <span>Clone Account</span>
                                         </button>
                                         <button
                                             onClick={() => onDelete(account.id)}

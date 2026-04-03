@@ -14,6 +14,7 @@ export type Category = {
   icon?: string | null;
   image_url?: string | null;
   mcc_codes?: string[] | null;
+  keywords?: string[] | null;
   kind?: "internal" | "external" | null;
   is_archived?: boolean | null;
   slug?: string | null;

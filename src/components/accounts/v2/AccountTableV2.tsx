@@ -16,6 +16,7 @@ interface AccountTableV2Props {
     accounts: Account[];
     allAccounts?: Account[]; // Added for looking up secured/parent accounts outside filtered list
     onEdit: (account: Account) => void;
+    onClone?: (account: Account) => void;
     onLend: (account: Account) => void;
     onRepay: (account: Account) => void;
     onPay: (account: Account) => void;
@@ -33,6 +34,7 @@ export function AccountTableV2({
     accounts,
     allAccounts,
     onEdit,
+    onClone,
     onLend,
     onRepay,
     onPay,
@@ -178,7 +180,7 @@ export function AccountTableV2({
                 <table className="w-full text-sm text-left border-collapse relative">
                     <thead className="bg-white border-b border-slate-200 sticky top-0 z-[40]">
                         <tr className="h-11">
-                            <th colSpan={visibleCols.length + 1} className="px-6">
+                            <th colSpan={visibleCols.length} className="px-6">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-6">
                                         <div className="flex items-center gap-4 border-r border-slate-200 pr-4">
@@ -199,7 +201,7 @@ export function AccountTableV2({
                                         <div className="flex items-center gap-3">
                                             <HoverCard openDelay={100} closeDelay={100}>
                                                 <HoverCardTrigger asChild>
-                                                    <div className="flex items-center gap-2 cursor-help group">
+                                                    <div className="flex items-center gap-2 group/name-row">
                                                         <div className="w-5 h-5 rounded bg-indigo-50 flex items-center justify-center border border-indigo-100 group-hover:bg-indigo-600 transition-colors">
                                                             <ArrowUpDown className="h-3 w-3 text-indigo-500 group-hover:text-white" />
                                                         </div>
@@ -280,7 +282,7 @@ export function AccountTableV2({
                     <tbody className="divide-y relative">
                         {groupedAccounts.length === 0 ? (
                             <tr>
-                                <td colSpan={visibleCols.length + 1} className="p-8 text-center text-muted-foreground">
+                                <td colSpan={visibleCols.length} className="p-8 text-center text-muted-foreground">
                                     No accounts found.
                                 </td>
                             </tr>
@@ -312,12 +314,12 @@ export function AccountTableV2({
                                             totalAmount={getGroupTotal(group)}
                                             isExpanded={expandedGroups.has(group.section)}
                                             onToggle={() => toggleGroup(group.section)}
+                                            colSpan={visibleCols.length}
                                         />
 
                                         {expandedGroups.has(group.section) && (
                                             <>
                                                 <tr className="bg-slate-50 border-b border-slate-100 sticky top-[44px] z-30 shadow-sm">
-                                                    <td className="px-2 py-1.5 border-r border-slate-100" />
                                                     {visibleCols.map((col, idx) => {
                                                         const isSortable = col.key === 'limit' || col.key === 'rewards' || col.key === 'balance';
                                                         const isSorted = sortConfig.key === col.key;
@@ -370,6 +372,7 @@ export function AccountTableV2({
                                                             isExpanded={isExpanded(account.id)}
                                                             onToggleExpand={toggleRow}
                                                             onEdit={onEdit}
+                                                            onClone={onClone}
                                                             onLend={onLend}
                                                             onRepay={onRepay}
                                                             onPay={onPay}

@@ -2,6 +2,7 @@ import type { Account } from '@/types/moneyflow.types'
 
 export type BalanceTransaction = {
   amount: number | null
+  final_price?: number | null
   type: string | null
   account_id: string | null
   target_account_id?: string | null
@@ -30,7 +31,10 @@ export function computeAccountTotals(params: {
     if (!txn) continue
     if (txn.status === 'void') continue
 
-    const amountAbs = Math.abs(Number(txn.amount) || 0)
+    // ALWAYS use amount for account balance calculations (original source of truth)
+    const rawVal = txn.amount ?? 0;
+    
+    const amountAbs = Math.abs(Number(rawVal) || 0)
     if (!amountAbs) continue
 
     if (txn.account_id === accountId) {
