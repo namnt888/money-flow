@@ -15,8 +15,8 @@ export type AccountBalanceTotals = {
   currentBalance: number
 }
 
-const isIncomingType = (type: string | null) =>
-  type === 'income' || type === 'repayment'
+export const isIncomingType = (type: string | null) =>
+  type === 'income' || type === 'repayment' || type === 'credit_pay' || type === 'refund' || type === 'cashback' || type === 'adjustment'
 
 export function computeAccountTotals(params: {
   accountId: string

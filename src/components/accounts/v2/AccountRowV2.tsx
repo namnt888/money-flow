@@ -39,6 +39,8 @@ import {
   Check,
   FileSpreadsheet,
   ExternalLink,
+  MoreHorizontal,
+  History,
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -60,6 +62,13 @@ import { Shop } from "@/types/moneyflow.types";
 import { toast } from "sonner";
 import { isToday, isTomorrow, startOfDay } from "date-fns";
 import { AccountRewardsCell } from "./cells/account-rewards-cell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface AccountRowProps {
   account: Account;
@@ -72,6 +81,7 @@ interface AccountRowProps {
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
   onClone?: (account: Account) => void;
+  onAudit: (account: Account) => void;
   familyBalance?: number;
   allAccounts?: Account[];
   categories?: Category[];
@@ -101,6 +111,7 @@ export function AccountRowV2({
   onPay,
   onTransfer,
   onClone,
+  onAudit,
   familyBalance,
   allAccounts,
   categories,
@@ -732,7 +743,7 @@ export function AccountRowV2({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              ) : account.relationships?.parent_info ? (
+              ) : (account.parent_account_id || account.relationships?.parent_info) ? (
                 <TooltipProvider>
                   <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
@@ -746,7 +757,7 @@ export function AccountRowV2({
                           Parent Account
                         </p>
                         <div className="flex items-center gap-3">
-                          {renderIcon(
+                          {account.relationships?.parent_info && renderIcon(
                             account.relationships.parent_info.type,
                             account.relationships.parent_info.image_url,
                             account.relationships.parent_info.name,
@@ -754,7 +765,7 @@ export function AccountRowV2({
                           )}
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-slate-200">
-                              {account.relationships.parent_info.name}
+                              {account.relationships?.parent_info?.name}
                             </span>
                             <span className="text-[10px] text-slate-500 italic uppercase">
                               Primary Authorized
@@ -1221,25 +1232,27 @@ export function AccountRowV2({
       }
       case "balance": {
         const isCC = account.type === "credit_card";
+        // Priority: Passed familyBalance -> Calculated family debt -> own balance
         let displayBalance = familyBalance ?? account.current_balance;
 
-        const balIsParent = account.relationships?.is_parent;
-        const balParentId = account.parent_account_id;
+        const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
         const balParentAccount = balParentId
           ? allAccounts?.find((a) => a.id === balParentId)
           : null;
 
-        if (balIsParent && allAccounts) {
-          const childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === account.id)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          displayBalance = (account.current_balance || 0) + childrenBalances;
-        } else if (balParentId && balParentAccount && allAccounts) {
-          const childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === balParentId)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          displayBalance =
-            (balParentAccount.current_balance || 0) + childrenBalances;
+        // If no familyBalance prop, try to calculate it again (safety fallback)
+        if (familyBalance === undefined) {
+          if (account.relationships?.is_parent) {
+            const childrenBalances = allAccounts
+              ?.filter((a) => a.parent_account_id === account.id)
+              .reduce((sum, child) => sum + (child.current_balance || 0), 0) || 0;
+            displayBalance = (account.current_balance || 0) + childrenBalances;
+          } else if (balParentId && balParentAccount) {
+            const childrenBalances = allAccounts
+              ?.filter((a) => a.parent_account_id === balParentId)
+              .reduce((sum, child) => sum + (child.current_balance || 0), 0) || 0;
+            displayBalance = (balParentAccount.current_balance || 0) + childrenBalances;
+          }
         }
 
         // For Credit Cards, Balance means Available (Limit - Debt)
@@ -1335,7 +1348,15 @@ export function AccountRowV2({
         return (
           <div className="action-cell flex flex-nowrap items-center gap-1 justify-end whitespace-nowrap">
             <ActionButtonsWithLoading
-              actions={{ onEdit, onLend, onRepay, onPay, onTransfer, onClone: onClone || (() => {}) }}
+              actions={{ 
+                onEdit, 
+                onLend, 
+                onRepay, 
+                onPay, 
+                onTransfer, 
+                onClone: onClone || (() => {}), 
+                onAudit 
+              }}
               account={account}
               isCC={isCC}
               isDebt={isDebt}
@@ -1470,6 +1491,7 @@ interface AccountRowActions {
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
   onClone: (account: Account) => void;
+  onAudit: (account: Account) => void;
 }
 
 interface ActionButtonsProps {
@@ -1499,13 +1521,14 @@ function ActionButtonsWithLoading({
   };
 
   return (
-    <>
+    <div className="flex items-center gap-1">
+      {/* Primary Actions: Repay & Lend */}
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-none"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("repay", actions.onRepay);
@@ -1523,62 +1546,12 @@ function ActionButtonsWithLoading({
         </TooltipContent>
       </Tooltip>
 
-      {(isCC || isDebt) && (
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction("pay", actions.onPay);
-              }}
-            >
-              {loadingAction === "pay" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-[18px] w-[18px]" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Pay Bill</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
-      {!isCC && (
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction("transfer", actions.onTransfer);
-              }}
-            >
-              {loadingAction === "transfer" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRightLeft className="h-[18px] w-[18px]" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Transfer</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-none"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("lend", actions.onLend);
@@ -1596,51 +1569,84 @@ function ActionButtonsWithLoading({
         </TooltipContent>
       </Tooltip>
 
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
+      {/* Secondary Actions: Dropdown Nest */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+            className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-none data-[state=open]:bg-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+             <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[180px] p-1 shadow-xl border-slate-200">
+           {/* Audit Action (Keywords: Re-Align Audit, Reconciliation) */}
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction("audit", actions.onAudit);
+            }}
+           >
+             <History className="h-4 w-4" />
+             <span>Re-Align Audit</span>
+           </DropdownMenuItem>
+
+           <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+           {(isCC || isDebt) && (
+              <DropdownMenuItem 
+                className="gap-2.5 h-9 font-bold text-xs text-amber-600 focus:text-amber-700 focus:bg-amber-50 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAction("pay", actions.onPay);
+                }}
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Pay Credit/Bill</span>
+              </DropdownMenuItem>
+           )}
+
+           {!isCC && (
+              <DropdownMenuItem 
+                className="gap-2.5 h-9 font-bold text-xs text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAction("transfer", actions.onTransfer);
+                }}
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                <span>Transfer Money</span>
+              </DropdownMenuItem>
+           )}
+
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-blue-500 focus:text-blue-600 focus:bg-blue-50 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("clone", actions.onClone);
             }}
-          >
-            {loadingAction === "clone" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Copy className="h-[18px] w-[18px]" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Clone Account</p>
-        </TooltipContent>
-      </Tooltip>
+           >
+             <Copy className="h-4 w-4" />
+             <span>Clone Account</span>
+           </DropdownMenuItem>
 
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-slate-400 hover:text-primary hover:bg-slate-50"
+           <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-slate-500 focus:text-primary focus:bg-slate-50 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("edit", actions.onEdit);
             }}
-          >
-            {loadingAction === "edit" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Edit className="h-[18px] w-[18px]" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Settings</p>
-        </TooltipContent>
-      </Tooltip>
-    </>
+           >
+             <Edit className="h-4 w-4" />
+             <span>Account Settings</span>
+           </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

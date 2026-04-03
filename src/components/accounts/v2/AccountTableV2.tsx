@@ -21,6 +21,7 @@ interface AccountTableV2Props {
     onRepay: (account: Account) => void;
     onPay: (account: Account) => void;
     onTransfer: (account: Account) => void;
+    onAudit: (account: Account) => void;
     categories?: Category[];
     people?: Person[];
     pendingSummaryMap?: Record<string, {
@@ -39,6 +40,7 @@ export function AccountTableV2({
     onRepay,
     onPay,
     onTransfer,
+    onAudit,
     categories,
     people,
     pendingSummaryMap,
@@ -358,8 +360,12 @@ export function AccountTableV2({
                                                 </tr>
 
                                                 {group.accounts.map((account) => {
-                                                    const familyBalance = account.relationships?.is_parent
-                                                        ? accounts.filter(a => a.parent_account_id === account.id).reduce((sum, a) => sum + (a.current_balance || 0), 0) + account.current_balance
+                                                    const parentIdForFamily = account.relationships?.is_parent ? account.id : account.parent_account_id;
+                                                    
+                                                    const familyBalance = parentIdForFamily
+                                                        ? robustAllAccounts
+                                                            .filter(a => a.id === parentIdForFamily || a.parent_account_id === parentIdForFamily)
+                                                            .reduce((sum, a) => sum + (a.current_balance || 0), 0)
                                                         : account.current_balance;
 
                                                     return (
@@ -377,6 +383,7 @@ export function AccountTableV2({
                                                             onRepay={onRepay}
                                                             onPay={onPay}
                                                             onTransfer={onTransfer}
+                                                            onAudit={onAudit}
                                                             categories={categories}
                                                             people={people}
                                                             pendingSummaryMap={pendingSummaryMap}

@@ -20,6 +20,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AccountAuditDialog } from "./AccountAuditDialog";
 
 interface AccountDirectoryV2Props {
     accounts: Account[];
@@ -79,6 +80,11 @@ export function AccountDirectoryV2({
     const [isTxnSlideOpen, setIsTxnSlideOpen] = useState(false);
     const [txnInitialData, setTxnInitialData] = useState<any>(null);
     const [lastTxnAccountId, setLastTxnAccountId] = useState<string | null>(null);
+
+    // Audit state
+    // Audit state
+    const [isAuditOpen, setIsAuditOpen] = useState(false);
+    const [auditAccount, setAuditAccount] = useState<Account | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -329,6 +335,11 @@ export function AccountDirectoryV2({
         setIsTxnSlideOpen(true);
     };
 
+    const handleAudit = (account: Account) => {
+        setAuditAccount(account);
+        setIsAuditOpen(true);
+    };
+
     const handleCategoryChange = (categoryId: string | undefined) => {
         setSelectedCategory(categoryId || null);
     };
@@ -371,6 +382,7 @@ export function AccountDirectoryV2({
                         onRepay={handleRepay}
                         onPay={handlePay}
                         onTransfer={handleTransfer}
+                        onAudit={handleAudit}
                         allAccounts={initialAccounts}
                         categories={categories}
                         people={people}
@@ -434,6 +446,15 @@ export function AccountDirectoryV2({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {auditAccount && (
+                <AccountAuditDialog 
+                    open={isAuditOpen} 
+                    onOpenChange={setIsAuditOpen} 
+                    account={{ id: auditAccount.id, name: auditAccount.name }}
+                    availableYears={['2025', '2026']}
+                />
+            )}
         </div>
     );
 }
