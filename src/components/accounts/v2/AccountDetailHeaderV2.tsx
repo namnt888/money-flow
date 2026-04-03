@@ -167,23 +167,35 @@ export function AccountDetailHeaderV2({
     : 0;
 
   // Family Balance Calculation
-  const isParent = account.relationships?.is_parent;
-  const parentId = account.parent_account_id;
-  const accountFamilyId = isParent ? account.id : parentId;
-  const familyChildren = accountFamilyId
-    ? allAccounts.filter(
-        (a) => a.parent_account_id === accountFamilyId && a.id !== account.id,
-      )
-    : [];
-  const childrenBalancesSum = familyChildren.reduce(
-    (sum, child) => sum + (child.current_balance || 0),
-    0,
-  );
-  const mainAccountBalance = isParent
-    ? account.current_balance || 0
-    : allAccounts.find((a) => a.id === parentId)?.current_balance || 0;
-  const familyDebtAbs = Math.abs(mainAccountBalance + childrenBalancesSum);
+  const isParent = !!account.relationships?.is_parent;
+  const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
+  const parentAccount = isParent ? account : (balParentId ? allAccounts.find(a => a.id === balParentId) : null);
+  const accountFamilyId = isParent ? account.id : balParentId;
+  const isFamily = !!accountFamilyId;
+
+  // Calculate total family debt (Parent + All Children)
+  const childrenBalancesSum = accountFamilyId
+    ? allAccounts
+        .filter((a) => a.parent_account_id === accountFamilyId)
+        .reduce((sum, child) => sum + (child.current_balance || 0), 0)
+    : 0;
+
+  const familyDebtAbs = Math.abs((parentAccount?.current_balance || 0) + childrenBalancesSum);
   const soloDebtAbs = Math.abs(account.current_balance || 0);
+
+  // Available Limit: Shared for family if set
+  const familyLimit = parentAccount?.credit_limit || 0;
+  const familyAvailableBalance = isCreditCard 
+    ? Math.max(0, familyLimit - familyDebtAbs) 
+    : ((parentAccount?.current_balance || 0) + childrenBalancesSum);
+
+  const displayBalance = (isFamily && isCreditCard) ? familyAvailableBalance : availableBalance;
+  const displayOutstanding = (isFamily && isCreditCard) ? familyDebtAbs : outstandingBalance;
+  const displayLimit = (isFamily && isCreditCard) ? familyLimit : (account.credit_limit || 0);
+
+  // Individual card available capacity (Solo Limit)
+  const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : account.current_balance;
+
 
   // Cleanup 'tab' param if present (fix for persistent url)
   React.useEffect(() => {
@@ -668,16 +680,23 @@ export function AccountDetailHeaderV2({
         <TooltipProvider>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
-              <HeaderSection label="Credit Health" borderColor="border-indigo-100" className="flex-[5] min-w-[400px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-2 border-dashed">
-                <div className="grid grid-cols-4 gap-4 items-start flex-1 pt-1.5 px-2">
+              <HeaderSection label="Credit Health" borderColor="border-indigo-100" className="flex-[6] min-w-[450px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-2 border-dashed">
+                <div className="grid grid-cols-5 gap-3 items-start flex-1 pt-1.5 px-2">
                   <div className="flex flex-col gap-1.5 border-r border-indigo-100/50 pr-4">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">AVAILABLE</span>
-                    <div className={cn("text-[17px] font-black tracking-tight leading-none tabular-nums drop-shadow-sm", availableBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>{formatMoneyVND(Math.ceil(availableBalance))}</div>
+                    <div className={cn("text-[17px] font-black tracking-tight leading-none tabular-nums drop-shadow-sm", displayBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>{formatMoneyVND(Math.ceil(displayBalance))}</div>
                   </div>
+                  
+                  <div className="flex flex-col gap-1.5 border-r border-indigo-100/50 pr-4">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">SOLO</span>
+                    <div className={cn("text-[17px] font-black tracking-tight leading-none tabular-nums", (soloAvailable || 0) >= 0 ? "text-indigo-600" : "text-rose-600")}>{formatMoneyVND(Math.ceil(soloAvailable || 0))}</div>
+                  </div>
+
                    <div className="flex flex-col gap-1.5 border-r border-indigo-100/50 pr-4">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">LIMIT</span>
-                    <div className="text-[17px] font-black tracking-tight leading-none tabular-nums text-slate-900 drop-shadow-sm">{formatMoneyVND(Math.ceil(account.credit_limit || 0))}</div>
+                    <div className="text-[17px] font-black tracking-tight leading-none tabular-nums text-slate-900 drop-shadow-sm">{formatMoneyVND(Math.ceil(displayLimit))}</div>
                   </div>
+
                   <div className="flex justify-center pt-1 animate-in fade-in zoom-in duration-700">{dueDateBadge}</div>
                   <div className="flex flex-col items-end pt-1 gap-1.5">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-0.5">HEALTH</span>
@@ -695,12 +714,13 @@ export function AccountDetailHeaderV2({
                 <div className="h-10 w-full border-t border-slate-100/40 pt-1.5 px-2">
                   <div className="relative w-full h-[36px] bg-slate-200/50 rounded-full overflow-hidden border border-slate-200/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] p-0.5">
                     <div
-                      className={cn("h-full transition-all duration-1200 rounded-full flex items-center justify-center min-w-[5rem] shadow-[0_4px_12px_rgba(0,0,0,0.1)] relative group", (account.credit_limit && (outstandingBalance / account.credit_limit) > 0.8) ? "bg-gradient-to-r from-rose-600 via-rose-500 to-rose-400" : "bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-400")}
-                      style={{ width: `${Math.max((account.credit_limit ? (outstandingBalance / account.credit_limit) * 100 : 0), 8)}%` }}
+                      className={cn("h-full transition-all duration-1200 rounded-full flex items-center justify-center min-w-[5rem] shadow-[0_4px_12px_rgba(0,0,0,0.1)] relative group", (displayLimit && (displayOutstanding / displayLimit) > 0.8) ? "bg-gradient-to-r from-rose-600 via-rose-500 to-rose-400" : "bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-400")}
+                      style={{ width: `${Math.max((displayLimit ? (displayOutstanding / displayLimit) * 100 : 0), 8)}%` }}
                     >
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:25px_25px] animate-[shimmer_2s_infinite_linear]"></div>
-                      <span className="text-[12px] font-black text-white uppercase tracking-[0.2em] drop-shadow-md z-10 transition-transform group-hover:scale-105">{(account.credit_limit ? (outstandingBalance / account.credit_limit) * 100 : 0).toFixed(1)}% RATIO</span>
+                      <span className="text-[12px] font-black text-white uppercase tracking-[0.2em] drop-shadow-md z-10 transition-transform group-hover:scale-105">{(displayLimit ? (displayOutstanding / displayLimit) * 100 : 0).toFixed(1)}% RATIO</span>
                     </div>
+
                   </div>
                 </div>
               </HeaderSection>

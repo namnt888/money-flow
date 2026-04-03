@@ -280,6 +280,82 @@ export function AccountTableV2({
                                 </div>
                             </th>
                         </tr>
+                        <tr className="bg-slate-50/50 border-b border-slate-200">
+                            {visibleCols.some(c => c.key === 'account') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-12">
+                                    Account Detail
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'role') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
+                                    Role
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'limit') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Credit Limit
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'rewards') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Reward logic
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'due') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Cycle Info
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'balance') && (
+                                <th className="px-4 py-2 text-[10px] font-black text-slate-900 bg-amber-50/30 uppercase tracking-widest text-right border-l border-amber-100/50">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[8px] text-amber-600/70 font-black leading-none mb-0.5">Balance</span>
+                                        <span>Current Net</span>
+                                    </div>
+                                </th>
+                            )}
+                            <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right pr-6">
+                                Actions
+                            </th>
+                        </tr>
+                        <tr className="bg-slate-50/50 border-b border-slate-200">
+                            {visibleCols.some(c => c.key === 'account') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-12">
+                                    Account Detail
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'role') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
+                                    Role
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'limit') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Credit Limit
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'rewards') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Reward logic
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'due') && (
+                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Cycle Info
+                                </th>
+                            )}
+                            {visibleCols.some(c => c.key === 'balance') && (
+                                <th className="px-4 py-2 text-[10px] font-black text-slate-900 bg-amber-50/30 uppercase tracking-widest text-right border-l border-amber-100/50">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[8px] text-amber-600/70 font-black leading-none mb-0.5">Balance</span>
+                                        <span>Current Net</span>
+                                    </div>
+                                </th>
+                            )}
+                            <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right pr-6">
+                                Actions
+                            </th>
+                        </tr>
                     </thead>
                     <tbody className="divide-y relative">
                         {groupedAccounts.length === 0 ? (
@@ -360,13 +436,23 @@ export function AccountTableV2({
                                                 </tr>
 
                                                 {group.accounts.map((account) => {
-                                                    const parentIdForFamily = account.relationships?.is_parent ? account.id : account.parent_account_id;
+                                                    const grpId = account.parent_account_id || (account.relationships?.is_parent ? account.id : '');
                                                     
-                                                    const familyBalance = parentIdForFamily
-                                                        ? robustAllAccounts
-                                                            .filter(a => a.id === parentIdForFamily || a.parent_account_id === parentIdForFamily)
-                                                            .reduce((sum, a) => sum + (a.current_balance || 0), 0)
-                                                        : account.current_balance;
+                                                    const familyBalance = (() => {
+                                                        if (!grpId) return account.current_balance;
+                                                        
+                                                        const family = robustAllAccounts.filter(a => a.id === grpId || a.parent_account_id === grpId);
+                                                        const parent = family.find(a => a.id === grpId) || account;
+                                                        const totalUsage = family.reduce((sum, a) => sum + (a.current_balance || 0), 0);
+                                                        
+                                                        // For Credit Cards: available = limit - abs(totalUsage)
+                                                        if (account.type === 'credit_card') {
+                                                            const limit = parent.credit_limit || account.credit_limit || 0;
+                                                            return limit - Math.abs(totalUsage);
+                                                        }
+                                                        
+                                                        return totalUsage;
+                                                    })();
 
                                                     return (
                                                         <AccountRowV2

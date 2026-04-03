@@ -179,9 +179,9 @@ export default async function AccountPage({ params, searchParams }: PageProps) {
 
     accountWithStats = {
       ...account,
-      current_balance: derivedBalance, // Override the stale DB field for the whole sub-tree
       stats: progressiveStats
     }
+
   }
 
   return (
