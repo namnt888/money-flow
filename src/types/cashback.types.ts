@@ -14,6 +14,7 @@ export type CashbackPolicyMetadata = {
   ruleMaxReward?: number | null
   ruleType?: 'category' | 'level_default' | 'program_default' | 'legacy'
   priority?: number
+  estimated_cashback?: number
 }
 
 export type CashbackTransaction = {

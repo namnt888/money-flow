@@ -9,6 +9,7 @@ import {
   getPocketBaseAccountSpendingStatsSnapshot,
   loadPocketBaseTransactionsForAccount,
 } from '@/services/pocketbase/account-details.service'
+import { computeAccountTotals } from '@/lib/account-balance'
 import { TagFilterProvider } from '@/context/tag-filter-context'
 import { AccountDetailViewV2 } from '@/components/accounts/v2/AccountDetailViewV2'
 import { Metadata } from 'next'
@@ -117,7 +118,44 @@ export default async function AccountPage({ params, searchParams }: PageProps) {
   // Calculate annual fee waiver stats manually for header display
   let accountWithStats = account
   if (account.type === 'credit_card') {
+    const limit = account.credit_limit ?? 0
+    
+    // Derive REAL balance from transactions to avoid stale DB fields
+    const { currentBalance: derivedBalance } = computeAccountTotals({
+      accountId: pocketBaseAccountId,
+      accountType: account.type,
+      transactions: transactions.map(t => ({
+        ...t,
+        amount: t.amount,
+        type: t.type,
+        account_id: t.account_id,
+        target_account_id: t.target_account_id,
+        status: t.status
+      }))
+    })
+
+    const currentBalanceAbs = Math.abs(derivedBalance ?? 0)
+    const usage_percent = limit > 0 ? (currentBalanceAbs / limit) * 100 : 0
+    const remaining_limit = Math.max(0, limit - currentBalanceAbs)
+
     const waiver_target = account.annual_fee_waiver_target ?? null
+    let progressiveStats: any = {
+      usage_percent,
+      remaining_limit,
+      spent_this_cycle: cashbackStats?.currentSpend ?? account.stats?.spent_this_cycle ?? 0,
+      min_spend: cashbackStats?.minSpend ?? null,
+      missing_for_min: cashbackStats?.minSpend ? Math.max(0, cashbackStats.minSpend - (cashbackStats.currentSpend || 0)) : null,
+      is_qualified: cashbackStats?.is_min_spend_met ?? false,
+      cycle_range: cashbackStats?.cycle?.label ?? '',
+      due_date_display: null,
+      due_date: null,
+      remains_cap: cashbackStats?.remainingBudget ?? null,
+      shared_cashback: cashbackStats?.sharedAmount ?? null,
+      real_awarded: cashbackStats?.actualClaimed ?? 0,
+      virtual_profit: cashbackStats?.netProfit ?? 0,
+      max_budget: cashbackStats?.maxCashback ?? null,
+    }
+
     if (waiver_target && waiver_target > 0) {
       // Calculate total expense spend from ALL transactions (not just cashback)
       // Include: expense, transfer, debt types; exclude: income, repayment
@@ -131,34 +169,19 @@ export default async function AccountPage({ params, searchParams }: PageProps) {
       const progress = Math.min(100, (spent / waiver_target) * 100)
       const met = spent >= waiver_target
 
-      const limit = account.credit_limit ?? 0
-      const currentBalanceAbs = Math.abs(account.current_balance ?? 0)
-      const usage_percent = limit > 0 ? (currentBalanceAbs / limit) * 100 : 0
-      const remaining_limit = Math.max(0, limit - currentBalanceAbs)
-
-      accountWithStats = {
-        ...account,
-        stats: {
-          usage_percent,
-          remaining_limit,
-          spent_this_cycle: cashbackStats?.currentSpend ?? account.stats?.spent_this_cycle ?? 0,
-          min_spend: cashbackStats?.minSpend ?? null,
-          missing_for_min: cashbackStats?.minSpend ? Math.max(0, cashbackStats.minSpend - (cashbackStats.currentSpend || 0)) : null,
-          is_qualified: cashbackStats?.is_min_spend_met ?? false,
-          cycle_range: cashbackStats?.cycle?.label ?? '',
-          due_date_display: null,
-          due_date: null,
-          remains_cap: cashbackStats?.remainingBudget ?? null,
-          shared_cashback: cashbackStats?.sharedAmount ?? null,
-          real_awarded: cashbackStats?.actualClaimed ?? 0,
-          virtual_profit: cashbackStats?.netProfit ?? 0,
-          annual_fee_waiver_target: waiver_target,
-          annual_fee_waiver_progress: progress,
-          annual_fee_waiver_met: met,
-          max_budget: cashbackStats?.maxCashback ?? null,
-        }
+      progressiveStats = {
+        ...progressiveStats,
+        annual_fee_waiver_target: waiver_target,
+        annual_fee_waiver_progress: progress,
+        annual_fee_waiver_met: met,
       }
     }
+
+    accountWithStats = {
+      ...account,
+      stats: progressiveStats
+    }
+
   }
 
   return (

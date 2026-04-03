@@ -23,16 +23,48 @@ export function resolveCashbackPolicy(params: {
         cb_is_unlimited?: boolean;
         cb_rules_json?: any;
         cb_min_spend?: number | null;
-    }
+    } | null | undefined
     categoryId?: string | null
     amount: number
     cycleTotals: {
         spent: number
+        accumulatedReward?: number // MF5.3: For FIFO reward tracking
     }
     categoryName?: string
     categorySlug?: string
 }): CashbackPolicyResult {
     const { account, amount, categoryId, categorySlug, categoryName, cycleTotals } = params
+
+    // --- 0. Pre-flight Guard ---
+    if (!account) {
+        return {
+            rate: 0,
+            metadata: {
+                policySource: 'program_default',
+                reason: 'No account provided',
+                rate: 0,
+                ruleType: 'program_default',
+                priority: 0
+            }
+        }
+    }
+
+    // --- 0. Category Aliasing Logic ---
+    // If cb_rules_json has an "aliases" object, we map the incoming category to another one.
+    // Example: { "aliases": { "insurance_id": "online_shopping_id" } }
+    let effectiveCategoryId = categoryId
+    let effectiveCategorySlug = categorySlug
+
+    const rulesJson = account.cb_rules_json
+    if (rulesJson && typeof rulesJson === 'object' && !Array.isArray(rulesJson) && rulesJson.aliases) {
+        const aliases = rulesJson.aliases as Record<string, string>
+        if (categoryId && aliases[categoryId]) {
+            effectiveCategoryId = aliases[categoryId]
+        }
+        if (categorySlug && aliases[categorySlug]) {
+            effectiveCategorySlug = aliases[categorySlug]
+        }
+    }
 
     // --- 1. State Initialization ---
     let finalRate = 0
@@ -72,14 +104,14 @@ export function resolveCashbackPolicy(params: {
             const qualifiedTiers = sortedTiers.filter((t: any) => cycleTotals.spent >= (t.min_spend ?? 0))
 
             let matchedPolicy: any = null
-            if (categoryId && qualifiedTiers.length > 0) {
+            if (effectiveCategoryId && qualifiedTiers.length > 0) {
                 for (const tier of qualifiedTiers) {
                     const policies = Array.isArray(tier.policies) ? tier.policies : (tier.rules || [])
                     let found = policies.find((p: any) => 
-                        (p.categoryIds && p.categoryIds.includes(categoryId)) || 
-                        (p.cat_ids && p.cat_ids.includes(categoryId)) ||
-                        (categorySlug && p.categoryIds && p.categoryIds.includes(categorySlug)) ||
-                        (categorySlug && p.cat_ids && p.cat_ids.includes(categorySlug))
+                        (p.categoryIds && p.categoryIds.includes(effectiveCategoryId)) || 
+                        (p.cat_ids && p.cat_ids.includes(effectiveCategoryId)) ||
+                        (effectiveCategorySlug && p.categoryIds && p.categoryIds.includes(effectiveCategorySlug)) ||
+                        (effectiveCategorySlug && p.cat_ids && p.cat_ids.includes(effectiveCategorySlug))
                     )
 
                     if (!found && categoryName) {
@@ -107,7 +139,7 @@ export function resolveCashbackPolicy(params: {
                     levelId: matchedPolicy.tier.id || `tier-${matchedPolicy.tier.min_spend}`,
                     levelName: (matchedPolicy.tier.name && matchedPolicy.tier.name !== "Standard") ? matchedPolicy.tier.name : "Hạng chuẩn",
                     levelMinSpend: matchedPolicy.tier.min_spend,
-                    categoryId: categoryId || undefined,
+                    categoryId: effectiveCategoryId || undefined,
                     ruleId: matchedPolicy.id,
                     ruleMaxReward: finalMaxReward,
                     ruleType: 'category',
@@ -131,8 +163,8 @@ export function resolveCashbackPolicy(params: {
             }
         } else if (account.cb_type === 'simple' && Array.isArray(account.cb_rules_json)) {
             const rules = account.cb_rules_json as any[]
-            const matchedBySlug = categorySlug ? rules.find((r: any) => r.categoryIds?.includes(categorySlug) || r.cat_ids?.includes(categorySlug)) : null
-            let matchedRule = (categoryId ? rules.find((r: any) => r.categoryIds?.includes(categoryId) || r.cat_ids?.includes(categoryId)) : null) || matchedBySlug
+            const matchedBySlug = effectiveCategorySlug ? rules.find((r: any) => r.categoryIds?.includes(effectiveCategorySlug) || r.cat_ids?.includes(effectiveCategorySlug)) : null
+            let matchedRule = (effectiveCategoryId ? rules.find((r: any) => r.categoryIds?.includes(effectiveCategoryId) || r.cat_ids?.includes(effectiveCategoryId)) : null) || matchedBySlug
 
             if (!matchedRule && categoryName) {
                 const lowerName = categoryName.toLowerCase()
@@ -150,7 +182,7 @@ export function resolveCashbackPolicy(params: {
                     reason: categoryName ? `${categoryName} rule` : 'Category rule matched',
                     rate: finalRate,
                     levelId: matchedRule.id,
-                    categoryId: categoryId || undefined,
+                    categoryId: effectiveCategoryId || undefined,
                     ruleId: matchedRule.id,
                     ruleMaxReward: finalMaxReward,
                     ruleType: 'category',
@@ -262,6 +294,35 @@ export function resolveCashbackPolicy(params: {
     if (config?.program?.minSpendTarget) {
         finalResult.minSpend = config.program.minSpendTarget
     }
+
+    // --- 4. FIFO Reward Calculation (New in MF5.3) ---
+    const rawReward = amount * finalRate
+    let finalReward = rawReward
+
+    // A. Apply Category-level Max Reward (FIFO)
+    if (finalMaxReward && finalMaxReward > 0) {
+        // If we have accumulatedReward, we assume it's for the same rule/category window
+        const rewardAlreadyPaid = cycleTotals.accumulatedReward || 0
+        const remainingBuffer = Math.max(0, finalMaxReward - rewardAlreadyPaid)
+        if (finalReward > remainingBuffer) {
+            finalReward = remainingBuffer
+            source.reason = `${source.reason} (Rule Max Reached)`
+        }
+    }
+
+    // B. Apply Global Account-level Max Budget (FIFO)
+    const globalMax = isModern ? account.cb_max_budget : config?.program?.maxBudget
+    if (globalMax && globalMax > 0) {
+        const rewardAlreadyPaidTotal = cycleTotals.accumulatedReward || 0
+        const remainingGlobal = Math.max(0, globalMax - rewardAlreadyPaidTotal)
+        if (finalReward > remainingGlobal) {
+            finalReward = remainingGlobal
+            source.reason = `${source.reason} (Global Max Reached)`
+        }
+    }
+
+    // Attach the resolved reward to metadata for display
+    source.estimated_cashback = finalReward
 
     // Safety: Cap the base/default rate to 2% if applied generally without a rule match
     const isDefaultSource = 

@@ -1105,24 +1105,65 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
     records.map((item) => [item.id, item.slug || item.id]),
   );
 
+  // Pre-calculate child counts
+  const childCounts = new Map<string, number>();
+  records.forEach((record) => {
+    if (record.parent_account_id) {
+      const parentId = record.parent_account_id;
+      childCounts.set(parentId, (childCounts.get(parentId) || 0) + 1);
+    }
+  });
+
   return mapped.map((account) => {
-    const sourceRecord = byPocketBaseId.get(
-      toPocketBaseId(account.id, "accounts"),
-    );
+    const pbId = toPocketBaseId(account.id, "accounts");
+    const sourceRecord = byPocketBaseId.get(pbId);
+    
     const parentPocketBaseId = sourceRecord?.parent_account_id || null;
     const securedByPocketBaseId = sourceRecord?.secured_by_account_id || null;
+    
+    const normalizedParentId = parentPocketBaseId
+      ? pocketBaseToSource.get(parentPocketBaseId) || null
+      : null;
+
+    // Find children for this account
+    const children = mapped
+      .filter((a) => {
+        const record = byPocketBaseId.get(toPocketBaseId(a.id, "accounts"));
+        return record?.parent_account_id === pbId;
+      })
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        image_url: a.image_url || null,
+      }));
+
+    // Find parent info
+    const parentAccount = normalizedParentId 
+      ? mapped.find(a => a.id === normalizedParentId)
+      : null;
 
     return {
       ...account,
-      parent_account_id: parentPocketBaseId
-        ? pocketBaseToSource.get(parentPocketBaseId) || null
-        : null,
+      parent_account_id: normalizedParentId,
       secured_by_account_id: securedByPocketBaseId
         ? pocketBaseToSource.get(securedByPocketBaseId) || null
         : null,
+      relationships: {
+        is_parent: children.length > 0,
+        child_count: children.length,
+        child_accounts: children,
+        parent_info: parentAccount ? {
+          id: parentAccount.id,
+          name: parentAccount.name,
+          type: parentAccount.type,
+          image_url: parentAccount.image_url || null
+        } : null,
+      },
     };
   });
 }
+
+
 
 export async function getPocketBaseAccountSpendingStatsSnapshot(
   sourceAccountId: string,

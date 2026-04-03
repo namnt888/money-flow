@@ -23,9 +23,6 @@ import {
   LucideIcon,
   Network,
   TrendingUp,
-  Calculator,
-  Info,
-  AlertCircle,
   Zap,
   Users,
   Building2,
@@ -39,6 +36,12 @@ import {
   Check,
   FileSpreadsheet,
   ExternalLink,
+  MoreHorizontal,
+  History,
+  Sigma,
+  ChevronRight,
+  Calculator,
+  AlertCircle
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -59,7 +62,19 @@ import { Person } from "@/types/moneyflow.types";
 import { Shop } from "@/types/moneyflow.types";
 import { toast } from "sonner";
 import { isToday, isTomorrow, startOfDay } from "date-fns";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { AccountRewardsCell } from "./cells/account-rewards-cell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface AccountRowProps {
   account: Account;
@@ -72,6 +87,7 @@ interface AccountRowProps {
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
   onClone?: (account: Account) => void;
+  onAudit: (account: Account) => void;
   familyBalance?: number;
   allAccounts?: Account[];
   categories?: Category[];
@@ -101,6 +117,7 @@ export function AccountRowV2({
   onPay,
   onTransfer,
   onClone,
+  onAudit,
   familyBalance,
   allAccounts,
   categories,
@@ -688,99 +705,146 @@ export function AccountRowV2({
         );
       }
       case "role": {
+        const isCC = account.type === "credit_card";
+        const isParent = !!account.relationships?.is_parent || (allAccounts?.some(a => a.parent_account_id === account.id) ?? false);
+        const grpId = account.parent_account_id || (isParent ? account.id : '');
+        const relatedAccounts = (grpId && allAccounts)
+          ? allAccounts.filter(a => (a.id === grpId || a.parent_account_id === grpId) && a.id !== account.id) 
+          : [];
+        const parentAcc = isParent ? null : allAccounts?.find(a => a.id === grpId);
+
+        // Group Total Balance (Debt)
+        const totalGroupDebt = familyBalance !== undefined ? familyBalance : (grpId 
+          ? allAccounts?.filter(a => a.id === grpId || a.parent_account_id === grpId).reduce((sum, a) => sum + (a.current_balance || 0), 0)
+          : account.current_balance) || 0;
+
+        const parentLimit = isCC ? (isParent ? account.credit_limit : parentAcc?.credit_limit) || 0 : 0;
+        const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
+
         return (
-          <div className="flex flex-row items-center justify-center min-w-[190px] group/role-cell">
-            {/* Role Badge (Left) */}
-            <div className="flex-shrink-0">
-              {account.relationships?.is_parent ? (
-                <TooltipProvider>
-                  <Tooltip delayDuration={300}>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        {renderRoleBadge("parent")}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900 text-white border-slate-800 p-3 rounded-xl shadow-2xl">
+          <div className="flex flex-col items-center justify-center min-w-[190px] gap-1 group/role-cell">
+            {/* Group Balance Badge (Upper Text) */}
+            {isCC && parentLimit > 0 && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
+                <Sigma className="w-2.5 h-2.5" />
+                <span>Group Balance: {formatMoneyVND(totalAvailable || 0)}</span>
+              </div>
+            )}
+
+            <div className="flex flex-row items-center justify-center w-full">
+              <HoverCard openDelay={200}>
+                <HoverCardTrigger asChild>
+                  <div
+                    className={cn(
+                      "inline-flex items-center rounded-md border px-2.5 py-1.5 text-[10px] font-black tracking-widest uppercase cursor-help shadow-sm transition-all hover:scale-105 active:scale-95",
+                      isParent
+                        ? "border-indigo-200 bg-indigo-600 text-white shadow-indigo-100"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                    )}
+                  >
+                    <div className={cn(
+                      "mr-2 h-4 w-4 flex items-center justify-center rounded-full border shadow-sm shrink-0",
+                      isParent ? "bg-white/20 border-white/30" : "bg-slate-50 border-slate-100"
+                    )}>
+                      {account.holder_type === 'me' ? (
+                        <Crown className={cn("h-2.5 w-2.5", isParent ? "text-white" : "text-indigo-500")} />
+                      ) : (
+                        <User className={cn("h-2.5 w-2.5", isParent ? "text-indigo-100" : "text-slate-500")} />
+                      )}
+                    </div>
+                    <span>{isParent ? "Parent" : "Child"}</span>
+                    {account.receiver_name && (
+                        <span className={cn("ml-1.5 opacity-80 font-bold border-l pl-1.5", isParent ? "border-white/30" : "border-slate-200")}>
+                            {account.receiver_name}
+                        </span>
+                    )}
+                    <ArrowRight className={cn("ml-1.5 h-3 w-3 opacity-50", isParent ? "text-white" : "text-slate-400")} />
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 p-0 rounded-2xl shadow-2xl border-indigo-100 overflow-hidden z-[100]" align="start">
+                  <div className="p-3 bg-indigo-600 text-white">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Group: {isParent ? account.name : (parentAcc?.name || 'Shared Core')}
+                    </h4>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    {isParent ? (
                       <div className="space-y-2">
-                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest border-b border-white/10 pb-1.5">
-                          Child Accounts
-                        </p>
-                        {allAccounts
-                          ?.filter((a) => a.parent_account_id === account.id)
-                          .map((child) => (
-                            <div
-                              key={child.id}
-                              className="flex items-center justify-between gap-4"
-                            >
-                              <div className="flex items-center gap-2">
-                                {renderIcon(
-                                  child.type,
-                                  child.image_url,
-                                  child.name,
-                                  "w-5 h-5",
-                                )}
-                                <span className="text-xs font-medium text-slate-200">
-                                  {child.name}
-                                </span>
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider">Sub-Accounts (Children)</p>
+                        <div className="space-y-2">
+                          {relatedAccounts && relatedAccounts.length > 0 ? (
+                            relatedAccounts.map(a => (
+                              <div key={a.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="h-8 w-8 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                                  {a.image_url ? (
+                                    <img src={a.image_url} alt="" className="h-full w-full object-contain" />
+                                  ) : (
+                                    <Wallet className="h-4 w-4 text-slate-300" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold text-slate-700 truncate">{a.name}</p>
+                                  <p className="text-[9px] text-slate-400 font-medium tabular-nums">Current Debt: {formatMoneyVND(Math.abs(a.current_balance || 0))}</p>
+                                </div>
                               </div>
-                              <span className="text-[10px] font-black tabular-nums text-slate-400">
-                                {formatMoneyVND(child.current_balance || 0)}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : account.relationships?.parent_info ? (
-                <TooltipProvider>
-                  <Tooltip delayDuration={300}>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help">
-                        {renderRoleBadge("child")}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900 text-white border-slate-800 p-3 rounded-xl shadow-2xl">
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest border-b border-white/10 pb-1.5">
-                          Parent Account
-                        </p>
-                        <div className="flex items-center gap-3">
-                          {renderIcon(
-                            account.relationships.parent_info.type,
-                            account.relationships.parent_info.image_url,
-                            account.relationships.parent_info.name,
-                            "w-8 h-8",
+                            ))
+                          ) : (
+                            <p className="text-[10px] text-slate-400 italic">No sub-accounts linked.</p>
                           )}
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-200">
-                              {account.relationships.parent_info.name}
-                            </span>
-                            <span className="text-[10px] text-slate-500 italic uppercase">
-                              Primary Authorized
-                            </span>
-                          </div>
                         </div>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                renderRoleBadge("standalone")
-              )}
-            </div>
-
-            {/* Connector Arrow */}
-            <div className="flex items-center justify-center w-8 overflow-hidden">
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover/role-cell:text-indigo-400 group-hover/role-cell:translate-x-0.5 transition-all duration-300" />
-            </div>
-
-            {/* Ownership Badge (Right) */}
-            <div className="flex-shrink-0">
-              {renderOwnershipBadge(
-                account.holder_type as any,
-                account.holder_person_id,
-              )}
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Main Account (Parent)</p>
+                          {parentAcc ? (
+                            <div className="flex items-center gap-3 p-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                              <div className="h-8 w-8 rounded-none border border-indigo-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+                                {parentAcc.image_url ? (
+                                  <img src={parentAcc.image_url} alt="" className="h-full w-full object-contain" />
+                                ) : (
+                                  <Crown className="h-4 w-4 text-indigo-400" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-bold text-indigo-700 truncate">{parentAcc.name}</p>
+                                <p className="text-[9px] text-indigo-400 font-medium tracking-tight">LIMIT: {formatMoneyVND(parentAcc.credit_limit || 0)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[9px] font-black text-indigo-300 uppercase">Available</p>
+                                <p className="text-[10px] font-bold text-indigo-600 tabular-nums">{formatMoneyVND(totalAvailable || 0)}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 italic">Parent account not found.</p>
+                          )}
+                        </div>
+                        
+                        {relatedAccounts.length > 0 && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Sibling Accounts</p>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {relatedAccounts.map(a => (
+                                <div key={a.id} className="flex items-center gap-3 p-1.5 bg-slate-50/50 rounded-lg border border-slate-100">
+                                  <div className="h-6 w-6 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0">
+                                    {a.image_url ? (
+                                      <img src={a.image_url} alt="" className="h-full w-full object-contain" />
+                                    ) : (
+                                      <Wallet className="h-3 w-3 text-slate-300" />
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] font-bold text-slate-600 truncate">{a.name}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
             </div>
           </div>
         );
@@ -1221,32 +1285,31 @@ export function AccountRowV2({
       }
       case "balance": {
         const isCC = account.type === "credit_card";
-        let displayBalance = familyBalance ?? account.current_balance;
-
-        const balIsParent = account.relationships?.is_parent;
-        const balParentId = account.parent_account_id;
-        const balParentAccount = balParentId
+        const isParent = !!account.relationships?.is_parent;
+        const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
+        const parentAccount = balParentId
           ? allAccounts?.find((a) => a.id === balParentId)
           : null;
 
-        if (balIsParent && allAccounts) {
-          const childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === account.id)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          displayBalance = (account.current_balance || 0) + childrenBalances;
-        } else if (balParentId && balParentAccount && allAccounts) {
-          const childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === balParentId)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          displayBalance =
-            (balParentAccount.current_balance || 0) + childrenBalances;
+        // Use passed familyBalance if available for consistent family-aware reporting
+        let displayBalance = familyBalance;
+
+        // Determine effective grouping
+        const effectiveParentId = account.relationships?.is_parent || isParent ? account.id : account.parent_account_id;
+
+        // If no familyBalance prop, try to calculate it again (safety fallback)
+        if (displayBalance === undefined || displayBalance === null) {
+          if (effectiveParentId) {
+            const familyMembers = allAccounts?.filter(a => a.id === effectiveParentId || a.parent_account_id === effectiveParentId) || [];
+            displayBalance = familyMembers.reduce((sum, a) => sum + (a.current_balance || 0), 0);
+          } else {
+            displayBalance = account.current_balance || 0;
+          }
         }
 
-        // For Credit Cards, Balance means Available (Limit - Debt)
+        // For Credit Cards, Balance means Available (Total Family Limit - Total Family Debt)
         const limit = isCC
-          ? balParentAccount
-            ? balParentAccount.credit_limit || 0
-            : account.credit_limit || 0
+          ? (account.credit_limit || parentAccount?.credit_limit || 0)
           : 0;
         const debt = isCC ? Math.abs(displayBalance || 0) : 0;
         const finalBalance = isCC ? limit - debt : displayBalance || 0;
@@ -1259,11 +1322,11 @@ export function AccountRowV2({
                   <div
                     className={cn(
                       "tabular-nums text-[13px] font-black tracking-tight",
-                      Math.abs(finalBalance) > 100000000
-                        ? "text-rose-600"
-                        : Math.abs(finalBalance) >= 50000000
-                          ? "text-amber-600"
-                          : "text-emerald-600",
+                    Math.abs(finalBalance) > 100000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.8)
+                      ? "text-rose-600"
+                      : Math.abs(finalBalance) >= 50000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.5)
+                        ? "text-amber-600"
+                        : "text-emerald-600",
                     )}
                   >
                     {finalBalance < 0 ? "-" : ""}
@@ -1335,7 +1398,15 @@ export function AccountRowV2({
         return (
           <div className="action-cell flex flex-nowrap items-center gap-1 justify-end whitespace-nowrap">
             <ActionButtonsWithLoading
-              actions={{ onEdit, onLend, onRepay, onPay, onTransfer, onClone: onClone || (() => {}) }}
+              actions={{ 
+                onEdit, 
+                onLend, 
+                onRepay, 
+                onPay, 
+                onTransfer, 
+                onClone: onClone || (() => {}), 
+                onAudit 
+              }}
               account={account}
               isCC={isCC}
               isDebt={isDebt}
@@ -1470,6 +1541,7 @@ interface AccountRowActions {
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
   onClone: (account: Account) => void;
+  onAudit: (account: Account) => void;
 }
 
 interface ActionButtonsProps {
@@ -1499,13 +1571,14 @@ function ActionButtonsWithLoading({
   };
 
   return (
-    <>
+    <div className="flex items-center gap-1">
+      {/* Primary Actions: Repay & Lend */}
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-none"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("repay", actions.onRepay);
@@ -1523,62 +1596,12 @@ function ActionButtonsWithLoading({
         </TooltipContent>
       </Tooltip>
 
-      {(isCC || isDebt) && (
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction("pay", actions.onPay);
-              }}
-            >
-              {loadingAction === "pay" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="h-[18px] w-[18px]" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Pay Bill</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
-      {!isCC && (
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction("transfer", actions.onTransfer);
-              }}
-            >
-              {loadingAction === "transfer" ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRightLeft className="h-[18px] w-[18px]" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Transfer</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-none"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("lend", actions.onLend);
@@ -1596,51 +1619,84 @@ function ActionButtonsWithLoading({
         </TooltipContent>
       </Tooltip>
 
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
+      {/* Secondary Actions: Dropdown Nest */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+            className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-none data-[state=open]:bg-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+             <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[180px] p-1 shadow-xl border-slate-200">
+           {/* Audit Action (Keywords: Re-Align Audit, Reconciliation) */}
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction("audit", actions.onAudit);
+            }}
+           >
+             <History className="h-4 w-4" />
+             <span>Re-Align Audit</span>
+           </DropdownMenuItem>
+
+           <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+           {(isCC || isDebt) && (
+              <DropdownMenuItem 
+                className="gap-2.5 h-9 font-bold text-xs text-amber-600 focus:text-amber-700 focus:bg-amber-50 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAction("pay", actions.onPay);
+                }}
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Pay Credit/Bill</span>
+              </DropdownMenuItem>
+           )}
+
+           {!isCC && (
+              <DropdownMenuItem 
+                className="gap-2.5 h-9 font-bold text-xs text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAction("transfer", actions.onTransfer);
+                }}
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                <span>Transfer Money</span>
+              </DropdownMenuItem>
+           )}
+
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-blue-500 focus:text-blue-600 focus:bg-blue-50 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("clone", actions.onClone);
             }}
-          >
-            {loadingAction === "clone" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Copy className="h-[18px] w-[18px]" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Clone Account</p>
-        </TooltipContent>
-      </Tooltip>
+           >
+             <Copy className="h-4 w-4" />
+             <span>Clone Account</span>
+           </DropdownMenuItem>
 
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-slate-400 hover:text-primary hover:bg-slate-50"
+           <DropdownMenuSeparator className="my-1 bg-slate-100" />
+
+           <DropdownMenuItem 
+            className="gap-2.5 h-9 font-bold text-xs text-slate-500 focus:text-primary focus:bg-slate-50 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               handleAction("edit", actions.onEdit);
             }}
-          >
-            {loadingAction === "edit" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Edit className="h-[18px] w-[18px]" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Settings</p>
-        </TooltipContent>
-      </Tooltip>
-    </>
+           >
+             <Edit className="h-4 w-4" />
+             <span>Account Settings</span>
+           </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
