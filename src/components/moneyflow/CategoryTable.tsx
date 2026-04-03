@@ -206,6 +206,19 @@ export function CategoryTable({
                         </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1 max-w-[250px]">
+                            {category.keywords && category.keywords.length > 0 ? (
+                                category.keywords.map(kw => (
+                                    <Badge key={kw} variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-50 border-emerald-100 text-emerald-700 font-black uppercase tracking-tight">
+                                        {kw}
+                                    </Badge>
+                                ))
+                            ) : (
+                                <span className="text-[10px] text-slate-300 italic font-medium">-</span>
+                            )}
+                        </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                         <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                             {category.mcc_codes && category.mcc_codes.length > 0 ? (
                                 category.mcc_codes.map(code => (
@@ -314,6 +327,7 @@ export function CategoryTable({
                                 <div className="flex items-center">Total ({selectedYear}) <SortIcon colKey="total" /></div>
                             </TableHead>
                             <TableHead className="w-[100px] h-10 px-6">Txns</TableHead>
+                            <TableHead className="h-10 px-6">Key words</TableHead>
                             <TableHead className="h-10 px-6">MCC Codes</TableHead>
                             <TableHead className="w-[120px] text-right h-10 px-6">Action</TableHead>
                         </TableRow>
@@ -321,7 +335,7 @@ export function CategoryTable({
                     <TableBody>
                         {filteredCategories.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-48 text-center text-slate-400 text-sm font-medium italic">
+                                <TableCell colSpan={8} className="h-48 text-center text-slate-400 text-sm font-medium italic">
                                     No categories found matching your criteria.
                                 </TableCell>
                             </TableRow>
@@ -330,7 +344,7 @@ export function CategoryTable({
                                 {internalCategories.length > 0 && (
                                     <>
                                         <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 pointer-events-none">
-                                            <TableCell colSpan={7} className="px-6 py-2.5">
+                                            <TableCell colSpan={8} className="px-6 py-2.5">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/70">Internal Categories</span>
@@ -345,7 +359,7 @@ export function CategoryTable({
                                 {externalCategories.length > 0 && (
                                     <>
                                         <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 pointer-events-none">
-                                            <TableCell colSpan={7} className="px-6 py-2.5 pt-6">
+                                            <TableCell colSpan={8} className="px-6 py-2.5 pt-6">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/70">External Categories</span>

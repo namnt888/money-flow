@@ -8,7 +8,6 @@ import {
   AccountColumnConfig,
   AccountColumnKey,
 } from "@/hooks/useAccountColumnPreferences";
-import { ExpandIcon } from "@/components/transaction/ui/ExpandIcon";
 import { AccountRowDetailsV2 } from "./AccountRowDetailsV2";
 import { Button } from "@/components/ui/button";
 import { VietnameseCurrency } from "@/components/ui/vietnamese-currency";
@@ -72,6 +71,7 @@ interface AccountRowProps {
   onRepay: (account: Account) => void;
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
+  onClone?: (account: Account) => void;
   familyBalance?: number;
   allAccounts?: Account[];
   categories?: Category[];
@@ -100,6 +100,7 @@ export function AccountRowV2({
   onRepay,
   onPay,
   onTransfer,
+  onClone,
   familyBalance,
   allAccounts,
   categories,
@@ -366,177 +367,120 @@ export function AccountRowV2({
                   </div>
                 )}
               </div>
+
+              {/* Action Icons (Moved between Image and Name with colors) */}
+              <div className="flex items-center gap-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity duration-200">
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md border border-blue-100/50 bg-blue-50/20"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(account.id);
+                          toast.success("Account ID copied");
+                        }}
+                      >
+                        <div className="flex items-center gap-1 px-1 py-0.5 text-[8px] font-black uppercase tracking-tighter">
+                          ID
+                        </div>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Copy Account ID: {account.id}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md border border-indigo-100/50 bg-indigo-50/20"
+                        onClick={(e) => e.stopPropagation()}
+                        asChild
+                      >
+                        <Link href={`/accounts/${account.id}`} target="_blank">
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Open in New Tab</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md border border-amber-100/50 bg-amber-50/20"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_acc_001&filter=${account.id}&sort=-%40rowid&recordId=${account.id}`, '_blank');
+                        }}
+                      >
+                        <Database className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Open in PocketBase Admin</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
               <div className="flex items-center justify-between min-w-0 flex-1 gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 group/name-row">
-                      <div className="flex items-center gap-1 shrink-0 opacity-100 transition-opacity">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className={cn(
-                                  "h-5 text-[9px] font-black uppercase transition-all border-slate-200 px-1.5",
-                                  copied
-                                    ? "text-emerald-600 bg-emerald-50 border-emerald-200"
-                                    : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50",
-                                )}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(account.id);
-                                  setCopied(true);
-                                  import("sonner").then(({ toast }) =>
-                                    toast.success("Copied Account ID", {
-                                      description: account.id,
-                                    }),
-                                  );
-                                  setTimeout(() => setCopied(false), 2000);
-                                }}
-                              >
-                                {copied ? (
-                                  <Check className="h-3 w-3 mr-1 text-emerald-600" />
-                                ) : (
-                                  <>
-                                    {account.type === "credit_card" && (
-                                      <CreditCard className="w-3 h-3 mr-1 text-indigo-500" />
-                                    )}
-                                    {account.type === "bank" && (
-                                      <Banknote className="w-3 h-3 mr-1 text-blue-500" />
-                                    )}
-                                    {account.type === "ewallet" && (
-                                      <Wallet className="w-3 h-3 mr-1 text-purple-500" />
-                                    )}
-                                    {account.type === "savings" && (
-                                      <ArrowUpRight className="w-3 h-3 mr-1 text-emerald-500" />
-                                    )}
-                                    {account.type === "debt" && (
-                                      <HandCoins className="w-3 h-3 mr-1 text-rose-500" />
-                                    )}
-                                    {![
-                                      "credit_card",
-                                      "bank",
-                                      "ewallet",
-                                      "savings",
-                                      "debt",
-                                    ].includes(account.type || "") && (
-                                      <Copy className="h-3 w-3 mr-1" />
-                                    )}
-                                  </>
-                                )}
-                                ID
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-900 border-none text-white">
-                              <p className="text-[10px] font-bold">
-                                Copy ID: {account.id}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-2 group/name-row">
+                    <Link
+                      href={`/accounts/${account.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {account.name}
+                    </Link>
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(
-                                    `/accounts/${account.id}`,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }}
-                                className="h-5 w-5 text-slate-300 hover:text-blue-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-900 border-none text-white">
-                              <p className="text-[10px] font-bold">
-                                Open Account Details (new tab)
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=accounts&filter=${encodeURIComponent(account.id)}&sort=-%40rowid`;
-                                  window.open(
-                                    url,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }}
-                                className="h-5 w-5 text-slate-300 hover:text-indigo-600 transition-all inline-flex items-center justify-center rounded hover:bg-slate-50"
-                              >
-                                <Database className="h-3 w-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-900 border-none text-white">
-                              <p className="text-[10px] font-bold">
-                                Open Account DB (new tab)
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-
+                    {pendingCount > 0 && (
                       <Link
-                        href={`/accounts/${account.id}`}
+                        href={`/accounts/${account.id}?pending=1`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate group-hover/row:translate-x-0.5 transform duration-200"
+                        className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 shrink-0"
+                        title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {account.name}
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        {pendingCount} Pending
                       </Link>
-
-                      {pendingCount > 0 && (
-                        <Link
-                          href={`/accounts/${account.id}?pending=1`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 shrink-0"
-                          title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <AlertCircle className="h-2.5 w-2.5" />
-                          {pendingCount} Pending
-                        </Link>
-                      )}
-                    </div>
+                    )}
                   </div>
-                  {(account.receiver_name || account.account_number) && (
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      {account.receiver_name && (
-                        <span
-                          className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]"
-                          title={account.receiver_name}
-                        >
-                          {account.receiver_name}
-                        </span>
-                      )}
-                      {account.receiver_name && account.account_number && (
-                        <span className="h-0.5 w-0.5 rounded-full bg-slate-200" />
-                      )}
-                      {account.account_number && (
-                        <code className="text-[9px] font-bold text-slate-400 tracking-tight bg-slate-50 px-1 rounded-sm border border-slate-100">
-                          {account.account_number}
-                        </code>
-                      )}
-                    </div>
-                  )}
+
+                  {/* Sub-row for Receiver Info (Standardized location) */}
+                  <div className="flex items-center gap-1.5 min-w-0 mt-0.5 whitespace-nowrap">
+                    {account.receiver_name && (
+                      <span
+                        className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]"
+                        title={account.receiver_name}
+                      >
+                        {account.receiver_name}
+                      </span>
+                    )}
+                    {account.receiver_name && account.account_number && (
+                      <span className="h-0.5 w-0.5 rounded-full bg-slate-200" />
+                    )}
+                    {account.account_number && (
+                      <code className="text-[9px] font-bold text-slate-400 tracking-tight bg-slate-50 px-1 rounded-sm border border-slate-100">
+                        {account.account_number}
+                      </code>
+                    )}
+                  </div>
                 </div>
               </div>
+
               <div className="flex flex-nowrap items-center gap-1.5 justify-end whitespace-nowrap">
                 {/* 1. Cashback Category Badges (Moved to first) */}
                 {(() => {
@@ -1389,35 +1333,14 @@ export function AccountRowV2({
         const isDebt = account.type === "debt";
 
         return (
-          <TooltipProvider>
-            <div className="action-cell flex flex-nowrap items-center gap-1 justify-end whitespace-nowrap">
-              <Tooltip delayDuration={300}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onLend(account);
-                    }}
-                  >
-                    <HandCoins className="h-[18px] w-[18px]" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Lend / Add Debt</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <ActionButtonsWithLoading
-                actions={{ onEdit, onLend, onRepay, onPay, onTransfer }}
-                account={account}
-                isCC={isCC}
-                isDebt={isDebt}
-              />
-            </div>
-          </TooltipProvider>
+          <div className="action-cell flex flex-nowrap items-center gap-1 justify-end whitespace-nowrap">
+            <ActionButtonsWithLoading
+              actions={{ onEdit, onLend, onRepay, onPay, onTransfer, onClone: onClone || (() => {}) }}
+              account={account}
+              isCC={isCC}
+              isDebt={isDebt}
+            />
+          </div>
         );
       }
       default:
@@ -1489,11 +1412,8 @@ export function AccountRowV2({
             return "bg-white border-b";
           })(),
         )}
+        onClick={() => onToggleExpand(account.id)}
       >
-        <td className="w-10 px-2 py-3 text-center border-r border-slate-200">
-          <ExpandIcon isExpanded={isExpanded} onClick={handleIconClick} />
-        </td>
-
         {visibleColumns.map((col, idx) => (
           <td
             key={`${account.id}-${col.key}`}
@@ -1509,7 +1429,7 @@ export function AccountRowV2({
 
       {isExpanded && (
         <tr className="bg-muted/30">
-          <td colSpan={visibleColumns.length + 1} className="p-0 border-b">
+          <td colSpan={visibleColumns.length} className="p-0 border-b">
             <AccountRowDetailsV2
               account={account}
               isExpanded={isExpanded}
@@ -1549,6 +1469,7 @@ interface AccountRowActions {
   onRepay: (account: Account) => void;
   onPay: (account: Account) => void;
   onTransfer: (account: Account) => void;
+  onClone: (account: Account) => void;
 }
 
 interface ActionButtonsProps {
@@ -1651,6 +1572,52 @@ function ActionButtonsWithLoading({
           </TooltipContent>
         </Tooltip>
       )}
+
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction("lend", actions.onLend);
+            }}
+          >
+            {loadingAction === "lend" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <HandCoins className="h-[18px] w-[18px]" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Lend / Add Debt</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction("clone", actions.onClone);
+            }}
+          >
+            {loadingAction === "clone" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Copy className="h-[18px] w-[18px]" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Clone Account</p>
+        </TooltipContent>
+      </Tooltip>
 
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>

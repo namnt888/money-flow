@@ -22,6 +22,7 @@ import {
   pocketbaseDelete, 
   toPocketBaseId 
 } from "./server";
+import { PB_COLLECTIONS } from "@/lib/pocketbase/collections";
 
 /**
  * PocketBase transaction record structure
@@ -123,7 +124,7 @@ export type PocketBaseTransactionMutationInput = {
 };
 
 const PB_API_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-db.reiwarden.io.vn';
-const PB_TXN_COLLECTION = 'pvl_txn_001';
+const PB_TXN_COLLECTION = PB_COLLECTIONS.TRANSACTIONS;
 
 function buildPocketBaseMutationPayload(input: PocketBaseTransactionMutationInput) {
   const baseMetadata = (input.metadata && typeof input.metadata === 'object')
@@ -339,7 +340,7 @@ export async function buildAccountIdBridge(): Promise<{
   const PB_API_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-db.reiwarden.io.vn';
   
   try {
-    const data = await pocketbaseList<any>('pvl_acc_001', {
+    const data = await pocketbaseList<any>(PB_COLLECTIONS.ACCOUNTS, {
       page: 1,
       perPage: 500,
       fields: 'id,name,sb_account_id'

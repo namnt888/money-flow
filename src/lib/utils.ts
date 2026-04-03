@@ -84,6 +84,18 @@ export function formatVNLongAmount(amount: number): string {
   return parts.join(' ').trim();
 }
 
+/**
+ * Normalizes text by removing Vietnamese accents and converting to lowercase.
+ */
+export function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, (m) => (m === 'đ' ? 'd' : 'D'))
+    .trim();
+}
+
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

@@ -30,9 +30,10 @@ import { PersonAvatar } from "@/components/ui/person-avatar";
 type BasicInfoSectionProps = {
     people: Person[];
     operationMode?: 'add' | 'edit' | 'duplicate';
+    onAddNewPerson?: () => void;
 };
 
-export function BasicInfoSection({ people, operationMode }: BasicInfoSectionProps) {
+export function BasicInfoSection({ people, operationMode, onAddNewPerson }: BasicInfoSectionProps) {
     const form = useFormContext<SingleTransactionFormValues>();
 
     // Sync Tag with Date - ONLY if empty and in ADD mode
@@ -143,6 +144,8 @@ export function BasicInfoSection({ people, operationMode }: BasicInfoSectionProp
                                     placeholder="Personal Flow (No one)"
                                     hideTriggerBadge
                                     className="w-full h-10 bg-white border-slate-200"
+                                    onAddNew={onAddNewPerson}
+                                    addLabel="Person"
                                 />
                             </FormControl>
                             <FormMessage />

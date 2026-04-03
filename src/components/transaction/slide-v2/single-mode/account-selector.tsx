@@ -90,6 +90,7 @@ export function AccountSelector({
   accounts,
   people,
   onAddNewAccount,
+  onAddNewPerson,
   onEditAccount,
 }: AccountSelectorProps) {
   const form = useFormContext<SingleTransactionFormValues>();
