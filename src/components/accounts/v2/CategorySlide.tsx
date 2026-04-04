@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Account, Category } from "@/types/moneyflow.types"
+import { Account, Category, Shop } from "@/types/moneyflow.types"
 import { createCategory, updateCategory } from "@/services/category.service"
 import { cn } from "@/lib/utils"
 import { Combobox } from "@/components/ui/combobox"
@@ -68,6 +68,7 @@ interface CategorySlideProps {
     zIndex?: number
     isExternalLoading?: boolean
     accounts?: Account[]
+    shops?: Shop[]
 }
 
 export function CategorySlide({
@@ -82,6 +83,7 @@ export function CategorySlide({
     allCategories = [],
     isExternalLoading = false,
     accounts = [],
+    shops = [],
 }: CategorySlideProps & { allCategories?: Category[] }) {
     const [isLoading, setIsLoading] = useState(false)
     const combinedLoading = isLoading || isExternalLoading
@@ -92,6 +94,8 @@ export function CategorySlide({
     const [keywords, setKeywords] = useState<string[]>([])
     const [keywordInput, setKeywordInput] = useState("")
     const [linkedAccountIds, setLinkedAccountIds] = useState<string[]>([])
+    const [linkedShopIds, setLinkedShopIds] = useState<string[]>([])
+    const [defaultShopId, setDefaultShopId] = useState<string | null>(null)
 
     const [isShopSlideOpen, setIsShopSlideOpen] = useState(false)
 
@@ -105,6 +109,18 @@ export function CategorySlide({
                 ) : undefined,
             })),
         [accounts],
+    )
+
+    const shopOptions = useMemo(
+        () =>
+            shops.map((shop) => ({
+                value: shop.id,
+                label: shop.name,
+                icon: shop.image_url ? (
+                    <img src={shop.image_url} alt={shop.name} className="h-4 w-4 object-contain rounded-none" />
+                ) : undefined,
+            })),
+        [shops],
     )
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -122,9 +138,12 @@ export function CategorySlide({
         mccCodes.length !== (category?.mcc_codes?.length || 0) || 
         keywords.length !== (category?.keywords?.length || 0) ||
         linkedAccountIds.length !== ((category?.linked_account_ids?.length) || 0) ||
+        linkedShopIds.length !== ((category?.linked_shop_ids?.length) || 0) ||
+        defaultShopId !== (category?.default_shop_id || null) ||
         (category && JSON.stringify(mccCodes) !== JSON.stringify(category.mcc_codes || [])) || 
         (category && JSON.stringify(keywords) !== JSON.stringify(category.keywords || [])) ||
         (category && JSON.stringify([...linkedAccountIds].sort()) !== JSON.stringify([...(category.linked_account_ids || [])].sort())) ||
+        (category && JSON.stringify([...linkedShopIds].sort()) !== JSON.stringify([...(category.linked_shop_ids || [])].sort())) ||
         mccInput !== "" || keywordInput !== ""
 
     const handleBack = () => {
@@ -168,6 +187,8 @@ export function CategorySlide({
                 setMccCodes(Array.isArray(category.mcc_codes) ? category.mcc_codes : [])
                 setKeywords(Array.isArray(category.keywords) ? category.keywords : [])
                 setLinkedAccountIds(Array.isArray(category.linked_account_ids) ? category.linked_account_ids : [])
+                setLinkedShopIds(Array.isArray(category.linked_shop_ids) ? category.linked_shop_ids : [])
+                setDefaultShopId(category.default_shop_id || null)
             } else {
                 form.reset({
                     name: "",
@@ -179,6 +200,8 @@ export function CategorySlide({
                 setMccCodes([])
                 setKeywords([])
                 setLinkedAccountIds([])
+                setLinkedShopIds([])
+                setDefaultShopId(null)
             }
             setMccInput("")
             setKeywordInput("")
@@ -237,6 +260,19 @@ export function CategorySlide({
         setLinkedAccountIds((prev) => prev.filter((id) => id !== accountId))
     }
 
+    const addLinkedShop = (shopId: string | null | undefined) => {
+        if (!shopId) return
+        if (linkedShopIds.includes(shopId)) return
+        setLinkedShopIds((prev) => [...prev, shopId])
+    }
+
+    const removeLinkedShop = (shopId: string) => {
+        setLinkedShopIds((prev) => prev.filter((id) => id !== shopId))
+        if (defaultShopId === shopId) {
+            setDefaultShopId(null)
+        }
+    }
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
@@ -245,6 +281,8 @@ export function CategorySlide({
                 mcc_codes: mccCodes.length > 0 ? mccCodes : undefined,
                 keywords: keywords.length > 0 ? keywords : undefined,
                 linked_account_ids: linkedAccountIds.length > 0 ? linkedAccountIds : undefined,
+                linked_shop_ids: linkedShopIds.length > 0 ? linkedShopIds : undefined,
+                default_shop_id: defaultShopId || null,
             }
 
             if (category) {
@@ -451,6 +489,9 @@ export function CategorySlide({
                                                     key={accountId}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-100 rounded-lg text-[11px] font-bold text-sky-700"
                                                 >
+                                                    {account?.image_url ? (
+                                                        <img src={account.image_url} alt={label} className="h-4 w-4 object-contain rounded-none" />
+                                                    ) : null}
                                                     <span>{label}</span>
                                                     <button
                                                         type="button"
@@ -465,6 +506,90 @@ export function CategorySlide({
                                     </div>
                                     <p className="text-[9px] text-slate-400 font-bold italic bg-sky-50/50 p-2 rounded-lg border border-sky-100/50">
                                         * TIP: Transaction slide will prioritize this category when selected account matches.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                                            <Tag className="h-3 w-3 text-slate-400" /> Linked Shops (Category {'->'} Shop)
+                                        </FormLabel>
+                                        {linkedShopIds.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setLinkedShopIds([])
+                                                    setDefaultShopId(null)
+                                                }}
+                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
+                                            >
+                                                Clear All
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <Combobox
+                                        items={shopOptions}
+                                        value={undefined}
+                                        onValueChange={(value) => addLinkedShop(value || null)}
+                                        placeholder="Select shop to link"
+                                        className="w-full h-10 border-slate-200 bg-white"
+                                    />
+
+                                    <div className="min-h-[72px] p-3 rounded-xl border border-slate-200 bg-white shadow-inner flex flex-wrap gap-2 content-start">
+                                        {linkedShopIds.length === 0 && (
+                                            <span className="text-[10px] text-slate-400 font-semibold">No linked shop yet.</span>
+                                        )}
+                                        {linkedShopIds.map((shopId) => {
+                                            const shop = shops.find((item) => item.id === shopId)
+                                            const label = shop?.name || shopId
+                                            const isDefault = defaultShopId === shopId
+                                            return (
+                                                <div
+                                                    key={shopId}
+                                                    className={cn(
+                                                        "flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[11px] font-bold cursor-pointer",
+                                                        isDefault
+                                                            ? "bg-amber-50 border-amber-200 text-amber-700"
+                                                            : "bg-violet-50 border-violet-100 text-violet-700",
+                                                    )}
+                                                    onClick={() => setDefaultShopId(shopId)}
+                                                    title={isDefault ? "Default shop" : "Click to set as default"}
+                                                >
+                                                    {shop?.image_url ? (
+                                                        <img src={shop.image_url} alt={label} className="h-4 w-4 object-contain rounded-none" />
+                                                    ) : null}
+                                                    <span>{label}</span>
+                                                    {isDefault && <span className="text-[9px] uppercase">default</span>}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeLinkedShop(shopId)}
+                                                        className="text-violet-300 hover:text-rose-500 transition-colors"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    <div className="flex items-center justify-between rounded-lg border border-amber-200/70 bg-amber-50/50 px-3 py-2">
+                                        <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">
+                                            {defaultShopId
+                                                ? `Default Shop: ${shops.find((shop) => shop.id === defaultShopId)?.name || defaultShopId}`
+                                                : "Default Shop: Not selected"}
+                                        </p>
+                                        {defaultShopId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setDefaultShopId(null)}
+                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
+                                            >
+                                                Clear Default
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 font-bold italic bg-violet-50/50 p-2 rounded-lg border border-violet-100/50">
+                                        * TIP: When account resolves to this category, transaction slide will suggest default/linked shop first.
                                     </p>
                                 </div>
 

@@ -16,6 +16,8 @@ export type Category = {
   mcc_codes?: string[] | null;
   keywords?: string[] | null;
   linked_account_ids?: string[] | null;
+  default_shop_id?: string | null;
+  linked_shop_ids?: string[] | null;
   kind?: "internal" | "external" | null;
   is_archived?: boolean | null;
   slug?: string | null;

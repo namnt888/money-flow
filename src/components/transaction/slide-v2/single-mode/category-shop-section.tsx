@@ -205,16 +205,33 @@ export function CategoryShopSection({
     }
 
     const historicalSet = new Set(effectiveCategoryHistoricalShopIds);
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    const linkedShopSet = new Set(
+      Array.isArray((selectedCategory as any)?.linked_shop_ids)
+        ? (((selectedCategory as any).linked_shop_ids as string[]) || [])
+        : [],
+    );
+    const defaultShopId = (selectedCategory as any)?.default_shop_id || null;
 
     // Filter and sort:
     // 1. Matches via default_category_id or History
     // 2. Others below
     return [...shops]
       .sort((a, b) => {
-        const aMatch =
-          a.default_category_id === categoryId || historicalSet.has(a.id);
-        const bMatch =
-          b.default_category_id === categoryId || historicalSet.has(b.id);
+        const aScore =
+          (defaultShopId && a.id === defaultShopId ? 100 : 0) +
+          (linkedShopSet.has(a.id) ? 50 : 0) +
+          (a.default_category_id === categoryId ? 20 : 0) +
+          (historicalSet.has(a.id) ? 10 : 0);
+        const bScore =
+          (defaultShopId && b.id === defaultShopId ? 100 : 0) +
+          (linkedShopSet.has(b.id) ? 50 : 0) +
+          (b.default_category_id === categoryId ? 20 : 0) +
+          (historicalSet.has(b.id) ? 10 : 0);
+        if (aScore !== bScore) return bScore - aScore;
+
+        const aMatch = a.default_category_id === categoryId || historicalSet.has(a.id);
+        const bMatch = b.default_category_id === categoryId || historicalSet.has(b.id);
         if (aMatch && !bMatch) return -1;
         if (!aMatch && bMatch) return 1;
         return 0;
@@ -234,7 +251,7 @@ export function CategoryShopSection({
           <Store className="w-4 h-4 text-slate-400" />
         ),
       }));
-  }, [shops, categoryId, effectiveCategoryHistoricalShopIds]);
+  }, [shops, categories, categoryId, effectiveCategoryHistoricalShopIds]);
 
   const categoryOptions = filteredCategories.map((c) => {
     let badgeLabel =
@@ -313,6 +330,11 @@ export function CategoryShopSection({
     if (!categoryId) return;
 
     const currentShopId = form.getValues("shop_id");
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    const categoryDefaultShopId = resolveShopValue((selectedCategory as any)?.default_shop_id || null);
+    const categoryLinkedShopIds = Array.isArray((selectedCategory as any)?.linked_shop_ids)
+      ? ((selectedCategory as any).linked_shop_ids as string[])
+      : [];
 
     const fetchShops = async () => {
       // Fetch multiple historical shops to improve the dropdown sorting
@@ -320,7 +342,15 @@ export function CategoryShopSection({
       setCategoryHistoricalShopIds(recentShopIds);
 
       if (!currentShopId) {
-        if (recentShopIds.length > 0) {
+        if (categoryDefaultShopId) {
+          form.setValue("shop_id", categoryDefaultShopId, { shouldDirty: true });
+        } else if (categoryLinkedShopIds.length > 0) {
+          const linkedShopId = resolveShopValue(categoryLinkedShopIds[0]);
+          if (linkedShopId) {
+            form.setValue("shop_id", linkedShopId, { shouldDirty: true });
+            return;
+          }
+        } else if (recentShopIds.length > 0) {
           form.setValue("shop_id", recentShopIds[0], { shouldDirty: true });
         } else {
           // Fallback to the single most recent shop logic
@@ -333,7 +363,7 @@ export function CategoryShopSection({
     };
 
     fetchShops();
-  }, [categoryId, form, shops]);
+  }, [categoryId, categories, form, shops, resolveShopValue]);
 
   // CASCADE: Select Shop -> Auto-set Category
   useEffect(() => {
@@ -349,11 +379,23 @@ export function CategoryShopSection({
       // Fetch historical categories for this shop to check compatibility
       const recentCategoryIds = await getRecentCategoriesByShopId(shopId);
       setShopHistoricalCategoryIds(recentCategoryIds);
+      const linkedCategory = categories.find((category) => {
+        const linkedShopIds = Array.isArray((category as any).linked_shop_ids)
+          ? ((category as any).linked_shop_ids as string[])
+          : [];
+        return linkedShopIds.includes(shopId);
+      });
 
       // Determine if current category is compatible with the new shop
       if (!currentCategoryId) {
-        // 1. Try default category from shop definition
-        if (selectedShop?.default_category_id) {
+        // 1. Prefer explicit category->shop linkage
+        if (linkedCategory?.id) {
+          form.setValue("category_id", linkedCategory.id, {
+            shouldDirty: true,
+          });
+        }
+        // 2. Try default category from shop definition
+        else if (selectedShop?.default_category_id) {
           form.setValue(
             "category_id",
             resolveCategoryValue(selectedShop.default_category_id),
@@ -362,7 +404,7 @@ export function CategoryShopSection({
             },
           );
         }
-        // 2. Or use the most recent one from history
+        // 3. Or use the most recent one from history
         else if (recentCategoryIds.length > 0) {
           form.setValue("category_id", resolveCategoryValue(recentCategoryIds[0]), {
             shouldDirty: true,
@@ -372,7 +414,7 @@ export function CategoryShopSection({
     };
 
     applyCategory();
-  }, [shopId, form, shops, resolveCategoryValue]);
+  }, [shopId, categories, form, shops, resolveCategoryValue]);
 
   useEffect(() => {
     if (isEditingMode) return;
@@ -456,6 +498,14 @@ export function CategoryShopSection({
   // Auto-select defaults logic
   useEffect(() => {
     const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
+    const shouldDeferToAccountLinkedPrefill =
+      !isEditingMode &&
+      Boolean(activeAccountId) &&
+      allowFavoritePrefill &&
+      !currentCategoryId;
+
+    if (shouldDeferToAccountLinkedPrefill) return;
+
     const isCurrentCategoryCompatible =
       !!currentCategoryId &&
       filteredCategories.some((c) => c.id === currentCategoryId);
@@ -497,6 +547,8 @@ export function CategoryShopSection({
     filteredCategories,
     form,
     isEditingMode,
+    activeAccountId,
+    allowFavoritePrefill,
     resolveCategoryValue,
   ]);
 

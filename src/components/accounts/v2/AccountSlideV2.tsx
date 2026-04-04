@@ -1912,6 +1912,7 @@ export function AccountSlideV2({
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
                 accounts={allAccounts}
+                shops={shops}
                 defaultType="expense"
                 onBack={() => setIsCategoryDialogOpen(false)}
                 zIndex={zIndex + 100}

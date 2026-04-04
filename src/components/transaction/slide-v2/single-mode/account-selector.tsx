@@ -189,7 +189,11 @@ export function AccountSelector({
           alt=""
           className="w-5 h-auto max-w-[20px] object-contain rounded-none"
         />
-      ) : undefined,
+      ) : (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-sm bg-slate-100 text-slate-500">
+          {typeIcon}
+        </span>
+      ),
       badge: (
         <div
           className={`flex items-center gap-1 rounded-[4px] border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest ${colorClass}`}

@@ -166,6 +166,8 @@ Example: `src/app/transactions/page.tsx` loads via `getAccounts()`, `getUnifiedT
 - Always link to account details via `/accounts/[id]` only.
 - If you see `v1`/`v2` naming in components, prefer `src/components/**/v2/**` and App Router pages under `src/app`.
 - For "Add Transaction" actions, always use `AddTransactionDropdown` from V2 and never hardcode URLs.
+- PocketBase categories collection canonical name is `categories` (not `pvl_cat_001`).
+- For account-category defaults, prefer explicit category schema fields (e.g. relation `linked_account_ids`) over hidden keyword encodings.
 
 ## Common Pitfalls & Solutions
 | Issue | Cause | Fix |

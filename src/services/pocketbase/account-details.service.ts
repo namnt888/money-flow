@@ -32,10 +32,6 @@ import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolvePocketBasePersonRecord } from "./people.service";
 import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
 import { PB_COLLECTIONS } from "@/lib/pocketbase/collections";
-import {
-  extractLinkedAccountIdsFromKeywords,
-  stripLinkedAccountKeywords,
-} from "@/lib/category-account-links";
 
 type PocketBaseRecord = Record<string, any>;
 
@@ -117,7 +113,12 @@ function mapAccount(record: PocketBaseRecord): Account {
 }
 
 function mapCategory(record: PocketBaseRecord): Category {
-  const linkedAccountIds = extractLinkedAccountIdsFromKeywords(record.keywords);
+  const linkedAccountIds = Array.isArray(record.linked_account_ids)
+    ? record.linked_account_ids
+    : [];
+  const linkedShopIds = Array.isArray(record.linked_shop_ids)
+    ? record.linked_shop_ids
+    : [];
   return {
     id: record.id,
     name: record.name,
@@ -125,8 +126,10 @@ function mapCategory(record: PocketBaseRecord): Category {
     icon: record.icon || null,
     image_url: record.image_url || null,
     mcc_codes: record.mcc_codes || null,
-    keywords: stripLinkedAccountKeywords(record.keywords),
+    keywords: record.keywords || null,
     linked_account_ids: linkedAccountIds,
+    default_shop_id: record.default_shop_id || null,
+    linked_shop_ids: linkedShopIds,
     kind: record.kind || null,
     is_archived: Boolean(record.is_archived || false),
     slug: record.slug || null,
@@ -483,6 +486,9 @@ export async function createPocketBaseCategory(
     kind?: Category["kind"] | null;
     mcc_codes?: string[] | null;
     keywords?: string[] | null;
+    linked_account_ids?: string[] | null;
+    default_shop_id?: string | null;
+    linked_shop_ids?: string[] | null;
   },
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);
@@ -501,6 +507,9 @@ export async function createPocketBaseCategory(
           kind: data.kind ?? null,
           mcc_codes: data.mcc_codes ?? null,
           keywords: data.keywords ?? null,
+          linked_account_ids: data.linked_account_ids ?? [],
+          default_shop_id: data.default_shop_id ?? null,
+          linked_shop_ids: data.linked_shop_ids ?? [],
           is_archived: false,
         },
       },
@@ -522,6 +531,9 @@ export async function updatePocketBaseCategory(
     kind: Category["kind"] | null;
     mcc_codes: string[] | null;
     keywords: string[] | null;
+    linked_account_ids: string[] | null;
+    default_shop_id: string | null;
+    linked_shop_ids: string[] | null;
   }>,
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);

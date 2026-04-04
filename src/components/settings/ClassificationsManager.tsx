@@ -642,6 +642,7 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                     if (!open) setIsCreatingCategoryFromShop(false)
                 }}
                 accounts={accounts}
+                shops={shops}
                 category={selectedCategory}
                 defaultType={categoryFilter === "all" || categoryFilter === "transfer" ? "expense" : categoryFilter as any}
                 onSuccess={(newCatId) => {

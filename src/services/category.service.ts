@@ -21,24 +21,11 @@ import {
   togglePocketBaseCategoriesArchiveBulk,
   deletePocketBaseCategoriesBulk,
 } from '@/services/pocketbase/account-details.service'
-import {
-  extractLinkedAccountIdsFromKeywords,
-  mergeKeywordsWithLinkedAccounts,
-  stripLinkedAccountKeywords,
-} from '@/lib/category-account-links'
 
 export async function getCategories(): Promise<Category[]> {
   console.log('[DB:PB] categories.list')
   try {
-    const categories = await getPocketBaseCategories()
-    return categories.map((category) => {
-      const linkedAccountIds = extractLinkedAccountIdsFromKeywords(category.keywords)
-      return {
-        ...category,
-        keywords: stripLinkedAccountKeywords(category.keywords),
-        linked_account_ids: linkedAccountIds,
-      }
-    })
+    return await getPocketBaseCategories()
   } catch (err) {
     console.error('[DB:PB] categories.list failed:', err)
     return []
@@ -60,10 +47,10 @@ export async function createCategory(category: Omit<Category, 'id'>): Promise<Ca
       image_url: category.image_url ?? null,
       kind: category.kind ?? null,
       mcc_codes: (category as any).mcc_codes ?? null,
-      keywords: mergeKeywordsWithLinkedAccounts(
-        (category as any).keywords,
-        (category as any).linked_account_ids,
-      ),
+      keywords: (category as any).keywords ?? null,
+      linked_account_ids: (category as any).linked_account_ids ?? [],
+      default_shop_id: (category as any).default_shop_id ?? null,
+      linked_shop_ids: (category as any).linked_shop_ids ?? [],
     })
 
     if (!success) throw new Error('Failed to create category in PocketBase')
@@ -89,10 +76,10 @@ export async function updateCategory(id: string, updates: Partial<Category>): Pr
       image_url: updates.image_url ?? null,
       kind: updates.kind ?? null,
       mcc_codes: (updates as any).mcc_codes ?? null,
-      keywords: mergeKeywordsWithLinkedAccounts(
-        (updates as any).keywords,
-        (updates as any).linked_account_ids,
-      ),
+      keywords: (updates as any).keywords ?? null,
+      linked_account_ids: (updates as any).linked_account_ids ?? null,
+      default_shop_id: (updates as any).default_shop_id ?? null,
+      linked_shop_ids: (updates as any).linked_shop_ids ?? null,
     })
 
     if (!success) throw new Error('Failed to update category in PocketBase')
@@ -121,8 +108,10 @@ export async function getCategoryById(id: string): Promise<Category | null> {
       image_url: item.image_url,
       kind: item.kind,
       mcc_codes: item.mcc_codes,
-      keywords: stripLinkedAccountKeywords(item.keywords),
-      linked_account_ids: extractLinkedAccountIdsFromKeywords(item.keywords),
+      keywords: item.keywords,
+      linked_account_ids: item.linked_account_ids ?? null,
+      default_shop_id: item.default_shop_id ?? null,
+      linked_shop_ids: item.linked_shop_ids ?? null,
       is_archived: item.is_archived,
     }
   } catch (error) {
