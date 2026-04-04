@@ -25,6 +25,8 @@ interface BatchMasterChecklistProps {
     bankType: 'MBB' | 'VIB'
     accounts: any[]
     bankMappings?: any[]
+    globalSheetUrl?: string | null
+    globalSheetName?: string | null
     period?: 'before' | 'after'
     monthYear?: string
     initialPhaseId?: string | null
@@ -38,6 +40,8 @@ export function BatchMasterChecklist({
     bankType,
     accounts,
     bankMappings = [],
+    globalSheetUrl,
+    globalSheetName,
     period,
     monthYear,
     initialPhaseId = null,
@@ -774,19 +778,36 @@ export function BatchMasterChecklist({
                             </Tooltip>
                         </div>
 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    onClick={handleGlobalToSheet}
-                                    disabled={performingAction}
-                                    className="h-11 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"
-                                >
-                                    {performingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
-                                    <span>Step 2 <span className="text-[10px] opacity-60 ml-1 font-bold">To Sheet ({phaseNameText})</span></span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Step 2: Sync list to Google Sheet for Auto-transfer</TooltipContent>
-                        </Tooltip>
+                        <div className="flex items-center rounded-xl shadow-md overflow-hidden">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={handleGlobalToSheet}
+                                        disabled={performingAction}
+                                        className="h-11 px-6 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                                    >
+                                        {performingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                                        <span>Step 2 <span className="text-[10px] opacity-60 ml-1 font-bold">To Sheet ({phaseNameText})</span></span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Step 2: Sync list to Google Sheet for Auto-transfer</TooltipContent>
+                            </Tooltip>
+                            {globalSheetUrl && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href={globalSheetUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="h-11 w-11 inline-flex items-center justify-center bg-indigo-700 text-indigo-100 hover:bg-indigo-800 border-l border-indigo-500 transition-colors"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{globalSheetName || 'Open Google Sheet in new tab'}</TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
 
                         <div className="flex bg-emerald-600 rounded-xl shadow-md overflow-hidden">
                             <Tooltip>
