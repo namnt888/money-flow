@@ -590,11 +590,11 @@ export const UnifiedTransactionTable = React.forwardRef<
         );
     }, [customColumnOrder]);
 
-    useEffect(() => {
+    React.useEffect(() => {
       localStorage.setItem("mf_v3_col_vis", JSON.stringify(visibleColumns));
     }, [visibleColumns]);
 
-    useEffect(() => {
+    React.useEffect(() => {
       localStorage.setItem("mf_v3_col_width", JSON.stringify(columnWidths));
     }, [columnWidths]);
 
