@@ -415,6 +415,59 @@ export function CategorySlide({
                                     )}
                                 />
 
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                                            <Zap className="h-3 w-3 text-slate-400" /> Linked Accounts (Auto-fill)
+                                        </FormLabel>
+                                        {linkedAccountIds.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setLinkedAccountIds([])}
+                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
+                                            >
+                                                Clear All
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <Combobox
+                                        items={accountOptions}
+                                        value={undefined}
+                                        onValueChange={(value) => addLinkedAccount(value || null)}
+                                        placeholder="Select account to link"
+                                        className="w-full h-10 border-slate-200 bg-white"
+                                    />
+
+                                    <div className="min-h-[72px] p-3 rounded-xl border border-slate-200 bg-white shadow-inner flex flex-wrap gap-2 content-start">
+                                        {linkedAccountIds.length === 0 && (
+                                            <span className="text-[10px] text-slate-400 font-semibold">No linked account yet.</span>
+                                        )}
+                                        {linkedAccountIds.map((accountId) => {
+                                            const account = accounts.find((item) => item.id === accountId)
+                                            const label = account?.name || accountId
+                                            return (
+                                                <div
+                                                    key={accountId}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-100 rounded-lg text-[11px] font-bold text-sky-700"
+                                                >
+                                                    <span>{label}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeLinkedAccount(accountId)}
+                                                        className="text-sky-300 hover:text-rose-500 transition-colors"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 font-bold italic bg-sky-50/50 p-2 rounded-lg border border-sky-100/50">
+                                        * TIP: Transaction slide will prioritize this category when selected account matches.
+                                    </p>
+                                </div>
+
                                 <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-4">
                                     <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                                         <div className="h-4 w-4 rounded bg-slate-100 text-slate-500 flex items-center justify-center text-[10px]">✨</div>
@@ -593,58 +646,6 @@ export function CategorySlide({
                                     </p>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                                            <Zap className="h-3 w-3 text-slate-400" /> Linked Accounts (Auto-fill)
-                                        </FormLabel>
-                                        {linkedAccountIds.length > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setLinkedAccountIds([])}
-                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
-                                            >
-                                                Clear All
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <Combobox
-                                        items={accountOptions}
-                                        value={undefined}
-                                        onValueChange={(value) => addLinkedAccount(value || null)}
-                                        placeholder="Select account to link"
-                                        className="w-full h-10 border-slate-200 bg-white"
-                                    />
-
-                                    <div className="min-h-[72px] p-3 rounded-xl border border-slate-200 bg-white shadow-inner flex flex-wrap gap-2 content-start">
-                                        {linkedAccountIds.length === 0 && (
-                                            <span className="text-[10px] text-slate-400 font-semibold">No linked account yet.</span>
-                                        )}
-                                        {linkedAccountIds.map((accountId) => {
-                                            const account = accounts.find((item) => item.id === accountId)
-                                            const label = account?.name || accountId
-                                            return (
-                                                <div
-                                                    key={accountId}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-100 rounded-lg text-[11px] font-bold text-sky-700"
-                                                >
-                                                    <span>{label}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeLinkedAccount(accountId)}
-                                                        className="text-sky-300 hover:text-rose-500 transition-colors"
-                                                    >
-                                                        <X className="h-3 w-3" />
-                                                    </button>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                    <p className="text-[9px] text-slate-400 font-bold italic bg-sky-50/50 p-2 rounded-lg border border-sky-100/50">
-                                        * TIP: Transaction slide will prioritize this category when selected account matches.
-                                    </p>
-                                </div>
                             </form>
                         </Form>
                     </div>
