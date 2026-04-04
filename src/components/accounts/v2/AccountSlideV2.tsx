@@ -752,14 +752,28 @@ export function AccountSlideV2({
         setReceiverName(acc.receiver_name || "");
         setParentAccountId(acc.parent_account_id || null);
         setStartDate((acc as any).start_date);
+        const programFavCategory =
+            (cb as any)?.program?.favorite_category_id ||
+            (cb as any)?.program?.favoriteCategoryId ||
+            (cb as any)?.favorite_category_id ||
+            (cb as any)?.favoriteCategoryId ||
+            null;
+        const programFavShop =
+            (cb as any)?.program?.favorite_shop_id ||
+            (cb as any)?.program?.favoriteShopId ||
+            (cb as any)?.favorite_shop_id ||
+            (cb as any)?.favoriteShopId ||
+            null;
         setFavoriteCategoryId(
             normalizedMetadata.favorite_category_id ||
             normalizedMetadata.favoriteCategoryId ||
+            programFavCategory ||
             null,
         );
         setFavoriteShopId(
             normalizedMetadata.favorite_shop_id ||
             normalizedMetadata.favoriteShopId ||
+            programFavShop ||
             null,
         );
 
@@ -916,8 +930,22 @@ export function AccountSlideV2({
                 cb_min_spend: cb.minSpendTarget,
                 cb_base_rate: (cb.defaultRate || 0) * 100,
                 cb_max_budget: cb.maxBudget || null,
-                favoriteCategoryId: (account as any)?.metadata?.favorite_category_id || null,
-                favoriteShopId: (account as any)?.metadata?.favorite_shop_id || null,
+                favoriteCategoryId:
+                    (account as any)?.metadata?.favorite_category_id ||
+                    (account as any)?.metadata?.favoriteCategoryId ||
+                    (cb as any)?.program?.favorite_category_id ||
+                    (cb as any)?.program?.favoriteCategoryId ||
+                    (cb as any)?.favorite_category_id ||
+                    (cb as any)?.favoriteCategoryId ||
+                    null,
+                favoriteShopId:
+                    (account as any)?.metadata?.favorite_shop_id ||
+                    (account as any)?.metadata?.favoriteShopId ||
+                    (cb as any)?.program?.favorite_shop_id ||
+                    (cb as any)?.program?.favoriteShopId ||
+                    (cb as any)?.favorite_shop_id ||
+                    (cb as any)?.favoriteShopId ||
+                    null,
                 levels: initLevels
             }));
         } else if (open && !account) {
@@ -1086,6 +1114,8 @@ export function AccountSlideV2({
 
                     // Keep legacy config for safety during transition
                     cashbackConfig: isCashbackEnabled ? {
+                        favorite_category_id: favoriteCategoryId || null,
+                        favorite_shop_id: favoriteShopId || null,
                         program: {
                             cycleType,
                             statementDay,
@@ -1093,7 +1123,9 @@ export function AccountSlideV2({
                             minSpendTarget: cbMinSpend,
                             defaultRate: cbBaseRate / 100,
                             maxBudget: cbMaxBudget,
-                            rules_json_v2: transformRulesForSave(cbRulesJson)
+                            rules_json_v2: transformRulesForSave(cbRulesJson),
+                            favorite_category_id: favoriteCategoryId || null,
+                            favorite_shop_id: favoriteShopId || null,
                         }
                     } as any : null
                 });
@@ -1144,6 +1176,8 @@ export function AccountSlideV2({
 
                     // Legacy config
                     cashbackConfig: isCashbackEnabled ? {
+                        favorite_category_id: favoriteCategoryId || null,
+                        favorite_shop_id: favoriteShopId || null,
                         program: {
                             cycleType,
                             statementDay,
@@ -1151,7 +1185,9 @@ export function AccountSlideV2({
                             minSpendTarget: cbMinSpend,
                             defaultRate: cbBaseRate / 100,
                             maxBudget: cbMaxBudget,
-                            rules_json_v2: transformRulesForSave(cbRulesJson)
+                            rules_json_v2: transformRulesForSave(cbRulesJson),
+                            favorite_category_id: favoriteCategoryId || null,
+                            favorite_shop_id: favoriteShopId || null,
                         }
                     } : null
                 });

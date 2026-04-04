@@ -387,10 +387,17 @@ export function CategoryShopSection({
     const hydrateRecentForAccount = async () => {
       const activeAccount = accounts.find((account) => account.id === activeAccountId);
       const metadata = ((activeAccount as any)?.metadata || {}) as Record<string, any>;
+      const cashbackConfig = ((activeAccount as any)?.cashback_config || {}) as Record<string, any>;
+      const programConfig =
+        cashbackConfig && typeof cashbackConfig === "object"
+          ? ((cashbackConfig as any).program || cashbackConfig)
+          : {};
       const metadataCategory =
         allowFavoritePrefill
           ? metadata.favorite_category_id ??
             metadata.favoriteCategoryId ??
+            (programConfig as any).favorite_category_id ??
+            (programConfig as any).favoriteCategoryId ??
             metadata.default_category_id ??
             metadata.defaultCategoryId ??
             metadata.favorite_category ??
@@ -400,6 +407,8 @@ export function CategoryShopSection({
         allowFavoritePrefill
           ? metadata.favorite_shop_id ??
             metadata.favoriteShopId ??
+            (programConfig as any).favorite_shop_id ??
+            (programConfig as any).favoriteShopId ??
             metadata.default_shop_id ??
             metadata.defaultShopId ??
             metadata.favorite_shop ??
