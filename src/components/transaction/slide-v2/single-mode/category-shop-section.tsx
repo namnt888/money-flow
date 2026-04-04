@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { SingleTransactionFormValues } from "../types";
-import { Category, Shop } from "@/types/moneyflow.types";
+import { Account, Category, Shop } from "@/types/moneyflow.types";
 import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,6 +25,7 @@ import {
 } from "@/actions/cascade-actions";
 
 type CategoryShopSectionProps = {
+  accounts: Account[];
   shops: Shop[];
   categories: Category[];
   onAddNewCategory?: () => void;
@@ -35,6 +36,7 @@ type CategoryShopSectionProps = {
 };
 
 export function CategoryShopSection({
+  accounts,
   shops,
   categories,
   onAddNewCategory,
@@ -98,9 +100,6 @@ export function CategoryShopSection({
   const [categoryHistoricalShopIds, setCategoryHistoricalShopIds] = useState<
     string[]
   >([]);
-  const [prefilledAccountId, setPrefilledAccountId] = useState<string | null>(
-    null,
-  );
 
   // Filter categories based on transaction type
   const filteredCategories = useMemo(() => {
@@ -161,6 +160,10 @@ export function CategoryShopSection({
     "repayment",
     "invest",
   ].includes(transactionType);
+
+  const allowFavoritePrefill = ["expense", "debt", "credit_pay"].includes(
+    transactionType,
+  );
 
   const isValidUrl = (url: string | null | undefined): url is string => {
     if (!url) return false;
@@ -374,7 +377,6 @@ export function CategoryShopSection({
   useEffect(() => {
     if (isEditingMode) return;
     if (!activeAccountId) return;
-    if (prefilledAccountId === activeAccountId) return;
 
     const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
     const currentShopId = resolveShopValue(form.getValues("shop_id"));
@@ -383,6 +385,47 @@ export function CategoryShopSection({
     let cancelled = false;
 
     const hydrateRecentForAccount = async () => {
+      const activeAccount = accounts.find((account) => account.id === activeAccountId);
+      const metadata = ((activeAccount as any)?.metadata || {}) as Record<string, any>;
+      const metadataCategory =
+        allowFavoritePrefill
+          ? metadata.favorite_category_id ??
+            metadata.favoriteCategoryId ??
+            metadata.default_category_id ??
+            metadata.defaultCategoryId ??
+            metadata.favorite_category ??
+            null
+          : null;
+      const metadataShop =
+        allowFavoritePrefill
+          ? metadata.favorite_shop_id ??
+            metadata.favoriteShopId ??
+            metadata.default_shop_id ??
+            metadata.defaultShopId ??
+            metadata.favorite_shop ??
+            null
+          : null;
+
+      const metadataCategoryId = resolveCategoryValue(metadataCategory);
+      const metadataShopId = resolveShopValue(metadataShop);
+
+      if (metadataCategoryId || metadataShopId) {
+        if (metadataCategoryId) {
+          form.setValue("category_id", metadataCategoryId, {
+            shouldDirty: false,
+            shouldTouch: false,
+          });
+        }
+
+        if (metadataShopId && !isShopHidden) {
+          form.setValue("shop_id", metadataShopId, {
+            shouldDirty: false,
+            shouldTouch: false,
+          });
+        }
+        return;
+      }
+
       const recent = await getRecentCategoryShopByAccountId(activeAccountId);
       if (cancelled) return;
 
@@ -391,19 +434,17 @@ export function CategoryShopSection({
 
       if (nextCategoryId) {
         form.setValue("category_id", nextCategoryId, {
-          shouldDirty: true,
-          shouldTouch: true,
+          shouldDirty: false,
+          shouldTouch: false,
         });
       }
 
       if (nextShopId && !isShopHidden) {
         form.setValue("shop_id", nextShopId, {
-          shouldDirty: true,
-          shouldTouch: true,
+          shouldDirty: false,
+          shouldTouch: false,
         });
       }
-
-      setPrefilledAccountId(activeAccountId);
     };
 
     hydrateRecentForAccount();
@@ -412,11 +453,12 @@ export function CategoryShopSection({
       cancelled = true;
     };
   }, [
+    accounts,
     activeAccountId,
     form,
     isEditingMode,
     isShopHidden,
-    prefilledAccountId,
+    allowFavoritePrefill,
     resolveCategoryValue,
     resolveShopValue,
   ]);

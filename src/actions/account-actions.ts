@@ -39,6 +39,7 @@ function mapAccountRow(record: any) {
     due_date: Number(record.due_date ?? 0),
     holder_type: record.holder_type ?? null,
     holder_person_id: record.holder_person_id ?? null,
+    metadata: record.metadata ?? null,
     created_at: record.created ?? null,
     updated_at: record.updated ?? null,
   }
@@ -68,6 +69,7 @@ type CreateAccountParams = {
   dueDate?: number | null
   holder_type?: 'me' | 'relative' | 'other'
   holder_person_id?: string | null
+  metadata?: Json | null
 }
 
 export async function createAccount(params: CreateAccountParams) {
@@ -101,6 +103,7 @@ export async function createAccount(params: CreateAccountParams) {
       cb_rules_json: params.cb_rules_json,
       cb_min_spend: params.cb_min_spend,
       cb_cycle_type: params.cb_cycle_type,
+      metadata: params.metadata,
       // Initial state
       current_balance: 0,
       is_active: true,
@@ -177,6 +180,7 @@ export async function updateAccountConfigAction(params: {
   dueDate?: number | null
   holder_type?: 'me' | 'relative' | 'other'
   holder_person_id?: string | null
+  metadata?: Json | null
 }) {
   console.log('[DB:PB] accounts.updateConfig START', {
     id: params.id,
@@ -206,6 +210,7 @@ export async function updateAccountConfigAction(params: {
       due_date: params.dueDate,
       holder_type: params.holder_type,
       holder_person_id: params.holder_person_id,
+      metadata: params.metadata,
       // cb_* columns + cashback_config JSON
       ...({
         cb_type: params.cb_type,

@@ -110,6 +110,7 @@ export type Account = {
     statement_day?: number;
     payment_due_day?: number;
   } | null;
+  metadata?: any;
 };
 
 export type AccountCashbackSnapshot = {

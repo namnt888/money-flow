@@ -706,19 +706,77 @@ export function AccountRowV2({
       }
       case "role": {
         const isCC = account.type === "credit_card";
-        const isParent = !!account.relationships?.is_parent || (allAccounts?.some(a => a.parent_account_id === account.id) ?? false);
-        const grpId = account.parent_account_id || (isParent ? account.id : '');
-        const relatedAccounts = (grpId && allAccounts)
-          ? allAccounts.filter(a => (a.id === grpId || a.parent_account_id === grpId) && a.id !== account.id) 
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          ) ?? false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
+              ),
+            );
+        const effectiveParentAcc = parentAcc || inferredParentAcc || null;
+
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAcc?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+          const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
+        }
+
+        const relatedAccounts = allAccounts
+          ? allAccounts.filter(
+              (item) =>
+                item.id !== account.id &&
+                (
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || "")
+                ),
+            )
           : [];
-        const parentAcc = isParent ? null : allAccounts?.find(a => a.id === grpId);
 
         // Group Total Balance (Debt)
-        const totalGroupDebt = familyBalance !== undefined ? familyBalance : (grpId 
-          ? allAccounts?.filter(a => a.id === grpId || a.parent_account_id === grpId).reduce((sum, a) => sum + (a.current_balance || 0), 0)
-          : account.current_balance) || 0;
+        const totalGroupDebt = familyBalance !== undefined
+          ? familyBalance
+          : (allAccounts
+              ? allAccounts
+                  .filter(
+                    (item) =>
+                      groupRefs.has(item.id) ||
+                      groupRefs.has(item.parent_account_id || ""),
+                  )
+                  .reduce((sum, item) => sum + (item.current_balance || 0), 0)
+              : account.current_balance) || 0;
 
-        const parentLimit = isCC ? (isParent ? account.credit_limit : parentAcc?.credit_limit) || 0 : 0;
+        const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
         const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
 
         return (
@@ -765,7 +823,7 @@ export function AccountRowV2({
                   <div className="p-3 bg-indigo-600 text-white">
                     <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Group: {isParent ? account.name : (parentAcc?.name || 'Shared Core')}
+                      Group: {isParent ? account.name : (effectiveParentAcc?.name || account.relationships?.parent_info?.name || 'Shared Core')}
                     </h4>
                   </div>
                   <div className="p-4 space-y-4">
@@ -798,18 +856,18 @@ export function AccountRowV2({
                       <div className="space-y-3">
                         <div>
                           <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Main Account (Parent)</p>
-                          {parentAcc ? (
+                          {effectiveParentAcc ? (
                             <div className="flex items-center gap-3 p-2 bg-indigo-50 rounded-xl border border-indigo-100">
                               <div className="h-8 w-8 rounded-none border border-indigo-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                                {parentAcc.image_url ? (
-                                  <img src={parentAcc.image_url} alt="" className="h-full w-full object-contain" />
+                                {effectiveParentAcc.image_url ? (
+                                  <img src={effectiveParentAcc.image_url} alt="" className="h-full w-full object-contain" />
                                 ) : (
                                   <Crown className="h-4 w-4 text-indigo-400" />
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-[11px] font-bold text-indigo-700 truncate">{parentAcc.name}</p>
-                                <p className="text-[9px] text-indigo-400 font-medium tracking-tight">LIMIT: {formatMoneyVND(parentAcc.credit_limit || 0)}</p>
+                                <p className="text-[11px] font-bold text-indigo-700 truncate">{effectiveParentAcc.name}</p>
+                                <p className="text-[9px] text-indigo-400 font-medium tracking-tight">LIMIT: {formatMoneyVND(effectiveParentAcc.credit_limit || 0)}</p>
                               </div>
                               <div className="text-right">
                                 <p className="text-[9px] font-black text-indigo-300 uppercase">Available</p>
@@ -877,19 +935,34 @@ export function AccountRowV2({
           );
         }
 
-        const isParent = account.relationships?.is_parent;
-        const parentId = account.parent_account_id;
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          (allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          )) || false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
+        const parentId = account.parent_account_id || account.relationships?.parent_info?.id || null;
         const parentAccount = parentId
-          ? allAccounts?.find((a) => a.id === parentId)
+          ? allAccounts?.find((a) => a.id === parentId || ((a as any)?.slug && (a as any).slug === parentId))
           : null;
+        const inferredParentAccount = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) => child.id === account.id,
+              ),
+            );
+        const effectiveParentAccount = parentAccount || inferredParentAccount;
 
-        const displayLimit = parentAccount
-          ? parentAccount.credit_limit || 0
+        const displayLimit = effectiveParentAccount
+          ? effectiveParentAccount.credit_limit || 0
           : account.credit_limit || 0;
         const cardDebtAbs = Math.abs(account.current_balance || 0);
         let familyDebt = account.current_balance || 0;
         let parentBalance = account.parent_account_id
-          ? parentAccount?.current_balance || 0
+          ? effectiveParentAccount?.current_balance || 0
           : account.current_balance || 0;
         let childrenBalances = 0;
 
@@ -898,11 +971,17 @@ export function AccountRowV2({
             .filter((a) => a.parent_account_id === account.id)
             .reduce((sum, child) => sum + (child.current_balance || 0), 0);
           familyDebt = (account.current_balance || 0) + childrenBalances;
-        } else if (parentId && parentAccount && allAccounts) {
+        } else if ((parentId || effectiveParentAccount?.id) && effectiveParentAccount && allAccounts) {
+          const parentRef = effectiveParentAccount.id;
           childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === parentId)
+            .filter(
+              (a) =>
+                a.parent_account_id === parentRef ||
+                ((effectiveParentAccount as any)?.slug &&
+                  a.parent_account_id === (effectiveParentAccount as any).slug),
+            )
             .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          familyDebt = (parentAccount.current_balance || 0) + childrenBalances;
+          familyDebt = (effectiveParentAccount.current_balance || 0) + childrenBalances;
         }
 
         const familyDebtAbs = Math.abs(familyDebt);
@@ -1285,17 +1364,24 @@ export function AccountRowV2({
       }
       case "balance": {
         const isCC = account.type === "credit_card";
-        const isParent = !!account.relationships?.is_parent;
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          ) || false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
         const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
         const parentAccount = balParentId
-          ? allAccounts?.find((a) => a.id === balParentId)
+          ? allAccounts?.find((a) => a.id === balParentId || ((a as any)?.slug && (a as any).slug === balParentId))
           : null;
 
         // Use passed familyBalance if available for consistent family-aware reporting
         let displayBalance = familyBalance;
 
         // Determine effective grouping
-        const effectiveParentId = account.relationships?.is_parent || isParent ? account.id : account.parent_account_id;
+        const effectiveParentId = isParent ? account.id : (account.parent_account_id || account.relationships?.parent_info?.id || null);
 
         // If no familyBalance prop, try to calculate it again (safety fallback)
         if (displayBalance === undefined || displayBalance === null) {

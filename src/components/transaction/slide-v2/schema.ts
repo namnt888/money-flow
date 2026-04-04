@@ -35,6 +35,8 @@ export const singleTransactionSchema = z.object({
         is_fixed: z.boolean().optional(),
         note: z.string().optional().nullable()
     })).optional().nullable(),
+    split_include_me: z.boolean().default(true).optional(),
+    split_me_note: z.string().optional().nullable(),
 
     // Installment
     is_installment: z.boolean().default(false).optional(),

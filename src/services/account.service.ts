@@ -223,6 +223,7 @@ export async function getAccounts(): Promise<Account[]> {
       due_date: (item as any).due_date ?? null,
       holder_type: (item as any).holder_type ?? 'me',
       holder_person_id: (item as any).holder_person_id ?? null,
+      metadata: parseJsonSafe((item as any).metadata),
       cashback_config: normalizeCashbackConfig(item.cashback_config),
       is_active: typeof item.is_active === 'boolean' ? item.is_active : null,
       image_url: typeof item.image_url === 'string' ? item.image_url : null,
@@ -316,7 +317,8 @@ export async function getAccountDetails(id: string): Promise<Account | null> {
     statement_day: row.statement_day ?? null,
     due_date: row.due_date ?? null,
     holder_type: (row as any).holder_type ?? 'me',
-    holder_person_id: (row as any).holder_person_id ?? null
+    holder_person_id: (row as any).holder_person_id ?? null,
+    metadata: parseJsonSafe((row as any).metadata),
   });
 
   try {

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
 import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search } from "lucide-react";
 import { updateAccountConfig } from "@/services/account.service";
@@ -40,6 +41,7 @@ import { SmartAmountInput } from "@/components/ui/smart-amount-input";
 import { CustomTooltip } from "@/components/ui/custom-tooltip";
 import { DayOfMonthPicker } from "@/components/ui/day-of-month-picker";
 import { CategorySlide } from "@/components/accounts/v2/CategorySlide";
+import { ShopSlide } from "@/components/shops/ShopSlide";
 import { CashbackConfigForm } from "./forms/CashbackConfigForm";
 import { CashbackRulesJson } from "@/types/cashback.types";
 import { UnsavedChangesDialog } from "@/components/transaction/slide-v2/unsaved-changes-dialog";
@@ -62,6 +64,7 @@ import { Category, Person, Subscription } from "@/types/moneyflow.types";
 import { PeopleSlideV2 } from "../../people/v2/people-slide-v2";
 import { getPeopleAction } from "@/actions/people-actions";
 import { getServicesAction } from "@/actions/service-actions";
+import { getShops } from "@/services/shop.service";
 
 type CashbackCycleType = 'calendar_month' | 'statement_cycle';
 
@@ -510,6 +513,7 @@ export function AccountSlideV2({
     const [restrictedCategoryIds, setRestrictedCategoryIds] = useState<string[]>([]);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isShopDialogOpen, setIsShopDialogOpen] = useState(false);
     const [isRefreshing, startRefresh] = React.useTransition();
     const [activeCategoryCallback, setActiveCategoryCallback] = useState<((categoryId: string) => void) | null>(null);
     // MF5.5 Rebooted Cashback States (Phase 16)
@@ -528,7 +532,10 @@ export function AccountSlideV2({
     const [openHolderPersonPopover, setOpenHolderPersonPopover] = useState(false);
     const [isPeopleSlideOpen, setIsPeopleSlideOpen] = useState(false);
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [shops, setShops] = useState<any[]>([]);
     const [performingAction, setPerformingAction] = useState(false);
+    const [favoriteCategoryId, setFavoriteCategoryId] = useState<string | null>(null);
+    const [favoriteShopId, setFavoriteShopId] = useState<string | null>(null);
 
     // Form state
     const [name, setName] = useState("");
@@ -608,6 +615,7 @@ export function AccountSlideV2({
                 console.error('[AccountSlideV2] Initial fetch failed:', err);
             });
             getServicesAction().then(res => setSubscriptions(res as any));
+            getShops().then((res) => setShops(res || [])).catch(() => setShops([]));
         }
     }, [open]);
 
@@ -642,6 +650,19 @@ export function AccountSlideV2({
     // Initial load helper
     const loadFromAccount = (acc: Account) => {
         console.log('[AccountSlideV2] loadFromAccount starting for:', acc.name, 'cb_type:', acc.cb_type);
+        const normalizedMetadata = (() => {
+            const raw = (acc as any)?.metadata;
+            if (!raw) return {} as Record<string, any>;
+            if (typeof raw === 'string') {
+                try {
+                    return JSON.parse(raw) as Record<string, any>;
+                } catch {
+                    return {} as Record<string, any>;
+                }
+            }
+            return raw as Record<string, any>;
+        })();
+
         setName(acc.name || "");
         setType(acc.type || 'bank');
         setAccountNumber(acc.account_number || "");
@@ -731,6 +752,16 @@ export function AccountSlideV2({
         setReceiverName(acc.receiver_name || "");
         setParentAccountId(acc.parent_account_id || null);
         setStartDate((acc as any).start_date);
+        setFavoriteCategoryId(
+            normalizedMetadata.favorite_category_id ||
+            normalizedMetadata.favoriteCategoryId ||
+            null,
+        );
+        setFavoriteShopId(
+            normalizedMetadata.favorite_shop_id ||
+            normalizedMetadata.favoriteShopId ||
+            null,
+        );
 
         // Determine main type
         if (acc.type === 'bank') setActiveMainType('bank');
@@ -782,6 +813,8 @@ export function AccountSlideV2({
             setCbMinSpend(0);
             setIsCategoryRestricted(false);
             setRestrictedCategoryIds([]);
+            setFavoriteCategoryId(null);
+            setFavoriteShopId(null);
         }
     }, [open, account]);
 
@@ -843,9 +876,11 @@ export function AccountSlideV2({
             dueDate,
             defaultRate: cbBaseRate,
             maxCashback: cbMaxBudget,
+            favoriteCategoryId,
+            favoriteShopId,
             levels: effectiveLevels
         });
-    }, [name, type, accountNumber, creditLimit, isActive, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
+    }, [name, type, accountNumber, creditLimit, isActive, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, favoriteCategoryId, favoriteShopId, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
 
     // Set initial state once when opening
     useEffect(() => {
@@ -881,6 +916,8 @@ export function AccountSlideV2({
                 cb_min_spend: cb.minSpendTarget,
                 cb_base_rate: (cb.defaultRate || 0) * 100,
                 cb_max_budget: cb.maxBudget || null,
+                favoriteCategoryId: (account as any)?.metadata?.favorite_category_id || null,
+                favoriteShopId: (account as any)?.metadata?.favorite_shop_id || null,
                 levels: initLevels
             }));
         } else if (open && !account) {
@@ -902,6 +939,8 @@ export function AccountSlideV2({
                 cb_min_spend: 0,
                 cb_base_rate: 0,
                 cb_max_budget: null,
+                favoriteCategoryId: null,
+                favoriteShopId: null,
                 levels: []
             }));
         }
@@ -968,6 +1007,12 @@ export function AccountSlideV2({
             };
 
             if (isEdit && account) {
+                const mergedMetadata = {
+                    ...(((account as any)?.metadata || {}) as Record<string, any>),
+                    favorite_category_id: favoriteCategoryId || null,
+                    favorite_shop_id: favoriteShopId || null,
+                };
+
                 // Determine cb_type
                 let effectiveCbType: 'none' | 'simple' | 'tiered' = 'none';
                 if (isCashbackEnabled) {
@@ -1037,6 +1082,7 @@ export function AccountSlideV2({
                     dueDate: dueDate,
                     holder_type: holderType,
                     holder_person_id: holderPersonId,
+                    metadata: mergedMetadata as any,
 
                     // Keep legacy config for safety during transition
                     cashbackConfig: isCashbackEnabled ? {
@@ -1068,6 +1114,10 @@ export function AccountSlideV2({
                 // Implementation for create
                 console.log('[AccountSlideV2] Creating account...', { name, cbType });
                 const result = await createAccount({
+                    metadata: {
+                        favorite_category_id: favoriteCategoryId || null,
+                        favorite_shop_id: favoriteShopId || null,
+                    } as any,
                     name,
                     type,
                     accountNumber: accountNumber,
@@ -1470,6 +1520,45 @@ export function AccountSlideV2({
                                             />
                                         </PopoverContent>
                                     </Popover>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fav Category</Label>
+                                    <Combobox
+                                        items={categories.map((category: any) => ({
+                                            value: category.id,
+                                            label: category.name,
+                                            icon: category.image_url ? (
+                                                <img src={category.image_url} alt={category.name} className="h-4 w-4 object-contain rounded-none" />
+                                            ) : undefined,
+                                        }))}
+                                        value={favoriteCategoryId || undefined}
+                                        onValueChange={(value) => setFavoriteCategoryId(value || null)}
+                                        placeholder="Select favorite category"
+                                        className="w-full h-10 border-slate-200 bg-white"
+                                        onAddNew={() => setIsCategoryDialogOpen(true)}
+                                        addLabel="Category"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fav Shop</Label>
+                                    <Combobox
+                                        items={shops.map((shop: any) => ({
+                                            value: shop.id,
+                                            label: shop.name,
+                                            icon: shop.image_url ? (
+                                                <img src={shop.image_url} alt={shop.name} className="h-4 w-4 object-contain rounded-none" />
+                                            ) : undefined,
+                                        }))}
+                                        value={favoriteShopId || undefined}
+                                        onValueChange={(value) => setFavoriteShopId(value || null)}
+                                        placeholder="Select favorite shop"
+                                        className="w-full h-10 border-slate-200 bg-white"
+                                        onAddNew={() => setIsShopDialogOpen(true)}
+                                        addLabel="Shop"
+                                    />
                                 </div>
                             </div>
 
@@ -1912,6 +2001,29 @@ export function AccountSlideV2({
                         setIsCategoryDialogOpen(false);
                         toast.success("Category created successfully");
                     });
+                }}
+            />
+
+            <ShopSlide
+                open={isShopDialogOpen}
+                onOpenChange={setIsShopDialogOpen}
+                categories={categories}
+                defaultCategoryId={favoriteCategoryId || undefined}
+                onBack={() => setIsShopDialogOpen(false)}
+                zIndex={zIndex + 100}
+                onSuccess={async (newShopId) => {
+                    setIsShopDialogOpen(false);
+                    if (!newShopId) return;
+
+                    try {
+                        const latestShops = await getShops();
+                        setShops(latestShops);
+                        setFavoriteShopId(newShopId);
+                        toast.success("Shop created and selected");
+                    } catch (error) {
+                        console.error("Failed to refresh shops:", error);
+                        toast.error("Shop created but failed to refresh list");
+                    }
                 }}
             />
         </>
