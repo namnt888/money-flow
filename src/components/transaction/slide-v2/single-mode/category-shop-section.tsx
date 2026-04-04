@@ -385,54 +385,33 @@ export function CategoryShopSection({
     let cancelled = false;
 
     const hydrateRecentForAccount = async () => {
-      const activeAccount = accounts.find((account) => account.id === activeAccountId);
-      const metadata = ((activeAccount as any)?.metadata || {}) as Record<string, any>;
-      const cashbackConfig = ((activeAccount as any)?.cashback_config || {}) as Record<string, any>;
-      const programConfig =
-        cashbackConfig && typeof cashbackConfig === "object"
-          ? ((cashbackConfig as any).program || cashbackConfig)
-          : {};
-      const metadataCategory =
-        allowFavoritePrefill
-          ? metadata.favorite_category_id ??
-            metadata.favoriteCategoryId ??
-            (programConfig as any).favorite_category_id ??
-            (programConfig as any).favoriteCategoryId ??
-            metadata.default_category_id ??
-            metadata.defaultCategoryId ??
-            metadata.favorite_category ??
-            null
-          : null;
-      const metadataShop =
-        allowFavoritePrefill
-          ? metadata.favorite_shop_id ??
-            metadata.favoriteShopId ??
-            (programConfig as any).favorite_shop_id ??
-            (programConfig as any).favoriteShopId ??
-            metadata.default_shop_id ??
-            metadata.defaultShopId ??
-            metadata.favorite_shop ??
-            null
-          : null;
+      if (allowFavoritePrefill) {
+        const linkedCategory = categories.find((category) => {
+          const linkedAccountIds = Array.isArray((category as any).linked_account_ids)
+            ? ((category as any).linked_account_ids as string[])
+            : [];
+          if (!linkedAccountIds.includes(activeAccountId)) return false;
 
-      const metadataCategoryId = resolveCategoryValue(metadataCategory);
-      const metadataShopId = resolveShopValue(metadataShop);
+          const txType = (transactionType || "expense").toLowerCase();
+          if (["expense", "debt", "credit_pay"].includes(txType)) {
+            return category.type === "expense";
+          }
+          if (["income", "repayment"].includes(txType)) {
+            return category.type === "income";
+          }
+          if (txType === "transfer") {
+            return category.type === "transfer";
+          }
+          return true;
+        });
 
-      if (metadataCategoryId || metadataShopId) {
-        if (metadataCategoryId) {
-          form.setValue("category_id", metadataCategoryId, {
+        if (linkedCategory?.id) {
+          form.setValue("category_id", linkedCategory.id, {
             shouldDirty: false,
             shouldTouch: false,
           });
+          return;
         }
-
-        if (metadataShopId && !isShopHidden) {
-          form.setValue("shop_id", metadataShopId, {
-            shouldDirty: false,
-            shouldTouch: false,
-          });
-        }
-        return;
       }
 
       const recent = await getRecentCategoryShopByAccountId(activeAccountId);
@@ -463,11 +442,13 @@ export function CategoryShopSection({
     };
   }, [
     accounts,
+    categories,
     activeAccountId,
     form,
     isEditingMode,
     isShopHidden,
     allowFavoritePrefill,
+    transactionType,
     resolveCategoryValue,
     resolveShopValue,
   ]);

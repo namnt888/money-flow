@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, KeyboardEvent } from "react"
+import { useState, useEffect, KeyboardEvent, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -43,9 +43,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Category } from "@/types/moneyflow.types"
+import { Account, Category } from "@/types/moneyflow.types"
 import { createCategory, updateCategory } from "@/services/category.service"
 import { cn } from "@/lib/utils"
+import { Combobox } from "@/components/ui/combobox"
 
 const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -66,6 +67,7 @@ interface CategorySlideProps {
     onBack?: () => void
     zIndex?: number
     isExternalLoading?: boolean
+    accounts?: Account[]
 }
 
 export function CategorySlide({
@@ -79,6 +81,7 @@ export function CategorySlide({
     zIndex = 600,
     allCategories = [],
     isExternalLoading = false,
+    accounts = [],
 }: CategorySlideProps & { allCategories?: Category[] }) {
     const [isLoading, setIsLoading] = useState(false)
     const combinedLoading = isLoading || isExternalLoading
@@ -88,8 +91,21 @@ export function CategorySlide({
     const [mccInput, setMccInput] = useState("")
     const [keywords, setKeywords] = useState<string[]>([])
     const [keywordInput, setKeywordInput] = useState("")
+    const [linkedAccountIds, setLinkedAccountIds] = useState<string[]>([])
 
     const [isShopSlideOpen, setIsShopSlideOpen] = useState(false)
+
+    const accountOptions = useMemo(
+        () =>
+            accounts.map((account) => ({
+                value: account.id,
+                label: account.name,
+                icon: account.image_url ? (
+                    <img src={account.image_url} alt={account.name} className="h-4 w-4 object-contain rounded-none" />
+                ) : undefined,
+            })),
+        [accounts],
+    )
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -105,8 +121,10 @@ export function CategorySlide({
     const hasChanges = form.formState.isDirty || 
         mccCodes.length !== (category?.mcc_codes?.length || 0) || 
         keywords.length !== (category?.keywords?.length || 0) ||
+        linkedAccountIds.length !== ((category?.linked_account_ids?.length) || 0) ||
         (category && JSON.stringify(mccCodes) !== JSON.stringify(category.mcc_codes || [])) || 
         (category && JSON.stringify(keywords) !== JSON.stringify(category.keywords || [])) ||
+        (category && JSON.stringify([...linkedAccountIds].sort()) !== JSON.stringify([...(category.linked_account_ids || [])].sort())) ||
         mccInput !== "" || keywordInput !== ""
 
     const handleBack = () => {
@@ -149,6 +167,7 @@ export function CategorySlide({
                 })
                 setMccCodes(Array.isArray(category.mcc_codes) ? category.mcc_codes : [])
                 setKeywords(Array.isArray(category.keywords) ? category.keywords : [])
+                setLinkedAccountIds(Array.isArray(category.linked_account_ids) ? category.linked_account_ids : [])
             } else {
                 form.reset({
                     name: "",
@@ -159,6 +178,7 @@ export function CategorySlide({
                 })
                 setMccCodes([])
                 setKeywords([])
+                setLinkedAccountIds([])
             }
             setMccInput("")
             setKeywordInput("")
@@ -207,6 +227,16 @@ export function CategorySlide({
         setKeywords(keywords.filter(k => k !== keyword))
     }
 
+    const addLinkedAccount = (accountId: string | null | undefined) => {
+        if (!accountId) return
+        if (linkedAccountIds.includes(accountId)) return
+        setLinkedAccountIds((prev) => [...prev, accountId])
+    }
+
+    const removeLinkedAccount = (accountId: string) => {
+        setLinkedAccountIds((prev) => prev.filter((id) => id !== accountId))
+    }
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
@@ -214,6 +244,7 @@ export function CategorySlide({
                 ...values,
                 mcc_codes: mccCodes.length > 0 ? mccCodes : undefined,
                 keywords: keywords.length > 0 ? keywords : undefined,
+                linked_account_ids: linkedAccountIds.length > 0 ? linkedAccountIds : undefined,
             }
 
             if (category) {
@@ -559,6 +590,59 @@ export function CategorySlide({
                                     </div>
                                     <p className="text-[9px] text-slate-400 font-bold italic bg-emerald-50/50 p-2 rounded-lg border border-emerald-100/50">
                                         * TIP: Add Vietnamese keywords to help the AI bot map user queries to this category correctly.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                                            <Zap className="h-3 w-3 text-slate-400" /> Linked Accounts (Auto-fill)
+                                        </FormLabel>
+                                        {linkedAccountIds.length > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setLinkedAccountIds([])}
+                                                className="text-[9px] font-black text-rose-500 hover:text-rose-700 uppercase tracking-tighter"
+                                            >
+                                                Clear All
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <Combobox
+                                        items={accountOptions}
+                                        value={undefined}
+                                        onValueChange={(value) => addLinkedAccount(value || null)}
+                                        placeholder="Select account to link"
+                                        className="w-full h-10 border-slate-200 bg-white"
+                                    />
+
+                                    <div className="min-h-[72px] p-3 rounded-xl border border-slate-200 bg-white shadow-inner flex flex-wrap gap-2 content-start">
+                                        {linkedAccountIds.length === 0 && (
+                                            <span className="text-[10px] text-slate-400 font-semibold">No linked account yet.</span>
+                                        )}
+                                        {linkedAccountIds.map((accountId) => {
+                                            const account = accounts.find((item) => item.id === accountId)
+                                            const label = account?.name || accountId
+                                            return (
+                                                <div
+                                                    key={accountId}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-100 rounded-lg text-[11px] font-bold text-sky-700"
+                                                >
+                                                    <span>{label}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeLinkedAccount(accountId)}
+                                                        className="text-sky-300 hover:text-rose-500 transition-colors"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 font-bold italic bg-sky-50/50 p-2 rounded-lg border border-sky-100/50">
+                                        * TIP: Transaction slide will prioritize this category when selected account matches.
                                     </p>
                                 </div>
                             </form>

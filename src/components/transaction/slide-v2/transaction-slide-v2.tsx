@@ -1454,6 +1454,7 @@ export function TransactionSlideV2({
           <CategorySlide
             open={isCategoryDialogOpen}
             onOpenChange={setIsCategoryDialogOpen}
+            accounts={accounts}
             defaultType={categoryDefaults.type}
             defaultKind={categoryDefaults.kind}
             onBack={() => setIsCategoryDialogOpen(false)}

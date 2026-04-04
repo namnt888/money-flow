@@ -32,6 +32,10 @@ import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolvePocketBasePersonRecord } from "./people.service";
 import { executeWithFallback, logSource } from "@/lib/pocketbase/fallback-helpers";
 import { PB_COLLECTIONS } from "@/lib/pocketbase/collections";
+import {
+  extractLinkedAccountIdsFromKeywords,
+  stripLinkedAccountKeywords,
+} from "@/lib/category-account-links";
 
 type PocketBaseRecord = Record<string, any>;
 
@@ -113,6 +117,7 @@ function mapAccount(record: PocketBaseRecord): Account {
 }
 
 function mapCategory(record: PocketBaseRecord): Category {
+  const linkedAccountIds = extractLinkedAccountIdsFromKeywords(record.keywords);
   return {
     id: record.id,
     name: record.name,
@@ -120,7 +125,8 @@ function mapCategory(record: PocketBaseRecord): Category {
     icon: record.icon || null,
     image_url: record.image_url || null,
     mcc_codes: record.mcc_codes || null,
-    keywords: record.keywords || null,
+    keywords: stripLinkedAccountKeywords(record.keywords),
+    linked_account_ids: linkedAccountIds,
     kind: record.kind || null,
     is_archived: Boolean(record.is_archived || false),
     slug: record.slug || null,
