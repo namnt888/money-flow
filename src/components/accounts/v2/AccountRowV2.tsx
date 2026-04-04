@@ -41,7 +41,8 @@ import {
   Sigma,
   ChevronRight,
   Calculator,
-  AlertCircle
+  AlertCircle,
+  Calendar,
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -154,6 +155,83 @@ export function AccountRowV2({
 
   const onEditTransaction = (id: string) => {
     handleEditTransaction(id);
+  };
+
+  const renderDueDateBadge = (account: Account) => {
+    if (account.type !== "credit_card" && account.type !== "debt") return null;
+
+    const stats = account.stats;
+    let dueDate = stats?.due_date ? new Date(stats.due_date) : null;
+
+    if (!dueDate || Number.isNaN(dueDate.getTime())) {
+      let rawDueDay: number | null = null;
+      try {
+        const config = normalizeCashbackConfig(account.cashback_config, account);
+        rawDueDay = Number(
+          account.due_date ||
+          (account as any)?.credit_card_info?.payment_due_day ||
+          config?.dueDate ||
+          0,
+        ) || null;
+      } catch {
+        rawDueDay = Number(
+          account.due_date || (account as any)?.credit_card_info?.payment_due_day || 0,
+        ) || null;
+      }
+
+      if (rawDueDay && rawDueDay >= 1 && rawDueDay <= 31) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(rawDueDay);
+        if (d < startOfDay(new Date())) d.setMonth(d.getMonth() + 1);
+        dueDate = d;
+      }
+    }
+
+    if (!dueDate || Number.isNaN(dueDate.getTime())) return null;
+
+    const dayDate = startOfDay(dueDate);
+    const isDueToday = isToday(dayDate);
+    const isDueTomorrow = isTomorrow(dayDate);
+
+    const diffTime = dayDate.getTime() - startOfDay(new Date()).getTime();
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const tone = isDueToday
+      ? "bg-rose-100 text-rose-700 border-rose-300"
+      : daysLeft < 0
+        ? "bg-rose-100 text-rose-700 border-rose-300"
+        : isDueTomorrow || daysLeft <= 10
+          ? "bg-amber-100 text-amber-700 border-amber-300"
+          : "bg-emerald-100 text-emerald-700 border-emerald-300";
+
+    const label = isDueToday
+      ? "Today Due"
+      : isDueTomorrow
+        ? "Tomorrow"
+        : daysLeft < 0
+          ? `${Math.abs(daysLeft)} Overdue`
+          : `${Math.abs(daysLeft)} Days`;
+
+    const dateLabel = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+    }).format(dueDate).toUpperCase();
+
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0",
+          tone,
+        )}
+        title={`Due date: ${dateLabel}`}
+      >
+        <Calendar className="h-2.5 w-2.5" />
+        <span>{label}</span>
+        <span className="opacity-40">|</span>
+        <span>{dateLabel}</span>
+      </span>
+    );
   };
 
   const renderCell = (key: AccountColumnKey) => {
@@ -450,7 +528,7 @@ export function AccountRowV2({
 
               <div className="flex items-center justify-between min-w-0 flex-1 gap-3">
                 <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2 group/name-row">
+                  <div className="flex items-center gap-2 group/name-row flex-wrap">
                     <Link
                       href={`/accounts/${account.id}`}
                       target="_blank"
@@ -474,6 +552,8 @@ export function AccountRowV2({
                         {pendingCount} Pending
                       </Link>
                     )}
+
+                    {renderDueDateBadge(account)}
                   </div>
 
                   {/* Sub-row for Receiver Info (Standardized location) */}

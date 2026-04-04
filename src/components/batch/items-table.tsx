@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useState, useMemo } from 'react'
 import {
     Table,
     TableBody,
@@ -523,7 +523,7 @@ export function ItemsTable({
                             </TableRow>
                         )}
                         {groupedItems.map((group) => (
-                            <React.Fragment key={group.label}>
+                            <>
                                 <TableRow className="bg-slate-50/80">
                                     <TableCell colSpan={bankType === 'MBB' ? 9 : 8} className="px-4 py-2">
                                         <div className="flex items-center justify-between gap-3">
@@ -542,7 +542,7 @@ export function ItemsTable({
                                     </TableCell>
                                 </TableRow>
                                 {group.items.map((item, index) => renderItemRow(item, index + 1))}
-                            </React.Fragment>
+                            </>
                         ))}
                     </TableBody>
                 </Table>

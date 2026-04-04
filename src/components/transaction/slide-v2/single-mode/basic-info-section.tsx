@@ -57,14 +57,11 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson }: Basi
 
     useEffect(() => {
         if (occurredAt && operationMode === 'add') {
-            const currentTag = form.getValues("tag");
+            const currentTag = String(form.getValues("tag") || '').trim();
             const dateTag = format(occurredAt, "yyyy-MM");
 
-            // Only auto-update if tag is empty OR it looks like a year-month tag
-            // We want it to be dynamic but not overwrite custom manual tags
-            const isManualTag = currentTag && !/^\d{4}-\d{2}$/.test(currentTag);
-
-            if (!currentTag || !isManualTag) {
+            // Do not override when user has already selected any cycle tag manually.
+            if (!currentTag) {
                 form.setValue("tag", dateTag);
             }
         }

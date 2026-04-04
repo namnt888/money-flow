@@ -58,6 +58,22 @@ export function SimpleTransactionTable({
     if (!showTag) {
         hiddenColumns.push('cycle')
     }
+
+    const peopleColumnOrder: any[] = [
+        'date',
+        'shop',
+        'account',
+        'amount',
+        'est_share',
+        'final_price',
+        'actual_cashback',
+        'total_back',
+        'category',
+        'people',
+        'cycle',
+        'actions',
+        'id',
+    ]
  
     return (
         <div className="bg-white rounded-lg border border-slate-200">
@@ -70,6 +86,7 @@ export function SimpleTransactionTable({
                 context={context}
                 contextId={contextId}
                 hiddenColumns={hiddenColumns}
+                columnOrder={context === 'person' ? peopleColumnOrder : undefined}
                 onEdit={onEdit}
                 onDuplicate={onDuplicate}
                 setIsGlobalLoading={setIsGlobalLoading}

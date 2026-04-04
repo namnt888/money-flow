@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X, SlidersHorizontal } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
@@ -20,6 +20,40 @@ import { Combobox } from '@/components/ui/combobox'
 import Link from 'next/link'
 import { differenceInDays, format, startOfDay } from 'date-fns'
 import { BatchMasterItemSlide } from '@/components/batch/BatchMasterItemSlide'
+
+function normalizeBankText(value: string | null | undefined): string {
+    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function resolveBankMappingMeta(item: any, bankMappings: any[]) {
+    const rawBankName = String(item?.bank_name || '').trim()
+    const rawBankCode = String(item?.bank_code || '').trim().toUpperCase()
+
+    const matched = (bankMappings || []).find((mapping: any) => {
+        const current = normalizeBankText(rawBankName)
+        const bankName = normalizeBankText(mapping?.bank_name)
+        const shortName = normalizeBankText(mapping?.short_name)
+        const bankCode = normalizeBankText(mapping?.bank_code)
+
+        return Boolean(
+            (rawBankCode && mapping?.bank_code && rawBankCode === String(mapping.bank_code).trim().toUpperCase()) ||
+            (current && (current === bankName || current === shortName || current.includes(bankName) || current.includes(shortName))) ||
+            (current && bankCode && current.includes(bankCode))
+        )
+    })
+
+    const bankCode = rawBankCode || String(matched?.bank_code || '').trim().toUpperCase()
+    const bankName = rawBankName || String(matched?.short_name || matched?.bank_name || '').trim()
+    const label = bankCode ? `${bankName || matched?.bank_name || 'Unknown Bank'} (${bankCode})` : (bankName || matched?.bank_name || 'Unknown Bank')
+    const sortKey = normalizeBankText(bankName || matched?.bank_name || bankCode || 'zzz')
+
+    return {
+        label,
+        sortKey,
+        bankCode: bankCode || null,
+        bankName: bankName || matched?.bank_name || null,
+    }
+}
 
 interface BatchMasterChecklistProps {
     bankType: 'MBB' | 'VIB'
@@ -792,21 +826,33 @@ export function BatchMasterChecklist({
                                 </TooltipTrigger>
                                 <TooltipContent>Step 2: Sync list to Google Sheet for Auto-transfer</TooltipContent>
                             </Tooltip>
-                            {globalSheetUrl && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Link
-                                            href={globalSheetUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="h-11 w-11 inline-flex items-center justify-center bg-indigo-700 text-indigo-100 hover:bg-indigo-800 border-l border-indigo-500 transition-colors"
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-                                        </Link>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{globalSheetName || 'Open Google Sheet in new tab'}</TooltipContent>
-                                </Tooltip>
-                            )}
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (globalSheetUrl) {
+                                                window.open(globalSheetUrl, '_blank', 'noopener,noreferrer')
+                                                return
+                                            }
+                                            window.open('/batch/settings', '_blank', 'noopener,noreferrer')
+                                        }}
+                                        className={cn(
+                                            "h-11 w-11 inline-flex items-center justify-center border-l transition-colors",
+                                            globalSheetUrl
+                                                ? "bg-indigo-700 text-indigo-100 hover:bg-indigo-800 border-indigo-500"
+                                                : "bg-amber-500 text-amber-50 hover:bg-amber-600 border-amber-400"
+                                        )}
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {globalSheetUrl
+                                        ? (globalSheetName || 'Open Google Sheet in new tab')
+                                        : 'No sheet link configured. Open Batch Settings'}
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
 
                         <div className="flex bg-emerald-600 rounded-xl shadow-md overflow-hidden">
@@ -1159,9 +1205,10 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, bankMappings = [] }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
+    const [isSmartSortEnabled, setIsSmartSortEnabled] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
     const [savingPhaseAmounts, setSavingPhaseAmounts] = useState(false)
     const lastDirtyRef = React.useRef<boolean | null>(null)
@@ -1171,6 +1218,58 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     const totalAmount = items.reduce((sum: number, i: any) => sum + Math.abs(i.amount || 0), 0)
     const allDone = items.length > 0 && totalConfirmed === items.length
     const remaining = items.length - totalConfirmed
+
+    const sortedItems = useMemo(() => {
+        if (!isSmartSortEnabled) {
+            return [...items].sort((a: any, b: any) => {
+                const getDaysLeft = (item: any) => {
+                    const dueDay = item.accounts?.due_date as number | undefined
+                    if (!dueDay) return Infinity
+                    const now = new Date()
+                    const d = new Date()
+                    d.setDate(dueDay)
+                    d.setHours(0, 0, 0, 0)
+                    if (d < startOfDay(now)) d.setMonth(d.getMonth() + 1)
+                    return differenceInDays(d, startOfDay(now))
+                }
+
+                return getDaysLeft(a) - getDaysLeft(b)
+            })
+        }
+
+        const grouped = new Map<string, { label: string; sortKey: string; items: any[] }>()
+
+        items.forEach((item: any) => {
+            const meta = resolveBankMappingMeta(item, bankMappings)
+            const key = meta.bankCode || meta.bankName || 'unknown-bank'
+            const current = grouped.get(key) || { label: meta.label, sortKey: meta.sortKey, items: [] }
+            current.items.push(item)
+            grouped.set(key, current)
+        })
+
+        return Array.from(grouped.values())
+            .map((group) => {
+                const amounts = group.items.map((entry: any) => Math.abs(Number(entry.amount || 0)))
+                const maxAmount = amounts.length ? Math.max(...amounts) : 0
+                const totalAmount = amounts.reduce((sum: number, current: number) => sum + current, 0)
+                return {
+                    ...group,
+                    maxAmount,
+                    totalAmount,
+                }
+            })
+            .sort((a, b) => {
+                if (b.maxAmount !== a.maxAmount) return b.maxAmount - a.maxAmount
+                if (b.totalAmount !== a.totalAmount) return b.totalAmount - a.totalAmount
+                return a.sortKey.localeCompare(b.sortKey, 'vi', { sensitivity: 'base' })
+            })
+            .flatMap((group) => group.items.sort((a: any, b: any) => {
+                const amountA = Math.abs(Number(a.amount || 0))
+                const amountB = Math.abs(Number(b.amount || 0))
+                if (amountA !== amountB) return amountB - amountA
+                return String(b.receiver_name || '').localeCompare(String(a.receiver_name || ''), 'vi', { sensitivity: 'base' })
+            }))
+    }, [bankMappings, isSmartSortEnabled, items])
 
     useEffect(() => {
         const nextDraft: Record<string, string> = {}
@@ -1358,6 +1457,19 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     {isPhaseEditing ? 'Editing' : 'Edit'}
                 </Button>
 
+                <Button
+                    variant={isSmartSortEnabled ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setIsSmartSortEnabled((prev) => !prev)}
+                    className={cn(
+                        "h-8 px-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                        isSmartSortEnabled ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "border-slate-200 text-slate-600"
+                    )}
+                >
+                    <SlidersHorizontal className="h-3.5 w-3.5 mr-1" />
+                    Smart Sort
+                </Button>
+
                 {isPhaseEditing && (
                     <Button
                         size="sm"
@@ -1488,19 +1600,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             "grid gap-3",
                             isStandalone ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
-                            {[...items].sort((a: any, b: any) => {
-                                const getDaysLeft = (item: any) => {
-                                    const dueDay = item.accounts?.due_date as number | undefined
-                                    if (!dueDay) return Infinity
-                                    const now = new Date()
-                                    const d = new Date()
-                                    d.setDate(dueDay)
-                                    d.setHours(0, 0, 0, 0)
-                                    if (d < startOfDay(now)) d.setMonth(d.getMonth() + 1)
-                                    return differenceInDays(d, startOfDay(now))
-                                }
-                                return getDaysLeft(a) - getDaysLeft(b)
-                            }).map((item: any) => {
+                            {sortedItems.map((item: any) => {
                                 let isHighlighted = false
                                 if (searchQuery) {
                                     const query = searchQuery.toLowerCase()
@@ -1519,6 +1619,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                         monthYear={monthYear}
                                         period={period}
                                         bankType={bankType}
+                                            bankMappings={bankMappings}
                                         onUpdate={onUpdate}
                                         isHighlighted={isHighlighted}
                                         isSearchActive={!!searchQuery}
@@ -1545,7 +1646,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     )
 }
 
-function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType }: any) {
+function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType, bankMappings = [] }: any) {
     const [saving, setSaving] = useState(false)
     const [isEditingRowAmount, setIsEditingRowAmount] = useState(false)
     const [rowDraftAmount, setRowDraftAmount] = useState(draftAmount)
@@ -1694,6 +1795,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
     }
 
     const dueDay = item.accounts?.due_date as number | undefined
+    const bankMapping = resolveBankMappingMeta(item, bankMappings)
     let dueBadge: { label: string; daysLeft: number } | null = null
     let isDueMismatch = false
     if (dueDay) {
@@ -1783,15 +1885,20 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                 </TooltipProvider>
             )}
 
-            {item.accounts?.image_url ? (
-                <div className="shrink-0 h-10 w-10 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
-                    <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
-                </div>
-            ) : (
-                <div className="shrink-0 h-10 w-10 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 shadow-sm">
-                    {item.bank_name?.substring(0, 2)}
-                </div>
-            )}
+            <div className="shrink-0 flex items-center gap-1.5">
+                <span className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter text-indigo-700">
+                    {bankMapping.bankCode || bankMapping.label}
+                </span>
+                {item.accounts?.image_url ? (
+                    <div className="h-10 w-10 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center shadow-sm">
+                        <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
+                    </div>
+                ) : (
+                    <div className="h-10 w-10 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
+                        {item.bank_name?.substring(0, 2)}
+                    </div>
+                )}
+            </div>
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

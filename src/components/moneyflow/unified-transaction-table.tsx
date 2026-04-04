@@ -440,8 +440,8 @@ export const UnifiedTransactionTable = React.forwardRef<
       { key: "account", label: "Money Flow", defaultWidth: 380, minWidth: 280 },
       { key: "amount", label: "BASE", defaultWidth: 180, minWidth: 140 },
       {
-        key: "total_back",
-        label: "Total Back",
+        key: "est_share",
+        label: "Cashback Shared",
         defaultWidth: 120,
         minWidth: 100,
       },
@@ -451,9 +451,6 @@ export const UnifiedTransactionTable = React.forwardRef<
         defaultWidth: 180,
         minWidth: 140,
       },
-      { key: "cycle", label: "Debt Cycle", defaultWidth: 120, minWidth: 100 },
-      { key: "people", label: "People", defaultWidth: 150 },
-      { key: "id", label: "ID", defaultWidth: 100 },
       {
         key: "actual_cashback",
         label: "Est. Cashback",
@@ -461,14 +458,17 @@ export const UnifiedTransactionTable = React.forwardRef<
         minWidth: 100,
       },
       {
-        key: "est_share",
-        label: "Cashback Shared",
-        defaultWidth: 100,
-        minWidth: 80,
+        key: "total_back",
+        label: "Est Back",
+        defaultWidth: 120,
+        minWidth: 100,
       },
+      { key: "cycle", label: "Debt Cycle", defaultWidth: 120, minWidth: 100 },
+      { key: "people", label: "People", defaultWidth: 150 },
+      { key: "id", label: "ID", defaultWidth: 100 },
       { key: "net_profit", label: "Profit", defaultWidth: 100, minWidth: 80 },
       { key: "actions", label: "Action", defaultWidth: 100, minWidth: 60 },
-      { key: "category", label: "Category", defaultWidth: 100, minWidth: 80 },
+      { key: "category", label: "Category", defaultWidth: 132, minWidth: 110 },
     ];
     const [isColumnCustomizerOpen, setIsColumnCustomizerOpen] = useState(false);
 
@@ -917,7 +917,8 @@ export const UnifiedTransactionTable = React.forwardRef<
     useEffect(() => {
       setVisibleColumns((prev) => {
         const next = { ...prev };
-        const showCashback = accountType === "credit_card";
+        const showCashback =
+          accountType === "credit_card" || context === "person";
 
         // Only update if changed
         if (
@@ -931,9 +932,12 @@ export const UnifiedTransactionTable = React.forwardRef<
         next.actual_cashback = showCashback;
         next.est_share = showCashback;
         next.net_profit = showCashback;
+        if (context === "person") {
+          next.total_back = true;
+        }
         return next;
       });
-    }, [accountType]);
+    }, [accountType, context]);
 
     useEffect(() => {
       const updateIsMobile = () => {
@@ -1867,9 +1871,11 @@ export const UnifiedTransactionTable = React.forwardRef<
         const cashbackAmount = shareAmount;
 
         const finalPrice =
-          typeof txn.final_price === "number"
-            ? Math.abs(txn.final_price)
-            : Math.max(0, originalAmount - cashbackAmount);
+          context === "person" && cashbackAmount > 0
+            ? Math.max(0, originalAmount - cashbackAmount)
+            : typeof txn.final_price === "number"
+              ? Math.abs(txn.final_price)
+              : Math.max(0, originalAmount - cashbackAmount);
 
         // Est Cashback (From Policy)
         let est_cb = 0;
@@ -4549,13 +4555,15 @@ export const UnifiedTransactionTable = React.forwardRef<
                               Number(originalAmount ?? 0),
                             );
                             const finalDisp =
-                              calculatedPolicy?.metadata?.policySource !== 'program_default' && calculatedPolicy?.metadata?.estimated_cashback !== undefined
-                                ? Math.max(0, baseAmount - calculatedPolicy.metadata.estimated_cashback)
-                                : typeof txn.final_price === "number"
-                                  ? Math.abs(txn.final_price)
-                                  : cashbackAmount > baseAmount
-                                    ? baseAmount
-                                    : Math.max(0, baseAmount - cashbackAmount);
+                              context === "person" && cashbackAmount > 0
+                                ? Math.max(0, baseAmount - cashbackAmount)
+                                : calculatedPolicy?.metadata?.policySource !== 'program_default' && calculatedPolicy?.metadata?.estimated_cashback !== undefined
+                                  ? Math.max(0, baseAmount - calculatedPolicy.metadata.estimated_cashback)
+                                  : typeof txn.final_price === "number"
+                                    ? Math.abs(txn.final_price)
+                                    : cashbackAmount > baseAmount
+                                      ? baseAmount
+                                      : Math.max(0, baseAmount - cashbackAmount);
 
                             const hasCashback =
                               cashbackVal > 0 ||
@@ -4647,7 +4655,10 @@ export const UnifiedTransactionTable = React.forwardRef<
                               resolveCashbackFields(txn, txnAccount);
                             const percentDisp = percentRaw;
                             const fixedDisp = fixedRaw;
-                            const cashbackAmount = bankBack || shareAmount;
+                            const cashbackAmount =
+                              context === "person"
+                                ? shareAmount
+                                : bankBack || shareAmount;
                             const baseAmount = Math.abs(
                               Number(originalAmount ?? 0),
                             );

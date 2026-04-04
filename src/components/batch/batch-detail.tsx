@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BatchItemSlide } from './batch-item-slide'
 import { ItemsTable } from './items-table'
-import { Loader2, CheckCircle2, DollarSign, Trash2, Send, ExternalLink, Settings, ChevronLeft, ChevronRight, Sparkles, Archive, ArchiveRestore, HandCoins, WalletCards, Plus, Copy, MoreVertical, Wallet, Info } from 'lucide-react'
+import { Loader2, CheckCircle2, DollarSign, Trash2, ExternalLink, Settings, ChevronLeft, ChevronRight, Sparkles, Archive, ArchiveRestore, HandCoins, WalletCards, Plus, Copy, MoreVertical, Wallet, Info, FileSpreadsheet } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { sendBatchToSheetAction, fundBatchAction, deleteBatchAction, confirmBatchItemAction, updateBatchCycleAction } from '@/actions/batch.actions'
 import { useRouter } from 'next/navigation'
@@ -79,9 +79,12 @@ export function BatchDetail({
         [batch.batch_items]
     )
 
+    const effectiveSheetUrl = batch.display_link || globalSheetUrl || batch.sheet_link || null
+    const effectiveSheetName = batch.display_name || globalSheetName || batch.sheet_name || 'Open Google Sheet'
+
     async function handleSend() {
-        if (!batch.sheet_link) {
-            toast.error('Please configure a Sheet Link first.')
+        if (!effectiveSheetUrl) {
+            setLinkDialogOpen(true)
             return
         }
         setSending(true)
@@ -94,6 +97,14 @@ export function BatchDetail({
         } finally {
             setSending(false)
         }
+    }
+
+    function handleOpenSheetOrSettings() {
+        if (effectiveSheetUrl) {
+            window.open(effectiveSheetUrl, '_blank', 'noopener,noreferrer')
+            return
+        }
+        setLinkDialogOpen(true)
     }
 
     async function handleFund() {
@@ -252,32 +263,50 @@ export function BatchDetail({
                                 )}
                             </div>
 
-                            {/* Sheet Link & Settings */}
-                            <div className="flex items-center gap-1">
-                                {(batch.display_link || globalSheetUrl) ? (
-                                    <a
-                                        href={batch.display_link || globalSheetUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={cn(
-                                            "h-7 w-7 flex items-center justify-center rounded-md border transition-all",
-                                            batch.display_link ? "border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-blue-600" : "border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-600"
-                                        )}
-                                        title={batch.display_name || globalSheetName || "Open Sheet"}
-                                    >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                    </a>
-                                ) : (
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7 text-slate-400"
-                                        onClick={() => setLinkDialogOpen(true)}
-                                    >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                    </Button>
-                                )}
-                            </div>
+                            {/* Step 2 moved below total amount */}
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            onClick={handleSend}
+                                            disabled={sending || batch.batch_items?.length === 0}
+                                            variant="default"
+                                            className="h-8 px-3 gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                        >
+                                            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5" />}
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Step 2: To Sheet</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {effectiveSheetUrl ? 'Send phase items to Google Sheet' : 'Open settings to configure the sheet link'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            onClick={handleOpenSheetOrSettings}
+                                            variant="outline"
+                                            size="icon"
+                                            className={cn(
+                                                "h-8 w-8 rounded-lg",
+                                                effectiveSheetUrl ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100"
+                                            )}
+                                            title={effectiveSheetUrl ? effectiveSheetName : 'Configure sheet link'}
+                                        >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {effectiveSheetUrl ? 'Open sheet in new tab' : 'Open settings to add sheet link'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </div>
                 </div>
@@ -335,26 +364,7 @@ export function BatchDetail({
 
                     <div className="w-px h-6 bg-slate-300 mx-1" />
 
-                    {/* Action Icons: Send to Sheet, AI Import, Add Item */}
-                    {batch.sheet_link && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={handleSend}
-                                        disabled={sending || batch.batch_items?.length === 0}
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9 text-slate-600 hover:bg-slate-100"
-                                    >
-                                        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Send to Sheet</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-
+                    {/* Action Icons: AI Import, Add Item */}
                     {batch.sheet_link && (
                         <TooltipProvider>
                             <Tooltip>
