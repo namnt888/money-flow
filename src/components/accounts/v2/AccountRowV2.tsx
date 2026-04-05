@@ -370,11 +370,12 @@ export function AccountRowV2({
 
         const MainPlaceholderIcon = getPlaceholderIcon(account.type);
 
-        const dueDate = stats?.due_date ? new Date(stats.due_date) : null;
+        const dueDateRaw = stats?.due_date || (account as any)?.due_date || null;
+        const dueDate = dueDateRaw ? new Date(dueDateRaw) : null;
         const dueDays = dueDate
           ? Math.ceil((startOfDay(dueDate).getTime() - startOfDay(new Date()).getTime()) / (1000 * 60 * 60 * 24))
           : null;
-        const showDueBadge = (account.type === 'credit_card' || account.type === 'debt') && dueDays !== null;
+        const showDueBadge = account.type === 'credit_card' || account.type === 'debt';
 
         return (
           <div className="flex flex-col gap-2 min-w-[170px]">
