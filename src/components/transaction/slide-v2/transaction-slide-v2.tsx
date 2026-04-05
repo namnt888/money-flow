@@ -205,9 +205,7 @@ export function TransactionSlideV2({
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
   const effectiveEditingId = operationMode === "add" ? undefined : editingId;
-  const isEditingContext = Boolean(
-    effectiveEditingId || initialData || operationMode !== "add",
-  );
+  const isEditingContext = operationMode === "edit" || Boolean(effectiveEditingId);
 
   // DEBUG: Verify schemas are defined
   useEffect(() => {
@@ -1454,6 +1452,8 @@ export function TransactionSlideV2({
           <CategorySlide
             open={isCategoryDialogOpen}
             onOpenChange={setIsCategoryDialogOpen}
+            accounts={accounts}
+            shops={localShops}
             defaultType={categoryDefaults.type}
             defaultKind={categoryDefaults.kind}
             onBack={() => setIsCategoryDialogOpen(false)}

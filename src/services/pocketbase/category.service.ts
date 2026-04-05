@@ -2,7 +2,7 @@
  * PocketBase Category Service
  * Provides category read/write operations from PocketBase
  * Phase 1: Foundation Tables Implementation
- * Collection ID: pvl_cat_001
+ * Collection: categories
  */
 
 import { logSource } from '@/lib/pocketbase/fallback-helpers'
