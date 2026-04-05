@@ -789,7 +789,6 @@ export function AccountRowV2({
         const isStandalone = !isParent && !effectiveParentAcc;
         const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
         const singleCardDebt = Math.abs(account.current_balance || 0);
-        const singleAvailable = isCC ? parentLimit - singleCardDebt : null;
         const peopleSource = (people.length > 0 ? people : (initialPeople || []));
         const ownerPerson = account.holder_person_id
           ? peopleSource.find((p) => p.id === account.holder_person_id)
@@ -859,11 +858,11 @@ export function AccountRowV2({
 
         return (
           <div className="flex flex-col items-center justify-center min-w-[220px] gap-1 group/role-cell">
-            {/* Singular card view per row */}
+            {/* Singular debt view per row */}
             {isCC && parentLimit > 0 && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
                 <Sigma className="w-2.5 h-2.5" />
-                <span>Single Balance: {formatMoneyVND(singleAvailable || 0)}</span>
+                <span>Single Debt: {formatMoneyVND(singleCardDebt)}</span>
               </div>
             )}
 
@@ -878,7 +877,7 @@ export function AccountRowV2({
                       : "bg-white text-slate-700 border-slate-200",
                 )}
               >
-                {isParent ? <Crown className="h-3 w-3" /> : isStandalone ? <CircleDashed className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
+                {isParent ? <Crown className="h-3 w-3" /> : isStandalone ? <Wallet className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
                 <span>{isParent ? 'Parent' : isStandalone ? 'Standalone' : 'Child'}</span>
               </div>
 
@@ -958,52 +957,63 @@ export function AccountRowV2({
 
         const accountSlug = (account as any)?.slug as string | undefined;
         const hasChildren =
-          (allAccounts?.some(
+          allAccounts?.some(
             (item) =>
               item.parent_account_id === account.id ||
               (accountSlug ? item.parent_account_id === accountSlug : false),
-          )) || false;
+          ) || false;
         const isParent = !!account.relationships?.is_parent || hasChildren;
-        const parentId = account.parent_account_id || account.relationships?.parent_info?.id || null;
-        const parentAccount = parentId
-          ? allAccounts?.find((a) => a.id === parentId || ((a as any)?.slug && (a as any).slug === parentId))
-          : null;
-        const inferredParentAccount = isParent
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
           ? null
           : allAccounts?.find((item) =>
               (item.relationships?.child_accounts || []).some(
-                (child: any) => child.id === account.id,
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
               ),
             );
-        const effectiveParentAccount = parentAccount || inferredParentAccount;
+        const effectiveParentAccount = parentAcc || inferredParentAcc || null;
+
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAccount?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAccount?.id) groupRefs.add(effectiveParentAccount.id);
+          const parentSlug = (effectiveParentAccount as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
+        }
 
         const displayLimit = effectiveParentAccount
           ? effectiveParentAccount.credit_limit || 0
           : account.credit_limit || 0;
-        const cardDebtAbs = Math.abs(account.current_balance || 0);
-        let familyDebt = account.current_balance || 0;
-        let parentBalance = account.parent_account_id
-          ? effectiveParentAccount?.current_balance || 0
-          : account.current_balance || 0;
-        let childrenBalances = 0;
 
-        if (isParent && allAccounts) {
-          childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === account.id)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          familyDebt = (account.current_balance || 0) + childrenBalances;
-        } else if ((parentId || effectiveParentAccount?.id) && effectiveParentAccount && allAccounts) {
-          const parentRef = effectiveParentAccount.id;
-          childrenBalances = allAccounts
-            .filter(
-              (a) =>
-                a.parent_account_id === parentRef ||
-                ((effectiveParentAccount as any)?.slug &&
-                  a.parent_account_id === (effectiveParentAccount as any).slug),
-            )
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          familyDebt = (effectiveParentAccount.current_balance || 0) + childrenBalances;
-        }
+        const familyDebt = allAccounts
+          ? allAccounts
+              .filter(
+                (item) =>
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || ""),
+              )
+              .reduce((sum, item) => sum + (item.current_balance || 0), 0)
+          : account.current_balance || 0;
 
         const familyDebtAbs = Math.abs(familyDebt);
         const limit = displayLimit;
@@ -1088,17 +1098,15 @@ export function AccountRowV2({
                       </div>
                     );
                   })()}
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
-                  Limit
-                </span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Limit</span>
                 <span
                   className={cn(
-                    "font-black text-[11px] tabular-nums leading-none",
+                    "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider border",
                     displayLimit > 100000000
-                      ? "text-rose-600"
+                      ? "bg-rose-100 text-rose-700 border-rose-200"
                       : displayLimit >= 50000000
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                        ? "bg-amber-100 text-amber-700 border-amber-200"
+                        : "bg-emerald-100 text-emerald-700 border-emerald-200",
                   )}
                 >
                   {displayLimit ? formatMoneyVND(displayLimit) : "—"}
@@ -1106,7 +1114,7 @@ export function AccountRowV2({
               </div>
 
               {displayLimit > 0 && (
-                <div className="w-full flex justify-end">
+                <div className="w-full flex flex-col items-end gap-1">
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -1142,19 +1150,19 @@ export function AccountRowV2({
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between gap-4">
                                 <span className="text-slate-400">
-                                  Card Active Balance:
+                                  Card Active Debt:
                                 </span>
                                 <span className="font-bold tabular-nums text-white">
-                                  {formatMoneyVND(parentBalance)}
+                                  {formatMoneyVND(Math.abs(account.current_balance || 0))}
                                 </span>
                               </div>
-                              {childrenBalances > 0 && (
+                              {familyDebtAbs > Math.abs(account.current_balance || 0) && (
                                 <div className="flex justify-between gap-4">
                                   <span className="text-slate-400">
-                                    Supplementary Cards:
+                                    Other Family Cards:
                                   </span>
                                   <span className="font-bold tabular-nums text-indigo-300">
-                                    + {formatMoneyVND(childrenBalances)}
+                                    + {formatMoneyVND(familyDebtAbs - Math.abs(account.current_balance || 0))}
                                   </span>
                                 </div>
                               )}
@@ -1229,6 +1237,20 @@ export function AccountRowV2({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+
+                  <div className="w-[160px] h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-500",
+                        remainingPercent < 20
+                          ? "bg-rose-500"
+                          : remainingPercent <= 80
+                            ? "bg-amber-500"
+                            : "bg-emerald-500",
+                      )}
+                      style={{ width: `${Math.max(0, Math.min(100, remainingPercent))}%` }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
