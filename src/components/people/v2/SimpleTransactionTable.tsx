@@ -3,6 +3,7 @@
 import React from 'react'
 import { UnifiedTransactionTable } from '@/components/moneyflow/unified-transaction-table'
 import { TransactionWithDetails, Account, Category, Person, Shop } from '@/types/moneyflow.types'
+import { ColumnKey } from '@/components/app/table/transactionColumns'
 
 interface SimpleTransactionTableProps {
     transactions: TransactionWithDetails[]
@@ -54,10 +55,24 @@ export function SimpleTransactionTable({
         })
         : transactions
 
-    const hiddenColumns: any[] = ['id']
+    const hiddenColumns: ColumnKey[] = ['id', 'actual_cashback', 'net_profit_raw', 'net_profit']
     if (!showTag) {
         hiddenColumns.push('cycle')
     }
+
+    const columnOrder: ColumnKey[] = [
+        'date',
+        'shop',
+        'account',
+        'amount',
+        'est_share',
+        'final_price',
+        'category',
+        'cycle',
+        'actions',
+        'people',
+        'id',
+    ]
  
     return (
         <div className="bg-white rounded-lg border border-slate-200">
@@ -70,6 +85,7 @@ export function SimpleTransactionTable({
                 context={context}
                 contextId={contextId}
                 hiddenColumns={hiddenColumns}
+                columnOrder={columnOrder}
                 onEdit={onEdit}
                 onDuplicate={onDuplicate}
                 setIsGlobalLoading={setIsGlobalLoading}

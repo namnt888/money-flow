@@ -83,34 +83,34 @@ export function ItemsTable({
     bankMappings = [],
     onEditItem
 }: ItemsTableProps) {
+    const getDaysUntilDue = (item: any) => {
+        if (!item?.target_account?.cashback_config) return 999
+        const config = parseCashbackConfig(item.target_account.cashback_config)
+        if (!config.dueDate) return 999
+
+        const today = new Date()
+        const currentDay = today.getDate()
+        const dueDay = config.dueDate
+
+        let daysDiff = dueDay - currentDay
+        if (daysDiff < 0) {
+            // Due date passed this month -> nearest due is next month.
+            daysDiff += 30
+        }
+        return daysDiff
+    }
+
+    const compareBySmartSort = (a: any, b: any) => {
+        const dueA = getDaysUntilDue(a)
+        const dueB = getDaysUntilDue(b)
+
+        if (dueA !== dueB) return dueA - dueB
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    }
+
     // Sort items: Nearest Due Date -> Created At (desc)
     const items = useMemo(() => {
-        return [...initialItems].sort((a, b) => {
-
-            const getDaysUntilDue = (item: any) => {
-                if (!item.target_account?.cashback_config) return 999
-                const config = parseCashbackConfig(item.target_account.cashback_config)
-                if (!config.dueDate) return 999
-
-                const today = new Date()
-                const currentDay = today.getDate()
-                const dueDay = config.dueDate
-
-                let daysDiff = dueDay - currentDay
-                if (daysDiff < 0) {
-                    // Due date has passed this month, so it's next month
-                    // Approximate days in month as 30 for sorting
-                    daysDiff += 30
-                }
-                return daysDiff
-            }
-
-            const dueA = getDaysUntilDue(a)
-            const dueB = getDaysUntilDue(b)
-
-            if (dueA !== dueB) return dueA - dueB
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        })
+        return [...initialItems].sort(compareBySmartSort)
     }, [initialItems])
 
     const groupedItems = useMemo(() => {
@@ -133,12 +133,7 @@ export function ItemsTable({
             .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'vi', { sensitivity: 'base' }))
             .map((group) => ({
                 ...group,
-                items: [...group.items].sort((a, b) => {
-                    const amountA = Math.abs(Number(a.amount || 0))
-                    const amountB = Math.abs(Number(b.amount || 0))
-                    if (amountA !== amountB) return amountB - amountA
-                    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-                })
+                items: [...group.items].sort(compareBySmartSort)
             }))
     }, [bankMappings, items])
 

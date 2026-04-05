@@ -11,6 +11,12 @@ import { AccountQuickStats } from "./AccountQuickStats";
 import { TransactionSlideV2 } from "@/components/transaction/slide-v2/transaction-slide-v2";
 import { toast } from "sonner";
 import { getUniqueFamilyCreditLimitTotal } from "@/lib/account-family";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { Copy, Search } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -86,6 +92,98 @@ export function AccountDirectoryV2({
     // Audit state
     const [isAuditOpen, setIsAuditOpen] = useState(false);
     const [auditAccount, setAuditAccount] = useState<Account | null>(null);
+
+    // Balance sync audit modal state
+    const [isSyncBalanceAuditOpen, setIsSyncBalanceAuditOpen] = useState(false)
+    const [syncSearch, setSyncSearch] = useState('')
+    const [syncSelectedIds, setSyncSelectedIds] = useState<string[]>([])
+    const [isSyncRunning, setIsSyncRunning] = useState(false)
+    const [syncProgress, setSyncProgress] = useState(0)
+    const [syncLogs, setSyncLogs] = useState<string[]>([])
+    const [afterBalanceMap, setAfterBalanceMap] = useState<Record<string, number>>({})
+
+    const syncCandidates = useMemo(() => {
+        return initialAccounts
+            .filter((acc) => acc.type !== 'debt')
+            .filter((acc) => {
+                if (!syncSearch.trim()) return true
+                const q = syncSearch.toLowerCase().trim()
+                return (
+                    acc.name.toLowerCase().includes(q) ||
+                    (acc.receiver_name || '').toLowerCase().includes(q) ||
+                    acc.id.toLowerCase().includes(q)
+                )
+            })
+            .sort((a, b) => a.name.localeCompare(b.name))
+    }, [initialAccounts, syncSearch])
+
+    const allVisibleSelected = syncCandidates.length > 0 && syncCandidates.every((acc) => syncSelectedIds.includes(acc.id))
+
+    const toggleSelectAllVisible = () => {
+        if (allVisibleSelected) {
+            setSyncSelectedIds((prev) => prev.filter((id) => !syncCandidates.some((acc) => acc.id === id)))
+            return
+        }
+        const merged = new Set(syncSelectedIds)
+        syncCandidates.forEach((acc) => merged.add(acc.id))
+        setSyncSelectedIds(Array.from(merged))
+    }
+
+    const toggleSelectOne = (accountId: string) => {
+        setSyncSelectedIds((prev) => prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId])
+    }
+
+    const handleCopySyncLogs = async () => {
+        const payload = [
+            'SYNC BALANCE AUDIT LOGS',
+            `timestamp=${new Date().toISOString()}`,
+            `selected=${syncSelectedIds.length}`,
+            ...syncLogs,
+        ].join('\n')
+
+        await navigator.clipboard.writeText(payload)
+        toast.success('Copied sync logs to clipboard')
+    }
+
+    const runSyncBalanceAudit = async () => {
+        if (syncSelectedIds.length === 0) {
+            toast.error('Select at least 1 account')
+            return
+        }
+
+        setIsSyncRunning(true)
+        setSyncProgress(0)
+        setSyncLogs([])
+        setAfterBalanceMap({})
+
+        const { syncSingleAccountBalanceAudit } = await import('@/actions/admin-actions')
+        const total = syncSelectedIds.length
+        let processed = 0
+
+        for (const accountId of syncSelectedIds) {
+            const result = await syncSingleAccountBalanceAudit(accountId)
+            processed += 1
+            setSyncProgress(Math.round((processed / total) * 100))
+
+            if (Array.isArray(result.logs)) {
+                setSyncLogs((prev) => [...prev, ...result.logs])
+            }
+
+            if (Array.isArray(result.affected)) {
+                setAfterBalanceMap((prev) => {
+                    const next = { ...prev }
+                    for (const item of result.affected) {
+                        next[item.id] = Number(item.afterBalance || 0)
+                    }
+                    return next
+                })
+            }
+        }
+
+        setIsSyncRunning(false)
+        router.refresh()
+        toast.success('Sync Balance audit completed')
+    }
 
     useEffect(() => {
         let mounted = true;
@@ -362,6 +460,7 @@ export function AccountDirectoryV2({
                 advancedFilters={advancedFilters}
                 onAdvancedFiltersChange={setAdvancedFilters}
                 othersStats={othersStats}
+                onOpenSyncBalanceAudit={() => setIsSyncBalanceAuditOpen(true)}
             />
 
             <AccountQuickStats
@@ -453,6 +552,102 @@ export function AccountDirectoryV2({
                     availableYears={['2025', '2026']}
                 />
             )}
+
+            <Dialog open={isSyncBalanceAuditOpen} onOpenChange={setIsSyncBalanceAuditOpen}>
+                <DialogContent className="max-w-5xl">
+                    <DialogHeader>
+                        <DialogTitle>Sync Balance Audit</DialogTitle>
+                        <DialogDescription>
+                            Select accounts to recalculate balances. Family-linked cards are recalculated together (parent + children).
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <Input
+                                    value={syncSearch}
+                                    onChange={(e) => setSyncSearch(e.target.value)}
+                                    placeholder="Search accounts (excluding receivable/debt)..."
+                                    className="pl-8"
+                                />
+                            </div>
+                            <Button variant="outline" onClick={toggleSelectAllVisible}>
+                                {allVisibleSelected ? 'Unselect All' : 'Select All'}
+                            </Button>
+                        </div>
+
+                        <div className="max-h-[320px] overflow-auto rounded-md border">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0 bg-white border-b">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left w-12">Sel</th>
+                                        <th className="px-3 py-2 text-left">Account</th>
+                                        <th className="px-3 py-2 text-left">Type</th>
+                                        <th className="px-3 py-2 text-right">Before</th>
+                                        <th className="px-3 py-2 text-right">After</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {syncCandidates.map((acc) => {
+                                        const before = Number(acc.current_balance || 0)
+                                        const after = afterBalanceMap[acc.id]
+                                        return (
+                                            <tr key={acc.id} className="border-b last:border-0">
+                                                <td className="px-3 py-2">
+                                                    <Checkbox
+                                                        checked={syncSelectedIds.includes(acc.id)}
+                                                        onCheckedChange={() => toggleSelectOne(acc.id)}
+                                                        disabled={isSyncRunning}
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-semibold">{acc.name}</div>
+                                                    <div className="text-xs text-slate-500">{acc.id}</div>
+                                                </td>
+                                                <td className="px-3 py-2 uppercase text-xs text-slate-600">{acc.type}</td>
+                                                <td className="px-3 py-2 text-right tabular-nums">{before.toLocaleString('vi-VN')}</td>
+                                                <td className="px-3 py-2 text-right tabular-nums">{typeof after === 'number' ? after.toLocaleString('vi-VN') : '—'}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs text-slate-600">
+                                <span>Progress</span>
+                                <span>{syncProgress}%</span>
+                            </div>
+                            <Progress value={syncProgress} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-semibold">Logs</h4>
+                                <Button variant="outline" size="sm" onClick={handleCopySyncLogs}>
+                                    <Copy className="h-4 w-4 mr-1" />
+                                    Copy Logs
+                                </Button>
+                            </div>
+                            <div className="max-h-[180px] overflow-auto rounded-md border bg-slate-50 p-2 text-xs whitespace-pre-wrap font-mono">
+                                {syncLogs.length > 0 ? syncLogs.join('\n') : 'No logs yet'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSyncBalanceAuditOpen(false)} disabled={isSyncRunning}>
+                            Close
+                        </Button>
+                        <Button onClick={runSyncBalanceAudit} disabled={isSyncRunning || syncSelectedIds.length === 0}>
+                            {isSyncRunning ? 'Running...' : 'Run Sync Balance'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

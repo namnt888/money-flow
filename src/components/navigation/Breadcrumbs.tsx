@@ -58,8 +58,8 @@ export function Breadcrumbs() {
                     ) : (
                         <Link
                             href={crumb.href}
-                            target={crumb.href === '/people' ? "_blank" : undefined}
-                            rel={crumb.href === '/people' ? "noopener noreferrer" : undefined}
+                            target={crumb.href === '/people' || crumb.href === '/accounts' ? "_blank" : undefined}
+                            rel={crumb.href === '/people' || crumb.href === '/accounts' ? "noopener noreferrer" : undefined}
                             className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors truncate max-w-[150px]"
                         >
                             {crumb.name}

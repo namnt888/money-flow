@@ -1373,33 +1373,63 @@ export function AccountRowV2({
               (accountSlug ? item.parent_account_id === accountSlug : false),
           ) || false;
         const isParent = !!account.relationships?.is_parent || hasChildren;
-        const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
-        const parentAccount = balParentId
-          ? allAccounts?.find((a) => a.id === balParentId || ((a as any)?.slug && (a as any).slug === balParentId))
-          : null;
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
+              ),
+            );
+        const effectiveParentAcc = parentAcc || inferredParentAcc || null;
 
-        // Use passed familyBalance if available for consistent family-aware reporting
-        let displayBalance = familyBalance;
-
-        // Determine effective grouping
-        const effectiveParentId = isParent ? account.id : (account.parent_account_id || account.relationships?.parent_info?.id || null);
-
-        // If no familyBalance prop, try to calculate it again (safety fallback)
-        if (displayBalance === undefined || displayBalance === null) {
-          if (effectiveParentId) {
-            const familyMembers = allAccounts?.filter(a => a.id === effectiveParentId || a.parent_account_id === effectiveParentId) || [];
-            displayBalance = familyMembers.reduce((sum, a) => sum + (a.current_balance || 0), 0);
-          } else {
-            displayBalance = account.current_balance || 0;
-          }
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAcc?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+          const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
         }
 
-        // For Credit Cards, Balance means Available (Total Family Limit - Total Family Debt)
-        const limit = isCC
-          ? getEffectiveCreditLimit(account, allAccounts)
+        const computedGroupDebt = allAccounts
+          ? allAccounts
+              .filter(
+                (item) =>
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || ""),
+              )
+              .reduce((sum, item) => sum + (item.current_balance || 0), 0)
+          : account.current_balance || 0;
+
+        const sharedFamilyDebt = familyBalance !== undefined ? familyBalance : computedGroupDebt;
+
+        // Keep Balance column in lockstep with Role's family math.
+        const familyLimit = isCC
+          ? ((isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0)
           : 0;
-        const debt = isCC ? Math.abs(displayBalance || 0) : 0;
-        const finalBalance = isCC ? limit - debt : displayBalance || 0;
+        const debt = isCC ? Math.abs(sharedFamilyDebt || 0) : 0;
+        const limit = isCC ? familyLimit : getEffectiveCreditLimit(account, allAccounts);
+        const finalBalance = isCC ? familyLimit - debt : account.current_balance || 0;
 
         return (
           <TooltipProvider>

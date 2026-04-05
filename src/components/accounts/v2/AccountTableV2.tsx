@@ -71,6 +71,66 @@ export function AccountTableV2({
     // Use derived state for robust lookup
     const robustAllAccounts = allAccounts || accounts;
 
+    const familyRootByAccountId = useMemo(() => {
+        const findByRef = (ref: string) => {
+            return robustAllAccounts.find(
+                (item) => item.id === ref || ((item as any)?.slug && (item as any).slug === ref),
+            )
+        }
+
+        const inferParent = (acc: Account) => {
+            const accSlug = (acc as any)?.slug as string | undefined
+            return robustAllAccounts.find((item) =>
+                (item.relationships?.child_accounts || []).some(
+                    (child: any) =>
+                        child.id === acc.id ||
+                        (accSlug ? child.id === accSlug : false),
+                ),
+            )
+        }
+
+        const hasChildren = (acc: Account) => {
+            const accSlug = (acc as any)?.slug as string | undefined
+            const byParentRef = robustAllAccounts.some(
+                (item) =>
+                    item.parent_account_id === acc.id ||
+                    (accSlug ? item.parent_account_id === accSlug : false),
+            )
+            const childRefs = acc.relationships?.child_accounts || []
+            const byRelationship = childRefs.some((child: any) =>
+                robustAllAccounts.some(
+                    (item) => item.id === child.id || (((item as any)?.slug as string | undefined) === child.id),
+                ),
+            )
+            return byParentRef || byRelationship
+        }
+
+        const resolveRootId = (acc: Account) => {
+            if (acc.relationships?.is_parent || hasChildren(acc)) {
+                return acc.id
+            }
+
+            const parentRef = acc.parent_account_id || acc.relationships?.parent_info?.id || null
+            const directParent = parentRef ? findByRef(parentRef) : null
+            if (directParent) {
+                return directParent.id
+            }
+
+            const inferredParent = inferParent(acc)
+            if (inferredParent) {
+                return inferredParent.id
+            }
+
+            return acc.id
+        }
+
+        const map = new Map<string, string>()
+        robustAllAccounts.forEach((acc) => {
+            map.set(acc.id, resolveRootId(acc))
+        })
+        return map
+    }, [robustAllAccounts])
+
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
         new Set(['credit', 'loans', 'banks', 'investments'])
     );
@@ -319,44 +379,6 @@ export function AccountTableV2({
                                 Actions
                             </th>
                         </tr>
-                        <tr className="bg-slate-50/50 border-b border-slate-200">
-                            {visibleCols.some(c => c.key === 'account') && (
-                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-12">
-                                    Account Detail
-                                </th>
-                            )}
-                            {visibleCols.some(c => c.key === 'role') && (
-                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
-                                    Role
-                                </th>
-                            )}
-                            {visibleCols.some(c => c.key === 'limit') && (
-                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                    Credit Limit
-                                </th>
-                            )}
-                            {visibleCols.some(c => c.key === 'rewards') && (
-                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                    Reward logic
-                                </th>
-                            )}
-                            {visibleCols.some(c => c.key === 'due') && (
-                                <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                    Cycle Info
-                                </th>
-                            )}
-                            {visibleCols.some(c => c.key === 'balance') && (
-                                <th className="px-4 py-2 text-[10px] font-black text-slate-900 bg-amber-50/30 uppercase tracking-widest text-right border-l border-amber-100/50">
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[8px] text-amber-600/70 font-black leading-none mb-0.5">Balance</span>
-                                        <span>Current Net</span>
-                                    </div>
-                                </th>
-                            )}
-                            <th className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right pr-6">
-                                Actions
-                            </th>
-                        </tr>
                     </thead>
                     <tbody className="divide-y relative">
                         {groupedAccounts.length === 0 ? (
@@ -437,33 +459,13 @@ export function AccountTableV2({
                                                 </tr>
 
                                                 {group.accounts.map((account) => {
-                                                    const hasChildren = robustAllAccounts.some(
-                                                        (item) => item.parent_account_id === account.id,
-                                                    );
-                                                    const isGroupRoot = !!account.relationships?.is_parent || hasChildren;
-                                                    const directParent = account.parent_account_id
-                                                        ? robustAllAccounts.find(
-                                                            (item) =>
-                                                                item.id === account.parent_account_id ||
-                                                                ((item as any)?.slug && (item as any).slug === account.parent_account_id),
-                                                        )
-                                                        : null;
-                                                    const inferredParent = robustAllAccounts.find((item) =>
-                                                        (item.relationships?.child_accounts || []).some(
-                                                            (child: any) => child.id === account.id,
-                                                        ),
-                                                    );
-                                                    const grpId = isGroupRoot
-                                                        ? account.id
-                                                        : (directParent?.id || inferredParent?.id || '');
+                                                    const grpId = familyRootByAccountId.get(account.id) || account.id;
 
                                                     const familyBalance = (() => {
                                                         if (!grpId) return account.current_balance || 0;
 
-                                                        // Keep this as "group debt/balance raw sum" so every row computes
-                                                        // available limit from the exact same mirrored family base.
                                                         const family = robustAllAccounts.filter(
-                                                            (item) => item.id === grpId || item.parent_account_id === grpId,
+                                                            (item) => (familyRootByAccountId.get(item.id) || item.id) === grpId,
                                                         );
                                                         return family.reduce(
                                                             (sum, item) => sum + (item.current_balance || 0),

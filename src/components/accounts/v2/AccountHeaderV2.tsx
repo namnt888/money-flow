@@ -47,6 +47,7 @@ interface AccountHeaderProps {
         limit: number;
         debt: number;
     };
+    onOpenSyncBalanceAudit?: () => void;
 }
 
 export function AccountHeaderV2({
@@ -67,6 +68,7 @@ export function AccountHeaderV2({
     advancedFilters,
     onAdvancedFiltersChange,
     othersStats,
+    onOpenSyncBalanceAudit,
 }: AccountHeaderProps) {
     const router = useRouter()
     const filters = [
@@ -166,6 +168,10 @@ export function AccountHeaderV2({
                         size="sm"
                         className="h-8 gap-2 border-emerald-200 bg-emerald-50/40 text-emerald-700 hover:bg-emerald-100/60 hover:text-emerald-800 font-black text-[9px] uppercase tracking-wider"
                         onClick={async () => {
+                            if (onOpenSyncBalanceAudit) {
+                                onOpenSyncBalanceAudit();
+                                return;
+                            }
                             const { fixAllAccountBalances } = await import("@/actions/admin-actions");
                             const toastId = toast.loading("Recalculating all account balances...");
                             try {

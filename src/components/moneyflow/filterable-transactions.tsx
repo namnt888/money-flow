@@ -132,7 +132,6 @@ export function FilterableTransactions({
             amount: true,
             back_info: false,
             final_price: true,
-            total_back: false,
             id: false,
             people: false,
             actions: true,
