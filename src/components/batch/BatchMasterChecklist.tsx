@@ -1000,6 +1000,7 @@ export function BatchMasterChecklist({
                             onAddMasterItem={() => openMasterItemAdder(phase.id)}
                             focusedMasterItemId={focusedMasterItemId}
                             onSmartSort={handleSmartSort}
+                            bankMappings={bankMappings}
                         />
                     </TabsContent>
                 ))}
@@ -1172,7 +1173,7 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
@@ -1555,6 +1556,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                         isPhaseEditing={isPhaseEditing}
                                         draftAmount={draftAmounts[item.id] ?? ''}
                                         batches={batches}
+                                        bankMappings={bankMappings}
                                         onDraftAmountChange={(value: string) => updateDraftAmount(item.id, value)}
                                         isSelected={item.batch_item_id ? selectedItemIds.has(item.batch_item_id) : false}
                                         isMasterFocused={focusedMasterItemId === item.id}
@@ -1575,7 +1577,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     )
 }
 
-function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType }: any) {
+function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType, bankMappings }: any) {
     const [saving, setSaving] = useState(false)
     const [isEditingRowAmount, setIsEditingRowAmount] = useState(false)
     const [rowDraftAmount, setRowDraftAmount] = useState(draftAmount)
@@ -1812,6 +1814,25 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                     </Tooltip>
                 </TooltipProvider>
             )}
+
+            {/* Bank Mapping Badge - shows if card group matches expected mapping */}
+            {(() => {
+                const foundMapping = bankMappings?.find((m: any) => 
+                    m.bank_code === item.bank_code || 
+                    (m.bank_name?.toLowerCase() === item.bank_name?.toLowerCase() && m.bank_type === bankType)
+                )
+                return foundMapping ? (
+                    <div className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shadow-sm">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-wider">Mapped</span>
+                    </div>
+                ) : item.bank_code ? (
+                    <div className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 shadow-sm">
+                        <AlertCircle className="h-3 w-3 text-amber-600" />
+                        <span className="text-[8px] font-black text-amber-600 uppercase tracking-wider">Unmapped</span>
+                    </div>
+                ) : null
+            })()}
 
             {item.accounts?.image_url ? (
                 <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center shadow-sm">
