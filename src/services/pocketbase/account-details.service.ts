@@ -60,6 +60,20 @@ function toAccountType(value: string | null | undefined): Account["type"] {
   return "bank";
 }
 
+function parseJsonSafe(value: unknown): Record<string, any> | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof value === "object") return value as Record<string, any>;
+  return null;
+}
+
 function mapAccount(record: PocketBaseRecord): Account {
   return {
     id: record.id,
@@ -92,6 +106,7 @@ function mapAccount(record: PocketBaseRecord): Account {
     due_date: record.due_date ?? null,
     holder_type: record.holder_type || "me",
     holder_person_id: record.holder_person_id || null,
+    metadata: parseJsonSafe(record.metadata),
     stats: null,
     relationships: null,
   };

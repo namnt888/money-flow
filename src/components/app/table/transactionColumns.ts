@@ -13,6 +13,7 @@ export type ColumnKey =
   | "actions"
   | "actual_cashback"
   | "est_share"
+  | "net_profit_raw"
   | "net_profit"
   | "back_info" // Legacy, keep for safety
   | "people"

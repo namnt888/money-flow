@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { SmartAmountInput } from "@/components/ui/smart-amount-input";
+import { Input } from "@/components/ui/input";
 import { SingleTransactionFormValues } from "../types";
 import { Person } from "@/types/moneyflow.types";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,8 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
     const amount = useWatch({ control: form.control, name: "amount" });
     const participants =
         useWatch({ control: form.control, name: "participants" }) || [];
+    const includeMe =
+        useWatch({ control: form.control, name: "split_include_me" }) ?? true;
     const personId = useWatch({ control: form.control, name: "person_id" });
 
     const totalSplit = participants.reduce(
@@ -48,6 +51,7 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
         0,
     );
     const remainder = (amount || 0) - totalSplit;
+    const meAmount = includeMe ? Math.max(0, remainder) : 0;
 
     const shouldShow =
         forceShow || !!personId || ["expense", "debt"].includes(transactionType);
@@ -70,8 +74,18 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
         [people],
     );
 
+    const mePersonId = useMemo(() => {
+        const owner = people.find((person) => person.is_owner);
+        if (owner) return owner.id;
+
+        const byName = people.find((person) =>
+            /^(me|toi|tôi|myself)$/i.test((person.name || "").trim()),
+        );
+        return byName?.id || undefined;
+    }, [people]);
+
     const handleAddPerson = () => {
-        append({ person_id: "", amount: 0 });
+        append({ person_id: "", amount: 0, note: "" });
         setIsOpen(true);
     };
 
@@ -122,16 +136,16 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
     if (!shouldShow) return null;
 
     return (
-        <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-500" />
+                    <Users className="h-3.5 w-3.5 text-slate-500" />
                     <div>
-                        <Label className="text-sm font-medium text-slate-700">
+                        <Label className="text-xs font-semibold text-slate-700">
                             Split Bill
                         </Label>
-                        <p className="text-[11px] text-slate-500">
-                            Keep people and shares in sync with the form.
+                        <p className="text-[10px] text-slate-500">
+                            Add people, amount, and split note.
                         </p>
                     </div>
                 </div>
@@ -154,9 +168,11 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
                         onCheckedChange={(checked) => {
                             setIsOpen(checked);
                             if (checked) {
-                                if (fields.length === 0) append({ person_id: "", amount: 0 });
+                                if (fields.length === 0) append({ person_id: "", amount: 0, note: "" });
                             } else {
                                 form.setValue("participants", [], { shouldDirty: true });
+                                form.setValue("split_include_me", true, { shouldDirty: true });
+                                form.setValue("split_me_note", "", { shouldDirty: true });
                             }
                         }}
                         disabled={!amount && !isExpanded}
@@ -166,12 +182,16 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
             </div>
 
             <Collapsible open={isExpanded} onOpenChange={setIsOpen}>
-                <CollapsibleContent className="space-y-3 pt-1">
-                    <div className="flex justify-between px-1 text-xs text-slate-500">
+                <CollapsibleContent className="space-y-2 pt-1">
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[10px] font-semibold text-slate-600">
+                        Split Base Amount: {new Intl.NumberFormat().format(amount || 0)}
+                    </div>
+
+                    <div className="flex justify-between px-1 text-[10px] text-slate-500">
                         <span>Total: {new Intl.NumberFormat().format(amount || 0)}</span>
                         <span
                             className={cn(
-                                "font-medium",
+                                "font-semibold",
                                 remainder < 0
                                     ? "text-red-600"
                                     : remainder > 0
@@ -185,62 +205,155 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
 
                     <div className="space-y-2">
                         {fields.map((field, index) => (
-                            <div key={field.id} className="flex items-start gap-2">
-                                <div className="grid flex-1 grid-cols-[minmax(0,1fr)_132px] gap-2">
-                                    <FormField
-                                        control={form.control}
-                                        name={`participants.${index}.person_id`}
-                                        render={({ field: personField }) => (
-                                            <FormItem className="w-full">
-                                                <FormControl>
-                                                    <Combobox
-                                                        items={peopleOptions}
-                                                        value={personField.value || undefined}
-                                                        onValueChange={(value) =>
-                                                            personField.onChange(value || "")
-                                                        }
-                                                        placeholder="Person"
-                                                        className="h-10 w-full"
-                                                        addLabel="Person"
-                                                    />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+                            <div key={field.id} className="rounded-lg border border-slate-200 bg-white p-2">
+                                <div className="flex items-start gap-2">
+                                    <div className="grid flex-1 grid-cols-[minmax(0,1fr)_120px] gap-2">
+                                        <FormField
+                                            control={form.control}
+                                            name={`participants.${index}.person_id`}
+                                            render={({ field: personField }) => (
+                                                <FormItem className="w-full">
+                                                    <FormControl>
+                                                        <Combobox
+                                                            items={peopleOptions}
+                                                            value={personField.value || undefined}
+                                                            onValueChange={(value) =>
+                                                                personField.onChange(value || "")
+                                                            }
+                                                            placeholder="Person"
+                                                            className="h-9 w-full"
+                                                            addLabel="Person"
+                                                        />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
 
-                                    <FormField
-                                        control={form.control}
-                                        name={`participants.${index}.amount`}
-                                        render={({ field: amountField }) => (
-                                            <FormItem className="w-full">
-                                                <FormControl>
-                                                    <SmartAmountInput
-                                                        value={amountField.value || 0}
-                                                        onChange={(value) => amountField.onChange(value || 0)}
-                                                        hideLabel
-                                                        className="h-10 font-medium"
-                                                        placeholder="0"
-                                                        compact
-                                                        hideCalculator
-                                                    />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+                                        <FormField
+                                            control={form.control}
+                                            name={`participants.${index}.amount`}
+                                            render={({ field: amountField }) => (
+                                                <FormItem className="w-full">
+                                                    <FormControl>
+                                                        <SmartAmountInput
+                                                            value={amountField.value || 0}
+                                                            onChange={(value) => amountField.onChange(value || 0)}
+                                                            hideLabel
+                                                            className="h-9 font-medium"
+                                                            placeholder="0"
+                                                            compact
+                                                            hideCalculator
+                                                        />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => remove(index)}
+                                        className="h-9 w-9 shrink-0 text-slate-400 hover:text-red-500"
+                                        type="button"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
 
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => remove(index)}
-                                    className="h-10 w-10 shrink-0 text-slate-400 hover:text-red-500"
-                                    type="button"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <FormField
+                                    control={form.control}
+                                    name={`participants.${index}.note`}
+                                    render={({ field: noteField }) => (
+                                        <FormItem className="mt-2">
+                                            <FormControl>
+                                                <Input
+                                                    value={noteField.value || ""}
+                                                    onChange={(event) =>
+                                                        noteField.onChange(event.target.value)
+                                                    }
+                                                    placeholder="Split note (e.g. Shopee)"
+                                                    className="h-8 text-xs"
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
                         ))}
                     </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <Label className="text-[11px] font-semibold text-slate-700">Include Me</Label>
+                            <Switch
+                                checked={includeMe}
+                                onCheckedChange={(checked) =>
+                                    form.setValue("split_include_me", checked, {
+                                        shouldDirty: true,
+                                    })
+                                }
+                            />
+                        </div>
+                        <p className="mt-1 text-[10px] text-slate-500">
+                            Turn off to create split rows only for people.
+                        </p>
+                    </div>
+
+                    <FormField
+                        control={form.control}
+                        name="split_me_note"
+                        render={({ field: meNoteField }) => (
+                            <FormItem className="space-y-2">
+                                <div className={cn(
+                                    "rounded-lg p-2",
+                                    includeMe
+                                        ? "border border-emerald-200 bg-emerald-50/40"
+                                        : "border border-slate-200 bg-slate-50",
+                                )}>
+                                    <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
+                                        <Combobox
+                                            items={peopleOptions}
+                                            value={mePersonId}
+                                            onValueChange={() => undefined}
+                                            placeholder="Me"
+                                            className="h-9 w-full"
+                                            disabled
+                                        />
+                                        <SmartAmountInput
+                                            value={meAmount}
+                                            onChange={() => undefined}
+                                            hideLabel
+                                            className="h-9 font-bold"
+                                            compact
+                                            hideCalculator
+                                            disabled
+                                        />
+                                    </div>
+                                    <div className={cn(
+                                        "mt-1 text-[9px] font-semibold",
+                                        includeMe ? "text-emerald-700" : "text-slate-600",
+                                    )}>
+                                        {includeMe
+                                            ? "Me amount = Remaining after split people."
+                                            : "Me is unlocked off for this split."}
+                                    </div>
+                                </div>
+
+                                <FormControl>
+                                    <Input
+                                        value={meNoteField.value || ""}
+                                        onChange={(event) =>
+                                            meNoteField.onChange(event.target.value)
+                                        }
+                                        placeholder="Me note (e.g. Pin sạc)"
+                                        className="h-8 text-xs bg-white"
+                                        disabled={!includeMe}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
 
                     <div className="flex flex-wrap gap-2">
                         <Button
@@ -248,7 +361,7 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
                             variant="outline"
                             size="sm"
                             onClick={handleAddPerson}
-                            className="h-9 flex-1 border-dashed"
+                            className="h-8 flex-1 border-dashed text-xs"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Person
@@ -258,7 +371,7 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
                             variant="ghost"
                             size="sm"
                             onClick={handleSplitEqually}
-                            className="h-9 text-xs text-blue-600"
+                            className="h-8 text-xs text-blue-600"
                             disabled={!amount || fields.length === 0}
                         >
                             Split Equally
@@ -268,7 +381,7 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
                             variant="ghost"
                             size="sm"
                             onClick={handleDistributeRemainder}
-                            className="h-9 text-xs text-orange-600"
+                            className="h-8 text-xs text-orange-600"
                             disabled={!amount || fields.length === 0 || remainder <= 0}
                         >
                             Distribute Rem.

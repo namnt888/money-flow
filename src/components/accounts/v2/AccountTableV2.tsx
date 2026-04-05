@@ -436,22 +436,38 @@ export function AccountTableV2({
                                                 </tr>
 
                                                 {group.accounts.map((account) => {
-                                                    const grpId = account.parent_account_id || (account.relationships?.is_parent ? account.id : '');
-                                                    
+                                                    const hasChildren = robustAllAccounts.some(
+                                                        (item) => item.parent_account_id === account.id,
+                                                    );
+                                                    const isGroupRoot = !!account.relationships?.is_parent || hasChildren;
+                                                    const directParent = account.parent_account_id
+                                                        ? robustAllAccounts.find(
+                                                            (item) =>
+                                                                item.id === account.parent_account_id ||
+                                                                ((item as any)?.slug && (item as any).slug === account.parent_account_id),
+                                                        )
+                                                        : null;
+                                                    const inferredParent = robustAllAccounts.find((item) =>
+                                                        (item.relationships?.child_accounts || []).some(
+                                                            (child: any) => child.id === account.id,
+                                                        ),
+                                                    );
+                                                    const grpId = isGroupRoot
+                                                        ? account.id
+                                                        : (directParent?.id || inferredParent?.id || '');
+
                                                     const familyBalance = (() => {
-                                                        if (!grpId) return account.current_balance;
-                                                        
-                                                        const family = robustAllAccounts.filter(a => a.id === grpId || a.parent_account_id === grpId);
-                                                        const parent = family.find(a => a.id === grpId) || account;
-                                                        const totalUsage = family.reduce((sum, a) => sum + (a.current_balance || 0), 0);
-                                                        
-                                                        // For Credit Cards: available = limit - abs(totalUsage)
-                                                        if (account.type === 'credit_card') {
-                                                            const limit = parent.credit_limit || account.credit_limit || 0;
-                                                            return limit - Math.abs(totalUsage);
-                                                        }
-                                                        
-                                                        return totalUsage;
+                                                        if (!grpId) return account.current_balance || 0;
+
+                                                        // Keep this as "group debt/balance raw sum" so every row computes
+                                                        // available limit from the exact same mirrored family base.
+                                                        const family = robustAllAccounts.filter(
+                                                            (item) => item.id === grpId || item.parent_account_id === grpId,
+                                                        );
+                                                        return family.reduce(
+                                                            (sum, item) => sum + (item.current_balance || 0),
+                                                            0,
+                                                        );
                                                     })();
 
                                                     return (

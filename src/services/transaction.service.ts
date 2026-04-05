@@ -128,9 +128,32 @@ export type CreateTransactionInput = {
   cashback_share_fixed?: number | null;
   cashback_mode?: CashbackMode | null;
   linked_transaction_id?: string | null;
+  parent_transaction_id?: string | null;
   debt_cycle_tag?: string | null;
   persisted_cycle_tag?: string | null;
   statement_cycle_tag?: string | null;
+};
+
+export type SplitParticipantInput = {
+  person_id: string;
+  base_amount: number;
+  note?: string | null;
+  cashback_back_amount?: number;
+  final_amount?: number;
+};
+
+export type CreateSplitTransactionsInput = {
+  basePayload: CreateTransactionInput;
+  includeMe?: boolean;
+  meBaseAmount: number;
+  serviceFee?: number;
+  meNote?: string | null;
+  participants: SplitParticipantInput[];
+  rawTotalAmount?: number;
+  splitSummaryNote?: string | null;
+  cashbackBackTotalToPeople?: number;
+  systemAccountId: string;
+  splitGroupId?: string;
 };
 
 type FlatTransactionRow = {
@@ -278,6 +301,7 @@ async function normalizeInput(input: CreateTransactionInput) {
     cashback_share_fixed: input.cashback_share_fixed,
     cashback_mode: input.cashback_mode,
     linked_transaction_id: input.linked_transaction_id ? toPocketBaseId(input.linked_transaction_id, 'transactions') : null,
+    parent_transaction_id: input.parent_transaction_id ? toPocketBaseId(input.parent_transaction_id, 'transactions') : null,
   };
 }
 
@@ -416,6 +440,44 @@ export async function mapTransactionRow(
         ? "income"
         : "expense";
 
+  const metadataObj =
+    typeof row.metadata === "string"
+      ? (() => {
+          try {
+            return JSON.parse(row.metadata);
+          } catch {
+            return null;
+          }
+        })()
+      : row.metadata;
+
+  const splitMeta = (metadataObj as any)?.split_bill;
+  const isSplitShareRow =
+    (metadataObj as any)?.is_split_share === true ||
+    (metadataObj as any)?.split_role === "participant" ||
+    (metadataObj as any)?.split_role === "participant_parent";
+  const splitSharedPerRow = Number(
+    (metadataObj as any)?.split_cashback_back_amount ?? 0,
+  );
+  const splitSharedFromMeta = Number(
+    splitMeta?.cashback_back_total_to_people ??
+      (metadataObj as any)?.cashback_back_total_to_people ??
+      0,
+  );
+  const hasSplitSharedFromMeta =
+    Number.isFinite(splitSharedFromMeta) && splitSharedFromMeta > 0;
+  const hasSplitSharedPerRow =
+    Number.isFinite(splitSharedPerRow) && splitSharedPerRow > 0;
+
+  const defaultSharedAmount =
+    (row.cashback_share_fixed ?? 0) +
+    Math.abs(row.amount) * (row.cashback_share_percent ?? 0);
+  const effectiveSharedAmount = hasSplitSharedPerRow
+    ? splitSharedPerRow
+    : isSplitShareRow && hasSplitSharedFromMeta
+      ? splitSharedFromMeta
+      : defaultSharedAmount;
+
   return {
     ...row,
     tag: normalizeMonthTag(row.tag) ?? row.tag ?? null,
@@ -440,7 +502,7 @@ export async function mapTransactionRow(
     shop_image_url: shop?.image_url ?? null,
     history_count: historyCountMap?.get(row.id) ?? 0,
     bank_back: 0,
-    cashback_share_amount: (row.cashback_share_fixed ?? 0) + (Math.abs(row.amount) * (row.cashback_share_percent ?? 0)),
+    cashback_share_amount: effectiveSharedAmount,
     profit: 0,
   } as TransactionWithDetails;
 }
@@ -630,6 +692,211 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
   } catch (error) {
     console.error("[DB:PB] createTransaction failed:", error);
     return null;
+  }
+}
+
+export async function createSplitTransactions(
+  input: CreateSplitTransactionsInput,
+): Promise<{ success: boolean; parentId?: string; participantIds: string[]; error?: string }> {
+  const participantIds: string[] = [];
+  try {
+    const splitGroupId = input.splitGroupId || crypto.randomUUID();
+    const includeMe = input.includeMe !== false;
+    const serviceFee = Math.max(0, Number(input.serviceFee || 0));
+    const meBaseAmount = Math.max(0, Number(input.meBaseAmount || 0));
+    const rawTotalAmount = Math.max(0, Number(input.rawTotalAmount || 0));
+    const cashbackBackTotalToPeople = Math.max(
+      0,
+      Number(input.cashbackBackTotalToPeople || 0),
+    );
+
+    const participants = (input.participants || []).filter(
+      (participant) =>
+        participant &&
+        participant.person_id &&
+        Number(participant.base_amount || 0) > 0,
+    );
+
+    if (participants.length === 0) {
+      return {
+        success: false,
+        participantIds,
+        error: "Split requires at least one participant",
+      };
+    }
+
+    const meTxnAmount = Math.max(0, meBaseAmount + serviceFee);
+    const baseMetadata =
+      input.basePayload.metadata && typeof input.basePayload.metadata === "object"
+        ? input.basePayload.metadata
+        : {};
+
+    const splitBillMetadata = {
+      ...(typeof (baseMetadata as any).split_bill === "object" &&
+      (baseMetadata as any).split_bill !== null
+        ? (baseMetadata as any).split_bill
+        : {}),
+      participants: participants.map((participant) => ({
+        person_id: participant.person_id,
+        note: participant.note || "",
+        base_amount: Math.max(0, Number(participant.base_amount || 0)),
+        cashback_back_amount: Math.max(
+          0,
+          Number(participant.cashback_back_amount || 0),
+        ),
+        final_amount:
+          participant.final_amount === undefined
+            ? Math.max(0, Number(participant.base_amount || 0))
+            : Math.max(0, Number(participant.final_amount || 0)),
+      })),
+      me_base_amount: meBaseAmount,
+      include_me: includeMe,
+      raw_total_amount: rawTotalAmount,
+      me_note: input.meNote || undefined,
+      note_summary: input.splitSummaryNote || undefined,
+      cashback_back_total_to_people: cashbackBackTotalToPeople,
+    };
+    let parentId: string | undefined;
+
+    if (includeMe) {
+      const meTxnPayload: CreateTransactionInput = {
+        ...input.basePayload,
+        amount: meTxnAmount,
+        note: input.meNote || input.basePayload.note || null,
+        person_id: null,
+        cashback_share_percent: null,
+        cashback_share_fixed: null,
+        parent_transaction_id: null,
+        metadata: {
+          ...baseMetadata,
+          split_bill: splitBillMetadata,
+          is_split_bill: true,
+          is_split_bill_base: true,
+          split_role: "me",
+          split_group_id: splitGroupId,
+          split_count: participants.length + 1,
+          split_parent_id: null,
+          parent_transaction_id: null,
+        },
+      };
+
+      const meTxnId = await createTransaction(meTxnPayload);
+      if (!meTxnId) {
+        return {
+          success: false,
+          participantIds,
+          error: "Failed to create Me split transaction",
+        };
+      }
+
+      const meLinkedPayload: CreateTransactionInput = {
+        ...meTxnPayload,
+        parent_transaction_id: meTxnId,
+        metadata: {
+          ...(meTxnPayload.metadata && typeof meTxnPayload.metadata === "object"
+            ? meTxnPayload.metadata
+            : {}),
+          split_parent_id: meTxnId,
+          parent_transaction_id: meTxnId,
+        },
+      };
+
+      const linkedUpdated = await updateTransaction(meTxnId, meLinkedPayload);
+      if (!linkedUpdated) {
+        return {
+          success: false,
+          parentId: meTxnId,
+          participantIds,
+          error: "Failed to link parent split transaction",
+        };
+      }
+      parentId = meTxnId;
+    }
+
+    for (const participant of participants) {
+      const baseAmount = Math.max(0, Number(participant.base_amount || 0));
+      const cashbackBackAmount = Math.max(
+        0,
+        Number(participant.cashback_back_amount || 0),
+      );
+      const finalAmount =
+        participant.final_amount === undefined
+          ? Math.max(0, baseAmount - cashbackBackAmount)
+          : Math.max(0, Number(participant.final_amount || 0));
+
+      const splitChildPayload: CreateTransactionInput = {
+        ...input.basePayload,
+        type: "debt",
+        amount: baseAmount,
+        note: participant.note || input.basePayload.note || null,
+        source_account_id:
+          input.basePayload.source_account_id || input.systemAccountId,
+        target_account_id: null,
+        person_id: participant.person_id,
+        cashback_mode: input.basePayload.cashback_mode || "none_back",
+        cashback_share_percent: input.basePayload.cashback_share_percent ?? null,
+        cashback_share_fixed: input.basePayload.cashback_share_fixed ?? null,
+        parent_transaction_id: parentId || null,
+        metadata: {
+          ...baseMetadata,
+          split_bill: splitBillMetadata,
+          is_split_share: true,
+          split_role: "participant",
+          split_group_id: splitGroupId,
+          split_count: participants.length + (includeMe ? 1 : 0),
+          split_parent_id: parentId || null,
+          parent_transaction_id: parentId || null,
+          split_origin_account_id:
+            input.basePayload.source_account_id || input.systemAccountId,
+          split_person_id: participant.person_id,
+          split_base_amount: baseAmount,
+          split_cashback_back_amount: cashbackBackAmount,
+          split_final_amount: finalAmount,
+        },
+      };
+
+      const childId = await createTransaction(splitChildPayload);
+      if (!childId) {
+        return {
+          success: false,
+          parentId,
+          participantIds,
+          error: "Failed to create one of split participant transactions",
+        };
+      }
+
+      if (!parentId) {
+        parentId = childId;
+        const parentLinkedPayload: CreateTransactionInput = {
+          ...splitChildPayload,
+          parent_transaction_id: childId,
+          metadata: {
+            ...(splitChildPayload.metadata && typeof splitChildPayload.metadata === "object"
+              ? splitChildPayload.metadata
+              : {}),
+            split_parent_id: childId,
+            parent_transaction_id: childId,
+            split_role: "participant_parent",
+          },
+        };
+        await updateTransaction(childId, parentLinkedPayload);
+      }
+
+      participantIds.push(childId);
+    }
+
+    return {
+      success: true,
+      parentId,
+      participantIds,
+    };
+  } catch (error: any) {
+    console.error("[DB:PB] createSplitTransactions failed:", error);
+    return {
+      success: false,
+      participantIds,
+      error: error?.message || "Split transaction creation failed",
+    };
   }
 }
 

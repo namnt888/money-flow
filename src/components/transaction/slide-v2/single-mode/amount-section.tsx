@@ -21,6 +21,7 @@ import { CashbackSection } from "./cashback-section";
 type AmountSectionProps = {
   accounts: Account[];
   categories: Category[];
+  splitSection?: ReactNode;
 };
 
 function renderHighlightedNumericWords(text: string): ReactNode {
@@ -50,12 +51,19 @@ function renderHighlightedNumericWords(text: string): ReactNode {
 export function AmountSection({
   accounts,
   categories,
+  splitSection,
 }: AmountSectionProps) {
   const form = useFormContext<SingleTransactionFormValues>();
   const amount = useWatch({ control: form.control, name: "amount" });
   const serviceFee = useWatch({ control: form.control, name: "service_fee" });
   const type = useWatch({ control: form.control, name: "type" });
   const isHideFee = type === "income" || type === "repayment";
+  const isCashbackSupported = ![
+    "income",
+    "repayment",
+    "transfer",
+    "credit_pay",
+  ].includes(type || "");
   const isCashbackExpanded = useWatch({
     control: form.control,
     name: "ui_is_cashback_expanded",
@@ -86,6 +94,26 @@ export function AmountSection({
       setShowFeeInput(true);
     }
   }, [serviceFee, isHideFee]);
+
+  useEffect(() => {
+    if (isCashbackSupported) return;
+
+    if (isCashbackExpanded) {
+      form.setValue("ui_is_cashback_expanded", false, { shouldDirty: true });
+    }
+
+    if (form.getValues("cashback_mode") !== "none_back") {
+      form.setValue("cashback_mode", "none_back", { shouldDirty: true });
+    }
+
+    if (form.getValues("cashback_share_percent") !== null) {
+      form.setValue("cashback_share_percent", null, { shouldDirty: true });
+    }
+
+    if (form.getValues("cashback_share_fixed") !== null) {
+      form.setValue("cashback_share_fixed", null, { shouldDirty: true });
+    }
+  }, [isCashbackSupported, isCashbackExpanded, form]);
 
   const isFeeVisible =
     !isHideFee && (showFeeInput || (Number(serviceFee) || 0) > 0);
@@ -296,6 +324,8 @@ export function AmountSection({
         </div>
       </div>
 
+      {splitSection ? <div>{splitSection}</div> : null}
+
       {/* Cashback toggle */}
       <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
         <div>
@@ -303,7 +333,9 @@ export function AmountSection({
             Cashback Reward
           </p>
           <p className="text-[10px] text-slate-400">
-            Toggle to reveal optimizations
+            {isCashbackSupported
+              ? "Toggle to reveal optimizations"
+              : "Disabled for In/Transfer types"}
           </p>
         </div>
         <Switch
@@ -311,15 +343,18 @@ export function AmountSection({
           onCheckedChange={(checked) =>
             form.setValue("ui_is_cashback_expanded", checked)
           }
+          disabled={!isCashbackSupported}
         />
       </div>
 
       {/* Cashback detail (expanded) */}
-      <CashbackSection
-        accounts={accounts}
-        categories={categories}
-        hideHeader
-      />
+      {isCashbackSupported && (
+        <CashbackSection
+          accounts={accounts}
+          categories={categories}
+          hideHeader
+        />
+      )}
     </div>
   );
 }
