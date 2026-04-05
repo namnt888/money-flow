@@ -30,6 +30,7 @@ import {
   CircleDashed,
   Crown,
   UserSquare2,
+  ArrowLeft,
   ArrowRight,
   Copy,
   Database,
@@ -779,9 +780,75 @@ export function AccountRowV2({
 
         const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
         const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
+        const peopleSource = (people.length > 0 ? people : (initialPeople || []));
+        const ownerPerson = account.holder_person_id
+          ? peopleSource.find((p) => p.id === account.holder_person_id)
+          : undefined;
+
+        const renderAccountBadge = (acc: Account | null, suffix?: string) => (
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="h-8 px-1.5 pr-2 rounded-full border border-slate-200 bg-white inline-flex items-center gap-1.5 shadow-sm cursor-help">
+                  <div className="h-5 w-5 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                    {acc?.image_url ? (
+                      <img src={acc.image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Wallet className="h-3 w-3 text-slate-400" />
+                    )}
+                  </div>
+                  {suffix && <span className="text-[10px] font-black text-indigo-600">{suffix}</span>}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="text-[10px] font-bold">
+                {acc ? `${acc.name} (${acc.id})` : 'No linked account'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+
+        const renderOwnerBadge = () => {
+          if (account.holder_type === 'relative' && ownerPerson) {
+            return (
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <div className="h-8 px-1.5 pr-2 rounded-full border border-emerald-200 bg-emerald-50 inline-flex items-center gap-1.5 shadow-sm cursor-help">
+                      <div className="h-5 w-5 rounded-full overflow-hidden border border-emerald-300 bg-white flex items-center justify-center">
+                        {ownerPerson.image_url ? (
+                          <img src={ownerPerson.image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="h-3 w-3 text-emerald-500" />
+                        )}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-[10px] font-bold">
+                    {`Owner: ${ownerPerson.name}`}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          }
+
+          return (
+            <TooltipProvider>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <div className="h-8 px-1.5 pr-2 rounded-full border border-amber-200 bg-amber-50 inline-flex items-center gap-1.5 shadow-sm cursor-help">
+                    <div className="h-5 w-5 rounded-full border border-amber-300 bg-white flex items-center justify-center">
+                      <Crown className="h-3 w-3 text-amber-500" />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px] font-bold">Owner: Me</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        };
 
         return (
-          <div className="flex flex-col items-center justify-center min-w-[190px] gap-1 group/role-cell">
+          <div className="flex flex-col items-center justify-center min-w-[220px] gap-1 group/role-cell">
             {/* Group Balance Badge (Upper Text) */}
             {isCC && parentLimit > 0 && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
@@ -790,120 +857,59 @@ export function AccountRowV2({
               </div>
             )}
 
-            <div className="flex flex-row items-center justify-center w-full">
-              <HoverCard openDelay={200}>
-                <HoverCardTrigger asChild>
-                  <div
-                    className={cn(
-                      "inline-flex items-center rounded-md border px-2.5 py-1.5 text-[10px] font-black tracking-widest uppercase cursor-help shadow-sm transition-all hover:scale-105 active:scale-95",
-                      isParent
-                        ? "border-indigo-200 bg-indigo-600 text-white shadow-indigo-100"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                    )}
-                  >
-                    <div className={cn(
-                      "mr-2 h-4 w-4 flex items-center justify-center rounded-full border shadow-sm shrink-0",
-                      isParent ? "bg-white/20 border-white/30" : "bg-slate-50 border-slate-100"
-                    )}>
-                      {account.holder_type === 'me' ? (
-                        <Crown className={cn("h-2.5 w-2.5", isParent ? "text-white" : "text-indigo-500")} />
-                      ) : (
-                        <User className={cn("h-2.5 w-2.5", isParent ? "text-indigo-100" : "text-slate-500")} />
-                      )}
-                    </div>
-                    <span>{isParent ? "Parent" : "Child"}</span>
-                    {account.receiver_name && (
-                        <span className={cn("ml-1.5 opacity-80 font-bold border-l pl-1.5", isParent ? "border-white/30" : "border-slate-200")}>
-                            {account.receiver_name}
-                        </span>
-                    )}
-                    <ArrowRight className={cn("ml-1.5 h-3 w-3 opacity-50", isParent ? "text-white" : "text-slate-400")} />
-                  </div>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-80 p-0 rounded-2xl shadow-2xl border-indigo-100 overflow-hidden z-[100]" align="start">
-                  <div className="p-3 bg-indigo-600 text-white">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Group: {isParent ? account.name : (effectiveParentAcc?.name || account.relationships?.parent_info?.name || 'Shared Core')}
-                    </h4>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    {isParent ? (
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider">Sub-Accounts (Children)</p>
-                        <div className="space-y-2">
-                          {relatedAccounts && relatedAccounts.length > 0 ? (
-                            relatedAccounts.map(a => (
-                              <div key={a.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                                <div className="h-8 w-8 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                                  {a.image_url ? (
-                                    <img src={a.image_url} alt="" className="h-full w-full object-contain" />
-                                  ) : (
-                                    <Wallet className="h-4 w-4 text-slate-300" />
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[11px] font-bold text-slate-700 truncate">{a.name}</p>
-                                  <p className="text-[9px] text-slate-400 font-medium tabular-nums">Current Debt: {formatMoneyVND(Math.abs(a.current_balance || 0))}</p>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-slate-400 italic">No sub-accounts linked.</p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Main Account (Parent)</p>
-                          {effectiveParentAcc ? (
-                            <div className="flex items-center gap-3 p-2 bg-indigo-50 rounded-xl border border-indigo-100">
-                              <div className="h-8 w-8 rounded-none border border-indigo-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                                {effectiveParentAcc.image_url ? (
-                                  <img src={effectiveParentAcc.image_url} alt="" className="h-full w-full object-contain" />
-                                ) : (
-                                  <Crown className="h-4 w-4 text-indigo-400" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[11px] font-bold text-indigo-700 truncate">{effectiveParentAcc.name}</p>
-                                <p className="text-[9px] text-indigo-400 font-medium tracking-tight">LIMIT: {formatMoneyVND(effectiveParentAcc.credit_limit || 0)}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[9px] font-black text-indigo-300 uppercase">Available</p>
-                                <p className="text-[10px] font-bold text-indigo-600 tabular-nums">{formatMoneyVND(totalAvailable || 0)}</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 italic">Parent account not found.</p>
-                          )}
-                        </div>
-                        
-                        {relatedAccounts.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100">
-                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Sibling Accounts</p>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {relatedAccounts.map(a => (
-                                <div key={a.id} className="flex items-center gap-3 p-1.5 bg-slate-50/50 rounded-lg border border-slate-100">
-                                  <div className="h-6 w-6 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0">
-                                    {a.image_url ? (
-                                      <img src={a.image_url} alt="" className="h-full w-full object-contain" />
-                                    ) : (
-                                      <Wallet className="h-3 w-3 text-slate-300" />
-                                    )}
-                                  </div>
-                                  <p className="text-[10px] font-bold text-slate-600 truncate">{a.name}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+            <div className="flex items-center justify-center gap-1.5 w-full flex-wrap">
+              <div
+                className={cn(
+                  "h-8 px-2.5 rounded-full border inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm",
+                  isParent ? "bg-indigo-600 text-white border-indigo-500" : "bg-white text-slate-700 border-slate-200",
+                )}
+              >
+                {isParent ? <Crown className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
+                <span>{isParent ? 'Parent' : 'Child'}</span>
+              </div>
+
+              {isParent ? (
+                <>
+                  <ArrowLeft className="h-3.5 w-3.5 text-slate-400" />
+                  <HoverCard openDelay={120} closeDelay={80}>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        {renderAccountBadge(
+                          relatedAccounts[0] || null,
+                          relatedAccounts.length > 1 ? `+${relatedAccounts.length - 1}` : undefined,
                         )}
                       </div>
-                    )}
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-72 p-2 space-y-1.5" align="start">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
+                      {relatedAccounts.length > 0 ? relatedAccounts.map((child) => (
+                        <div key={child.id} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                          <div className="h-6 w-6 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                            {child.image_url ? (
+                              <img src={child.image_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Wallet className="h-3 w-3 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-bold text-slate-700 truncate">{child.name}</div>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="text-[10px] text-slate-400 italic px-1 py-1">No child linked</div>
+                      )}
+                    </HoverCardContent>
+                  </HoverCard>
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                  {renderAccountBadge(effectiveParentAcc)}
+                </>
+              )}
+
+              <Network className="h-3.5 w-3.5 text-slate-400" />
+              {renderOwnerBadge()}
             </div>
           </div>
         );
