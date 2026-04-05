@@ -115,6 +115,30 @@ export function CategorySlide({
         return JSON.stringify(normalizedLeft) === JSON.stringify(normalizedRight)
     }
 
+    const accountOptions = useMemo(
+        () =>
+            accounts.map((account) => ({
+                value: account.id,
+                label: account.name,
+                icon: account.image_url ? (
+                    <img src={account.image_url} alt={account.name} className="h-4 w-4 object-contain rounded-none" />
+                ) : undefined,
+            })),
+        [accounts],
+    )
+
+    const shopOptions = useMemo(
+        () =>
+            shops.map((shop) => ({
+                value: shop.id,
+                label: shop.name,
+                icon: shop.image_url ? (
+                    <img src={shop.image_url} alt={shop.name} className="h-4 w-4 object-contain rounded-none" />
+                ) : undefined,
+            })),
+        [shops],
+    )
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -229,6 +253,9 @@ export function CategorySlide({
 
     const removeLinkedShop = (shopId: string) => {
         setLinkedShopIds((prev) => prev.filter((id) => id !== shopId))
+        if (defaultShopId === shopId) {
+            setDefaultShopId(undefined)
+        }
     }
 
     const renderAvatar = (name: string, imageUrl?: string | null) => (
@@ -289,21 +316,10 @@ export function CategorySlide({
         setLinkedAccountIds((prev) => [...prev, accountId])
     }
 
-    const removeLinkedAccount = (accountId: string) => {
-        setLinkedAccountIds((prev) => prev.filter((id) => id !== accountId))
-    }
-
     const addLinkedShop = (shopId: string | null | undefined) => {
         if (!shopId) return
         if (linkedShopIds.includes(shopId)) return
         setLinkedShopIds((prev) => [...prev, shopId])
-    }
-
-    const removeLinkedShop = (shopId: string) => {
-        setLinkedShopIds((prev) => prev.filter((id) => id !== shopId))
-        if (defaultShopId === shopId) {
-            setDefaultShopId(null)
-        }
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {

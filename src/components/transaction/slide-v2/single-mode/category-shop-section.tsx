@@ -457,6 +457,8 @@ export function CategoryShopSection({
     resolveCategoryValue,
     resolveShopValue,
   ]);
+
+  useEffect(() => {
     if (!shopId) return;
     const currentCategoryId = form.getValues("category_id");
     if (currentCategoryId) {
@@ -610,16 +612,6 @@ export function CategoryShopSection({
       return;
     }
 
-    // Defer fallback category for add mode until account-based prefill has run.
-    if (
-      !isEditingMode &&
-      activeAccountId &&
-      prefilledAccountId !== activeAccountId &&
-      !currentCategoryId
-    ) {
-      return;
-    }
-
     if (isEditingMode && isCurrentCategoryCompatible) return;
     if (isCurrentCategoryCompatible) return;
 
@@ -658,7 +650,6 @@ export function CategoryShopSection({
     form,
     isEditingMode,
     activeAccountId,
-    prefilledAccountId,
     resolveCategoryValue,
     resolveShopValue,
   ]);
