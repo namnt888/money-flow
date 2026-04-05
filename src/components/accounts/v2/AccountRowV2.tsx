@@ -366,7 +366,7 @@ export function AccountRowV2({
         const MainPlaceholderIcon = getPlaceholderIcon(account.type);
 
         return (
-          <div className="flex flex-col gap-2 min-w-[170px]">
+          <div className="flex flex-col gap-2 min-w-[140px]">
             <div className="flex items-center gap-3 w-full">
               <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-none overflow-hidden">
                 {account.image_url ? (
@@ -452,7 +452,7 @@ export function AccountRowV2({
                       href={`/accounts/${account.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate"
+                      className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate max-w-[150px]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {account.name}
@@ -464,7 +464,7 @@ export function AccountRowV2({
                   <div className="flex items-center gap-1.5 min-w-0 mt-0.5 whitespace-nowrap">
                     {account.receiver_name && (
                       <span
-                        className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]"
+                        className="text-[10px] font-bold text-slate-400 truncate max-w-[90px]"
                         title={account.receiver_name}
                       >
                         {account.receiver_name}
@@ -537,7 +537,7 @@ export function AccountRowV2({
                               <div className="flex items-center gap-1.5 bg-indigo-50/50 border border-indigo-100/50 rounded-md px-2 py-0.5 hover:bg-indigo-100/50 transition-all cursor-help group/rewards shadow-sm">
                                 <Zap className="w-3 h-3 text-indigo-500 animate-pulse" />
                                 <div className="flex items-center gap-1 text-[10px] font-black text-indigo-700 uppercase tracking-tight">
-                                  <span className="truncate max-w-[160px]">
+                                  <span className="truncate max-w-[110px]">
                                     {badgeLabel}
                                   </span>
                                   <span className="text-indigo-400 font-bold ml-0.5">
@@ -755,11 +755,11 @@ export function AccountRowV2({
           ? peopleSource.find((p) => p.id === account.holder_person_id)
           : undefined;
 
-        const renderAccountBadge = (acc: Account | null, suffix?: string) => (
+        const renderAccountBadge = (acc: Account | null) => (
           <TooltipProvider>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="h-9 inline-flex items-center gap-1.5 cursor-help">
+                <div className="h-9 w-[52px] inline-flex items-center justify-center cursor-help">
                   <div className="h-9 w-12 rounded-none overflow-hidden bg-transparent flex items-center justify-center">
                     {acc?.image_url ? (
                       <img src={acc.image_url} alt="" className="w-full h-full object-contain" />
@@ -767,7 +767,6 @@ export function AccountRowV2({
                       <Wallet className="h-4 w-4 text-slate-400" />
                     )}
                   </div>
-                  {suffix && <span className="text-[11px] font-black text-indigo-600">{suffix}</span>}
                 </div>
               </TooltipTrigger>
               <TooltipContent className="text-[10px] font-bold">
@@ -818,19 +817,19 @@ export function AccountRowV2({
         };
 
         return (
-          <div className="flex flex-col items-center justify-center min-w-[220px] gap-1 group/role-cell">
+          <div className="flex flex-col items-center justify-center min-w-[185px] gap-1 group/role-cell">
             {/* Singular debt view per row */}
             {isCC && parentLimit > 0 && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200 whitespace-nowrap">
                 <Sigma className="w-2.5 h-2.5" />
                 <span>Single Debt: {formatMoneyVND(singleCardDebt)}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-1.5 w-full flex-wrap">
+              <div className="grid w-full grid-cols-[108px_14px_52px_28px_14px_42px] items-center justify-items-center gap-x-1">
               <div
                 className={cn(
-                  "h-8 px-2.5 rounded-full border inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm",
+                    "h-8 w-[108px] px-2 rounded-full border inline-flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap",
                   isParent
                     ? "bg-indigo-600 text-white border-indigo-500"
                     : isStandalone
@@ -842,16 +841,13 @@ export function AccountRowV2({
                 <span>{isParent ? 'Parent' : isStandalone ? 'Standalone' : 'Child'}</span>
               </div>
 
-              {isStandalone ? null : isParent ? (
+              {isParent ? (
                 <>
                   <ArrowLeft className="h-3.5 w-3.5 text-slate-400" />
                   <HoverCard openDelay={120} closeDelay={80}>
                     <HoverCardTrigger asChild>
                       <div>
-                        {renderAccountBadge(
-                          relatedAccounts[0] || null,
-                          relatedAccounts.length > 1 ? `+${relatedAccounts.length - 1}` : undefined,
-                        )}
+                        {renderAccountBadge(relatedAccounts[0] || null)}
                       </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-72 p-2 space-y-1.5" align="start">
@@ -874,11 +870,30 @@ export function AccountRowV2({
                       )}
                     </HoverCardContent>
                   </HoverCard>
+                  <span
+                    className={cn(
+                      "h-6 min-w-[24px] px-1 inline-flex items-center justify-center rounded-md text-[10px] font-black leading-none",
+                      relatedAccounts.length > 1
+                        ? "bg-indigo-50 text-indigo-600 border border-indigo-200"
+                        : "border border-transparent text-transparent",
+                    )}
+                  >
+                    {relatedAccounts.length > 1 ? `+${relatedAccounts.length - 1}` : "+0"}
+                  </span>
                 </>
-              ) : (
+              ) : !isStandalone ? (
                 <>
                   <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
                   {renderAccountBadge(effectiveParentAcc)}
+                  <span className="h-6 min-w-[24px] px-1 inline-flex items-center justify-center border border-transparent text-transparent text-[10px] font-black leading-none">
+                    +0
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-3.5 w-3.5" />
+                  <span className="h-9 w-[52px]" />
+                  <span className="h-6 min-w-[24px]" />
                 </>
               )}
 
@@ -1092,7 +1107,7 @@ export function AccountRowV2({
                         <div className="cursor-help">
                           <span
                             className={cn(
-                              "h-6 px-2.5 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider gap-1.5",
+                              "h-6 px-2 rounded-full inline-flex items-center text-[8px] font-black uppercase tracking-wider gap-1.5 whitespace-nowrap",
                               remainingPercent < 10
                                 ? "bg-rose-100 text-rose-700 border border-rose-200"
                                 : remainingPercent < 30
@@ -1103,7 +1118,7 @@ export function AccountRowV2({
                             <Calculator className="w-2.5 h-2.5 opacity-60" />
                             <span>{remainingPercLabel}% Remaining</span>
                             <span className="opacity-50">•</span>
-                            <span>Total Debt {numberFormatter.format(familyDebtAbs)}</span>
+                            <span>Debt {numberFormatter.format(familyDebtAbs)}</span>
                           </span>
                         </div>
                       </TooltipTrigger>
@@ -1363,7 +1378,7 @@ export function AccountRowV2({
           <div className="flex flex-col items-center justify-center gap-1">
             <span
               className={cn(
-                "h-6 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border text-[9px] font-black tracking-wide",
+                "h-7 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border text-[10px] font-black tracking-wide",
                 tone,
                 isDueToday && "animate-pulse",
               )}
@@ -1385,7 +1400,7 @@ export function AccountRowV2({
                 </>
               ) : (
                 <>
-                  <span><b>{Math.abs(daysLeft)}</b> Left</span>
+                  <span><span className="text-[12px] font-black">{Math.abs(daysLeft)}</span> Left</span>
                   <CalendarDays className="h-3 w-3" />
                   <span className="font-bold">{month} {day}</span>
                 </>
@@ -1402,7 +1417,7 @@ export function AccountRowV2({
                         e.stopPropagation();
                         onOpenPending?.(account);
                       }}
-                      className="h-6 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[9px] font-black tracking-wide text-amber-700 hover:bg-amber-100"
+                      className="h-7 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[10px] font-black tracking-wide text-amber-700 hover:bg-amber-100"
                     >
                       <Hourglass className="h-3 w-3" />
                       <span>{pendingCount} Pending</span>
@@ -1484,6 +1499,21 @@ export function AccountRowV2({
         const debt = isCC ? Math.abs(sharedFamilyDebt || 0) : 0;
         const limit = isCC ? familyLimit : getEffectiveCreditLimit(account, allAccounts);
         const finalBalance = isCC ? familyLimit - debt : account.current_balance || 0;
+        const remainingPercent = isCC && limit > 0
+          ? Math.max(0, Math.min(100, (finalBalance / limit) * 100))
+          : null;
+
+        const balanceTone = isCC && remainingPercent !== null
+          ? remainingPercent < 30
+            ? "bg-rose-50 text-rose-700 border-rose-300"
+            : remainingPercent < 80
+              ? "bg-amber-50 text-amber-700 border-amber-300"
+              : "bg-emerald-50 text-emerald-700 border-emerald-300"
+          : Math.abs(finalBalance) > 100000000
+            ? "bg-rose-50 text-rose-700 border-rose-300"
+            : Math.abs(finalBalance) >= 50000000
+              ? "bg-amber-50 text-amber-700 border-amber-300"
+              : "bg-emerald-50 text-emerald-700 border-emerald-300";
 
         return (
           <TooltipProvider>
@@ -1492,12 +1522,8 @@ export function AccountRowV2({
                 <div className="flex items-center justify-end text-right cursor-help min-w-[120px]">
                   <span
                     className={cn(
-                      "h-6 px-2.5 rounded-full inline-flex items-center text-[10px] font-black tabular-nums border",
-                      Math.abs(finalBalance) > 100000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.8)
-                        ? "bg-rose-100 text-rose-700 border-rose-200"
-                        : Math.abs(finalBalance) >= 50000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.5)
-                          ? "bg-amber-100 text-amber-700 border-amber-200"
-                          : "bg-emerald-100 text-emerald-700 border-emerald-200",
+                      "h-7 px-3 rounded-full inline-flex items-center text-[11px] font-black tabular-nums border",
+                      balanceTone,
                     )}
                   >
                     {finalBalance < 0 ? "-" : ""}
