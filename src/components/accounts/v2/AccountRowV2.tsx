@@ -42,7 +42,9 @@ import {
   Sigma,
   ChevronRight,
   Calculator,
-  AlertCircle
+  CalendarDays,
+  Eye,
+  Hourglass,
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -160,8 +162,6 @@ export function AccountRowV2({
 
   const renderCell = (key: AccountColumnKey) => {
     const stats = account.stats;
-    const badgeBase =
-      "h-6 px-3 text-[10px] font-semibold uppercase tracking-wide rounded-full border flex items-center justify-center gap-1 min-w-[96px]";
 
     const renderRoleBadge = (role: "parent" | "child" | "standalone") => {
       const base =
@@ -361,24 +361,8 @@ export function AccountRowV2({
           allAccounts?.filter(
             (a: Account) => a.parent_account_id === account.id,
           ) || [];
-        const pendingCount = Number(
-          pendingSummaryMap?.[account.id]?.count || 0,
-        );
-        const pendingTotalAmount = Number(
-          pendingSummaryMap?.[account.id]?.totalAmount || 0,
-        );
 
         const MainPlaceholderIcon = getPlaceholderIcon(account.type);
-
-        const dueDateRaw = stats?.due_date || (account as any)?.due_date || null;
-        const dueDate = dueDateRaw ? new Date(dueDateRaw) : null;
-        const dueDays = dueDate
-          ? Math.ceil((startOfDay(dueDate).getTime() - startOfDay(new Date()).getTime()) / (1000 * 60 * 60 * 24))
-          : null;
-        const showDueBadge = account.type === 'credit_card' || account.type === 'debt';
-        const dueDateDisplay = dueDate
-          ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(dueDate)
-          : null;
 
         return (
           <div className="flex flex-col gap-2 min-w-[170px]">
@@ -473,42 +457,6 @@ export function AccountRowV2({
                       {account.name}
                     </Link>
 
-                    {showDueBadge && (
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0",
-                          dueDays !== null && dueDays < 0
-                            ? "border-rose-300 bg-rose-50 text-rose-700"
-                            : dueDays !== null && dueDays === 0
-                              ? "border-rose-300 bg-rose-50 text-rose-700"
-                            : dueDays !== null && dueDays <= 7
-                              ? "border-amber-300 bg-amber-50 text-amber-700"
-                              : "border-emerald-300 bg-emerald-50 text-emerald-700",
-                        )}
-                      >
-                        {dueDays === null
-                          ? "No Due"
-                          : dueDays < 0
-                            ? `Late ${Math.abs(dueDays)}d${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`
-                            : dueDays === 0
-                              ? `Today${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`
-                              : `D-${dueDays}${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`}
-                      </span>
-                    )}
-
-                    {pendingCount > 0 && (
-                      <Link
-                        href={`/accounts/${account.id}?pending=1`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 shrink-0"
-                        title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <AlertCircle className="h-2.5 w-2.5" />
-                        {pendingCount} Pending
-                      </Link>
-                    )}
                   </div>
 
                   {/* Sub-row for Receiver Info (Standardized location) */}
@@ -1323,12 +1271,15 @@ export function AccountRowV2({
       case "due": {
         const isDueAccount =
           account.type === "credit_card" || account.type === "debt";
-        const dueDate = stats?.due_date ? new Date(stats.due_date) : null;
+        const dueDateRaw = stats?.due_date || (account as any)?.due_date || null;
+        const dueDate = dueDateRaw ? new Date(dueDateRaw) : null;
         let daysLeft = Infinity;
         if (dueDate) {
           const diffTime = dueDate.getTime() - new Date().getTime();
           daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
+        const pendingCount = Number(pendingSummaryMap?.[account.id]?.count || 0);
+        const pendingTotalAmount = Number(pendingSummaryMap?.[account.id]?.totalAmount || 0);
 
         const formatDate = (date: Date | null) =>
           date
@@ -1338,17 +1289,11 @@ export function AccountRowV2({
               }).format(date)
             : "";
 
-        const badgeWidth = "w-[140px]";
-        const baseClass = cn(badgeBase, badgeWidth);
-
-        if (!isDueAccount || daysLeft === Infinity) {
+        if (!isDueAccount && pendingCount === 0) {
           return (
             <div className="flex justify-center">
               <span
-                className={cn(
-                  baseClass,
-                  "bg-slate-50 text-slate-300 border-slate-100 italic shadow-none",
-                )}
+                className="h-6 px-2.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-400"
               >
                 No Due Date
               </span>
@@ -1361,41 +1306,73 @@ export function AccountRowV2({
         const isDueTomorrow = isTomorrow(dayDate);
 
         const tone = isDueToday
-          ? "bg-rose-100 text-rose-800 border-rose-400 shadow-[0_0_12px_rgba(225,29,72,0.2)]"
-          : isDueTomorrow || (daysLeft > 0 && daysLeft <= 10)
-            ? "bg-amber-100 text-amber-800 border-amber-300"
+          ? "border-rose-300 bg-rose-50 text-rose-700"
+          : isDueTomorrow || (daysLeft > 0 && daysLeft <= 5)
+            ? "border-rose-300 bg-rose-50 text-rose-700"
             : daysLeft <= 0
-              ? "bg-rose-100 text-rose-800 border-rose-300"
-              : "bg-emerald-100 text-emerald-800 border-emerald-300";
+              ? "border-rose-300 bg-rose-50 text-rose-700"
+              : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
         const labelDate = formatDate(dueDate);
-        const [month, day] = labelDate.split(" ");
+        const [month, day] = (labelDate || "").split(" ");
 
         return (
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-1.5 flex-wrap">
             <span
-              className={cn(baseClass, tone, isDueToday && "animate-pulse")}
+              className={cn(
+                "h-6 px-2.5 inline-flex items-center gap-1 rounded-full border text-[9px] font-black uppercase tracking-wider",
+                tone,
+                isDueToday && "animate-pulse",
+              )}
             >
               {isDueToday ? (
-                <span className="font-black text-xs uppercase tracking-tighter">
-                  Today Due
-                </span>
+                <>
+                  <span>Today Due</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
               ) : isDueTomorrow ? (
-                <span className="font-black text-xs uppercase tracking-tighter">
-                  Tomorrow
-                </span>
+                <>
+                  <span>Tomorrow</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
+              ) : daysLeft === Infinity ? (
+                <>
+                  <span>No Due</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
               ) : (
                 <>
-                  <span className="font-medium text-xs">
-                    <b className="font-extrabold">{Math.abs(daysLeft)}</b> Days
-                  </span>
-                  <span className="text-slate-400 mx-0.5 opacity-30">|</span>
-                  <span className="font-medium text-xs uppercase tracking-tighter">
-                    {month} <b className="font-extrabold">{day}</b>
-                  </span>
+                  <span><b>{Math.abs(daysLeft)}</b> left</span>
+                  <CalendarDays className="h-3 w-3" />
+                  <span className="font-bold">{month} {day}</span>
                 </>
               )}
             </span>
+
+            {pendingCount > 0 && (
+              <>
+                <Eye className="h-3.5 w-3.5 text-slate-400" />
+                <TooltipProvider>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/accounts/${account.id}?pending=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-6 px-2.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[9px] font-black uppercase tracking-wider text-amber-700 hover:bg-amber-100"
+                      >
+                        <Hourglass className="h-3 w-3" />
+                        <span>{pendingCount} Pending</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
           </div>
         );
       }
