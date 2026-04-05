@@ -370,6 +370,12 @@ export function AccountRowV2({
 
         const MainPlaceholderIcon = getPlaceholderIcon(account.type);
 
+        const dueDate = stats?.due_date ? new Date(stats.due_date) : null;
+        const dueDays = dueDate
+          ? Math.ceil((startOfDay(dueDate).getTime() - startOfDay(new Date()).getTime()) / (1000 * 60 * 60 * 24))
+          : null;
+        const showDueBadge = (account.type === 'credit_card' || account.type === 'debt') && dueDays !== null;
+
         return (
           <div className="flex flex-col gap-2 min-w-[170px]">
             <div className="flex items-center gap-3 w-full">
@@ -475,6 +481,21 @@ export function AccountRowV2({
                         <AlertCircle className="h-2.5 w-2.5" />
                         {pendingCount} Pending
                       </Link>
+                    )}
+
+                    {showDueBadge && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0",
+                          dueDays !== null && dueDays <= 0
+                            ? "border-rose-300 bg-rose-50 text-rose-700"
+                            : dueDays !== null && dueDays <= 7
+                              ? "border-amber-300 bg-amber-50 text-amber-700"
+                              : "border-emerald-300 bg-emerald-50 text-emerald-700",
+                        )}
+                      >
+                        {dueDays !== null && dueDays <= 0 ? "Due" : dueDays !== null ? `D-${dueDays}` : "No Due"}
+                      </span>
                     )}
                   </div>
 
@@ -778,6 +799,7 @@ export function AccountRowV2({
                   .reduce((sum, item) => sum + (item.current_balance || 0), 0)
               : account.current_balance) || 0;
 
+        const isStandalone = !isParent && !effectiveParentAcc;
         const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
         const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
         const peopleSource = (people.length > 0 ? people : (initialPeople || []));
@@ -790,9 +812,9 @@ export function AccountRowV2({
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <div className="h-8 px-1.5 pr-2 rounded-full border border-slate-200 bg-white inline-flex items-center gap-1.5 shadow-sm cursor-help">
-                  <div className="h-5 w-5 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                  <div className="h-5 w-5 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
                     {acc?.image_url ? (
-                      <img src={acc.image_url} alt="" className="w-full h-full object-cover" />
+                      <img src={acc.image_url} alt="" className="w-full h-full object-contain" />
                     ) : (
                       <Wallet className="h-3 w-3 text-slate-400" />
                     )}
@@ -814,9 +836,9 @@ export function AccountRowV2({
                 <Tooltip delayDuration={200}>
                   <TooltipTrigger asChild>
                     <div className="h-8 px-1.5 pr-2 rounded-full border border-emerald-200 bg-emerald-50 inline-flex items-center gap-1.5 shadow-sm cursor-help">
-                      <div className="h-5 w-5 rounded-full overflow-hidden border border-emerald-300 bg-white flex items-center justify-center">
+                      <div className="h-5 w-5 rounded-none overflow-hidden border border-emerald-300 bg-white flex items-center justify-center">
                         {ownerPerson.image_url ? (
-                          <img src={ownerPerson.image_url} alt="" className="w-full h-full object-cover" />
+                          <img src={ownerPerson.image_url} alt="" className="w-full h-full object-contain" />
                         ) : (
                           <User className="h-3 w-3 text-emerald-500" />
                         )}
@@ -861,14 +883,18 @@ export function AccountRowV2({
               <div
                 className={cn(
                   "h-8 px-2.5 rounded-full border inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm",
-                  isParent ? "bg-indigo-600 text-white border-indigo-500" : "bg-white text-slate-700 border-slate-200",
+                  isParent
+                    ? "bg-indigo-600 text-white border-indigo-500"
+                    : isStandalone
+                      ? "bg-slate-100 text-slate-700 border-slate-300"
+                      : "bg-white text-slate-700 border-slate-200",
                 )}
               >
-                {isParent ? <Crown className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
-                <span>{isParent ? 'Parent' : 'Child'}</span>
+                {isParent ? <Crown className="h-3 w-3" /> : isStandalone ? <CircleDashed className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
+                <span>{isParent ? 'Parent' : isStandalone ? 'Standalone' : 'Child'}</span>
               </div>
 
-              {isParent ? (
+              {isStandalone ? null : isParent ? (
                 <>
                   <ArrowLeft className="h-3.5 w-3.5 text-slate-400" />
                   <HoverCard openDelay={120} closeDelay={80}>
@@ -884,9 +910,9 @@ export function AccountRowV2({
                       <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
                       {relatedAccounts.length > 0 ? relatedAccounts.map((child) => (
                         <div key={child.id} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
-                          <div className="h-6 w-6 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                          <div className="h-6 w-6 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
                             {child.image_url ? (
-                              <img src={child.image_url} alt="" className="w-full h-full object-cover" />
+                              <img src={child.image_url} alt="" className="w-full h-full object-contain" />
                             ) : (
                               <Wallet className="h-3 w-3 text-slate-400" />
                             )}
@@ -1002,8 +1028,10 @@ export function AccountRowV2({
           account.stats.annual_fee_waiver_target > 0
         );
 
+        const remainingAmount = Math.max(0, displayLimit - familyDebtAbs);
+
         return (
-          <div className="flex flex-col items-end gap-2 min-w-[140px] py-1">
+          <div className="flex flex-col items-end gap-1.5 min-w-[160px] py-1">
             <div className="flex flex-col items-end gap-1.5 w-full group/limit">
               <div className="flex items-center gap-2 justify-end w-full px-0.5 min-h-[16px]">
                 {!!account.secured_by_account_id && (
@@ -1092,51 +1120,44 @@ export function AccountRowV2({
               </div>
 
               {displayLimit > 0 && (
-                <div
-                  className={cn(
-                    "relative w-full h-6 bg-slate-100/50 rounded-lg border border-slate-200 overflow-hidden group transition-all duration-300 hover:border-indigo-300 hover:shadow-inner",
-                    hasWaiver &&
-                      "border-amber-200 shadow-[inset_0_0_8px_rgba(245,158,11,0.05)]",
-                  )}
-                >
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-
-                  <div
-                    className={cn(
-                      "absolute inset-0 h-full transition-all duration-700 ease-in-out shadow-[0_0_15px_rgba(0,0,0,0.1)]",
-                      remainingPercent < 10
-                        ? "bg-gradient-to-r from-rose-500 to-rose-600"
-                        : remainingPercent < 30
-                          ? "bg-gradient-to-r from-amber-500 to-amber-600"
-                          : "bg-gradient-to-r from-indigo-500 to-indigo-600",
-                    )}
-                    style={{ width: `${Math.max(remainingPercent, 0)}%` }}
-                  />
-                  {hasWaiver && (
-                    <div className="absolute top-0 left-0 w-full h-[1.5px] bg-amber-400/80 blur-[0.5px] z-10" />
-                  )}
-
-                  <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none">
-                    <div className="flex items-center gap-1">
-                      {hasWaiver && (
-                        <Zap className="w-2.5 h-2.5 text-white animate-pulse drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                <div className="w-full rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider",
+                        remainingPercent < 10
+                          ? "bg-rose-100 text-rose-700 border border-rose-200"
+                          : remainingPercent < 30
+                            ? "bg-amber-100 text-amber-700 border border-amber-200"
+                            : "bg-indigo-100 text-indigo-700 border border-indigo-200",
                       )}
-                      <span className="text-[10px] font-black text-white drop-shadow-sm tabular-nums">
-                        {remainingPercLabel}%{" "}
-                        <span className="text-[7px] opacity-70 ml-0.5">
-                          REMAINING
-                        </span>
-                      </span>
-                    </div>
-                    <div />
+                    >
+                      {remainingPercLabel}% Remaining
+                    </span>
+                    <span className="text-[10px] font-black text-slate-600 tabular-nums">
+                      {numberFormatter.format(remainingAmount)}
+                    </span>
+                  </div>
+
+                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-500",
+                        remainingPercent < 10
+                          ? "bg-rose-500"
+                          : remainingPercent < 30
+                            ? "bg-amber-500"
+                            : "bg-indigo-500",
+                      )}
+                      style={{ width: `${Math.max(0, Math.min(100, remainingPercent))}%` }}
+                    />
                   </div>
 
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
-                        <div className="absolute inset-0 flex items-center justify-end px-2.5 cursor-help pointer-events-auto">
-                          <span className="text-[9px] font-black text-slate-700/80 tabular-nums bg-white/40 backdrop-blur-sm px-1.5 py-0.5 rounded transition-colors group-hover:bg-white/80 flex items-center gap-1">
+                        <div className="mt-1.5 flex items-center justify-end cursor-help">
+                          <span className="text-[9px] font-black text-slate-600 tabular-nums px-1 py-0.5 rounded flex items-center gap-1">
                             <Calculator className="w-2.5 h-2.5 opacity-60" />
                             {numberFormatter.format(familyDebtAbs)}
                           </span>
