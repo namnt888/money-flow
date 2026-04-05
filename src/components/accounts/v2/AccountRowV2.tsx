@@ -68,6 +68,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { AccountRewardsCell } from "./cells/account-rewards-cell";
+import { getEffectiveCreditLimit } from "@/lib/account-family";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1395,7 +1396,7 @@ export function AccountRowV2({
 
         // For Credit Cards, Balance means Available (Total Family Limit - Total Family Debt)
         const limit = isCC
-          ? (account.credit_limit || parentAccount?.credit_limit || 0)
+          ? getEffectiveCreditLimit(account, allAccounts)
           : 0;
         const debt = isCC ? Math.abs(displayBalance || 0) : 0;
         const finalBalance = isCC ? limit - debt : displayBalance || 0;

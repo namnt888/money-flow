@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { AccountGroupHeader } from "./AccountGroupHeader";
 import { AccountGroupFooter } from "./AccountGroupFooter";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
-import { getEffectiveCreditLimit } from "@/lib/account-family";
+import { getEffectiveCreditLimit, getUniqueFamilyCreditLimitTotal } from "@/lib/account-family";
 
 interface AccountTableV2Props {
     accounts: Account[];
@@ -171,7 +171,7 @@ export function AccountTableV2({
     const getGroupTotal = (group: any) => {
         if (group.section === 'credit') {
             const totalDebt = group.accounts.reduce((sum: number, a: Account) => sum + Math.abs(a.current_balance || 0), 0);
-            const totalLimit = group.accounts.reduce((sum: number, a: Account) => sum + getEffectiveCreditLimit(a, robustAllAccounts), 0);
+            const totalLimit = getUniqueFamilyCreditLimitTotal(group.accounts, robustAllAccounts);
             return { debt: totalDebt, limit: totalLimit };
         }
         return group.accounts.reduce((sum: number, a: Account) => sum + (a.current_balance || 0), 0);

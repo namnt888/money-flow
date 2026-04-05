@@ -142,10 +142,10 @@ export function AccountHeaderV2({
                         size="sm"
                         className="h-8 gap-2 border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:text-indigo-700 font-black text-[9px] uppercase tracking-wider"
                         onClick={async () => {
-                            const { fixAllAccountBalances } = await import("@/actions/admin-actions");
-                            const toastId = toast.loading("Recalculating all account balances...");
+                            const { syncAllAccountsCashbackAction } = await import("@/actions/account-actions");
+                            const toastId = toast.loading("Regenerating all credit cycles...");
                             try {
-                                const result = await fixAllAccountBalances();
+                                const result = await syncAllAccountsCashbackAction();
                                 if (result.success) {
                                     toast.success(`${result.message}`, { id: toastId });
                                     router.refresh();
@@ -159,6 +159,30 @@ export function AccountHeaderV2({
                     >
                         <Sparkles className="h-3 w-3" />
                         SYNC DB
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 border-emerald-200 bg-emerald-50/40 text-emerald-700 hover:bg-emerald-100/60 hover:text-emerald-800 font-black text-[9px] uppercase tracking-wider"
+                        onClick={async () => {
+                            const { fixAllAccountBalances } = await import("@/actions/admin-actions");
+                            const toastId = toast.loading("Recalculating all account balances...");
+                            try {
+                                const result = await fixAllAccountBalances();
+                                if (result.success) {
+                                    toast.success(`${result.message}`, { id: toastId });
+                                    router.refresh();
+                                } else {
+                                    toast.error(result.error || "Sync balance failed", { id: toastId });
+                                }
+                            } catch (err) {
+                                toast.error("An unexpected error occurred", { id: toastId });
+                            }
+                        }}
+                    >
+                        <ShieldCheck className="h-3 w-3" />
+                        SYNC BALANCE
                     </Button>
 
                     <div className="h-6 w-px bg-slate-200 hidden sm:block" />
