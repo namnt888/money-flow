@@ -204,7 +204,11 @@ export function TransactionSlideV2({
   // Unsaved Changes Dialog State
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
-  const isEditingContext = Boolean(editingId || operationMode !== "add");
+  const effectiveEditingId = useMemo(
+    () => (operationMode === "add" ? undefined : editingId),
+    [editingId, operationMode],
+  );
+  const isEditingContext = operationMode === "edit" || Boolean(effectiveEditingId);
 
   // DEBUG: Verify schemas are defined
   useEffect(() => {
