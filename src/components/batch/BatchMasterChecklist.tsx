@@ -1535,6 +1535,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                 // Same group: sort by amount (largest first)
                                 const amountA = Math.abs(a.amount || 0)
                                 const amountB = Math.abs(b.amount || 0)
+                                console.log(`[SmartSort] ${groupA}: ${a.receiver_name}=${amountA} vs ${b.receiver_name}=${amountB}`)
                                 if (amountA !== amountB) {
                                     return amountB - amountA
                                 }
