@@ -332,6 +332,99 @@ export function CategoryShopSection({
     fetchShops();
   }, [categoryId, form, shops]);
 
+  useEffect(() => {
+    if (isEditingMode) return;
+    if (!activeAccountId) return;
+
+    const linkedCategories = filteredCategories.filter((category) =>
+      Array.isArray(category.linked_account_ids)
+        ? category.linked_account_ids.includes(activeAccountId)
+        : false,
+    );
+
+    if (linkedCategories.length === 0) return;
+
+    const preferredKindForType: "internal" | "external" | null =
+      transactionType === "debt" || transactionType === "repayment"
+        ? "internal"
+        : transactionType === "expense" || transactionType === "income"
+          ? "external"
+          : null;
+
+    const preferredCategory = [...linkedCategories].sort((left, right) => {
+      if (preferredKindForType) {
+        const leftKindScore = left.kind === preferredKindForType ? 1 : 0;
+        const rightKindScore = right.kind === preferredKindForType ? 1 : 0;
+        if (leftKindScore !== rightKindScore) {
+          return rightKindScore - leftKindScore;
+        }
+      }
+
+      const leftHasDefault = left.default_shop_id ? 1 : 0;
+      const rightHasDefault = right.default_shop_id ? 1 : 0;
+      if (leftHasDefault !== rightHasDefault) return rightHasDefault - leftHasDefault;
+
+      const leftLinkedShopCount = left.linked_shop_ids?.length || 0;
+      const rightLinkedShopCount = right.linked_shop_ids?.length || 0;
+      if (leftLinkedShopCount !== rightLinkedShopCount) {
+        return rightLinkedShopCount - leftLinkedShopCount;
+      }
+
+      return left.name.localeCompare(right.name);
+    })[0];
+
+    const nextCategoryId = resolveCategoryValue(preferredCategory.id);
+    const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
+
+    if (nextCategoryId && nextCategoryId !== currentCategoryId) {
+      form.setValue("category_id", nextCategoryId, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+
+    if (isShopHidden) {
+      form.setValue("shop_id", null, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      return;
+    }
+
+    const linkedShopIds = Array.isArray(preferredCategory.linked_shop_ids)
+      ? preferredCategory.linked_shop_ids
+      : [];
+
+    let nextShopId: string | null = null;
+    if (
+      preferredCategory.default_shop_id &&
+      linkedShopIds.includes(preferredCategory.default_shop_id)
+    ) {
+      nextShopId = preferredCategory.default_shop_id;
+    } else if (linkedShopIds.length > 0) {
+      nextShopId = linkedShopIds[0];
+    }
+
+    const resolvedNextShopId = resolveShopValue(nextShopId);
+    const currentShopId = resolveShopValue(form.getValues("shop_id"));
+
+    if (resolvedNextShopId && resolvedNextShopId !== currentShopId) {
+      form.setValue("shop_id", resolvedNextShopId, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+  }, [
+    activeAccountId,
+    filteredCategories,
+    form,
+    isEditingMode,
+    isShopHidden,
+    transactionType,
+    resolveCategoryValue,
+    resolveShopValue,
+  ]);
+
   // CASCADE: Select Shop -> Auto-set Category
   useEffect(() => {
     if (!shopId) return;
@@ -428,6 +521,27 @@ export function CategoryShopSection({
       !!currentCategoryId &&
       filteredCategories.some((c) => c.id === currentCategoryId);
 
+    const currentShopId = resolveShopValue(form.getValues("shop_id"));
+
+    if (
+      !isEditingMode &&
+      !activeAccountId &&
+      !currentShopId &&
+      !currentCategoryId
+    ) {
+      return;
+    }
+
+    // Defer fallback category for add mode until account-based prefill has run.
+    if (
+      !isEditingMode &&
+      activeAccountId &&
+      prefilledAccountId !== activeAccountId &&
+      !currentCategoryId
+    ) {
+      return;
+    }
+
     if (isEditingMode && isCurrentCategoryCompatible) return;
     if (isCurrentCategoryCompatible) return;
 
@@ -465,7 +579,10 @@ export function CategoryShopSection({
     filteredCategories,
     form,
     isEditingMode,
+    activeAccountId,
+    prefilledAccountId,
     resolveCategoryValue,
+    resolveShopValue,
   ]);
 
   // Auto-clear shop if hidden

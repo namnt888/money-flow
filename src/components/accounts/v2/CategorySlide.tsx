@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { 
   Loader2, 
+    Check,
   X, 
   Plus, 
   Hash, 
@@ -18,7 +19,8 @@ import {
   PiggyBank,
   Brain,
   Zap,
-  Info
+    Info,
+    ChevronDown
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -43,9 +45,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Category } from "@/types/moneyflow.types"
+import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Account, Category, Shop } from "@/types/moneyflow.types"
 import { createCategory, updateCategory } from "@/services/category.service"
 import { cn } from "@/lib/utils"
+import { Combobox } from "@/components/ui/combobox"
 
 const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -66,6 +72,8 @@ interface CategorySlideProps {
     onBack?: () => void
     zIndex?: number
     isExternalLoading?: boolean
+    accounts?: Account[]
+    shops?: Shop[]
 }
 
 export function CategorySlide({
@@ -79,6 +87,8 @@ export function CategorySlide({
     zIndex = 600,
     allCategories = [],
     isExternalLoading = false,
+    accounts = [],
+    shops = [],
 }: CategorySlideProps & { allCategories?: Category[] }) {
     const [isLoading, setIsLoading] = useState(false)
     const combinedLoading = isLoading || isExternalLoading
@@ -88,8 +98,22 @@ export function CategorySlide({
     const [mccInput, setMccInput] = useState("")
     const [keywords, setKeywords] = useState<string[]>([])
     const [keywordInput, setKeywordInput] = useState("")
+    const [linkedAccountIds, setLinkedAccountIds] = useState<string[]>([])
+    const [linkedShopIds, setLinkedShopIds] = useState<string[]>([])
+    const [isLinkedAccountsOpen, setIsLinkedAccountsOpen] = useState(false)
+    const [isLinkedShopsOpen, setIsLinkedShopsOpen] = useState(false)
+    const [defaultShopId, setDefaultShopId] = useState<string | undefined>(undefined)
 
     const [isShopSlideOpen, setIsShopSlideOpen] = useState(false)
+
+    const normalizeStringArray = (value?: string[] | null) =>
+        Array.isArray(value) ? [...value].sort() : []
+
+    const isSameStringArray = (left?: string[] | null, right?: string[] | null) => {
+        const normalizedLeft = normalizeStringArray(left)
+        const normalizedRight = normalizeStringArray(right)
+        return JSON.stringify(normalizedLeft) === JSON.stringify(normalizedRight)
+    }
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -107,6 +131,9 @@ export function CategorySlide({
         keywords.length !== (category?.keywords?.length || 0) ||
         (category && JSON.stringify(mccCodes) !== JSON.stringify(category.mcc_codes || [])) || 
         (category && JSON.stringify(keywords) !== JSON.stringify(category.keywords || [])) ||
+        (category ? !isSameStringArray(linkedAccountIds, category.linked_account_ids) : linkedAccountIds.length > 0) ||
+        (category ? !isSameStringArray(linkedShopIds, category.linked_shop_ids) : linkedShopIds.length > 0) ||
+        (category ? (defaultShopId || "") !== (category.default_shop_id || "") : Boolean(defaultShopId)) ||
         mccInput !== "" || keywordInput !== ""
 
     const handleBack = () => {
@@ -149,6 +176,9 @@ export function CategorySlide({
                 })
                 setMccCodes(Array.isArray(category.mcc_codes) ? category.mcc_codes : [])
                 setKeywords(Array.isArray(category.keywords) ? category.keywords : [])
+                setLinkedAccountIds(Array.isArray(category.linked_account_ids) ? category.linked_account_ids : [])
+                setLinkedShopIds(Array.isArray(category.linked_shop_ids) ? category.linked_shop_ids : [])
+                setDefaultShopId(category.default_shop_id || undefined)
             } else {
                 form.reset({
                     name: "",
@@ -159,11 +189,54 @@ export function CategorySlide({
                 })
                 setMccCodes([])
                 setKeywords([])
+                setLinkedAccountIds([])
+                setLinkedShopIds([])
+                setDefaultShopId(undefined)
             }
             setMccInput("")
             setKeywordInput("")
         }
     }, [category, defaultType, defaultKind, form, open])
+
+    useEffect(() => {
+        if (defaultShopId && !linkedShopIds.includes(defaultShopId)) {
+            setDefaultShopId(undefined)
+        }
+    }, [defaultShopId, linkedShopIds])
+
+    const toggleLinkedAccount = (accountId: string) => {
+        setLinkedAccountIds((prev) =>
+            prev.includes(accountId)
+                ? prev.filter((id) => id !== accountId)
+                : [...prev, accountId]
+        )
+    }
+
+    const toggleLinkedShop = (shopId: string) => {
+        setLinkedShopIds((prev) =>
+            prev.includes(shopId)
+                ? prev.filter((id) => id !== shopId)
+                : [...prev, shopId]
+        )
+    }
+
+    const removeLinkedAccount = (accountId: string) => {
+        setLinkedAccountIds((prev) => prev.filter((id) => id !== accountId))
+    }
+
+    const removeLinkedShop = (shopId: string) => {
+        setLinkedShopIds((prev) => prev.filter((id) => id !== shopId))
+    }
+
+    const renderAvatar = (name: string, imageUrl?: string | null) => (
+        <div className="h-5 w-5 rounded-sm overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
+            {imageUrl ? (
+                <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+                <span className="text-[9px] font-black text-slate-400 uppercase">{name[0] || "?"}</span>
+            )}
+        </div>
+    )
 
     const handleAddMcc = () => {
         const trimmed = mccInput.trim().replace(/[^0-9]/g, "")
@@ -214,6 +287,9 @@ export function CategorySlide({
                 ...values,
                 mcc_codes: mccCodes.length > 0 ? mccCodes : undefined,
                 keywords: keywords.length > 0 ? keywords : undefined,
+                linked_account_ids: linkedAccountIds.length > 0 ? linkedAccountIds : undefined,
+                linked_shop_ids: linkedShopIds.length > 0 ? linkedShopIds : undefined,
+                default_shop_id: defaultShopId || undefined,
             }
 
             if (category) {
@@ -444,6 +520,189 @@ export function CategorySlide({
                                             </FormItem>
                                         )}
                                     />
+                                </div>
+
+                                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                                        <div className="h-4 w-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center text-[10px]">🔗</div>
+                                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Linked Entities</h3>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Linked Accounts</FormLabel>
+                                        <Popover open={isLinkedAccountsOpen} onOpenChange={setIsLinkedAccountsOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-10 w-full justify-between bg-white border-slate-200 text-slate-700"
+                                                >
+                                                    <span className="truncate text-xs font-bold">
+                                                        {linkedAccountIds.length > 0
+                                                            ? `${linkedAccountIds.length} linked account${linkedAccountIds.length > 1 ? "s" : ""} selected`
+                                                            : "Select linked accounts"}
+                                                    </span>
+                                                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-[420px] p-0 [overscroll-behavior:contain]"
+                                                align="start"
+                                                onWheel={(e) => e.stopPropagation()}
+                                            >
+                                                <Command>
+                                                    <CommandInput placeholder="Search accounts..." />
+                                                    <CommandList
+                                                        className="max-h-64 overflow-y-auto [overscroll-behavior:contain]"
+                                                        onWheel={(e) => e.stopPropagation()}
+                                                    >
+                                                        <CommandEmpty>No account found</CommandEmpty>
+                                                        {accounts.map((account) => {
+                                                            const selected = linkedAccountIds.includes(account.id)
+                                                            return (
+                                                                <CommandItem
+                                                                    key={account.id}
+                                                                    value={account.name}
+                                                                    onSelect={() => toggleLinkedAccount(account.id)}
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <span className={cn(
+                                                                        "h-4 w-4 rounded border flex items-center justify-center",
+                                                                        selected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white"
+                                                                    )}>
+                                                                        {selected && <Check className="h-3 w-3" />}
+                                                                    </span>
+                                                                    {renderAvatar(account.name, account.image_url)}
+                                                                    <span className="truncate text-sm">{account.name}</span>
+                                                                </CommandItem>
+                                                            )
+                                                        })}
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <div className="min-h-8 flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                            {linkedAccountIds.length === 0 ? (
+                                                <span className="text-[10px] text-slate-400">No linked accounts selected</span>
+                                            ) : linkedAccountIds.map((id) => {
+                                                const account = accounts.find((item) => item.id === id)
+                                                const accountName = account?.name || id
+                                                return (
+                                                    <Badge key={id} variant="secondary" className="h-6 px-2 gap-1.5 bg-blue-50 text-blue-700 border border-blue-100">
+                                                        {renderAvatar(accountName, account?.image_url)}
+                                                        <span className="max-w-[140px] truncate">{accountName}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeLinkedAccount(id)}
+                                                            className="text-blue-400 hover:text-rose-500 transition-colors"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </Badge>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Linked Shops</FormLabel>
+                                        <Popover open={isLinkedShopsOpen} onOpenChange={setIsLinkedShopsOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-10 w-full justify-between bg-white border-slate-200 text-slate-700"
+                                                >
+                                                    <span className="truncate text-xs font-bold">
+                                                        {linkedShopIds.length > 0
+                                                            ? `${linkedShopIds.length} linked shop${linkedShopIds.length > 1 ? "s" : ""} selected`
+                                                            : "Select linked shops"}
+                                                    </span>
+                                                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-[420px] p-0 [overscroll-behavior:contain]"
+                                                align="start"
+                                                onWheel={(e) => e.stopPropagation()}
+                                            >
+                                                <Command>
+                                                    <CommandInput placeholder="Search shops..." />
+                                                    <CommandList
+                                                        className="max-h-64 overflow-y-auto [overscroll-behavior:contain]"
+                                                        onWheel={(e) => e.stopPropagation()}
+                                                    >
+                                                        <CommandEmpty>No shop found</CommandEmpty>
+                                                        {shops
+                                                            .filter((shop) => !shop.is_archived)
+                                                            .map((shop) => {
+                                                                const selected = linkedShopIds.includes(shop.id)
+                                                                return (
+                                                                    <CommandItem
+                                                                        key={shop.id}
+                                                                        value={shop.name}
+                                                                        onSelect={() => toggleLinkedShop(shop.id)}
+                                                                        className="flex items-center gap-2"
+                                                                    >
+                                                                        <span className={cn(
+                                                                            "h-4 w-4 rounded border flex items-center justify-center",
+                                                                            selected ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300 bg-white"
+                                                                        )}>
+                                                                            {selected && <Check className="h-3 w-3" />}
+                                                                        </span>
+                                                                        {renderAvatar(shop.name, shop.image_url)}
+                                                                        <span className="truncate text-sm">{shop.name}</span>
+                                                                    </CommandItem>
+                                                                )
+                                                            })}
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <div className="min-h-8 flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                            {linkedShopIds.length === 0 ? (
+                                                <span className="text-[10px] text-slate-400">No linked shops selected</span>
+                                            ) : linkedShopIds.map((id) => {
+                                                const shop = shops.find((item) => item.id === id)
+                                                const shopName = shop?.name || id
+                                                return (
+                                                    <Badge key={id} variant="secondary" className="h-6 px-2 gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                                        {renderAvatar(shopName, shop?.image_url)}
+                                                        <span className="max-w-[140px] truncate">{shopName}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeLinkedShop(id)}
+                                                            className="text-emerald-400 hover:text-rose-500 transition-colors"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </Badge>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <FormLabel className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Default Shop</FormLabel>
+                                        <Combobox
+                                            value={defaultShopId}
+                                            onValueChange={setDefaultShopId}
+                                            placeholder="Select default shop"
+                                            inputPlaceholder="Search shops..."
+                                            emptyState="No matching shop"
+                                            className="h-10"
+                                            items={shops
+                                                .filter((shop) => !shop.is_archived && linkedShopIds.includes(shop.id))
+                                                .map((shop) => ({
+                                                    value: shop.id,
+                                                    label: shop.name,
+                                                    icon: renderAvatar(shop.name, shop.image_url),
+                                                }))}
+                                        />
+                                        {linkedShopIds.length === 0 && (
+                                            <p className="text-[10px] text-slate-400">Select at least one linked shop before setting a default.</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* MCC Section Enhanced */}

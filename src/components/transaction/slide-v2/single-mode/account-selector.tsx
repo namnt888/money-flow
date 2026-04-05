@@ -309,10 +309,25 @@ export function AccountSelector({
                       groups={getAccountGroups("source")}
                       value={field.value ?? undefined}
                       onValueChange={(val) => {
-                        field.onChange(val || undefined); // Use undefined instead of null to fix lint
+                        form.setValue("source_account_id", (val ?? null) as any, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+
+                        if (val && !isSpecialMode) {
+                          form.setValue(
+                            "type",
+                            (personId ? "debt" : "expense") as any,
+                            { shouldDirty: true },
+                          );
+                        }
+
                         // BẬP BÊNH logic: Selecting source clears target if standard mode
                         if (val && !isSpecialMode && targetId) {
-                          form.setValue("target_account_id", undefined as any);
+                          form.setValue("target_account_id", null as any, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
                         }
                       }}
                       placeholder={sourcePlaceholder}
@@ -387,10 +402,25 @@ export function AccountSelector({
                       groups={getAccountGroups("target")}
                       value={field.value ?? undefined}
                       onValueChange={(val) => {
-                        field.onChange(val || undefined);
+                        form.setValue("target_account_id", (val ?? null) as any, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+
+                        if (val && !isSpecialMode) {
+                          form.setValue(
+                            "type",
+                            (personId ? "repayment" : "income") as any,
+                            { shouldDirty: true },
+                          );
+                        }
+
                         // BẬP BÊNH logic: Selecting target clears source if standard mode
                         if (val && !isSpecialMode && sourceId) {
-                          form.setValue("source_account_id", undefined as any);
+                          form.setValue("source_account_id", null as any, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
                         }
                       }}
                       placeholder={targetPlaceholder}
