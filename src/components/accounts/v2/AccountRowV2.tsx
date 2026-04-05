@@ -1099,18 +1099,28 @@ export function AccountRowV2({
                     );
                   })()}
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Limit</span>
-                <span
-                  className={cn(
-                    "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider border",
-                    displayLimit > 100000000
-                      ? "bg-rose-100 text-rose-700 border-rose-200"
-                      : displayLimit >= 50000000
-                        ? "bg-amber-100 text-amber-700 border-amber-200"
-                        : "bg-emerald-100 text-emerald-700 border-emerald-200",
-                  )}
-                >
-                  {displayLimit ? formatMoneyVND(displayLimit) : "—"}
-                </span>
+                <TooltipProvider>
+                  <Tooltip delayDuration={250}>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={cn(
+                          "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider border cursor-help",
+                          displayLimit > 100000000
+                            ? "bg-rose-100 text-rose-700 border-rose-200"
+                            : displayLimit >= 50000000
+                              ? "bg-amber-100 text-amber-700 border-amber-200"
+                              : "bg-emerald-100 text-emerald-700 border-emerald-200",
+                        )}
+                      >
+                        {displayLimit ? formatMoneyVND(displayLimit) : "—"}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-white border-slate-200 text-slate-700">
+                      <div className="text-[10px] font-bold mb-1">Limit (Text)</div>
+                      <VietnameseCurrency amount={displayLimit} variant="none" className="text-[11px]" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               {displayLimit > 0 && (
@@ -1238,7 +1248,7 @@ export function AccountRowV2({
                     </Tooltip>
                   </TooltipProvider>
 
-                  <div className="w-[160px] h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="w-[170px] h-2 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-inner">
                     <div
                       className={cn(
                         "h-full transition-all duration-500",
@@ -1449,25 +1459,20 @@ export function AccountRowV2({
           <TooltipProvider>
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <div className="flex flex-col items-end text-right gap-0.5 cursor-help min-w-[120px]">
-                  <div
+                <div className="flex items-center justify-end text-right cursor-help min-w-[120px]">
+                  <span
                     className={cn(
-                      "tabular-nums text-[13px] font-black tracking-tight",
-                    Math.abs(finalBalance) > 100000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.8)
-                      ? "text-rose-600"
-                      : Math.abs(finalBalance) >= 50000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.5)
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                      "h-6 px-2.5 rounded-full inline-flex items-center text-[10px] font-black tabular-nums border",
+                      Math.abs(finalBalance) > 100000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.8)
+                        ? "bg-rose-100 text-rose-700 border-rose-200"
+                        : Math.abs(finalBalance) >= 50000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.5)
+                          ? "bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-emerald-100 text-emerald-700 border-emerald-200",
                     )}
                   >
                     {finalBalance < 0 ? "-" : ""}
                     {formatMoneyVND(Math.round(Math.abs(finalBalance)))}
-                  </div>
-                  <VietnameseCurrency
-                    amount={finalBalance}
-                    variant="stylized"
-                    className="text-[11px]"
-                  />
+                  </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent
@@ -1486,6 +1491,10 @@ export function AccountRowV2({
 
                   {isCC ? (
                     <div className="space-y-1.5 pt-1">
+                      <div className="pb-1 border-b border-slate-700">
+                        <div className="text-[10px] text-slate-400 mb-1">Amount (Text)</div>
+                        <VietnameseCurrency amount={finalBalance} variant="none" className="text-[11px]" />
+                      </div>
                       <div className="flex justify-between text-[11px]">
                         <span className="text-slate-400">Credit Limit:</span>
                         <span className="font-bold">
