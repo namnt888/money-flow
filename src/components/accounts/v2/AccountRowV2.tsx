@@ -43,7 +43,6 @@ import {
   ChevronRight,
   Calculator,
   CalendarDays,
-  Eye,
   Hourglass,
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
@@ -92,6 +91,7 @@ interface AccountRowProps {
   onTransfer: (account: Account) => void;
   onClone?: (account: Account) => void;
   onAudit: (account: Account) => void;
+  onOpenPending?: (account: Account) => void;
   familyBalance?: number;
   allAccounts?: Account[];
   categories?: Category[];
@@ -122,6 +122,7 @@ export function AccountRowV2({
   onTransfer,
   onClone,
   onAudit,
+  onOpenPending,
   familyBalance,
   allAccounts,
   categories,
@@ -1272,7 +1273,50 @@ export function AccountRowV2({
         const isDueAccount =
           account.type === "credit_card" || account.type === "debt";
         const dueDateRaw = stats?.due_date || (account as any)?.due_date || null;
-        const dueDate = dueDateRaw ? new Date(dueDateRaw) : null;
+
+        const resolveDueDate = (): Date | null => {
+          if (!dueDateRaw) return null;
+
+          if (dueDateRaw instanceof Date && !Number.isNaN(dueDateRaw.getTime())) {
+            return dueDateRaw;
+          }
+
+          // Many accounts store only due day (e.g., 21). Map it to next calendar occurrence.
+          const rawText = String(dueDateRaw).trim();
+          const isNumericDay = /^\d{1,2}$/.test(rawText);
+          if (isNumericDay) {
+            const day = Number(rawText);
+            if (day >= 1 && day <= 31) {
+              const now = new Date();
+              const y = now.getFullYear();
+              const m = now.getMonth();
+              const clampDay = (year: number, month: number, d: number) => {
+                const endOfMonth = new Date(year, month + 1, 0).getDate();
+                return Math.min(d, endOfMonth);
+              };
+
+              const thisMonthDay = clampDay(y, m, day);
+              const candidate = new Date(y, m, thisMonthDay);
+              candidate.setHours(0, 0, 0, 0);
+
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (candidate >= today) return candidate;
+
+              const nextMonth = m === 11 ? 0 : m + 1;
+              const nextYear = m === 11 ? y + 1 : y;
+              const nextMonthDay = clampDay(nextYear, nextMonth, day);
+              const nextCandidate = new Date(nextYear, nextMonth, nextMonthDay);
+              nextCandidate.setHours(0, 0, 0, 0);
+              return nextCandidate;
+            }
+          }
+
+          const parsed = new Date(rawText);
+          return Number.isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        const dueDate = resolveDueDate();
         let daysLeft = Infinity;
         if (dueDate) {
           const diffTime = dueDate.getTime() - new Date().getTime();
@@ -1301,9 +1345,8 @@ export function AccountRowV2({
           );
         }
 
-        const dayDate = startOfDay(dueDate!);
-        const isDueToday = isToday(dayDate);
-        const isDueTomorrow = isTomorrow(dayDate);
+        const isDueToday = dueDate ? isToday(startOfDay(dueDate)) : false;
+        const isDueTomorrow = dueDate ? isTomorrow(startOfDay(dueDate)) : false;
 
         const tone = isDueToday
           ? "border-rose-300 bg-rose-50 text-rose-700"
@@ -1317,10 +1360,10 @@ export function AccountRowV2({
         const [month, day] = (labelDate || "").split(" ");
 
         return (
-          <div className="flex justify-center items-center gap-1.5 flex-wrap">
+          <div className="flex flex-col items-center justify-center gap-1">
             <span
               className={cn(
-                "h-6 px-2.5 inline-flex items-center gap-1 rounded-full border text-[9px] font-black uppercase tracking-wider",
+                "h-6 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border text-[9px] font-black tracking-wide",
                 tone,
                 isDueToday && "animate-pulse",
               )}
@@ -1342,7 +1385,7 @@ export function AccountRowV2({
                 </>
               ) : (
                 <>
-                  <span><b>{Math.abs(daysLeft)}</b> left</span>
+                  <span><b>{Math.abs(daysLeft)}</b> Left</span>
                   <CalendarDays className="h-3 w-3" />
                   <span className="font-bold">{month} {day}</span>
                 </>
@@ -1350,28 +1393,26 @@ export function AccountRowV2({
             </span>
 
             {pendingCount > 0 && (
-              <>
-                <Eye className="h-3.5 w-3.5 text-slate-400" />
-                <TooltipProvider>
-                  <Tooltip delayDuration={200}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={`/accounts/${account.id}?pending=1`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-6 px-2.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[9px] font-black uppercase tracking-wider text-amber-700 hover:bg-amber-100"
-                      >
-                        <Hourglass className="h-3 w-3" />
-                        <span>{pendingCount} Pending</span>
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      {`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </>
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPending?.(account);
+                      }}
+                      className="h-6 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[9px] font-black tracking-wide text-amber-700 hover:bg-amber-100"
+                    >
+                      <Hourglass className="h-3 w-3" />
+                      <span>{pendingCount} Pending</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         );

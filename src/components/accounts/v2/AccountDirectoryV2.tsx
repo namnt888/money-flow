@@ -8,6 +8,7 @@ import { AccountTableV2 } from "./AccountTableV2";
 import { AccountGridView } from "./AccountGridView";
 import { AccountSlideV2 } from "./AccountSlideV2";
 import { AccountQuickStats } from "./AccountQuickStats";
+import { AccountPendingItemsModal } from "./AccountPendingItemsModal";
 import { TransactionSlideV2 } from "@/components/transaction/slide-v2/transaction-slide-v2";
 import { toast } from "sonner";
 import { getUniqueFamilyCreditLimitTotal } from "@/lib/account-family";
@@ -34,6 +35,12 @@ interface AccountDirectoryV2Props {
     categories: Category[];
     people: Person[];
     shops: Shop[];
+}
+
+type PendingBatchItem = {
+    id: string
+    amount: number
+    batch_id: string
 }
 
 export function AccountDirectoryV2({
@@ -74,6 +81,9 @@ export function AccountDirectoryV2({
         totalAmount: number
         accountName?: string | null
     }>>({});
+    const [pendingModalOpen, setPendingModalOpen] = useState(false)
+    const [pendingModalAccountId, setPendingModalAccountId] = useState<string>('')
+    const [pendingModalItems, setPendingModalItems] = useState<PendingBatchItem[]>([])
 
     // CRUD state (Account)
     const [isAccountSlideOpen, setIsAccountSlideOpen] = useState(false);
@@ -436,6 +446,27 @@ export function AccountDirectoryV2({
         setIsAuditOpen(true);
     };
 
+    const handleOpenPending = async (account: Account) => {
+        try {
+            const res = await fetch(`/api/batch/pending-items?accountId=${encodeURIComponent(account.id)}`, {
+                method: 'GET',
+                cache: 'no-store',
+            })
+
+            if (!res.ok) {
+                toast.error('Unable to load pending items')
+                return
+            }
+
+            const rows = await res.json()
+            setPendingModalItems(Array.isArray(rows) ? rows : [])
+            setPendingModalAccountId(account.id)
+            setPendingModalOpen(true)
+        } catch {
+            toast.error('Unable to load pending items')
+        }
+    }
+
     const handleCategoryChange = (categoryId: string | undefined) => {
         setSelectedCategory(categoryId || null);
     };
@@ -480,6 +511,7 @@ export function AccountDirectoryV2({
                         onPay={handlePay}
                         onTransfer={handleTransfer}
                         onAudit={handleAudit}
+                        onOpenPending={handleOpenPending}
                         allAccounts={initialAccounts}
                         categories={categories}
                         people={people}
@@ -550,6 +582,39 @@ export function AccountDirectoryV2({
                     onOpenChange={setIsAuditOpen} 
                     account={{ id: auditAccount.id, name: auditAccount.name }}
                     availableYears={['2025', '2026']}
+                />
+            )}
+
+            {pendingModalAccountId && (
+                <AccountPendingItemsModal
+                    open={pendingModalOpen}
+                    onOpenChange={setPendingModalOpen}
+                    accountId={pendingModalAccountId}
+                    pendingItems={pendingModalItems}
+                    pendingRefundCount={0}
+                    pendingRefundAmount={0}
+                    onSuccess={async () => {
+                        const res = await fetch('/api/batch/pending-summary', {
+                            method: 'GET',
+                            cache: 'no-store',
+                        })
+                        if (!res.ok) return
+                        const rows = await res.json()
+                        if (!Array.isArray(rows)) return
+
+                        const nextMap: Record<string, { count: number; totalAmount: number; accountName?: string | null }> = {}
+                        for (const row of rows) {
+                            const accountId = String(row?.accountId || '').trim()
+                            if (!accountId) continue
+                            nextMap[accountId] = {
+                                count: Number(row?.count || 0),
+                                totalAmount: Number(row?.totalAmount || 0),
+                                accountName: row?.accountName || null,
+                            }
+                        }
+                        setPendingSummaryMap(nextMap)
+                        router.refresh()
+                    }}
                 />
             )}
 

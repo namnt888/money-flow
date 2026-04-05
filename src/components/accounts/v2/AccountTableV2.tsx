@@ -23,6 +23,7 @@ interface AccountTableV2Props {
     onPay: (account: Account) => void;
     onTransfer: (account: Account) => void;
     onAudit: (account: Account) => void;
+    onOpenPending?: (account: Account) => void;
     categories?: Category[];
     people?: Person[];
     pendingSummaryMap?: Record<string, {
@@ -42,6 +43,7 @@ export function AccountTableV2({
     onPay,
     onTransfer,
     onAudit,
+    onOpenPending,
     categories,
     people,
     pendingSummaryMap,
@@ -489,6 +491,7 @@ export function AccountTableV2({
                                                             onPay={onPay}
                                                             onTransfer={onTransfer}
                                                             onAudit={onAudit}
+                                                            onOpenPending={onOpenPending}
                                                             categories={categories}
                                                             people={people}
                                                             pendingSummaryMap={pendingSummaryMap}
