@@ -127,9 +127,9 @@ function mapCategory(record: PocketBaseRecord): Category {
     image_url: record.image_url || null,
     mcc_codes: record.mcc_codes || null,
     keywords: record.keywords || null,
-    linked_account_ids: linkedAccountIds,
+    linked_account_ids: record.linked_account_ids || null,
+    linked_shop_ids: record.linked_shop_ids || null,
     default_shop_id: record.default_shop_id || null,
-    linked_shop_ids: linkedShopIds,
     kind: record.kind || null,
     is_archived: Boolean(record.is_archived || false),
     slug: record.slug || null,
@@ -487,8 +487,8 @@ export async function createPocketBaseCategory(
     mcc_codes?: string[] | null;
     keywords?: string[] | null;
     linked_account_ids?: string[] | null;
-    default_shop_id?: string | null;
     linked_shop_ids?: string[] | null;
+    default_shop_id?: string | null;
   },
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);
@@ -507,9 +507,9 @@ export async function createPocketBaseCategory(
           kind: data.kind ?? null,
           mcc_codes: data.mcc_codes ?? null,
           keywords: data.keywords ?? null,
-          linked_account_ids: data.linked_account_ids ?? [],
+          linked_account_ids: data.linked_account_ids ?? null,
+          linked_shop_ids: data.linked_shop_ids ?? null,
           default_shop_id: data.default_shop_id ?? null,
-          linked_shop_ids: data.linked_shop_ids ?? [],
           is_archived: false,
         },
       },
@@ -532,8 +532,8 @@ export async function updatePocketBaseCategory(
     mcc_codes: string[] | null;
     keywords: string[] | null;
     linked_account_ids: string[] | null;
-    default_shop_id: string | null;
     linked_shop_ids: string[] | null;
+    default_shop_id: string | null;
   }>,
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseId);

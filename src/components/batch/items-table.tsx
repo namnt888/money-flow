@@ -25,6 +25,41 @@ import { TabsContent } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
+function normalizeText(value: string | null | undefined): string {
+    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function resolveBankGroup(item: any, bankMappings: any[]) {
+    const rawBankName = String(item?.bank_name || '').trim()
+    const rawBankCode = String(item?.bank_code || '').trim().toUpperCase()
+
+    const matched = (bankMappings || []).find((mapping: any) => {
+        const bankCode = normalizeText(mapping?.bank_code)
+        const bankName = normalizeText(mapping?.bank_name)
+        const shortName = normalizeText(mapping?.short_name)
+        const current = normalizeText(rawBankName)
+
+        return Boolean(
+            (rawBankCode && mapping?.bank_code && rawBankCode === String(mapping.bank_code).trim().toUpperCase()) ||
+            (current && (current === bankName || current === shortName || current.includes(bankName) || current.includes(shortName))) ||
+            (current && bankCode && current.includes(bankCode))
+        )
+    })
+
+    const bankCode = rawBankCode || String(matched?.bank_code || '').trim().toUpperCase()
+    const bankName = rawBankName || String(matched?.short_name || matched?.bank_name || '').trim()
+    const label = bankCode ? `${bankName || matched?.bank_name || 'Unknown Bank'} (${bankCode})` : (bankName || matched?.bank_name || 'Unknown Bank')
+    const sortKey = normalizeText(bankName || matched?.bank_name || bankCode || 'zzz')
+
+    return {
+        key: bankCode || bankName || 'unknown-bank',
+        label,
+        sortKey,
+        bankCode: bankCode || null,
+        bankName: bankName || matched?.bank_name || null,
+    }
+}
+
 interface ItemsTableProps {
     items: any[]
     batchId: string
@@ -77,6 +112,35 @@ export function ItemsTable({
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         })
     }, [initialItems])
+
+    const groupedItems = useMemo(() => {
+        const groups = new Map<string, { label: string; sortKey: string; totalAmount: number; items: any[] }>()
+
+        items.forEach((item) => {
+            const group = resolveBankGroup(item, bankMappings)
+            const entry = groups.get(group.key) || {
+                label: group.label,
+                sortKey: group.sortKey,
+                totalAmount: 0,
+                items: [],
+            }
+            entry.totalAmount += Math.abs(Number(item.amount || 0))
+            entry.items.push(item)
+            groups.set(group.key, entry)
+        })
+
+        return Array.from(groups.values())
+            .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'vi', { sensitivity: 'base' }))
+            .map((group) => ({
+                ...group,
+                items: [...group.items].sort((a, b) => {
+                    const amountA = Math.abs(Number(a.amount || 0))
+                    const amountB = Math.abs(Number(b.amount || 0))
+                    if (amountA !== amountB) return amountB - amountA
+                    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+                })
+            }))
+    }, [bankMappings, items])
 
     const [showConfirm, setShowConfirm] = useState(false)
     const [showTransferDialog, setShowTransferDialog] = useState(false)
@@ -173,6 +237,249 @@ export function ItemsTable({
         onSelectionChange?.(newSelectedIds)
     }
 
+    const renderItemRow = (item: any, index: number) => (
+        <TableRow key={item.id} className="group border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+            <TableCell className="pl-6">
+                <Checkbox
+                    checked={selectedIds.includes(item.id)}
+                    onCheckedChange={(checked) => handleSelectOne(item.id, checked as boolean)}
+                    className="rounded-[4px] border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                />
+            </TableCell>
+            <TableCell className="text-xs font-bold text-slate-400">{index + 1}</TableCell>
+
+            {bankType === 'MBB' ? (
+                <>
+                    <TableCell>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-900 leading-tight">{item.receiver_name || 'Unknown'}</span>
+                            <span className="text-xs font-medium text-slate-400">{item.bank_number || '-'}</span>
+                        </div>
+                    </TableCell>
+                    <TableCell>
+                        {resolveBankGroup(item, bankMappings).bankCode ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-none bg-indigo-600 text-[9px] font-black text-white uppercase tracking-tighter">
+                                {resolveBankGroup(item, bankMappings).bankCode}
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-600 uppercase">
+                                {resolveBankGroup(item, bankMappings).label}
+                            </span>
+                        )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <span className="text-sm font-black text-slate-900">
+                            {new Intl.NumberFormat('en-US').format(item.amount)}
+                        </span>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex flex-col gap-1.5 min-w-[150px]">
+                            <span className="text-xs text-slate-600 font-medium line-clamp-1 group-hover:line-clamp-none transition-all">{item.note}</span>
+                            {item.target_account?.cashback_config && (
+                                (() => {
+                                    const config = parseCashbackConfig(item.target_account.cashback_config)
+                                    if (config.dueDate) {
+                                        const today = new Date()
+                                        const currentDay = today.getDate()
+                                        const dueDay = config.dueDate
+                                        let daysDiff = dueDay - currentDay
+                                        if (daysDiff < 0) daysDiff += 30
+
+                                        const isCritical = daysDiff <= 3
+                                        const isWarning = daysDiff <= 7
+
+                                        return (
+                                            <div className={cn(
+                                                "flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-fit border",
+                                                isCritical ? "bg-red-50 text-red-600 border-red-100" :
+                                                    isWarning ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                        "bg-blue-50 text-blue-600 border-blue-100"
+                                            )}>
+                                                <CalendarClock className="h-3 w-3" />
+                                                Due in {daysDiff}d
+                                            </div>
+                                        )
+                                    }
+                                    return null
+                                })()
+                            )}
+                        </div>
+                    </TableCell>
+                </>
+            ) : (
+                <>
+                    <TableCell>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-slate-900 leading-tight">{item.receiver_name || 'Unknown'}</span>
+                                {resolveBankGroup(item, bankMappings).bankCode && (
+                                    <span className="px-1 py-0.5 rounded-none bg-indigo-600 text-[8px] font-black text-white uppercase tracking-tighter">
+                                        {resolveBankGroup(item, bankMappings).bankCode}
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-xs font-medium text-slate-400">{item.bank_number || '-'}</span>
+                        </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <span className="text-sm font-black text-slate-900">
+                            {new Intl.NumberFormat('en-US').format(item.amount)}
+                        </span>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex flex-col gap-1.5 min-w-[150px]">
+                            <span className="text-xs text-slate-600 font-medium line-clamp-1 group-hover:line-clamp-none transition-all">{item.note}</span>
+                            {item.target_account?.cashback_config && (
+                                (() => {
+                                    const config = parseCashbackConfig(item.target_account.cashback_config)
+                                    if (config.dueDate) {
+                                        const today = new Date()
+                                        const currentDay = today.getDate()
+                                        const dueDay = config.dueDate
+                                        let daysDiff = dueDay - currentDay
+                                        if (daysDiff < 0) daysDiff += 30
+
+                                        const isCritical = daysDiff <= 3
+                                        const isWarning = daysDiff <= 7
+
+                                        return (
+                                            <div className={cn(
+                                                "flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-fit border",
+                                                isCritical ? "bg-red-50 text-red-600 border-red-100" :
+                                                    isWarning ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                        "bg-blue-50 text-blue-600 border-blue-100"
+                                            )}>
+                                                <CalendarClock className="h-3 w-3" />
+                                                Due in {daysDiff}d
+                                            </div>
+                                        )
+                                    }
+                                    return null
+                                })()
+                            )}
+                        </div>
+                    </TableCell>
+                </>
+            )}
+
+            <TableCell>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">
+                        <div className="w-4 h-4 rounded-none bg-indigo-500 flex items-center justify-center text-[8px] text-white">B</div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Pool</span>
+                    </div>
+                    <ArrowRight className="h-3 w-3 text-slate-300" />
+                    {item.target_account_id ? (
+                        <Link href={`/accounts/${item.target_account_id}`}>
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-md border border-blue-100 hover:border-blue-300 transition-colors">
+                                {item.target_account?.image_url ? (
+                                    <div className="w-5 h-5 rounded-none overflow-hidden border border-blue-200 bg-white">
+                                        <img src={item.target_account.image_url} alt="" className="w-full h-full object-contain rounded-none" />
+                                    </div>
+                                ) : (
+                                    <div className="w-5 h-5 rounded-none bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shrink-0 uppercase">
+                                        {item.target_account?.name?.[0] || 'A'}
+                                    </div>
+                                )}
+                                <span className="text-[10px] font-black text-blue-700 whitespace-nowrap">
+                                    {item.target_account?.name || 'Account'}
+                                </span>
+                                {activeInstallmentAccounts.includes(item.target_account_id) && (
+                                    <CreditCard className="h-3 w-3 text-purple-500 shrink-0" />
+                                )}
+                            </div>
+                        </Link>
+                    ) : (
+                        <div className="text-[10px] font-bold text-amber-600 italic px-2 py-1 bg-amber-50 rounded-md border border-amber-100">Select target...</div>
+                    )}
+                </div>
+            </TableCell>
+            <TableCell>
+                <div className="flex items-center gap-1.5">
+                    {item.status === 'confirmed' ? (
+                        <Link
+                            href={`/transactions?highlight=${item.transaction_id}`}
+                            target="_blank"
+                            className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                        >
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>Done</span>
+                        </Link>
+                    ) : (
+                        <div className="flex items-center gap-1 text-amber-600 font-bold text-[10px] uppercase tracking-wider bg-amber-50 px-2 py-1 rounded border border-amber-100">
+                            <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span>Pending</span>
+                        </div>
+                    )}
+
+                    {item.is_installment_payment && (
+                        <div className="flex items-center gap-1 text-indigo-600 font-bold text-[10px] uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                            <CreditCard className="h-3 w-3" />
+                            <span>PP</span>
+                        </div>
+                    )}
+                </div>
+            </TableCell>
+            <TableCell className="pr-6 text-right">
+                <div className="flex items-center justify-end gap-1">
+                    {item.status !== 'confirmed' ? (
+                        <>
+                            {item.target_account_id && activeInstallmentAccounts.includes(item.target_account_id) && (
+                                <InstallmentPaymentDialog
+                                    batchItemId={item.id}
+                                    batchItemAmount={Math.abs(item.amount)}
+                                    targetAccountId={item.target_account_id}
+                                    onSuccess={() => window.location.reload()}
+                                />
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openTransferDialog(item)}
+                                className="h-8 px-3 text-emerald-600 hover:bg-emerald-50 rounded-lg font-bold text-[10px] uppercase gap-1.5"
+                                title="Quick Confirm"
+                            >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>Confirm</span>
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:bg-slate-100 rounded-lg">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                    <DropdownMenuItem onClick={() => onEditItem?.(item)} className="cursor-pointer gap-2 font-bold text-xs">
+                                        <CreditCard className="h-3.5 w-3.5 text-blue-500" />
+                                        Edit Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleClone(item.id)} disabled={cloningItemId === item.id} className="cursor-pointer gap-2 font-bold text-xs">
+                                        {cloningItemId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
+                                        Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDelete(item.id)} className="cursor-pointer gap-2 font-bold text-xs text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Delete Item
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVoid(item.id)}
+                            className="h-8 px-3 text-orange-600 hover:bg-orange-50 font-bold text-[10px] uppercase gap-1.5"
+                        >
+                            <Ban className="h-3.5 w-3.5" />
+                            <span>Void</span>
+                        </Button>
+                    )}
+                </div>
+            </TableCell>
+        </TableRow>
+    )
+
     return (
         <>
             {/* Bulk action bar removed - moved to BatchDetail */}
@@ -215,248 +522,27 @@ export function ItemsTable({
                                 </TableCell>
                             </TableRow>
                         )}
-                        {items.map((item, index) => (
-                            <TableRow key={item.id} className="group border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                                <TableCell className="pl-6">
-                                    <Checkbox
-                                        checked={selectedIds.includes(item.id)}
-                                        onCheckedChange={(checked) => handleSelectOne(item.id, checked as boolean)}
-                                        className="rounded-[4px] border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                                    />
-                                </TableCell>
-                                <TableCell className="text-xs font-bold text-slate-400">{index + 1}</TableCell>
-
-                                {bankType === 'MBB' ? (
-                                    <>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-slate-900 leading-tight">{item.receiver_name || 'Unknown'}</span>
-                                                <span className="text-xs font-medium text-slate-400">{item.bank_number || '-'}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.bank_code ? (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-none bg-indigo-600 text-[9px] font-black text-white uppercase tracking-tighter">
-                                                    {item.bank_code}
+                        {groupedItems.map((group) => (
+                            <React.Fragment key={group.label}>
+                                <TableRow className="bg-slate-50/80">
+                                    <TableCell colSpan={bankType === 'MBB' ? 9 : 8} className="px-4 py-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="rounded-full border-slate-200 bg-white text-slate-700 text-[10px] font-black uppercase tracking-wider px-2 py-0.5">
+                                                    {group.label}
+                                                </Badge>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    {group.items.length} items
                                                 </span>
-                                            ) : (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-600 uppercase">
-                                                    {item.bank_name}
-                                                </span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <span className="text-sm font-black text-slate-900">
-                                                {new Intl.NumberFormat('en-US').format(item.amount)}
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                                {new Intl.NumberFormat('en-US').format(group.totalAmount)}
                                             </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1.5 min-w-[150px]">
-                                                <span className="text-xs text-slate-600 font-medium line-clamp-1 group-hover:line-clamp-none transition-all">{item.note}</span>
-                                                {item.target_account?.cashback_config && (
-                                                    (() => {
-                                                        const config = parseCashbackConfig(item.target_account.cashback_config)
-                                                        if (config.dueDate) {
-                                                            const today = new Date()
-                                                            const currentDay = today.getDate()
-                                                            const dueDay = config.dueDate
-                                                            let daysDiff = dueDay - currentDay
-                                                            if (daysDiff < 0) daysDiff += 30
-
-                                                            const isCritical = daysDiff <= 3
-                                                            const isWarning = daysDiff <= 7
-
-                                                            return (
-                                                                <div className={cn(
-                                                                    "flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-fit border",
-                                                                    isCritical ? "bg-red-50 text-red-600 border-red-100" :
-                                                                        isWarning ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                                            "bg-blue-50 text-blue-600 border-blue-100"
-                                                                )}>
-                                                                    <CalendarClock className="h-3 w-3" />
-                                                                    Due in {daysDiff}d
-                                                                </div>
-                                                            )
-                                                        }
-                                                        return null
-                                                    })()
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </>
-                                ) : (
-                                    <>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-slate-900 leading-tight">{item.receiver_name || 'Unknown'}</span>
-                                                    {item.bank_code && (
-                                                        <span className="px-1 py-0.5 rounded-none bg-indigo-600 text-[8px] font-black text-white uppercase tracking-tighter">
-                                                            {item.bank_code}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <span className="text-xs font-medium text-slate-400">{item.bank_number || '-'}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <span className="text-sm font-black text-slate-900">
-                                                {new Intl.NumberFormat('en-US').format(item.amount)}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1.5 min-w-[150px]">
-                                                <span className="text-xs text-slate-600 font-medium line-clamp-1 group-hover:line-clamp-none transition-all">{item.note}</span>
-                                                {item.target_account?.cashback_config && (
-                                                    (() => {
-                                                        const config = parseCashbackConfig(item.target_account.cashback_config)
-                                                        if (config.dueDate) {
-                                                            const today = new Date()
-                                                            const currentDay = today.getDate()
-                                                            const dueDay = config.dueDate
-                                                            let daysDiff = dueDay - currentDay
-                                                            if (daysDiff < 0) daysDiff += 30
-
-                                                            const isCritical = daysDiff <= 3
-                                                            const isWarning = daysDiff <= 7
-
-                                                            return (
-                                                                <div className={cn(
-                                                                    "flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-fit border",
-                                                                    isCritical ? "bg-red-50 text-red-600 border-red-100" :
-                                                                        isWarning ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                                            "bg-blue-50 text-blue-600 border-blue-100"
-                                                                )}>
-                                                                    <CalendarClock className="h-3 w-3" />
-                                                                    Due in {daysDiff}d
-                                                                </div>
-                                                            )
-                                                        }
-                                                        return null
-                                                    })()
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </>
-                                )}
-
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">
-                                            <div className="w-4 h-4 rounded-none bg-indigo-500 flex items-center justify-center text-[8px] text-white">B</div>
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase">Pool</span>
                                         </div>
-                                        <ArrowRight className="h-3 w-3 text-slate-300" />
-                                        {item.target_account_id ? (
-                                            <Link href={`/accounts/${item.target_account_id}`}>
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 rounded-md border border-blue-100 hover:border-blue-300 transition-colors">
-                                                    {item.target_account?.image_url ? (
-                                                        <div className="w-5 h-5 rounded-none overflow-hidden border border-blue-200 bg-white">
-                                                            <img src={item.target_account.image_url} alt="" className="w-full h-full object-contain rounded-none" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-5 h-5 rounded-none bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shrink-0 uppercase">
-                                                            {item.target_account?.name?.[0] || 'A'}
-                                                        </div>
-                                                    )}
-                                                    <span className="text-[10px] font-black text-blue-700 whitespace-nowrap">
-                                                        {item.target_account?.name || 'Account'}
-                                                    </span>
-                                                    {activeInstallmentAccounts.includes(item.target_account_id) && (
-                                                        <CreditCard className="h-3 w-3 text-purple-500 shrink-0" />
-                                                    )}
-                                                </div>
-                                            </Link>
-                                        ) : (
-                                            <div className="text-[10px] font-bold text-amber-600 italic px-2 py-1 bg-amber-50 rounded-md border border-amber-100">Select target...</div>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-1.5">
-                                        {item.status === 'confirmed' ? (
-                                            <Link
-                                                href={`/transactions?highlight=${item.transaction_id}`}
-                                                target="_blank"
-                                                className="flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                                            >
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                <span>Done</span>
-                                            </Link>
-                                        ) : (
-                                            <div className="flex items-center gap-1 text-amber-600 font-bold text-[10px] uppercase tracking-wider bg-amber-50 px-2 py-1 rounded border border-amber-100">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                                <span>Pending</span>
-                                            </div>
-                                        )}
-
-                                        {item.is_installment_payment && (
-                                            <div className="flex items-center gap-1 text-indigo-600 font-bold text-[10px] uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
-                                                <CreditCard className="h-3 w-3" />
-                                                <span>PP</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                <TableCell className="pr-6 text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        {item.status !== 'confirmed' ? (
-                                            <>
-                                                {/* Smart Quick Match for Installments */}
-                                                {item.target_account_id && activeInstallmentAccounts.includes(item.target_account_id) && (
-                                                    <InstallmentPaymentDialog
-                                                        batchItemId={item.id}
-                                                        batchItemAmount={Math.abs(item.amount)}
-                                                        targetAccountId={item.target_account_id}
-                                                        onSuccess={() => window.location.reload()}
-                                                    />
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => openTransferDialog(item)}
-                                                    className="h-8 px-3 text-emerald-600 hover:bg-emerald-50 rounded-lg font-bold text-[10px] uppercase gap-1.5"
-                                                    title="Quick Confirm"
-                                                >
-                                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                                    <span>Confirm</span>
-                                                </Button>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:bg-slate-100 rounded-lg">
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-40">
-                                                        <DropdownMenuItem onClick={() => onEditItem?.(item)} className="cursor-pointer gap-2 font-bold text-xs">
-                                                            <CreditCard className="h-3.5 w-3.5 text-blue-500" />
-                                                            Edit Details
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleClone(item.id)} disabled={cloningItemId === item.id} className="cursor-pointer gap-2 font-bold text-xs">
-                                                            {cloningItemId === item.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
-                                                            Duplicate
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleDelete(item.id)} className="cursor-pointer gap-2 font-bold text-xs text-red-600">
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                            Delete Item
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </>
-                                        ) : (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleVoid(item.id)}
-                                                className="h-8 px-3 text-orange-600 hover:bg-orange-50 font-bold text-[10px] uppercase gap-1.5"
-                                            >
-                                                <Ban className="h-3.5 w-3.5" />
-                                                <span>Void</span>
-                                            </Button>
-                                        )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+                                    </TableCell>
+                                </TableRow>
+                                {group.items.map((item, index) => renderItemRow(item, index + 1))}
+                            </React.Fragment>
                         ))}
                     </TableBody>
                 </Table>

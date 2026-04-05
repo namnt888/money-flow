@@ -32,6 +32,42 @@ function isPocketBaseId(id: string | null | undefined): boolean {
     return Boolean(id && PB_ID_REGEX.test(id))
 }
 
+function hasBankCodeSuffix(value: string): boolean {
+    return /\([A-Za-z0-9]{2,10}\)\s*$/.test(String(value || '').trim())
+}
+
+function normalizeBankKey(value: string): string {
+    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function resolveBankNameWithCode(rawBankName: string, bankMappings: any[]): string {
+    const bankName = String(rawBankName || '').trim()
+    if (!bankName) return ''
+    if (hasBankCodeSuffix(bankName)) return bankName
+
+    const normalizedInput = normalizeBankKey(bankName)
+    if (!normalizedInput) return bankName
+
+    const matched = (bankMappings || []).find((mapping: any) => {
+        const candidates = [
+            normalizeBankKey(mapping?.bank_name || ''),
+            normalizeBankKey(mapping?.short_name || ''),
+            normalizeBankKey(mapping?.bank_code || ''),
+        ].filter(Boolean)
+
+        return candidates.some((candidate) =>
+            normalizedInput === candidate ||
+            normalizedInput.includes(candidate) ||
+            candidate.includes(normalizedInput),
+        )
+    })
+
+    const code = String(matched?.bank_code || '').trim().toUpperCase()
+    if (!code) return bankName
+
+    return `${bankName} (${code})`
+}
+
 async function fundBatchPocketbase(batchId: string, sourceAccountId?: string) {
     console.log('[BatchDebug][Action] fundBatchPocketbase:start', { batchId, sourceAccountId })
     const batch = await pocketbaseGetById<any>('batches', batchId)
@@ -272,6 +308,17 @@ async function sendBatchToSheetPocketbase(
         || (String(batch.period || '').toLowerCase() === 'before' ? 'Phase 1' : String(batch.period || '').toLowerCase() === 'after' ? 'Phase 2' : null)
         || (String(batch.name || '').toLowerCase().includes('early') ? 'Phase 1' : String(batch.name || '').toLowerCase().includes('late') ? 'Phase 2' : 'Phase')
 
+    let bankMappings: any[] = []
+    try {
+        const bankMappingsResp = await pocketbaseList<any>('bank_mappings', {
+            filter: `bank_type = "${bankType}"`,
+            perPage: 1000,
+        })
+        bankMappings = bankMappingsResp.items || []
+    } catch {
+        bankMappings = []
+    }
+
     const [yearRaw, monthRaw] = String(batch.month_year || '').split('-')
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     const monthIndex = Math.max(1, Math.min(12, Number(monthRaw || 1)))
@@ -351,7 +398,8 @@ async function sendBatchToSheetPocketbase(
             ''
         ).trim()
         const bankNumber = String(item.bank_number || fallbackBankNumber || '').trim()
-        const bankName = String(item.bank_name || effectiveMaster?.bank_name || expandedTarget?.bank_name || '').trim()
+        const rawBankName = String(item.bank_name || effectiveMaster?.bank_name || expandedTarget?.bank_name || '').trim()
+        const bankName = resolveBankNameWithCode(rawBankName, bankMappings)
         const accountName = String(expandedTarget?.name || '').trim() || receiverName || 'Transfer'
         const note = `${accountName} ${phaseLabel} ${monthYearLabel} by ${bankTitle}`.trim()
 
