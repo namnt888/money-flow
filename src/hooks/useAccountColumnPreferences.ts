@@ -19,10 +19,10 @@ export interface AccountColumnConfig {
 
 const defaultAccountColumns: AccountColumnConfig[] = [
     { key: 'account', label: 'Account Name', defaultWidth: 250, minWidth: 200, frozen: true },
+    { key: 'due', label: 'Due', defaultWidth: 160, minWidth: 140 },
     { key: 'role', label: 'Role & Ownership', defaultWidth: 200, minWidth: 180 },
     { key: 'limit', label: 'Limit', defaultWidth: 120, minWidth: 100 },
     { key: 'rewards', label: 'Rewards', defaultWidth: 150, minWidth: 130 },
-    { key: 'due', label: 'Due', defaultWidth: 140, minWidth: 120 },
     { key: 'balance', label: 'Balance', defaultWidth: 180, minWidth: 150 },
     { key: 'action', label: 'Actions', defaultWidth: 120, minWidth: 100, frozen: true },
 ];
@@ -34,10 +34,10 @@ export function useAccountColumnPreferences() {
 
     const [visibleColumns, setVisibleColumns] = useState<Record<AccountColumnKey, boolean>>({
         account: true,
+        due: true,
         role: true,
         limit: true,
         rewards: true,
-        due: false,
         balance: true,
         action: true,
     });
@@ -61,9 +61,31 @@ export function useAccountColumnPreferences() {
                 // Filter out keys that no longer exist in our definition to incorrect lookups
                 const parsed = JSON.parse(savedOrder);
                 const validKeys = defaultAccountColumns.map(c => c.key);
-                setColumnOrder(parsed.filter((k: any) => validKeys.includes(k)));
+                const filtered = parsed.filter((k: any) => validKeys.includes(k));
+
+                // Force Due column right after Account for consistent UX.
+                const withoutDue = filtered.filter((k: AccountColumnKey) => k !== 'due');
+                const accountIdx = withoutDue.indexOf('account');
+                if (accountIdx >= 0) {
+                    withoutDue.splice(accountIdx + 1, 0, 'due');
+                } else {
+                    withoutDue.unshift('account', 'due');
+                }
+
+                // Ensure no missing columns remain.
+                const fullOrder = [...withoutDue];
+                defaultAccountColumns.forEach((c) => {
+                    if (!fullOrder.includes(c.key)) {
+                        fullOrder.push(c.key);
+                    }
+                });
+
+                setColumnOrder(fullOrder);
             }
-            if (savedVis) setVisibleColumns(JSON.parse(savedVis));
+            if (savedVis) {
+                const parsedVis = JSON.parse(savedVis);
+                setVisibleColumns({ ...parsedVis, due: true });
+            }
             if (savedWidths) setColumnWidths(JSON.parse(savedWidths));
         } catch (e) {
             console.error("Failed to load account column settings", e);
@@ -94,10 +116,10 @@ export function useAccountColumnPreferences() {
         setColumnOrder(defaultAccountColumns.map(c => c.key));
         setVisibleColumns({
             account: true,
+            due: true,
             role: true,
             limit: true,
             rewards: true,
-            due: false,
             balance: true,
             action: true,
         });
