@@ -177,9 +177,9 @@ export function BatchMasterChecklist({
         setPerformingAction(true)
         try {
             await handleFastRefresh()
-            toast.success('Smart sort refreshed')
+            toast.success('✓ Smart sort triggered - reloading data')
         } catch (error) {
-            toast.error('Smart sort failed')
+            toast.error('✗ Smart sort failed')
         } finally {
             setPerformingAction(false)
         }
@@ -1001,6 +1001,7 @@ export function BatchMasterChecklist({
                             focusedMasterItemId={focusedMasterItemId}
                             onSmartSort={handleSmartSort}
                             bankMappings={bankMappings}
+                            performingAction={performingAction}
                         />
                     </TabsContent>
                 ))}
@@ -1173,7 +1174,7 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings, performingAction }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
@@ -1376,11 +1377,21 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     variant="ghost"
                     size="sm"
                     onClick={onSmartSort}
+                    disabled={performingAction}
                     className="h-8 px-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all"
                     title="Smart sort"
                 >
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    Smart Sort
+                    {performingAction ? (
+                        <>
+                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin text-emerald-500" />
+                            Sorting...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="h-3.5 w-3.5 mr-1" />
+                            Smart Sort
+                        </>
+                    )}
                 </Button>
 
                 {isPhaseEditing && (
@@ -1821,17 +1832,12 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                     m.bank_code === item.bank_code || 
                     (m.bank_name?.toLowerCase() === item.bank_name?.toLowerCase() && m.bank_type === bankType)
                 )
-                return foundMapping ? (
-                    <div className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 shadow-sm">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-wider">Mapped</span>
+                const displayCode = foundMapping?.short_name || item.bank_code || '?'
+                return (
+                    <div className="shrink-0 inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 shadow-sm">
+                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{displayCode}</span>
                     </div>
-                ) : item.bank_code ? (
-                    <div className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 shadow-sm">
-                        <AlertCircle className="h-3 w-3 text-amber-600" />
-                        <span className="text-[8px] font-black text-amber-600 uppercase tracking-wider">Unmapped</span>
-                    </div>
-                ) : null
+                )
             })()}
 
             {item.accounts?.image_url ? (
