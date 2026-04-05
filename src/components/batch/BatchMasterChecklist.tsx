@@ -1863,11 +1863,11 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             })()}
 
             {item.accounts?.image_url ? (
-                <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden flex items-center justify-center">
                     <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
                 </div>
             ) : (
-                <div className="shrink-0 h-12 w-12 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none flex items-center justify-center text-[10px] font-black text-slate-400">
                     {item.bank_name?.substring(0, 2)}
                 </div>
             )}
