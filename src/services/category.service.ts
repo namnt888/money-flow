@@ -48,9 +48,9 @@ export async function createCategory(category: Omit<Category, 'id'>): Promise<Ca
       kind: category.kind ?? null,
       mcc_codes: (category as any).mcc_codes ?? null,
       keywords: (category as any).keywords ?? null,
-      linked_account_ids: (category as any).linked_account_ids ?? [],
-      default_shop_id: (category as any).default_shop_id ?? null,
-      linked_shop_ids: (category as any).linked_shop_ids ?? [],
+      linked_account_ids: category.linked_account_ids ?? null,
+      linked_shop_ids: category.linked_shop_ids ?? null,
+      default_shop_id: category.default_shop_id ?? null,
     })
 
     if (!success) throw new Error('Failed to create category in PocketBase')
@@ -77,9 +77,9 @@ export async function updateCategory(id: string, updates: Partial<Category>): Pr
       kind: updates.kind ?? null,
       mcc_codes: (updates as any).mcc_codes ?? null,
       keywords: (updates as any).keywords ?? null,
-      linked_account_ids: (updates as any).linked_account_ids ?? null,
-      default_shop_id: (updates as any).default_shop_id ?? null,
-      linked_shop_ids: (updates as any).linked_shop_ids ?? null,
+      linked_account_ids: updates.linked_account_ids ?? null,
+      linked_shop_ids: updates.linked_shop_ids ?? null,
+      default_shop_id: updates.default_shop_id ?? null,
     })
 
     if (!success) throw new Error('Failed to update category in PocketBase')
@@ -109,9 +109,9 @@ export async function getCategoryById(id: string): Promise<Category | null> {
       kind: item.kind,
       mcc_codes: item.mcc_codes,
       keywords: item.keywords,
-      linked_account_ids: item.linked_account_ids ?? null,
-      default_shop_id: item.default_shop_id ?? null,
-      linked_shop_ids: item.linked_shop_ids ?? null,
+      linked_account_ids: item.linked_account_ids,
+      linked_shop_ids: item.linked_shop_ids,
+      default_shop_id: item.default_shop_id,
       is_archived: item.is_archived,
     }
   } catch (error) {

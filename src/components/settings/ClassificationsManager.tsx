@@ -477,6 +477,26 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                 {/* Search */}
                 <div className="relative w-[200px] shrink-0">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    {((activeTab === 'categories' && catSearch) || (activeTab === 'shops' && shopSearch) || (activeTab === 'archives' && archiveSearch)) && (
+                        <button
+                            type="button"
+                            onMouseDown={(e) => {
+                                e.preventDefault()
+                                if (activeTab === 'categories') setCatSearch('')
+                                else if (activeTab === 'shops') setShopSearch('')
+                                else setArchiveSearch('')
+                            }}
+                            onClick={() => {
+                                if (activeTab === 'categories') setCatSearch('')
+                                else if (activeTab === 'shops') setShopSearch('')
+                                else setArchiveSearch('')
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            title="Clear search"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    )}
                     <Input
                         placeholder="Search..."
                         value={activeTab === 'categories' ? catSearch : activeTab === 'shops' ? shopSearch : archiveSearch}
@@ -485,7 +505,7 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                             else if (activeTab === 'shops') setShopSearch(e.target.value)
                             else setArchiveSearch(e.target.value)
                         }}
-                        className="h-9 pl-8 bg-slate-50 border-slate-200 font-bold text-[11px] rounded-lg"
+                        className="h-9 pl-8 pr-8 bg-slate-50 border-slate-200 font-bold text-[11px] rounded-lg"
                     />
                 </div>
 
@@ -533,6 +553,8 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                         <div className="animate-in fade-in slide-in-from-left-4 duration-300 h-full">
                             <CategoryTable
                                 categories={categories}
+                                accounts={accounts}
+                                shops={shops}
                                 onEdit={(cat) => {
                                     setSelectedCategory(cat)
                                     setIsCategoryDialogOpen(true)
@@ -585,6 +607,8 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                                 </div>
                                 <CategoryTable
                                     categories={categories.filter(c => c.is_archived)}
+                                    accounts={accounts}
+                                    shops={shops}
                                     onEdit={(cat) => {
                                         setSelectedCategory(cat)
                                         setIsCategoryDialogOpen(true)
@@ -644,6 +668,8 @@ export function ClassificationsManager({ initialShops, initialCategories, accoun
                 accounts={accounts}
                 shops={shops}
                 category={selectedCategory}
+                accounts={accounts}
+                shops={shops}
                 defaultType={categoryFilter === "all" || categoryFilter === "transfer" ? "expense" : categoryFilter as any}
                 onSuccess={(newCatId) => {
                     refreshCategories();

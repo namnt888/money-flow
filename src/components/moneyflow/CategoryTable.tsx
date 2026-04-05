@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import React, { useState } from 'react'
-import { Category } from "@/types/moneyflow.types"
+import { Account, Category, Shop } from "@/types/moneyflow.types"
 import {
     Table,
     TableBody,
@@ -13,13 +13,15 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit2, Search, X, Copy, ExternalLink, TrendingUp, TrendingDown, ArrowRightLeft, ArrowUpDown, Archive, ArchiveRestore } from "lucide-react"
+import { Edit2, Search, X, Copy, ExternalLink, TrendingUp, TrendingDown, ArrowRightLeft, ArrowUpDown, Archive, ArchiveRestore, Info, Database } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { CustomTooltip } from "@/components/ui/custom-tooltip"
 
 interface CategoryTableProps {
     categories: Category[]
+    accounts?: Account[]
+    shops?: Shop[]
     onEdit: (category: Category) => void
     activeTab: string
     searchQuery: string
@@ -33,11 +35,13 @@ interface CategoryTableProps {
     className?: string
 }
 
-type SortKey = 'name' | 'type' | 'total';
+type SortKey = 'name' | 'type' | 'total' | 'linked_account';
 type SortDirection = 'asc' | 'desc';
 
 export function CategoryTable({
     categories,
+    accounts = [],
+    shops = [],
     onEdit,
     activeTab,
     searchQuery,
@@ -50,7 +54,7 @@ export function CategoryTable({
     onSelectAll,
     className
 }: CategoryTableProps) {
-    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'total', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'linked_account', direction: 'desc' });
 
     const handleSort = (key: SortKey) => {
         setSortConfig(current => ({
@@ -91,6 +95,15 @@ export function CategoryTable({
             return a.type.localeCompare(b.type) * multiplier;
         }
 
+        if (key === 'linked_account') {
+            const countA = a.linked_account_ids?.length || 0;
+            const countB = b.linked_account_ids?.length || 0;
+            if (countA === countB) {
+                return a.name.localeCompare(b.name) * multiplier;
+            }
+            return (countA - countB) * multiplier;
+        }
+
         return 0;
     });
 
@@ -104,10 +117,126 @@ export function CategoryTable({
         toast.success("Category ID copied to clipboard");
     };
 
+    const accountMap = new Map(accounts.map((account) => [account.id, account]))
+    const shopMap = new Map(shops.map((shop) => [shop.id, shop]))
+
+    const renderLinkedAccounts = (ids?: string[] | null) => {
+        if (!ids || ids.length === 0) {
+            return <span className="text-[10px] text-slate-300 italic font-medium">-</span>
+        }
+
+        const visibleIds = ids.slice(0, 3)
+        const hiddenIds = ids.slice(3)
+
+        return (
+            <div className="space-y-1 leading-5">
+                {visibleIds.map((id) => {
+                    const account = accountMap.get(id)
+                    const label = account?.name || id
+                    return (
+                        <Link
+                            key={id}
+                            href={`/accounts/${id}`}
+                            className="flex items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-blue-50 transition-colors"
+                        >
+                            <div className="h-5 w-5 rounded-sm overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
+                                {account?.image_url ? (
+                                    <img src={account.image_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="text-[9px] font-black text-slate-400 uppercase">{label[0]}</span>
+                                )}
+                            </div>
+                            <span className="text-[11px] text-slate-700 font-semibold truncate hover:text-blue-700">{label}</span>
+                        </Link>
+                    )
+                })}
+                {hiddenIds.length > 0 && (
+                    <CustomTooltip
+                        content={
+                            <div className="max-w-[260px] space-y-1">
+                                {hiddenIds.map((id) => {
+                                    const account = accountMap.get(id)
+                                    const label = account?.name || id
+                                    return (
+                                        <div key={id} className="flex items-center gap-1.5 text-[11px] text-slate-100">
+                                            <span>{label}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        }
+                        side="right"
+                    >
+                        <button
+                            type="button"
+                            className="text-[10px] font-black uppercase tracking-wide text-blue-600 hover:text-blue-700"
+                        >
+                            +{hiddenIds.length} show list
+                        </button>
+                    </CustomTooltip>
+                )}
+            </div>
+        )
+    }
+
+    const renderLinkedShops = (ids?: string[] | null) => {
+        if (!ids || ids.length === 0) {
+            return <span className="text-[10px] text-slate-300 italic font-medium">-</span>
+        }
+
+        const visibleIds = ids.slice(0, 3)
+        const hiddenIds = ids.slice(3)
+
+        return (
+            <div className="space-y-1 leading-5">
+                {visibleIds.map((id) => {
+                    const shop = shopMap.get(id)
+                    const label = shop?.name || id
+                    return (
+                        <div key={id} className="flex items-center gap-1.5 rounded-md px-1 py-0.5">
+                            <div className="h-5 w-5 rounded-sm overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
+                                {shop?.image_url ? (
+                                    <img src={shop.image_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="text-[9px] font-black text-slate-400 uppercase">{label[0]}</span>
+                                )}
+                            </div>
+                            <span className="text-[11px] text-slate-700 font-semibold truncate">{label}</span>
+                        </div>
+                    )
+                })}
+                {hiddenIds.length > 0 && (
+                    <CustomTooltip
+                        content={
+                            <div className="max-w-[260px] space-y-1">
+                                {hiddenIds.map((id) => {
+                                    const shop = shopMap.get(id)
+                                    const label = shop?.name || id
+                                    return (
+                                        <div key={id} className="text-[11px] text-slate-100">{label}</div>
+                                    )
+                                })}
+                            </div>
+                        }
+                        side="right"
+                    >
+                        <button
+                            type="button"
+                            className="text-[10px] font-black uppercase tracking-wide text-blue-600 hover:text-blue-700"
+                        >
+                            +{hiddenIds.length} show list
+                        </button>
+                    </CustomTooltip>
+                )}
+            </div>
+        )
+    }
+
     const renderRows = (cats: Category[]) => {
         return cats.map((category) => {
             const stat = stats[category.id] || { total: 0, count: 0 };
             const canDelete = stat.count === 0;
+            const dbRecordUrl = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_cat_001&filter=online&sort=-%40rowid&recordId=${category.id}`;
 
             return (
                 <TableRow key={category.id} className={cn(
@@ -141,6 +270,9 @@ export function CategoryTable({
                                         <Link href={`/categories/${category.id}`} target="_blank" className="text-[10px] text-blue-400 mt-1 flex items-center gap-1 hover:underline">
                                             Open in new tab <ExternalLink className="h-3 w-3" />
                                         </Link>
+                                        <Link href={dbRecordUrl} target="_blank" className="text-[10px] text-indigo-400 flex items-center gap-1 hover:underline">
+                                            Open DB record <ExternalLink className="h-3 w-3" />
+                                        </Link>
                                     </div>
                                 }
                                 side="right"
@@ -153,19 +285,30 @@ export function CategoryTable({
                                     >
                                         <div className="flex items-center gap-1.5">
                                             <span className="font-extrabold text-slate-900 text-sm truncate hover:text-blue-600 transition-colors uppercase tracking-tight">{category.name}</span>
-                                            <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-40 transition-opacity" />
+                                            <ExternalLink className="h-3 w-3 text-blue-500/90" />
                                         </div>
                                         <span className="text-[10px] text-slate-400 font-bold font-mono uppercase tracking-wider truncate flex items-center gap-1">
                                             {category.id.slice(0, 8)}
                                         </span>
                                     </Link>
-                                    <button
-                                        onClick={(e) => copyToClipboard(category.id, e)}
-                                        className="opacity-0 group-hover/link:opacity-100 p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
-                                        title="Copy ID"
-                                    >
-                                        <Copy className="h-3 w-3" />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={(e) => copyToClipboard(category.id, e)}
+                                            className="p-1 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 rounded transition-all"
+                                            title="Copy ID"
+                                        >
+                                            <Copy className="h-3 w-3" />
+                                        </button>
+                                        <Link
+                                            href={dbRecordUrl}
+                                            target="_blank"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-1 text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded transition-all"
+                                            title="Open DB category record"
+                                        >
+                                            <Database className="h-3 w-3" />
+                                        </Link>
+                                    </div>
                                 </div>
                             </CustomTooltip>
                         </div>
@@ -205,12 +348,18 @@ export function CategoryTable({
                             <span className="text-[10px] text-slate-400 uppercase font-bold">txns</span>
                         </div>
                     </TableCell>
+                    <TableCell className="px-6 py-4 align-top">
+                        {renderLinkedAccounts(category.linked_account_ids)}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 align-top">
+                        {renderLinkedShops(category.linked_shop_ids)}
+                    </TableCell>
                     <TableCell className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1 max-w-[250px]">
-                            {category.keywords && category.keywords.length > 0 ? (
-                                category.keywords.map(kw => (
-                                    <Badge key={kw} variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-50 border-emerald-100 text-emerald-700 font-black uppercase tracking-tight">
-                                        {kw}
+                        <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                            {category.mcc_codes && category.mcc_codes.length > 0 ? (
+                                category.mcc_codes.map(code => (
+                                    <Badge key={code} variant="outline" className="text-[13px] font-mono px-1.5 py-0 bg-slate-50 border-slate-200 text-slate-500 font-bold hover:bg-slate-100 transition-colors">
+                                        {code}
                                     </Badge>
                                 ))
                             ) : (
@@ -219,11 +368,11 @@ export function CategoryTable({
                         </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                            {category.mcc_codes && category.mcc_codes.length > 0 ? (
-                                category.mcc_codes.map(code => (
-                                    <Badge key={code} variant="outline" className="text-[13px] font-mono px-1.5 py-0 bg-slate-50 border-slate-200 text-slate-500 font-bold hover:bg-slate-100 transition-colors">
-                                        {code}
+                        <div className="flex flex-wrap gap-1 max-w-[250px]">
+                            {category.keywords && category.keywords.length > 0 ? (
+                                category.keywords.map(kw => (
+                                    <Badge key={kw} variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-50 border-emerald-100 text-emerald-700 font-black uppercase tracking-tight">
+                                        {kw}
                                     </Badge>
                                 ))
                             ) : (
@@ -305,7 +454,7 @@ export function CategoryTable({
         <div className={cn("rounded-xl border border-slate-200 bg-white shadow-sm w-full flex flex-col overflow-hidden", className || "h-full")}>
             <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                 <Table className="relative w-full border-collapse">
-                    <TableHeader className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md shadow-sm">
+                    <TableHeader className="sticky top-0 z-30 bg-slate-50/95 backdrop-blur-md shadow-sm border-b border-slate-200">
                         <TableRow className="hover:bg-transparent border-slate-100 uppercase text-[10px] font-black text-slate-500 tracking-[0.1em]">
                             <TableHead className="w-10 px-4">
                                 <div className="flex items-center justify-center">
@@ -327,15 +476,24 @@ export function CategoryTable({
                                 <div className="flex items-center">Total ({selectedYear}) <SortIcon colKey="total" /></div>
                             </TableHead>
                             <TableHead className="w-[100px] h-10 px-6">Txns</TableHead>
-                            <TableHead className="h-10 px-6">Key words</TableHead>
+                            <TableHead className="h-10 px-6 cursor-pointer group select-none hover:text-slate-800 transition-colors" onClick={() => handleSort('linked_account')}>
+                                <div className="flex items-center gap-1.5">
+                                    Linked account <SortIcon colKey="linked_account" />
+                                    <CustomTooltip content="Default sort: categories with more linked accounts first.">
+                                        <Info className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </CustomTooltip>
+                                </div>
+                            </TableHead>
+                            <TableHead className="h-10 px-6">Link shop</TableHead>
                             <TableHead className="h-10 px-6">MCC Codes</TableHead>
+                            <TableHead className="h-10 px-6">Key words</TableHead>
                             <TableHead className="w-[120px] text-right h-10 px-6">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredCategories.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-48 text-center text-slate-400 text-sm font-medium italic">
+                                <TableCell colSpan={10} className="h-48 text-center text-slate-400 text-sm font-medium italic">
                                     No categories found matching your criteria.
                                 </TableCell>
                             </TableRow>
@@ -344,7 +502,7 @@ export function CategoryTable({
                                 {internalCategories.length > 0 && (
                                     <>
                                         <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 pointer-events-none">
-                                            <TableCell colSpan={8} className="px-6 py-2.5">
+                                            <TableCell colSpan={10} className="px-6 py-2.5">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/70">Internal Categories</span>
@@ -359,7 +517,7 @@ export function CategoryTable({
                                 {externalCategories.length > 0 && (
                                     <>
                                         <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 pointer-events-none">
-                                            <TableCell colSpan={8} className="px-6 py-2.5 pt-6">
+                                            <TableCell colSpan={10} className="px-6 py-2.5 pt-6">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/70">External Categories</span>
