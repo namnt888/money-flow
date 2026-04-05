@@ -180,6 +180,63 @@ Example: `src/app/transactions/page.tsx` loads via `getAccounts()`, `getUnifiedT
 | **RLS permission denied** | Selecting columns user isn't authorized for | Use explicit column selection from `.cursorrules` section 3 |
 | **Missing Google Sheets sync** | Forgot to run `pnpm sheet:people` | Run before deploying people sheet changes; required command |
 
+## Batch Component Architecture (Since April 2026)
+
+### BatchMasterChecklist Component
+**Location:** `src/components/batch/BatchMasterChecklist.tsx` (~2200 lines)  
+**Purpose:** Master checklist for batch payment management (MBB/VIB) with Smart Sort
+
+### Smart Sort Feature (April 2026 Phase)
+- **Smart Sort Button:** Triggers data refresh with loading state (Loader2 spinner + "Sorting..." text)
+- **Sort Algorithm:** Groups by `bank_code`, ranks groups by max amount (descending), then items within group by amount (descending)
+- **Bank Code Badges:** Display actual codes (HDB, MSB, VPB) from `item.bank_code` or `bankMappings[].bank_code`, never use display names
+- **Image Styling:** Size h-12 w-12 (rounded-none, no border/background/shadow)
+- **DB Links:** Include `&recordId={itemId}` parameter for direct edit mode access
+
+### Sort Algorithm Details
+```typescript
+// Group by bank_code, calculate max per group, sort groups by max amount desc
+const sortedItems = useMemo(() => {
+  const getGroupKey = (item) => item.bank_code || item.accounts?.bank_code || item.bank_name || item.accounts?.name
+  const groupMaxAmounts = new Map()
+  
+  // Calculate group maxes
+  items.forEach((item) => {
+    const groupKey = getGroupKey(item)
+    const amount = Math.abs(item.amount || 0)
+    if (amount > (groupMaxAmounts.get(groupKey) || 0)) {
+      groupMaxAmounts.set(groupKey, amount)
+    }
+  })
+  
+  // Sort groups by max amount desc, items by amount desc
+  return [...items].sort((a, b) => {
+    const groupMaxA = groupMaxAmounts.get(getGroupKey(a)) || 0
+    const groupMaxB = groupMaxAmounts.get(getGroupKey(b)) || 0
+    if (groupMaxA !== groupMaxB) return groupMaxB - groupMaxA
+    const amountA = Math.abs(a.amount || 0)
+    const amountB = Math.abs(b.amount || 0)
+    if (amountA !== amountB) return amountB - amountA
+    // Tie-breakers: bank_name, receiver_name
+    ...
+  })
+}, [items])
+```
+
+### Props Cascade for Smart Sort
+- `performingAction: boolean` → **PeriodSection** → Smart Sort button (disable + spinner)
+- `bankMappings: array` → **ChecklistItemRow** → badge display
+- Pass props from parent component to enable loading state
+
+### Common Batch Component Pitfalls
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| **Badge shows Vietnamese name instead of code** | Using `foundMapping?.short_name` instead of `bank_code` | Always use: `item.bank_code || foundMapping?.bank_code || '?'` |
+| **Sort order wrong (small amounts before large)** | Sort comparator uses alphabetic grouping instead of max amount | Ensure memoized sort calculates group max amounts first |
+| **Image has border/background when shouldn't** | CSS classes include `bg-slate-50` or `shadow-sm` | Remove bg/shadow: `<div className="shrink-0 h-12 w-12 rounded-none overflow-hidden">` |
+| **Smart Sort button stuck in loading** | performingAction state not properly cascaded | Pass `performingAction` prop from parent to PeriodSection component |
+| **DB link opens wrong record** | Missing or incorrect recordId parameter | Append `&recordId=${item.batch_item_id}` to URL |
+
 ## Essential Reading (In Order)
 1. `.cursorrules` – Detailed coding standards
 2. `README.md` – Project status, Phase 3 notes, UI refactor
