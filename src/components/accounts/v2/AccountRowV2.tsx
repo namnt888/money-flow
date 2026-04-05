@@ -376,6 +376,9 @@ export function AccountRowV2({
           ? Math.ceil((startOfDay(dueDate).getTime() - startOfDay(new Date()).getTime()) / (1000 * 60 * 60 * 24))
           : null;
         const showDueBadge = account.type === 'credit_card' || account.type === 'debt';
+        const dueDateDisplay = dueDate
+          ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(dueDate)
+          : null;
 
         return (
           <div className="flex flex-col gap-2 min-w-[170px]">
@@ -470,6 +473,29 @@ export function AccountRowV2({
                       {account.name}
                     </Link>
 
+                    {showDueBadge && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0",
+                          dueDays !== null && dueDays < 0
+                            ? "border-rose-300 bg-rose-50 text-rose-700"
+                            : dueDays !== null && dueDays === 0
+                              ? "border-rose-300 bg-rose-50 text-rose-700"
+                            : dueDays !== null && dueDays <= 7
+                              ? "border-amber-300 bg-amber-50 text-amber-700"
+                              : "border-emerald-300 bg-emerald-50 text-emerald-700",
+                        )}
+                      >
+                        {dueDays === null
+                          ? "No Due"
+                          : dueDays < 0
+                            ? `Late ${Math.abs(dueDays)}d${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`
+                            : dueDays === 0
+                              ? `Today${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`
+                              : `D-${dueDays}${dueDateDisplay ? ` • ${dueDateDisplay}` : ""}`}
+                      </span>
+                    )}
+
                     {pendingCount > 0 && (
                       <Link
                         href={`/accounts/${account.id}?pending=1`}
@@ -482,21 +508,6 @@ export function AccountRowV2({
                         <AlertCircle className="h-2.5 w-2.5" />
                         {pendingCount} Pending
                       </Link>
-                    )}
-
-                    {showDueBadge && (
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0",
-                          dueDays !== null && dueDays <= 0
-                            ? "border-rose-300 bg-rose-50 text-rose-700"
-                            : dueDays !== null && dueDays <= 7
-                              ? "border-amber-300 bg-amber-50 text-amber-700"
-                              : "border-emerald-300 bg-emerald-50 text-emerald-700",
-                        )}
-                      >
-                        {dueDays !== null && dueDays <= 0 ? "Due" : dueDays !== null ? `D-${dueDays}` : "No Due"}
-                      </span>
                     )}
                   </div>
 
