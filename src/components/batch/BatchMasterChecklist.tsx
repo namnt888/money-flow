@@ -999,6 +999,7 @@ export function BatchMasterChecklist({
                             onEditMasterItem={openMasterItemEditor}
                             onAddMasterItem={() => openMasterItemAdder(phase.id)}
                             focusedMasterItemId={focusedMasterItemId}
+                            onSmartSort={handleSmartSort}
                         />
                     </TabsContent>
                 ))}
@@ -1171,7 +1172,7 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
@@ -1373,7 +1374,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleSmartSort}
+                    onClick={onSmartSort}
                     className="h-8 px-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all"
                     title="Smart sort"
                 >
