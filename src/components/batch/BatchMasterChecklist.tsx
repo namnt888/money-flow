@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, Trash2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
@@ -170,6 +170,18 @@ export function BatchMasterChecklist({
             }
         } catch (error) {
             console.error('Fast refresh failed', error)
+        }
+    }
+
+    async function handleSmartSort() {
+        setPerformingAction(true)
+        try {
+            await handleFastRefresh()
+            toast.success('Smart sort refreshed')
+        } catch (error) {
+            toast.error('Smart sort failed')
+        } finally {
+            setPerformingAction(false)
         }
     }
 
@@ -1358,6 +1370,17 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     {isPhaseEditing ? 'Editing' : 'Edit'}
                 </Button>
 
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSmartSort}
+                    className="h-8 px-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                    title="Smart sort"
+                >
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Smart Sort
+                </Button>
+
                 {isPhaseEditing && (
                     <Button
                         size="sm"
@@ -1373,46 +1396,47 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
 
             {/* Body */}
             <div className="px-4 pb-4 pt-3 space-y-3">
-                    {/* Controls row: select-all + search */}
-                    {items.length > 0 && (
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 shrink-0" title="Select All Pending">
-                                <input
-                                    type="checkbox"
-                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                    checked={
-                                        items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').length > 0 &&
-                                        items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').every((i: any) => selectedItemIds.has(i.batch_item_id))
-                                    }
-                                    onChange={(e) => {
-                                        const pendingIds = items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').map((i: any) => i.batch_item_id)
-                                        const next = new Set(selectedItemIds)
-                                        if (e.target.checked) pendingIds.forEach((id: string) => next.add(id))
-                                        else pendingIds.forEach((id: string) => next.delete(id))
-                                        setSelectedItemIds(next)
-                                    }}
-                                />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">All</span>
-                            </div>
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                                <Input
-                                    placeholder="Search in this phase..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-9 h-9 bg-slate-50 border-slate-200 rounded-xl text-sm"
-                                />
-                                {searchQuery && (
-                                    <button
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                                    >
-                                        <XCircle className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
-                            </div>
+                {items.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 ml-2 shrink-0">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleOpenEditPhase(phase, e)}
+                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                title="Edit phase"
+                            >
+                                <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleInitiateDeletePhase(phase, e)}
+                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                                title="Delete phase"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
-                    )}
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <Input
+                                placeholder="Search in this phase..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-9 h-9 bg-slate-50 border-slate-200 rounded-xl text-sm"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                >
+                                    <XCircle className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                     {/* Progress bar */}
                     <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
