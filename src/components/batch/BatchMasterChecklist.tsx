@@ -1514,17 +1514,22 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             isStandalone ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
                             {[...items].sort((a: any, b: any) => {
-                                const getDaysLeft = (item: any) => {
-                                    const dueDay = item.accounts?.due_date as number | undefined
-                                    if (!dueDay) return Infinity
-                                    const now = new Date()
-                                    const d = new Date()
-                                    d.setDate(dueDay)
-                                    d.setHours(0, 0, 0, 0)
-                                    if (d < startOfDay(now)) d.setMonth(d.getMonth() + 1)
-                                    return differenceInDays(d, startOfDay(now))
+                                // Sort by: 1) Card Group (accounts.name), 2) Amount (largest first), 3) Bank
+                                const groupA = a.accounts?.name || ''
+                                const groupB = b.accounts?.name || ''
+                                if (groupA !== groupB) {
+                                    return groupA.localeCompare(groupB)
                                 }
-                                return getDaysLeft(a) - getDaysLeft(b)
+                                // Same group: sort by amount (largest first)
+                                const amountA = Math.abs(a.amount || 0)
+                                const amountB = Math.abs(b.amount || 0)
+                                if (amountA !== amountB) {
+                                    return amountB - amountA
+                                }
+                                // Same amount: sort by bank
+                                const bankA = a.bank_name || ''
+                                const bankB = b.bank_name || ''
+                                return bankA.localeCompare(bankB)
                             }).map((item: any) => {
                                 let isHighlighted = false
                                 if (searchQuery) {
@@ -1714,7 +1719,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
     function handleOpenBatchItemInDb(e: React.MouseEvent) {
         e.stopPropagation()
         if (!item.batch_item_id) return
-        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_bai_001&filter=${encodeURIComponent(item.batch_item_id)}&sort=-%40rowid`
+        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_bai_001&filter=${encodeURIComponent(item.batch_item_id)}&sort=-%40rowid&recordId=${item.batch_item_id}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 
@@ -1809,11 +1814,11 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             )}
 
             {item.accounts?.image_url ? (
-                <div className="shrink-0 h-10 w-10 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center shadow-sm">
                     <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
                 </div>
             ) : (
-                <div className="shrink-0 h-10 w-10 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
                     {item.bank_name?.substring(0, 2)}
                 </div>
             )}
@@ -1886,11 +1891,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                             {dueBadge.label} · {dueBadge.daysLeft}d
                         </span>
                     )}
-                    {isDueMismatch && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] font-black text-amber-500 uppercase tracking-wider">
-                            <AlertCircle className="h-2.5 w-2.5" /> Wrong phase
-                        </span>
-                    )}
+
                     {item.cutoff_period && (
                         <TooltipProvider>
                             <Tooltip>
