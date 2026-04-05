@@ -1180,6 +1180,45 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
     const [savingPhaseAmounts, setSavingPhaseAmounts] = useState(false)
     const lastDirtyRef = React.useRef<boolean | null>(null)
+    const sortedItems = useMemo(() => {
+        const normalize = (value: string) => value.trim().toLowerCase()
+        const getGroupKey = (item: any) => item.bank_code || item.accounts?.bank_code || item.bank_name || item.accounts?.name || ''
+        const groupMaxAmounts = new Map<string, number>()
+
+        items.forEach((item: any) => {
+            const groupKey = getGroupKey(item)
+            const amount = Math.abs(item.amount || 0)
+            const prevMax = groupMaxAmounts.get(groupKey) || 0
+            if (amount > prevMax) {
+                groupMaxAmounts.set(groupKey, amount)
+            }
+        })
+
+        return [...items].sort((a: any, b: any) => {
+            const groupA = getGroupKey(a)
+            const groupB = getGroupKey(b)
+            const groupMaxA = groupMaxAmounts.get(groupA) || 0
+            const groupMaxB = groupMaxAmounts.get(groupB) || 0
+
+            if (groupMaxA !== groupMaxB) {
+                return groupMaxB - groupMaxA
+            }
+
+            const amountA = Math.abs(a.amount || 0)
+            const amountB = Math.abs(b.amount || 0)
+            if (amountA !== amountB) {
+                return amountB - amountA
+            }
+
+            const bankA = normalize(a.bank_name || a.accounts?.name || '')
+            const bankB = normalize(b.bank_name || b.accounts?.name || '')
+            if (bankA !== bankB) {
+                return bankA.localeCompare(bankB)
+            }
+
+            return normalize(a.receiver_name || '').localeCompare(normalize(b.receiver_name || ''))
+        })
+    }, [items])
     const totalConfirmed = items.filter((i: any) => i.status === 'confirmed').length
     const createdTransactions = items.filter((i: any) => Boolean(i.transaction_id))
     const progress = items.length > 0 ? (totalConfirmed / items.length) * 100 : 0
@@ -1525,25 +1564,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             "grid gap-3",
                             isStandalone ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
-                            {[...items].sort((a: any, b: any) => {
-                                // Sort by: 1) Card Group (accounts.name), 2) Amount (largest first), 3) Bank
-                                const groupA = a.accounts?.name || ''
-                                const groupB = b.accounts?.name || ''
-                                if (groupA !== groupB) {
-                                    return groupA.localeCompare(groupB)
-                                }
-                                // Same group: sort by amount (largest first)
-                                const amountA = Math.abs(a.amount || 0)
-                                const amountB = Math.abs(b.amount || 0)
-                                console.log(`[SmartSort] ${groupA}: ${a.receiver_name}=${amountA} vs ${b.receiver_name}=${amountB}`)
-                                if (amountA !== amountB) {
-                                    return amountB - amountA
-                                }
-                                // Same amount: sort by bank
-                                const bankA = a.bank_name || ''
-                                const bankB = b.bank_name || ''
-                                return bankA.localeCompare(bankB)
-                            }).map((item: any) => {
+                            {sortedItems.map((item: any) => {
                                 let isHighlighted = false
                                 if (searchQuery) {
                                     const query = searchQuery.toLowerCase()
@@ -1833,7 +1854,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                     m.bank_code === item.bank_code || 
                     (m.bank_name?.toLowerCase() === item.bank_name?.toLowerCase() && m.bank_type === bankType)
                 )
-                const displayCode = foundMapping?.short_name || item.bank_code || '?'
+                const displayCode = item.bank_code || foundMapping?.bank_code || '?'
                 return (
                     <div className="shrink-0 inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 shadow-sm">
                         <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{displayCode}</span>
