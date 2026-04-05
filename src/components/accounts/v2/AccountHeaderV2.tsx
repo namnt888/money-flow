@@ -1,4 +1,5 @@
 import { Search, Plus, Landmark, LayoutGrid, List, Filter, X, Users, Users2, CalendarClock, Target, Sparkles, Building2, ShieldCheck, AlertCircle } from "lucide-react";
+import { useRouter } from 'next/navigation'
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function AccountHeaderV2({
     onAdvancedFiltersChange,
     othersStats,
 }: AccountHeaderProps) {
+    const router = useRouter()
     const filters = [
         { id: 'accounts_cards' as const, label: 'Standard' },
         { id: 'credit' as const, label: 'Credit' },
@@ -140,12 +142,13 @@ export function AccountHeaderV2({
                         size="sm"
                         className="h-8 gap-2 border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:text-indigo-700 font-black text-[9px] uppercase tracking-wider"
                         onClick={async () => {
-                            const { syncAllAccountsCashbackAction } = await import("@/actions/account-actions");
-                            const toastId = toast.loading("Regenerating all credit cycles...");
+                            const { fixAllAccountBalances } = await import("@/actions/admin-actions");
+                            const toastId = toast.loading("Recalculating all account balances...");
                             try {
-                                const result = await syncAllAccountsCashbackAction();
+                                const result = await fixAllAccountBalances();
                                 if (result.success) {
                                     toast.success(`${result.message}`, { id: toastId });
+                                    router.refresh();
                                 } else {
                                     toast.error(result.error || "Sync failed", { id: toastId });
                                 }

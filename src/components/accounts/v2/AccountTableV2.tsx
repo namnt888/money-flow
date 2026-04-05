@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { AccountGroupHeader } from "./AccountGroupHeader";
 import { AccountGroupFooter } from "./AccountGroupFooter";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { getEffectiveCreditLimit } from "@/lib/account-family";
 
 interface AccountTableV2Props {
     accounts: Account[];
@@ -96,7 +97,7 @@ export function AccountTableV2({
             return [...list].sort((a, b) => {
                 if (sortConfig.key === 'limit') {
                     const getRem = (acc: Account) => {
-                        const l = acc.credit_limit || 0;
+                        const l = getEffectiveCreditLimit(acc, robustAllAccounts);
                         const d = Math.abs(acc.current_balance || 0);
                         return l - d;
                     };
@@ -165,12 +166,12 @@ export function AccountTableV2({
         };
 
         return Object.values(groups).filter(g => g.accounts.length > 0);
-    }, [accounts, sortConfig]);
+    }, [accounts, robustAllAccounts, sortConfig]);
 
     const getGroupTotal = (group: any) => {
         if (group.section === 'credit') {
             const totalDebt = group.accounts.reduce((sum: number, a: Account) => sum + Math.abs(a.current_balance || 0), 0);
-            const totalLimit = group.accounts.reduce((sum: number, a: Account) => a.parent_account_id ? sum : sum + (a.credit_limit || 0), 0);
+            const totalLimit = group.accounts.reduce((sum: number, a: Account) => sum + getEffectiveCreditLimit(a, robustAllAccounts), 0);
             return { debt: totalDebt, limit: totalLimit };
         }
         return group.accounts.reduce((sum: number, a: Account) => sum + (a.current_balance || 0), 0);

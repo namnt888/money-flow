@@ -10,6 +10,7 @@ import { AccountSlideV2 } from "./AccountSlideV2";
 import { AccountQuickStats } from "./AccountQuickStats";
 import { TransactionSlideV2 } from "@/components/transaction/slide-v2/transaction-slide-v2";
 import { toast } from "sonner";
+import { getUniqueFamilyCreditLimitTotal } from "@/lib/account-family";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -223,10 +224,7 @@ export function AccountDirectoryV2({
 
     const othersStats = useMemo(() => {
         const otherAccounts = initialAccounts.filter(a => a.holder_type && a.holder_type !== 'me' && a.is_active !== false);
-        const limit = otherAccounts.reduce((sum, a) => {
-            if (a.parent_account_id) return sum;
-            return sum + (a.credit_limit || 0);
-        }, 0);
+        const limit = getUniqueFamilyCreditLimitTotal(otherAccounts, initialAccounts);
         const debt = otherAccounts.reduce((sum, a) => {
             if (a.type === 'credit_card') return sum + Math.abs(a.current_balance || 0);
             return sum + (a.current_balance < 0 ? Math.abs(a.current_balance) : 0);
