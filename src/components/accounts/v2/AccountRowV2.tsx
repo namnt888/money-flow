@@ -786,22 +786,10 @@ export function AccountRowV2({
             )
           : [];
 
-        // Group Total Balance (Debt)
-        const totalGroupDebt = familyBalance !== undefined
-          ? familyBalance
-          : (allAccounts
-              ? allAccounts
-                  .filter(
-                    (item) =>
-                      groupRefs.has(item.id) ||
-                      groupRefs.has(item.parent_account_id || ""),
-                  )
-                  .reduce((sum, item) => sum + (item.current_balance || 0), 0)
-              : account.current_balance) || 0;
-
         const isStandalone = !isParent && !effectiveParentAcc;
         const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
-        const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
+        const singleCardDebt = Math.abs(account.current_balance || 0);
+        const singleAvailable = isCC ? parentLimit - singleCardDebt : null;
         const peopleSource = (people.length > 0 ? people : (initialPeople || []));
         const ownerPerson = account.holder_person_id
           ? peopleSource.find((p) => p.id === account.holder_person_id)
@@ -811,15 +799,15 @@ export function AccountRowV2({
           <TooltipProvider>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="h-8 px-1.5 pr-2 rounded-full border border-slate-200 bg-white inline-flex items-center gap-1.5 shadow-sm cursor-help">
-                  <div className="h-5 w-5 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                <div className="h-9 inline-flex items-center gap-1.5 cursor-help">
+                  <div className="h-9 w-12 rounded-none overflow-hidden bg-transparent flex items-center justify-center">
                     {acc?.image_url ? (
                       <img src={acc.image_url} alt="" className="w-full h-full object-contain" />
                     ) : (
-                      <Wallet className="h-3 w-3 text-slate-400" />
+                      <Wallet className="h-4 w-4 text-slate-400" />
                     )}
                   </div>
-                  {suffix && <span className="text-[10px] font-black text-indigo-600">{suffix}</span>}
+                  {suffix && <span className="text-[11px] font-black text-indigo-600">{suffix}</span>}
                 </div>
               </TooltipTrigger>
               <TooltipContent className="text-[10px] font-bold">
@@ -835,12 +823,12 @@ export function AccountRowV2({
               <TooltipProvider>
                 <Tooltip delayDuration={200}>
                   <TooltipTrigger asChild>
-                    <div className="h-8 px-1.5 pr-2 rounded-full border border-emerald-200 bg-emerald-50 inline-flex items-center gap-1.5 shadow-sm cursor-help">
-                      <div className="h-5 w-5 rounded-none overflow-hidden border border-emerald-300 bg-white flex items-center justify-center">
+                    <div className="h-9 inline-flex items-center cursor-help">
+                      <div className="h-9 w-12 rounded-none overflow-hidden bg-transparent flex items-center justify-center">
                         {ownerPerson.image_url ? (
                           <img src={ownerPerson.image_url} alt="" className="w-full h-full object-contain" />
                         ) : (
-                          <User className="h-3 w-3 text-emerald-500" />
+                          <User className="h-4 w-4 text-emerald-500" />
                         )}
                       </div>
                     </div>
@@ -857,9 +845,9 @@ export function AccountRowV2({
             <TooltipProvider>
               <Tooltip delayDuration={200}>
                 <TooltipTrigger asChild>
-                  <div className="h-8 px-1.5 pr-2 rounded-full border border-amber-200 bg-amber-50 inline-flex items-center gap-1.5 shadow-sm cursor-help">
-                    <div className="h-5 w-5 rounded-full border border-amber-300 bg-white flex items-center justify-center">
-                      <Crown className="h-3 w-3 text-amber-500" />
+                  <div className="h-9 w-12 inline-flex items-center justify-center cursor-help">
+                    <div className="h-9 w-12 rounded-none bg-transparent flex items-center justify-center">
+                      <Crown className="h-4 w-4 text-amber-500" />
                     </div>
                   </div>
                 </TooltipTrigger>
@@ -871,11 +859,11 @@ export function AccountRowV2({
 
         return (
           <div className="flex flex-col items-center justify-center min-w-[220px] gap-1 group/role-cell">
-            {/* Group Balance Badge (Upper Text) */}
+            {/* Singular card view per row */}
             {isCC && parentLimit > 0 && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
                 <Sigma className="w-2.5 h-2.5" />
-                <span>Group Balance: {formatMoneyVND(totalAvailable || 0)}</span>
+                <span>Single Balance: {formatMoneyVND(singleAvailable || 0)}</span>
               </div>
             )}
 
@@ -1028,8 +1016,6 @@ export function AccountRowV2({
           account.stats.annual_fee_waiver_target > 0
         );
 
-        const remainingAmount = Math.max(0, displayLimit - familyDebtAbs);
-
         return (
           <div className="flex flex-col items-end gap-1.5 min-w-[160px] py-1">
             <div className="flex flex-col items-end gap-1.5 w-full group/limit">
@@ -1120,46 +1106,25 @@ export function AccountRowV2({
               </div>
 
               {displayLimit > 0 && (
-                <div className="w-full rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={cn(
-                        "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider",
-                        remainingPercent < 10
-                          ? "bg-rose-100 text-rose-700 border border-rose-200"
-                          : remainingPercent < 30
-                            ? "bg-amber-100 text-amber-700 border border-amber-200"
-                            : "bg-indigo-100 text-indigo-700 border border-indigo-200",
-                      )}
-                    >
-                      {remainingPercLabel}% Remaining
-                    </span>
-                    <span className="text-[10px] font-black text-slate-600 tabular-nums">
-                      {numberFormatter.format(remainingAmount)}
-                    </span>
-                  </div>
-
-                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className={cn(
-                        "h-full transition-all duration-500",
-                        remainingPercent < 10
-                          ? "bg-rose-500"
-                          : remainingPercent < 30
-                            ? "bg-amber-500"
-                            : "bg-indigo-500",
-                      )}
-                      style={{ width: `${Math.max(0, Math.min(100, remainingPercent))}%` }}
-                    />
-                  </div>
-
+                <div className="w-full flex justify-end">
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
-                        <div className="mt-1.5 flex items-center justify-end cursor-help">
-                          <span className="text-[9px] font-black text-slate-600 tabular-nums px-1 py-0.5 rounded flex items-center gap-1">
+                        <div className="cursor-help">
+                          <span
+                            className={cn(
+                              "h-6 px-2.5 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider gap-1.5",
+                              remainingPercent < 10
+                                ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                : remainingPercent < 30
+                                  ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                  : "bg-indigo-100 text-indigo-700 border border-indigo-200",
+                            )}
+                          >
                             <Calculator className="w-2.5 h-2.5 opacity-60" />
-                            {numberFormatter.format(familyDebtAbs)}
+                            <span>{remainingPercLabel}% Remaining</span>
+                            <span className="opacity-50">•</span>
+                            <span>Total Debt {numberFormatter.format(familyDebtAbs)}</span>
                           </span>
                         </div>
                       </TooltipTrigger>
