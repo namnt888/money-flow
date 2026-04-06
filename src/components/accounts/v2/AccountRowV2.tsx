@@ -974,6 +974,10 @@ export function AccountRowV2({
           if (effectiveParentAccount?.id) groupRefs.add(effectiveParentAccount.id);
           const parentSlug = (effectiveParentAccount as any)?.slug as string | undefined;
           if (parentSlug) groupRefs.add(parentSlug);
+          if (!rawParentRef && !effectiveParentAccount) {
+            groupRefs.add(account.id);
+            if (accountSlug) groupRefs.add(accountSlug);
+          }
         }
 
         const displayLimit = effectiveParentAccount
@@ -1477,6 +1481,10 @@ export function AccountRowV2({
           if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
           const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
           if (parentSlug) groupRefs.add(parentSlug);
+          if (!rawParentRef && !effectiveParentAcc) {
+            groupRefs.add(account.id);
+            if (accountSlug) groupRefs.add(accountSlug);
+          }
         }
 
         const computedGroupDebt = allAccounts
@@ -1494,7 +1502,7 @@ export function AccountRowV2({
 
         // Keep Balance column in lockstep with Role's family math.
         const familyLimit = isCC
-          ? ((isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0)
+          ? ((effectiveParentAcc?.credit_limit ?? account.credit_limit) || 0)
           : 0;
         const debt = isCC ? Math.abs(sharedFamilyDebt || 0) : 0;
         const limit = isCC ? familyLimit : getEffectiveCreditLimit(account, allAccounts);
