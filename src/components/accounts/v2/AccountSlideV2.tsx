@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
-import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search } from "lucide-react";
+import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search, Star } from "lucide-react";
 import { updateAccountConfig } from "@/services/account.service";
 import { createAccount } from "@/actions/account-actions";
 import { toast } from "sonner";
@@ -541,6 +541,7 @@ export function AccountSlideV2({
     const [accountNumber, setAccountNumber] = useState("");
     const [creditLimit, setCreditLimit] = useState<number>(0);
     const [isActive, setIsActive] = useState(true);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
 
     // Advanced settings
@@ -653,6 +654,7 @@ export function AccountSlideV2({
         setAccountNumber(acc.account_number || "");
         setCreditLimit(acc.credit_limit || 0);
         setIsActive(acc.is_active !== false);
+        setIsFavorite(acc.is_favorite === true);
         setImageUrl(acc.image_url || "");
         setHolderType(acc.holder_type || 'me');
         setHolderPersonId(acc.holder_person_id || null);
@@ -771,6 +773,7 @@ export function AccountSlideV2({
             setAccountNumber("");
             setCreditLimit(0);
             setIsActive(true);
+            setIsFavorite(false);
             setImageUrl("");
             setCycleType('calendar_month');
             setStatementDay(null);
@@ -839,6 +842,7 @@ export function AccountSlideV2({
             accountNumber,
             creditLimit,
             isActive,
+            isFavorite,
             imageUrl,
             annualFee,
             receiverName,
@@ -851,7 +855,7 @@ export function AccountSlideV2({
             maxCashback: cbMaxBudget,
             levels: effectiveLevels
         });
-    }, [name, type, accountNumber, creditLimit, isActive, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
+    }, [name, type, accountNumber, creditLimit, isActive, isFavorite, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
 
     // Set initial state once when opening
     useEffect(() => {
@@ -875,6 +879,7 @@ export function AccountSlideV2({
                 accountNumber: account.account_number || "",
                 creditLimit: account.credit_limit || 0,
                 isActive: account.is_active !== false,
+                isFavorite: account.is_favorite === true,
                 imageUrl: account.image_url || "",
                 annualFee: account.annual_fee || 0,
                 annualFeeWaiverTarget: account.annual_fee_waiver_target || 0,
@@ -897,6 +902,7 @@ export function AccountSlideV2({
                 accountNumber: "",
                 creditLimit: 0,
                 isActive: true,
+                isFavorite: false,
                 imageUrl: "",
                 annualFee: 0,
                 receiverName: "",
@@ -1047,6 +1053,7 @@ export function AccountSlideV2({
                     dueDate: dueDate,
                     holder_type: holderType,
                     holder_person_id: holderPersonId,
+                    isFavorite,
                     metadata: mergedMetadata as any,
 
                     // Keep legacy config for safety during transition
@@ -1103,6 +1110,7 @@ export function AccountSlideV2({
                     dueDate: dueDate,
                     holder_type: holderType,
                     holder_person_id: holderPersonId,
+                    isFavorite,
 
                     // Legacy config
                     cashbackConfig: isCashbackEnabled ? {
@@ -1633,6 +1641,28 @@ export function AccountSlideV2({
                                     </div>
                                 )
                             }
+
+                            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className={cn(
+                                            "p-1.5 rounded-md",
+                                            isFavorite ? "bg-amber-100" : "bg-slate-100"
+                                        )}>
+                                            <Star className={cn("h-4 w-4", isFavorite ? "text-amber-600 fill-amber-500" : "text-slate-500")} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-slate-800">Favorite</h3>
+                                            <p className="text-[10px] text-slate-500 font-medium italic">Show this account in sidebar favorites list.</p>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={isFavorite}
+                                        onCheckedChange={(checked) => setIsFavorite(checked)}
+                                        className="scale-75 data-[state=checked]:bg-amber-500"
+                                    />
+                                </div>
+                            </div>
 
                             {/* Security & Collateral - Only for Credit Cards */}
                             {

@@ -318,11 +318,27 @@ export async function updatePerson(id: string, data: any) {
 
 export async function getRecentPeopleByTransactions(limit: number = 5): Promise<Person[]> {
   try {
-    const res = await pocketbaseList<any>("pvl_txn_001", { filter: "person_id != null", sort: "-occurred_at", perPage: 50 });
+    const res = await pocketbaseList<any>("pvl_txn_001", {
+      filter: "person_id != null && person_id != '' && account_id != null && account_id != '' && status != 'void'",
+      sort: "-occurred_at",
+      perPage: 50,
+    });
     const ids = Array.from(new Set(res.items.map(t => t.person_id))).slice(0, limit);
     const people = await getPeople({ includeArchived: true });
     return ids.map(id => people.find(p => p.id === (id as string))).filter(Boolean) as Person[];
   } catch (err) { return []; }
+}
+
+export async function getFavoritePeople(limit: number = 6): Promise<Person[]> {
+  try {
+    const people = await getPeople({ includeArchived: false });
+    return people
+      .filter((person) => person.is_favorite === true)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
 }
 
 export async function ensureDebtAccount(pId: string, name?: string): Promise<string | null> {

@@ -223,6 +223,7 @@ export async function getAccounts(): Promise<Account[]> {
       due_date: (item as any).due_date ?? null,
       holder_type: (item as any).holder_type ?? 'me',
       holder_person_id: (item as any).holder_person_id ?? null,
+      is_favorite: (item as any).is_favorite ?? null,
       metadata: parseJsonSafe((item as any).metadata),
       cashback_config: normalizeCashbackConfig(item.cashback_config),
       is_active: typeof item.is_active === 'boolean' ? item.is_active : null,
@@ -318,6 +319,7 @@ export async function getAccountDetails(id: string): Promise<Account | null> {
     due_date: row.due_date ?? null,
     holder_type: (row as any).holder_type ?? 'me',
     holder_person_id: (row as any).holder_person_id ?? null,
+    is_favorite: (row as any).is_favorite ?? null,
     metadata: parseJsonSafe((row as any).metadata),
   });
 
@@ -511,6 +513,7 @@ export async function getRecentAccountsByTransactions(limit: number = 5): Promis
   console.log('[DB:PB] accounts.getRecentByTxns', { limit })
   try {
     const txns = await pocketbaseList<any>(PB_COLLECTIONS.TRANSACTIONS, {
+      filter: 'account_id != "" && person_id != "" && status != "void"',
       sort: '-occurred_at',
       perPage: 50,
       fields: 'account_id'
@@ -523,6 +526,54 @@ export async function getRecentAccountsByTransactions(limit: number = 5): Promis
     return accounts.filter(Boolean) as Account[]
   } catch (err) {
     console.error('[DB:PB] getRecentAccountsByTransactions failed:', err)
+    return []
+  }
+}
+
+export async function getFavoriteAccounts(limit: number = 6): Promise<Account[]> {
+  console.log('[DB:PB] accounts.getFavorites', { limit })
+  try {
+    const response = await pocketbaseList<any>(PB_COLLECTIONS.ACCOUNTS, {
+      filter: 'is_favorite = true && is_active = true',
+      perPage: limit,
+      sort: '-updated,name',
+    })
+
+    return response.items.map(mapPocketBaseAccountRow).map((item) => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      currency: item.currency ?? 'VND',
+      current_balance: item.current_balance ?? 0,
+      credit_limit: item.credit_limit ?? 0,
+      owner_id: item.owner_id ?? '',
+      account_number: item.account_number ?? null,
+      receiver_name: item.receiver_name ?? null,
+      parent_account_id: item.parent_account_id ?? null,
+      secured_by_account_id: item.secured_by_account_id ?? null,
+      cb_type: item.cb_type ?? 'none',
+      cb_base_rate: item.cb_base_rate ?? 0,
+      cb_max_budget: item.cb_max_budget ?? null,
+      cb_is_unlimited: item.cb_is_unlimited ?? false,
+      cb_rules_json: parseJsonSafe(item.cb_rules_json),
+      cb_min_spend: item.cb_min_spend ?? null,
+      cb_cycle_type: item.cb_cycle_type ?? 'calendar_month',
+      statement_day: item.statement_day ?? null,
+      due_date: item.due_date ?? null,
+      holder_type: (item as any).holder_type ?? 'me',
+      holder_person_id: (item as any).holder_person_id ?? null,
+      metadata: parseJsonSafe(item.metadata),
+      cashback_config: normalizeCashbackConfig(item.cashback_config),
+      is_active: typeof item.is_active === 'boolean' ? item.is_active : null,
+      image_url: typeof item.image_url === 'string' ? item.image_url : null,
+      total_in: item.total_in ?? 0,
+      total_out: item.total_out ?? 0,
+      stats: null,
+      relationships: null,
+      is_favorite: (item as any).is_favorite ?? null,
+    })) as Account[]
+  } catch (err) {
+    console.error('[DB:PB] getFavoriteAccounts failed:', err)
     return []
   }
 }

@@ -334,3 +334,8 @@ export async function getRecentPeopleAction(limit: number = 5) {
   const { getRecentPeopleByTransactions } = await import('@/services/people.service')
   return await getRecentPeopleByTransactions(limit)
 }
+
+export async function getFavoritePeopleAction(limit: number = 6) {
+  const { getFavoritePeople } = await import('@/services/people.service')
+  return await getFavoritePeople(limit)
+}
