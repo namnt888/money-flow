@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/hover-card";
 import { AccountRewardsCell } from "./cells/account-rewards-cell";
 import { getEffectiveCreditLimit } from "@/lib/account-family";
+import { computeCreditAvailableBalance, resolveCreditLimit } from "@/lib/credit-balance";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1502,11 +1503,20 @@ export function AccountRowV2({
 
         // Keep Balance column in lockstep with Role's family math.
         const familyLimit = isCC
-          ? ((effectiveParentAcc?.credit_limit ?? account.credit_limit) || 0)
+          ? resolveCreditLimit({
+              ownLimit: account.credit_limit,
+              parentLimit: effectiveParentAcc?.credit_limit,
+            })
           : 0;
         const debt = isCC ? Math.abs(sharedFamilyDebt || 0) : 0;
         const limit = isCC ? familyLimit : getEffectiveCreditLimit(account, allAccounts);
-        const finalBalance = isCC ? familyLimit - debt : account.current_balance || 0;
+        const finalBalance = isCC
+          ? computeCreditAvailableBalance({
+              ownLimit: account.credit_limit,
+              parentLimit: effectiveParentAcc?.credit_limit,
+              debt,
+            })
+          : account.current_balance || 0;
         const remainingPercent = isCC && limit > 0
           ? Math.max(0, Math.min(100, (finalBalance / limit) * 100))
           : null;
