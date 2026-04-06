@@ -243,5 +243,15 @@ const sortedItems = useMemo(() => {
 3. `.agent/README.md` – Transaction Slide V2 architecture
 4. `.cursorrules` section 4 & 6 – Business logic & cashback details
 5. CASHBACK_GUIDE_VI.md – Complete cashback flow walkthrough
+6. **`docs/AGENT_SAFETY_RULES.md`** – ⚠️ **MANDATORY** Agent workflow rules to prevent code loss & CI breaks
+
+## Agent Workflow Rules (Critical)
+**Before ANY coding work:**
+- Always read `docs/AGENT_SAFETY_RULES.md` first
+- Follow the 10 Critical Rules + Pre-Commit Checklist
+- Test before commit, commit before push
+- Batch edit changes, don't do sequential file edits
+
+**Goal:** Prevent lost code, failed CI, branch conflicts.
 
 **Ask for clarification on avatar shapes, refund chains, or transaction integrity patterns if unclear.**

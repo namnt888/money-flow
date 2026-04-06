@@ -227,6 +227,12 @@ export function PeopleRowV2({
         </tr>
       )}
 
+      <ReAlignAuditDialog
+        open={isAuditOpen}
+        onOpenChange={setIsAuditOpen}
+        person={{ id: person.id, name: person.name }}
+      />
+
     </>
   );
 }
@@ -383,6 +389,25 @@ function renderCell(
                     </TooltipTrigger>
                     <TooltipContent className="bg-indigo-900 border-none text-white font-bold text-[10px]">
                       Database View
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAudit?.();
+                        }}
+                        className="h-7 w-7 text-amber-500 hover:text-amber-700 hover:bg-amber-50 transition-all inline-flex items-center justify-center rounded-lg border border-transparent hover:border-amber-200 active:scale-90"
+                      >
+                        <RefreshCw className="h-4 w-4 stroke-[2.5px]" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-amber-900 border-none text-white font-bold text-[10px]">
+                      Re-Align Audit
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -569,6 +594,25 @@ function renderCell(
               </TooltipTrigger>
               <TooltipContent>
                 <p>Edit Details</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAudit?.();
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-amber-900 text-white border-amber-800">
+                <p>Re-Align Audit</p>
               </TooltipContent>
             </Tooltip>
           </div>

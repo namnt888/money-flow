@@ -10,6 +10,7 @@ import {
     HoverCardTrigger,
 } from "@/components/ui/hover-card"
 import { VietnameseCurrency } from "@/components/ui/vietnamese-currency"
+import { getUniqueFamilyCreditLimitTotal } from "@/lib/account-family"
 
 interface AccountQuickStatsProps {
     accounts: Account[];
@@ -42,7 +43,7 @@ export function AccountQuickStats({ accounts, lastTxnAccountId, pendingSummaryMa
         // Limit & Debt (Owner Summary - No double counting)
         const totalDebtRaw = creditCards.reduce((sum, a) => sum + Math.abs(a.current_balance || 0), 0);
         const totalDebt = Math.round(totalDebtRaw);
-        const totalLimit = Math.round(creditCards.filter(a => !a.parent_account_id).reduce((sum, a) => sum + (a.credit_limit || 0), 0));
+        const totalLimit = Math.round(getUniqueFamilyCreditLimitTotal(creditCards, accounts));
 
         // Utilization by Owner - Enhanced Detection: holder_type 'me' is ME. Anything else linked to a person is OTHERS.
         // Fallback: If no type and no person, assume ME.
@@ -51,7 +52,7 @@ export function AccountQuickStats({ accounts, lastTxnAccountId, pendingSummaryMa
             (!a.holder_type && !a.holder_person_id)
         );
         const myDebt = Math.round(myCards.reduce((sum, a) => sum + Math.abs(a.current_balance || 0), 0));
-        const myLimit = Math.round(myCards.filter(a => !a.parent_account_id).reduce((sum, a) => sum + (a.credit_limit || 0), 0));
+        const myLimit = Math.round(getUniqueFamilyCreditLimitTotal(myCards, accounts));
 
         const othersCards = creditCards.filter(a =>
             (a.holder_type && a.holder_type !== 'me') ||
@@ -59,7 +60,7 @@ export function AccountQuickStats({ accounts, lastTxnAccountId, pendingSummaryMa
             (a.holder_type === 'me' && a.holder_person_id && a.name.toLowerCase().includes('mom')) // Specific safety for user's MOM card case
         );
         const othersDebt = Math.round(othersCards.reduce((sum, a) => sum + Math.abs(a.current_balance || 0), 0));
-        const othersLimit = Math.round(othersCards.filter(a => !a.parent_account_id).reduce((sum, a) => sum + (a.credit_limit || 0), 0));
+        const othersLimit = Math.round(getUniqueFamilyCreditLimitTotal(othersCards, accounts));
 
         const hasOthers = othersCards.length > 0;
 

@@ -1,4 +1,5 @@
 import { Search, Plus, Landmark, LayoutGrid, List, Filter, X, Users, Users2, CalendarClock, Target, Sparkles, Building2, ShieldCheck, AlertCircle } from "lucide-react";
+import { useRouter } from 'next/navigation'
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ interface AccountHeaderProps {
         limit: number;
         debt: number;
     };
+    onOpenSyncBalanceAudit?: () => void;
 }
 
 export function AccountHeaderV2({
@@ -66,7 +68,9 @@ export function AccountHeaderV2({
     advancedFilters,
     onAdvancedFiltersChange,
     othersStats,
+    onOpenSyncBalanceAudit,
 }: AccountHeaderProps) {
+    const router = useRouter()
     const filters = [
         { id: 'accounts_cards' as const, label: 'Standard' },
         { id: 'credit' as const, label: 'Credit' },
@@ -146,6 +150,7 @@ export function AccountHeaderV2({
                                 const result = await syncAllAccountsCashbackAction();
                                 if (result.success) {
                                     toast.success(`${result.message}`, { id: toastId });
+                                    router.refresh();
                                 } else {
                                     toast.error(result.error || "Sync failed", { id: toastId });
                                 }
@@ -156,6 +161,34 @@ export function AccountHeaderV2({
                     >
                         <Sparkles className="h-3 w-3" />
                         SYNC DB
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 border-emerald-200 bg-emerald-50/40 text-emerald-700 hover:bg-emerald-100/60 hover:text-emerald-800 font-black text-[9px] uppercase tracking-wider"
+                        onClick={async () => {
+                            if (onOpenSyncBalanceAudit) {
+                                onOpenSyncBalanceAudit();
+                                return;
+                            }
+                            const { fixAllAccountBalances } = await import("@/actions/admin-actions");
+                            const toastId = toast.loading("Recalculating all account balances...");
+                            try {
+                                const result = await fixAllAccountBalances();
+                                if (result.success) {
+                                    toast.success(`${result.message}`, { id: toastId });
+                                    router.refresh();
+                                } else {
+                                    toast.error(result.error || "Sync balance failed", { id: toastId });
+                                }
+                            } catch (err) {
+                                toast.error("An unexpected error occurred", { id: toastId });
+                            }
+                        }}
+                    >
+                        <ShieldCheck className="h-3 w-3" />
+                        SYNC BALANCE
                     </Button>
 
                     <div className="h-6 w-px bg-slate-200 hidden sm:block" />
