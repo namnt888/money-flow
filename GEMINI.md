@@ -24,7 +24,7 @@
 ## 📚 Essential Documentation
 
 ### Must Read First
-1. **`.agent/prompts/onboarding.md`** - Master onboarding guide
+1. **`.agent/knowledge/root-docs/ONBOARDING.md`** - Master onboarding guide
 2. **`.agent/rules/rules.md`** - Core coding standards
 3. **`.agent/rules/ui_rules.md`** - UI/UX standards (STRICT)
 4. **`.agent/CASHBACK_WORKFLOW.md`** - Advanced cashback rules & logic (CRITICAL for credit cards)
@@ -204,7 +204,7 @@ npm run dev
 ## ✅ Quick Checklist
 
 Before starting work:
-- [ ] Read `.agent/prompts/onboarding.md`
+- [ ] Read `.agent/knowledge/root-docs/ONBOARDING.md`
 - [ ] Read `.agent/rules/rules.md`
 - [ ] Read `.agent/rules/ui_rules.md`
 - [ ] Read current phase handover (`.agent/HANDOVER_PHASE_*.md`)
@@ -220,4 +220,4 @@ Before starting work:
 
 ---
 
-**For more details**: See `.agent/prompts/onboarding.md`
+**For more details**: See `.agent/knowledge/root-docs/ONBOARDING.md`

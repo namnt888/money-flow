@@ -18,12 +18,18 @@ export async function GET() {
     ])
 
     return NextResponse.json({
-      accounts: accounts.map((item) => ({ id: item.id, name: item.name, image_url: item.image_url ?? null })),
+      accounts: accounts.map((item) => ({
+        id: item.id,
+        name: item.name,
+        image_url: item.image_url ?? null,
+        is_favorite: item.is_favorite === true,
+      })),
       people: people.map((item) => ({
         id: item.id,
         route_id: item.pocketbase_id || item.id,
         name: item.name,
         image_url: item.image_url ?? null,
+        is_favorite: item.is_favorite === true,
       })),
       shops: shops.map((item) => ({ id: item.id, name: item.name, image_url: item.image_url ?? null })),
       categories: categories.map((item) => ({ id: item.id, name: item.name, image_url: item.image_url ?? null })),

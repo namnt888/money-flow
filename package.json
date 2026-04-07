@@ -6,6 +6,8 @@
     "dev": "node scripts/dev-port.mjs",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint",
     "next": "next",
     "postinstall": "node scripts/fix-react-remove-scroll-bar.mjs",

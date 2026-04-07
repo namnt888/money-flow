@@ -1330,6 +1330,28 @@ export const UnifiedTransactionTable = React.forwardRef<
       setIsVoiding(false);
     };
 
+    const getLinkedRolloverId = useCallback(
+      (txn: TransactionWithDetails | null | undefined): string | null => {
+        if (!txn) return null;
+        const note = String(txn.note || "").toLowerCase();
+        if (!note.includes("rollover")) return null;
+
+        const metadata = parseMetadata(txn.metadata) as any;
+        const linkedId =
+          typeof txn.linked_transaction_id === "string"
+            ? txn.linked_transaction_id
+            : typeof metadata?.linked_transaction_id === "string"
+              ? metadata.linked_transaction_id
+              : null;
+
+        if (!linkedId || linkedId === txn.id) return null;
+        return linkedId;
+      },
+      [],
+    );
+
+    const confirmVoidLinkedRolloverId = getLinkedRolloverId(confirmVoidTarget);
+
     const handleRestore = async (txn: TransactionWithDetails) => {
       setIsRestoring(true);
       try {
@@ -1466,6 +1488,11 @@ export const UnifiedTransactionTable = React.forwardRef<
           return;
         }
         setStatusOverrides((prev) => ({ ...prev, [targetId]: "void" }));
+        if (confirmVoidLinkedRolloverId) {
+          toast.success("Rollover pair voided", {
+            description: `Linked transaction ${confirmVoidLinkedRolloverId} was voided and synced as well.`,
+          });
+        }
         if (onSuccess) await onSuccess();
         window.dispatchEvent(new CustomEvent("refresh-account-data"));
         router.refresh();
@@ -3925,15 +3952,40 @@ export const UnifiedTransactionTable = React.forwardRef<
                                         );
                                       }
 
+                                      const linkedRolloverId = getLinkedRolloverId(txn);
+
                                       return (
-                                        <CustomTooltip content={note}>
-                                          <span
-                                            className="text-slate-900 font-black truncate cursor-help block flex-1"
-                                            style={{ fontSize: `1.15em` }}
-                                          >
-                                            {displayNote}
-                                          </span>
-                                        </CustomTooltip>
+                                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                          {linkedRolloverId ? (
+                                            <CustomTooltip
+                                              content={`Copy linked rollover ID: ${linkedRolloverId}`}
+                                            >
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  void copyToClipboard(
+                                                    linkedRolloverId,
+                                                    "Linked rollover ID",
+                                                  );
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-2 h-[22px] min-w-[72px] justify-center rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold whitespace-nowrap transition-all duration-200 shadow-sm hover:bg-indigo-100"
+                                              >
+                                                <Link2 className="h-3 w-3" />
+                                                ROLLOVER
+                                              </button>
+                                            </CustomTooltip>
+                                          ) : null}
+
+                                          <CustomTooltip content={note}>
+                                            <span
+                                              className="text-slate-900 font-black truncate cursor-help block flex-1"
+                                              style={{ fontSize: `1.15em` }}
+                                            >
+                                              {displayNote}
+                                            </span>
+                                          </CustomTooltip>
+                                        </div>
                                       );
                                     })()}
                                   </div>
@@ -5866,6 +5918,19 @@ export const UnifiedTransactionTable = React.forwardRef<
                     will not be deleted, but it will be hidden from default
                     views and excluded from calculations.
                   </p>
+
+                  {confirmVoidLinkedRolloverId && (
+                    <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex gap-3">
+                      <Link2 className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                      <div className="text-[11px] font-medium text-indigo-800 leading-normal">
+                        <strong className="block text-indigo-900 mb-0.5 uppercase tracking-wider">
+                          Rollover pair detected
+                        </strong>
+                        Voiding this transaction will also void its linked rollover
+                        pair in the other cycle and sync both removals to Sheet.
+                      </div>
+                    </div>
+                  )}
 
                   {/* Specific warning for batch confirmed items */}
                   {(confirmVoidTarget.note?.includes("[C]") ||

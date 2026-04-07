@@ -325,17 +325,25 @@ export function AccountDetailViewV2({
     const syncPendingStats = useCallback(async () => {
         setIsLoadingPending(true)
         try {
+            const safeFetch = async (url: string) => {
+                try {
+                    return await fetch(url, { cache: 'no-store' })
+                } catch {
+                    return null
+                }
+            }
+
             const [batchRes, refundRes] = await Promise.all([
-                fetch(`/api/batch/pending-items?accountId=${account.id}&t=${Date.now()}`, { cache: 'no-store' }),
-                fetch(`/api/refunds/pending?accountId=${account.id}&t=${Date.now()}`, { cache: 'no-store' })
+                safeFetch(`/api/batch/pending-items?accountId=${account.id}&t=${Date.now()}`),
+                safeFetch(`/api/refunds/pending?accountId=${account.id}&t=${Date.now()}`)
             ])
 
-            if (batchRes.ok) {
+            if (batchRes?.ok) {
                 const data = await batchRes.json()
                 setPendingItems(Array.isArray(data) ? data : [])
             }
 
-            if (refundRes.ok) {
+            if (refundRes?.ok) {
                 const data = await refundRes.json()
                 setPendingRefundAmount(Math.max(0, data?.total ?? 0))
                 setPendingRefundCount(Array.isArray(data?.items) ? data.items.length : 0)

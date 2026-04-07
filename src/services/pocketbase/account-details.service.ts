@@ -106,6 +106,7 @@ function mapAccount(record: PocketBaseRecord): Account {
     due_date: record.due_date ?? null,
     holder_type: record.holder_type || "me",
     holder_person_id: record.holder_person_id || null,
+    is_favorite: (record.is_favorite as boolean | null | undefined) ?? null,
     metadata: parseJsonSafe(record.metadata),
     stats: null,
     relationships: null,
@@ -935,6 +936,7 @@ export async function createPocketBaseAccount(
     cb_rules_json?: unknown;
     cb_min_spend?: number | null;
     cb_cycle_type?: string;
+    is_favorite?: boolean;
   },
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   const pbId = toPocketBaseId(supabaseAccountId);
@@ -954,43 +956,67 @@ export async function createPocketBaseAccount(
     type: data.type,
   });
   try {
-    const record = await pocketbaseRequest<Record<string, unknown>>(
+    const baseBody: Record<string, unknown> = {
+      id: pbId,
+      slug: supabaseAccountId,
+      name: data.name,
+      type: data.type,
+      currency: data.currency ?? "VND",
+      // owner_id intentionally omitted — new accounts don't have a relation target
+      credit_limit: data.credit_limit ?? null,
+      current_balance: data.current_balance ?? 0,
+      total_in: data.total_in ?? 0,
+      total_out: data.total_out ?? 0,
+      is_active: data.is_active ?? true,
+      image_url: data.image_url ?? null,
+      account_number: data.account_number ?? null,
+      receiver_name: data.receiver_name ?? null,
+      parent_account_id: pbParentId,
+      secured_by_account_id: pbSecuredById,
+      annual_fee: data.annual_fee ?? null,
+      annual_fee_waiver_target: data.annual_fee_waiver_target ?? null,
+      holder_type: data.holder_type ?? "me",
+      holder_person_id: pbHolderPersonId,
+      statement_day: data.statement_day ?? null,
+      due_date: data.due_date ?? null,
+      cb_type: data.cb_type ?? "none",
+      cb_base_rate: data.cb_base_rate ?? 0,
+      cb_max_budget: data.cb_max_budget ?? null,
+      cb_is_unlimited: data.cb_is_unlimited ?? false,
+      cb_rules_json: data.cb_rules_json ?? null,
+      cb_min_spend: data.cb_min_spend ?? null,
+      cb_cycle_type: data.cb_cycle_type ?? "calendar_month",
+    };
+
+    if (typeof data.is_favorite === "boolean") {
+      baseBody.is_favorite = data.is_favorite;
+    }
+
+    let record: Record<string, unknown>;
+    try {
+      record = await pocketbaseRequest<Record<string, unknown>>(
       "/api/collections/pvl_acc_001/records",
       {
         method: "POST",
-        body: {
-          id: pbId,
-          slug: supabaseAccountId,
-          name: data.name,
-          type: data.type,
-          currency: data.currency ?? "VND",
-          // owner_id intentionally omitted — new accounts don't have a relation target
-          credit_limit: data.credit_limit ?? null,
-          current_balance: data.current_balance ?? 0,
-          total_in: data.total_in ?? 0,
-          total_out: data.total_out ?? 0,
-          is_active: data.is_active ?? true,
-          image_url: data.image_url ?? null,
-          account_number: data.account_number ?? null,
-          receiver_name: data.receiver_name ?? null,
-          parent_account_id: pbParentId,
-          secured_by_account_id: pbSecuredById,
-          annual_fee: data.annual_fee ?? null,
-          annual_fee_waiver_target: data.annual_fee_waiver_target ?? null,
-          holder_type: data.holder_type ?? "me",
-          holder_person_id: pbHolderPersonId,
-          statement_day: data.statement_day ?? null,
-          due_date: data.due_date ?? null,
-          cb_type: data.cb_type ?? "none",
-          cb_base_rate: data.cb_base_rate ?? 0,
-          cb_max_budget: data.cb_max_budget ?? null,
-          cb_is_unlimited: data.cb_is_unlimited ?? false,
-          cb_rules_json: data.cb_rules_json ?? null,
-          cb_min_spend: data.cb_min_spend ?? null,
-          cb_cycle_type: data.cb_cycle_type ?? "calendar_month",
-        },
+        body: baseBody,
       },
     );
+    } catch (firstErr) {
+      const msg = (firstErr as Error).message || String(firstErr);
+      if ("is_favorite" in baseBody && msg.includes("is_favorite")) {
+        const retryBody = { ...baseBody };
+        delete retryBody.is_favorite;
+        record = await pocketbaseRequest<Record<string, unknown>>(
+          "/api/collections/pvl_acc_001/records",
+          {
+            method: "POST",
+            body: retryBody,
+          },
+        );
+      } else {
+        throw firstErr;
+      }
+    }
     console.log("[DB:PB] accounts.create SUCCESS id:", record.id);
     return { success: true, id: record.id as string };
   } catch (err) {
@@ -1019,6 +1045,7 @@ export async function updatePocketBaseAccountInfo(
     holder_person_id: string | null;
     statement_day: number | null;
     due_date: number | null;
+    is_favorite: boolean;
   }>,
 ): Promise<boolean> {
   const pbId = toPocketBaseId(supabaseAccountId);
@@ -1055,6 +1082,24 @@ export async function updatePocketBaseAccountInfo(
     );
     return true;
   } catch (err) {
+    const msg = (err as Error).message || String(err);
+    if ("is_favorite" in body && msg.includes("is_favorite")) {
+      try {
+        const retryBody = { ...body };
+        delete retryBody.is_favorite;
+        await pocketbaseRequest<Record<string, unknown>>(
+          `/api/collections/pvl_acc_001/records/${pbId}`,
+          {
+            method: "PATCH",
+            body: retryBody,
+          },
+        );
+        return true;
+      } catch (retryErr) {
+        console.error("[DB:PB] accounts.updateInfo retry failed:", retryErr);
+        return false;
+      }
+    }
     console.error("[DB:PB] accounts.updateInfo failed:", err);
     return false;
   }

@@ -883,20 +883,41 @@ export function TransactionSlideV2({
       effectiveServiceFee,
     );
 
-    const normalizedParticipants = Array.isArray(data.participants)
-      ? data.participants
-          .filter(
-            (participant) =>
-              participant &&
-              participant.person_id &&
-              Number(participant.amount || 0) > 0,
-          )
+    const rawParticipants = Array.isArray(data.participants)
+      ? data.participants.filter(
+          (participant) => participant && participant.person_id,
+        )
+      : [];
+
+    const splitIncludeMe = data.split_include_me !== false;
+    const splitRawTotal = Math.max(0, Number(data.amount) || 0);
+    const hasAnyManualSplitAmount = rawParticipants.some(
+      (participant) => Number(participant.amount || 0) > 0,
+    );
+
+    const normalizedParticipants = hasAnyManualSplitAmount
+      ? rawParticipants
+          .filter((participant) => Number(participant.amount || 0) > 0)
           .map((participant) => ({
             person_id: participant.person_id,
             amount: Math.max(0, Number(participant.amount || 0)),
             note: String(participant.note || "").trim(),
           }))
-      : [];
+      : (() => {
+          if (rawParticipants.length === 0 || splitRawTotal <= 0) return [];
+
+          const totalSlots = rawParticipants.length + (splitIncludeMe ? 1 : 0);
+          if (totalSlots <= 0) return [];
+
+          const share = Math.floor(splitRawTotal / totalSlots);
+          const peopleLeftover = splitRawTotal - share * totalSlots;
+
+          return rawParticipants.map((participant, index) => ({
+            person_id: participant.person_id,
+            amount: Math.max(0, index === 0 ? share + peopleLeftover : share),
+            note: String(participant.note || "").trim(),
+          }));
+        })();
 
     const splitPeopleNotes = normalizedParticipants
       .filter((participant) => participant.note.length > 0)
@@ -912,12 +933,10 @@ export function TransactionSlideV2({
       .filter(Boolean)
       .join(" | ");
 
-    const splitIncludeMe = data.split_include_me !== false;
     const splitPeopleTotal = normalizedParticipants.reduce(
       (sum, participant) => sum + participant.amount,
       0,
     );
-    const splitRawTotal = Math.max(0, Number(data.amount) || 0);
     const splitMeBase = splitIncludeMe
       ? Math.max(0, splitRawTotal - splitPeopleTotal)
       : 0;
