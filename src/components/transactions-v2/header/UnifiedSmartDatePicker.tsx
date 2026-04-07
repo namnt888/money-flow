@@ -54,6 +54,8 @@ interface UnifiedSmartDatePickerProps {
       repay?: number;
       shared?: number;
       spent?: number;
+      actualEarn?: number;
+      estEarn?: number;
       earned?: number;
       profit?: number;
       remains?: number;
@@ -454,12 +456,14 @@ export function UnifiedSmartDatePicker({
                         </button>
                         {/* Current Month Shortcut */}
                         {(() => {
-                            const nowTag = new Date().toISOString().slice(0, 7);
-                            const isCurrentSelected = localCycle === nowTag;
+                            const highlightedCycle = filteredCycles.find((cycle: any) => cycle.value !== 'all' && cycle.highlight);
+                            const fallbackNowTag = new Date().toISOString().slice(0, 7);
+                            const currentCycleValue = highlightedCycle?.value || fallbackNowTag;
+                            const isCurrentSelected = localCycle === currentCycleValue;
                             return (
                                 <button 
                               onClick={() => {
-                                setLocalCycle(nowTag)
+                                setLocalCycle(currentCycleValue)
                                 setLocalMode('cycle')
                               }}
                                     className={cn(
@@ -484,13 +488,24 @@ export function UnifiedSmartDatePicker({
                     {/* Header */}
                     <div className="flex h-6 items-center px-4 mb-1">
                       <div className="min-w-[100px] flex items-center">
-                        <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest italic">Tag</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cycle</span>
                       </div>
                       <div className="flex-1 grid grid-cols-4 items-center">
-                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Base</span>
-                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">C.Back</span>
-                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Repaid</span>
-                        <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest text-center">Status</span>
+                        {statType === 'debt' ? (
+                          <>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">Base</span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">C.Back</span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">Repaid</span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">Status</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">Spent</span>
+                            <span className="text-[8px] font-black text-cyan-700 uppercase tracking-widest text-center">Actual Earn</span>
+                            <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest text-center">Est. Earned</span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center">Profit</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -523,14 +538,13 @@ export function UnifiedSmartDatePicker({
                               >
                                 <div className="flex h-[48px] items-center">
                                   {/* Cycle Label (Left) */}
-                                  <div className="min-w-[100px] px-3 py-2 flex flex-col justify-center border-r border-slate-50 h-[70%] my-auto">
+                                  <div className="min-w-[100px] px-3 py-2 flex flex-col justify-center border-r border-slate-200 h-[70%] my-auto">
                                     <span className={cn(
                                       "text-sm font-black tracking-tight leading-none mb-0.5",
                                       isSelected ? "text-amber-700" : "text-slate-900"
                                     )}>
-                                      {cycle.value}
+                                      {cycle.label || cycle.value}
                                     </span>
-                                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight">CYCLE</span>
                                   </div>
 
                                   {/* Data Grid (Right) */}
@@ -538,19 +552,19 @@ export function UnifiedSmartDatePicker({
                                     {statType === 'debt' ? (
                                       <>
                                         {/* Initial */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
                                           <span className="text-[13px] font-bold text-slate-700 tabular-nums truncate w-full text-center">
                                             {numberFormatter.format(Math.round(cycle.stats?.initial || 0))}
                                           </span>
                                         </div>
                                         {/* Cashback */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
                                           <span className="text-[13px] font-bold text-orange-500 tabular-nums truncate w-full text-center">
                                             {Number(cycle.stats?.cashback || 0) > 0 ? `-${numberFormatter.format(Math.round(Number(cycle.stats?.cashback)))}` : '0'}
                                           </span>
                                         </div>
                                         {/* Repaid */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
                                           <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
                                             {numberFormatter.format(Math.round(cycle.stats?.repay || 0))}
                                           </span>
@@ -578,22 +592,27 @@ export function UnifiedSmartDatePicker({
                                       </>
                                     ) : (
                                       <>
+                                        {(() => {
+                                          const actualEarn = Number(cycle.stats?.actualEarn ?? cycle.stats?.earned ?? 0)
+                                          const estEarn = Number(cycle.stats?.estEarn ?? cycle.stats?.earned ?? 0)
+                                          return (
+                                            <>
                                         {/* Spent */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
                                           <span className="text-[13px] font-bold text-slate-700 tabular-nums truncate w-full text-center">
                                             {numberFormatter.format(Math.round(cycle.stats?.spent || 0))}
                                           </span>
                                         </div>
                                         {/* Earned */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
-                                          <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
-                                            {numberFormatter.format(Math.round(cycle.stats?.earned || 0))}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-cyan-700 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(actualEarn))}
                                           </span>
                                         </div>
-                                        {/* Shared */}
-                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-50 px-1 overflow-hidden">
-                                          <span className="text-[13px] font-bold text-amber-600 tabular-nums truncate w-full text-center">
-                                            {numberFormatter.format(Math.round(cycle.stats?.shared || 0))}
+                                        {/* Est. Earned */}
+                                        <div className="flex flex-col items-center justify-center h-full border-r border-slate-200 px-1 overflow-hidden">
+                                          <span className="text-[13px] font-bold text-emerald-600 tabular-nums truncate w-full text-center">
+                                            {numberFormatter.format(Math.round(estEarn))}
                                           </span>
                                         </div>
                                         {/* Profit */}
@@ -607,6 +626,9 @@ export function UnifiedSmartDatePicker({
                                             </span>
                                           </div>
                                         </div>
+                                            </>
+                                          )
+                                        })()}
                                       </>
                                     )}
                                   </div>

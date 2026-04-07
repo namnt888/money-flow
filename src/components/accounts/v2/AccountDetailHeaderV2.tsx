@@ -547,6 +547,18 @@ export function AccountDetailHeaderV2({
       (sum, rule: any) => sum + Number(rule?.earned || 0),
       0,
     );
+    const activeRuleCap = (dynamicCashbackStats?.activeRules || []).reduce(
+      (sum, rule: any) => sum + Number(rule?.max || 0),
+      0,
+    );
+    const normalizedProgram = normalizeCashbackConfig(account.cashback_config, account);
+    const capCandidates = [
+      Number(dynamicCashbackStats?.maxCashback || 0),
+      Number(normalizedProgram?.maxBudget || 0),
+      Number(activeRuleCap || 0),
+    ].filter((value) => Number.isFinite(value) && value > 0);
+    const effectiveCycleCap = capCandidates.length > 0 ? Math.min(...capCandidates) : 0;
+
     const derivedEst = selectedCycleMetrics?.est ?? 0;
     const derivedShared = selectedCycleMetrics?.shared ?? 0;
     const derivedProfit = selectedCycleMetrics?.profit ?? derivedEst - derivedShared;
@@ -554,24 +566,34 @@ export function AccountDetailHeaderV2({
     const snapshotEst = Number(dynamicCashbackStats?.earnedSoFar || 0);
     const snapshotShared = Number(dynamicCashbackStats?.sharedAmount || 0);
 
-    const estCashback = selectedCycleMetrics
+    const rawEstCashback = selectedCycleMetrics
       ? derivedEst
       : snapshotEst > 0
         ? snapshotEst
         : activeRuleEarned;
+    const estCashback =
+      effectiveCycleCap > 0 ? Math.min(rawEstCashback, effectiveCycleCap) : rawEstCashback;
+    const rawActualEarn = selectedCycleMetrics
+      ? rawEstCashback
+      : snapshotEst > 0
+        ? snapshotEst
+        : activeRuleEarned;
+    const actualEarn = rawActualEarn;
     const sharedAmount = selectedCycleMetrics ? derivedShared : snapshotShared;
     const totalProfit = selectedCycleMetrics ? derivedProfit : estCashback - sharedAmount;
 
     return {
       estCashback,
+      actualEarn,
       sharedAmount,
       totalProfit,
       actualClaimed: Number(dynamicCashbackStats?.actualClaimed ?? selectedCycleMetrics?.actual ?? 0),
       currentSpend: Number(dynamicCashbackStats?.currentSpend || 0),
       source: selectedCycleMetrics ? "cycle_transactions" : "snapshot",
       activeRuleEarned,
+      effectiveCycleCap,
     };
-  }, [dynamicCashbackStats, selectedCycleMetrics]);
+  }, [account, dynamicCashbackStats, selectedCycleMetrics]);
 
   const annualPerformanceReport = React.useMemo(() => {
     if (!summary) return { profit: 0, actual: 0, est: 0, shared: 0, totalNetBenefit: 0 };
@@ -930,18 +952,58 @@ export function AccountDetailHeaderV2({
             ) : <div className="h-12 w-12 flex items-center justify-center bg-white rounded-2xl shadow-sm border border-emerald-50"><Calendar className="h-7 w-7 text-emerald-300" /></div>}
 
             {dynamicCashbackStats && selectedCycle && selectedCycle !== "all" && (
-                <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-2.5 pt-0.5 border-l border-emerald-100/50 pl-5">
+                <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5 pt-0.5 border-l border-emerald-100/50 pl-5">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Net Profit</span>
                     <span className={cn("text-[16px] font-black tabular-nums tracking-tight drop-shadow-sm", cycleMetricSnapshot.totalProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>{formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Paid Back</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Actual Claimed</span>
+                      <TooltipProvider>
+                        <Tooltip delayDuration={120}>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-slate-300 text-[8px] font-black text-slate-500 hover:border-slate-400 hover:text-slate-700"
+                              aria-label="Actual Claimed explanation"
+                            >
+                              i
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[280px] text-xs leading-5">
+                            Tiền cashback ngân hàng da tra trong ky (dong tien thu ve thuc te), thuong den tu giao dich income/cashback.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <span className="text-[16px] font-black text-indigo-700 tabular-nums tracking-tight drop-shadow-sm">{formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualClaimed))}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest leading-none">Est. Earned</span>
                     <span className="text-[16px] font-black text-emerald-600 tabular-nums tracking-tight drop-shadow-sm">{formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-black text-cyan-600 uppercase tracking-widest leading-none">Actual Earn</span>
+                      <TooltipProvider>
+                        <Tooltip delayDuration={120}>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-cyan-300 text-[8px] font-black text-cyan-600 hover:border-cyan-400 hover:text-cyan-700"
+                              aria-label="Actual Earn explanation"
+                            >
+                              i
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[300px] text-xs leading-5">
+                            Cashback ghi nhan theo rule trong ky hien tai truoc khi ap dung cycle cap; day la muc thuong phat sinh, khong phai tien da bank tra.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <span className="text-[16px] font-black text-cyan-700 tabular-nums tracking-tight drop-shadow-sm">{formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest leading-none">Shared To Group</span>
@@ -975,7 +1037,8 @@ export function AccountDetailHeaderV2({
                         <div className="grid grid-cols-2 gap-3 pb-2">
                            {[
                               { label: "Eligible Spend", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}`, sub: "Rule matching spend", color: "text-indigo-600", icon: BarChart3 },
-                              { label: "Cashback Earned", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}`, sub: "Estimated rewards", color: "text-emerald-600", icon: Zap },
+                            { label: "Est. Earned", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}`, sub: cycleMetricSnapshot.effectiveCycleCap > 0 ? `Capped at ${formatVNShort(cycleMetricSnapshot.effectiveCycleCap)}` : "Estimated rewards", color: "text-emerald-600", icon: Zap },
+                              { label: "Actual Earn", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}`, sub: "Gross earned before cycle cap", color: "text-cyan-700", icon: Target },
                               { label: "Shared Out", val: `-${formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount))}`, sub: "Sent to members", color: "text-rose-500", icon: Users2 },
                               { label: "Net Profit", val: `${formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}`, sub: "Cycle profitability", color: "text-slate-900", icon: Briefcase },
                             ].map((item, i) => (
@@ -1027,7 +1090,7 @@ export function AccountDetailHeaderV2({
                           <div className="grid grid-cols-2 gap-8 mb-8">
                             <div className="space-y-6">
                               <div className="flex flex-col gap-1.5 transition-transform hover:translate-x-1"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-1 h-3 bg-emerald-500/30" /> TOTAL YEAR PROFIT</span><span className={cn("text-2xl font-black tabular-nums tracking-tighter drop-shadow-sm", annualPerformanceReport.profit >= 0 ? "text-emerald-700" : "text-rose-700")}>{formatMoneyVND(Math.ceil(annualPerformanceReport.profit))}</span></div>
-                              <div className="flex flex-col gap-1.5 transition-transform hover:translate-x-1"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-1 h-3 bg-indigo-500/30" /> ACTUAL PAID BACK</span><span className="text-2xl font-black text-indigo-700 tabular-nums tracking-tighter drop-shadow-sm">{formatMoneyVND(Math.ceil(annualPerformanceReport.actual))}</span></div>
+                              <div className="flex flex-col gap-1.5 transition-transform hover:translate-x-1"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-1 h-3 bg-indigo-500/30" /> ACTUAL CLAIMED</span><span className="text-2xl font-black text-indigo-700 tabular-nums tracking-tighter drop-shadow-sm">{formatMoneyVND(Math.ceil(annualPerformanceReport.actual))}</span></div>
                             </div>
                             <div className="space-y-6 text-right">
                               <div className="flex flex-col gap-1.5 transition-transform hover:-translate-x-1 items-end"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">EST. POTENTIAL REWARDS <div className="w-1 h-3 bg-emerald-500/30" /></span><span className="text-2xl font-black text-emerald-600 tabular-nums tracking-tighter drop-shadow-sm">{formatMoneyVND(Math.ceil(annualPerformanceReport.est))}</span></div>
