@@ -11,6 +11,7 @@ import { useState } from 'react'
 
 interface StatsPopoverProps {
     personId?: string
+    personName?: string
     tag?: string
     originalLend: number
     cashback: number
@@ -43,6 +44,7 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 
 export function StatsPopover({
     personId,
+    personName,
     tag,
     originalLend,
     cashback,
@@ -69,6 +71,15 @@ export function StatsPopover({
         receiveRollover,
         outstandingDebt,
     }
+
+    const remainsAbs = Math.abs(Number(view.remains) || 0)
+    const isSettled = remainsAbs <= 1000
+    const isAdvance = Number(view.remains) < -1000
+    const remainsLabel = isSettled
+        ? 'Da tat toan'
+        : isAdvance
+            ? `${personName || 'Nguoi nay'} da tra du no`
+            : 'Con no can tra them'
 
     const handleSync = async () => {
         if (!personId || !tag || isSyncing) return
@@ -131,7 +142,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">1. Initial (Gross)</span>
-                            <span className="text-[9px] text-slate-400">Total spent for member</span>
+                            <span className="text-[9px] text-slate-400">No goc</span>
                         </div>
                         <span className="text-sm font-black text-slate-900 tabular-nums">
                             {numberFormatter.format(view.originalLend)}
@@ -148,7 +159,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between p-2.5 rounded-lg border border-emerald-100 bg-emerald-50/30 group hover:bg-emerald-50 transition-colors">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.1em]">2. Back (Shared)</span>
-                            <span className="text-[9px] text-emerald-400">Cashback share/adjustments</span>
+                            <span className="text-[9px] text-emerald-400">Tong Cashback</span>
                         </div>
                         <span className="text-sm font-black text-emerald-600 tabular-nums">
                             -{numberFormatter.format(view.cashback)}
@@ -185,7 +196,7 @@ export function StatsPopover({
                     <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">4. Repay (Paid)</span>
-                            <span className="text-[9px] text-slate-400">Transactions / Rollovers</span>
+                            <span className="text-[9px] text-slate-400">Da tra</span>
                         </div>
                         <span className="text-sm font-black text-slate-600 tabular-nums">
                             -{numberFormatter.format(view.repay)}
@@ -198,17 +209,19 @@ export function StatsPopover({
                     {/* 5. REMAINS */}
                     <div className={cn(
                         "flex items-center justify-between p-3 rounded-xl border group transition-all duration-300",
-                        view.remains <= 1000 
-                            ? "bg-emerald-500 border-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.2)]" 
-                            : "bg-rose-500 border-rose-400 shadow-[0_4px_12px_rgba(244,63,94,0.2)]"
+                        isSettled
+                            ? "bg-emerald-500 border-emerald-400 shadow-[0_4px_12px_rgba(16,185,129,0.2)]"
+                            : isAdvance
+                                ? "bg-indigo-500 border-indigo-400 shadow-[0_4px_12px_rgba(99,102,241,0.2)]"
+                                : "bg-rose-500 border-rose-400 shadow-[0_4px_12px_rgba(244,63,94,0.2)]"
                     )}>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-white/90 uppercase tracking-[0.15em]">5. Remains (Out)</span>
-                            <span className="text-[9px] text-white/70">Calculated Debt: LEND - REPAY</span>
+                            <span className="text-[9px] text-white/70">{remainsLabel}</span>
                         </div>
                         <div className="flex flex-col items-end">
                             <span className="text-lg font-black text-white tabular-nums drop-shadow-sm">
-                                {numberFormatter.format(view.remains)}
+                                {numberFormatter.format(Math.round(remainsAbs))}
                             </span>
                         </div>
                     </div>

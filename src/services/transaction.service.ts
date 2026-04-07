@@ -999,7 +999,10 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
   }
 }
 
-export async function voidTransaction(id: string): Promise<boolean> {
+export async function voidTransaction(
+  id: string,
+  options?: { cascadeLinkedRollover?: boolean },
+): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'pvl_txn_001');
   console.log('[DB:PB] transactions.void', { id: pbId });
 
@@ -1007,10 +1010,22 @@ export async function voidTransaction(id: string): Promise<boolean> {
     const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
     if (!existing) return false;
 
+    const cascadeLinkedRollover = options?.cascadeLinkedRollover !== false;
     const existingMeta =
       typeof existing.metadata === 'object' && existing.metadata !== null
         ? existing.metadata
         : {};
+    const isRolloverTxn = String(existing.note || '').toLowerCase().includes('rollover');
+    const linkedTxnIdRaw =
+      typeof existing.linked_transaction_id === 'string'
+        ? existing.linked_transaction_id
+        : typeof (existingMeta as Record<string, unknown>).linked_transaction_id === 'string'
+          ? ((existingMeta as Record<string, unknown>).linked_transaction_id as string)
+          : null;
+    const linkedTxnId =
+      linkedTxnIdRaw && linkedTxnIdRaw !== pbId
+        ? linkedTxnIdRaw
+        : null;
     const originalTxnId =
       typeof (existingMeta as Record<string, unknown>).original_transaction_id === 'string'
         ? ((existingMeta as Record<string, unknown>).original_transaction_id as string)
@@ -1122,6 +1137,22 @@ export async function voidTransaction(id: string): Promise<boolean> {
         }
       } catch (refundReopenError) {
         console.warn('[DB:PB] voidTransaction confirmation rollback skipped:', refundReopenError);
+      }
+    }
+
+    if (cascadeLinkedRollover && isRolloverTxn && linkedTxnId) {
+      try {
+        const linkedTxn = await pocketbaseGetById<any>('pvl_txn_001', linkedTxnId);
+        if (linkedTxn && linkedTxn.status !== 'void') {
+          const linkedVoided = await voidTransaction(linkedTxnId, {
+            cascadeLinkedRollover: false,
+          });
+          if (!linkedVoided) {
+            console.warn('[DB:PB] linked rollover void failed:', linkedTxnId);
+          }
+        }
+      } catch (linkedVoidError) {
+        console.warn('[DB:PB] linked rollover void skipped:', linkedVoidError);
       }
     }
 

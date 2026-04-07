@@ -197,6 +197,8 @@ export async function rolloverDebtAction(
   const toCycle = formData.get('toCycle') as string
   const amountStr = formData.get('amount') as string
   const occurredAt = formData.get('occurredAt') as string
+  const noteInput = formData.get('note') as string | null
+  const rolloverDirectionInput = formData.get('rolloverDirection') as string | null
 
   if (!personId || !fromCycle || !toCycle || !amountStr) {
     return { success: false, error: 'Missing required fields' }
@@ -206,6 +208,20 @@ export async function rolloverDebtAction(
   if (isNaN(amount) || amount <= 0) {
     return { success: false, error: 'Invalid amount' }
   }
+
+  const isCreditCarry = rolloverDirectionInput === 'credit'
+
+  const customNote = (noteInput || '').trim()
+  const settlePrefix = isCreditCarry
+    ? `Rollover credit to ${toCycle}`
+    : `Rollover to ${toCycle}`
+  const openPrefix = isCreditCarry
+    ? `Rollover credit from ${fromCycle}`
+    : `Rollover from ${fromCycle}`
+  const settleNote = customNote ? `${settlePrefix}: ${customNote}` : settlePrefix
+  const openNote = customNote ? `${openPrefix}: ${customNote}` : openPrefix
+  const settleType = isCreditCarry ? 'debt' : 'repayment'
+  const openType = isCreditCarry ? 'repayment' : 'debt'
 
   // Ensure debt account exists and get its ID
   // This is crucial because transactions must link to a valid account ID, not just a person ID
@@ -225,14 +241,13 @@ export async function rolloverDebtAction(
 
   // Transaction 1: Settlement (IN) for the OLD cycle (Debt Repayment)
   // This reduces the balance of the old month to 0 (or less)
-  const settleNote = `Rollover to ${toCycle}`
   const txDate = occurredAt ? new Date(occurredAt).toISOString() : new Date().toISOString()
 
   const settleRes = await createTransaction({
     occurred_at: txDate,
     tag: fromCycle,
     note: settleNote,
-    type: 'repayment', // Counts as IN (Reduces debt)
+    type: settleType,
     source_account_id: accountId,
     amount: amount,
     person_id: personId,
@@ -254,17 +269,16 @@ export async function rolloverDebtAction(
     original_amount: amount,
     cashback_share_percent: 0,
     cashback_share_fixed: 0,
-    type: 'repayment',
+    type: settleType,
   }, 'create').catch((err) => console.error('[rollover] sheet sync (settle) failed:', err))
 
   // Transaction 2: Opening Balance (OUT) for the NEW cycle (Lending)
   // This increases the balance of the new month
-  const openNote = `Rollover from ${fromCycle}`
   const openRes = await createTransaction({
     occurred_at: txDate,
     tag: toCycle,
     note: openNote,
-    type: 'debt', // Counts as OUT (Increases debt)
+    type: openType,
     source_account_id: accountId,
     amount: amount,
     person_id: personId,
@@ -286,7 +300,7 @@ export async function rolloverDebtAction(
     original_amount: amount,
     cashback_share_percent: 0,
     cashback_share_fixed: 0,
-    type: 'debt',
+    type: openType,
   }, 'create').catch((err) => console.error('[rollover] sheet sync (open) failed:', err))
 
   // Link Transaction 1 to Transaction 2 (Bidirectional for easier voiding)

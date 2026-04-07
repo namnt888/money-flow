@@ -489,9 +489,13 @@ export function ManageSheetButton({
                               <span className="text-amber-700 font-bold text-[10px] uppercase">All</span>
                             ) : isSettled ? (
                               <Check className="h-3.5 w-3.5 text-emerald-500" />
+                            ) : activeCycleRemains < -100 ? (
+                              <span className="font-bold text-indigo-600 text-[10px]">
+                                {numberFormatter.format(Math.abs(Math.round(activeCycleRemains)))}
+                              </span>
                             ) : (
                               <span className="font-bold text-rose-600 text-[10px]">
-                                {numberFormatter.format(activeCycleRemains)}
+                                {numberFormatter.format(Math.round(activeCycleRemains))}
                               </span>
                             )}
                             <ChevronDown className="h-3 w-3 text-slate-300 group-hover:text-slate-500" />
@@ -674,6 +678,7 @@ export function ManageSheetButton({
                       {group.cycles.map((cycle) => {
                         const isSelected = cycleTag === cycle.tag // This is the actual active cycle from props
                         const settled = Math.abs(cycle.remains) <= 100
+                        const isAdvance = cycle.remains < -100
                         const stats = cycle.stats || { originalLend: 0, cashback: 0, repay: 0 }
                         const initial = stats.originalLend || 0
                         const cashback = stats.cashback || 0
@@ -733,6 +738,15 @@ export function ManageSheetButton({
                                     isSelected ? "bg-emerald-500 text-white shadow-sm" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
                                   )}>
                                     <span className="text-[8px] font-black uppercase tracking-widest leading-none">SETTLED</span>
+                                  </div>
+                                ) : isAdvance ? (
+                                  <div className={cn(
+                                    "flex flex-col items-center justify-center py-1 px-3 rounded-lg shrink-0 w-fit min-w-[70px]",
+                                    isSelected ? "bg-indigo-500 text-white shadow-sm" : "bg-indigo-50 border border-indigo-100"
+                                  )}>
+                                    <span className={cn("text-[12px] font-black tabular-nums", isSelected ? "text-white" : "text-indigo-600")}>
+                                      {numberFormatter.format(Math.abs(Math.round(remains)))}
+                                    </span>
                                   </div>
                                 ) : (
                                   <div className={cn(

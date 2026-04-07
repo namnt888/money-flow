@@ -84,6 +84,19 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
         return byName?.id || undefined;
     }, [people]);
 
+    const getPersonName = (personId: string) =>
+        people.find((person) => person.id === personId)?.name?.trim() || "";
+
+    const buildSmartNote = (participant: (typeof participants)[number]) => {
+        const existingNote = String(participant.note || "").trim();
+        if (existingNote) return existingNote;
+
+        const personName = getPersonName(participant.person_id || "");
+        if (personName) return personName;
+
+        return "";
+    };
+
     const handleAddPerson = () => {
         append({ person_id: "", amount: 0, note: "" });
         setIsOpen(true);
@@ -92,14 +105,16 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
     const handleSplitEqually = () => {
         if (participants.length === 0 || !amount) return;
 
-        const count = participants.length;
-        const share = Math.floor(amount / count);
-        const leftover = amount - share * count;
+        const totalSlots = participants.length + (includeMe ? 1 : 0);
+        if (totalSlots <= 0) return;
+
+        const share = Math.floor(amount / totalSlots);
+        const peopleLeftover = amount - share * totalSlots;
 
         replace(
             participants.map((participant, index) => ({
                 ...participant,
-                amount: index === 0 ? share + leftover : share,
+                amount: index === 0 ? share + peopleLeftover : share,
             })),
         );
     };
@@ -128,6 +143,7 @@ export function SplitBillSection({ people, forceShow = false }: SplitBillSection
 
         emptyIndexes.forEach(({ index }, itemIndex) => {
             nextParticipants[index].amount = itemIndex === 0 ? share + dust : share;
+            nextParticipants[index].note = buildSmartNote(nextParticipants[index]);
         });
 
         replace(nextParticipants);

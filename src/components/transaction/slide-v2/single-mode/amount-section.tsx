@@ -77,12 +77,17 @@ export function AmountSection({
   const category = categories.find((c) => c.id === categoryId);
   const sourceAccount = accounts.find((a) => a.id === sourceAccountId);
   const targetAccount = accounts.find((a) => a.id === targetAccountId);
+  const categoryName = String(category?.name || "").toLowerCase();
+  const hasExistingQuantity = Number(quantity || 0) > 0;
+  const isGoldCategory = categoryName.includes("gold") || categoryName.includes("vang");
 
   const isInvestment =
     category?.type === "investment" ||
     sourceAccount?.type === "investment" ||
     targetAccount?.type === "investment" ||
-    type === "invest";
+    type === "invest" ||
+    isGoldCategory ||
+    hasExistingQuantity;
 
   const [showFeeInput, setShowFeeInput] = useState<boolean>(() => {
     const existing = form.getValues("service_fee");
@@ -259,6 +264,7 @@ export function AmountSection({
                       className="h-10 border-slate-200 bg-white px-3 text-sm font-black focus-visible:border-sky-500"
                       placeholder="0.00"
                       hideCurrencyText
+                      allowDecimal
                     />
                   </FormControl>
                   <FormMessage />

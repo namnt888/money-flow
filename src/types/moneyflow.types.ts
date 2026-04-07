@@ -114,6 +114,7 @@ export type Account = {
     payment_due_day?: number;
   } | null;
   metadata?: any;
+  is_favorite?: boolean | null;
 };
 
 export type AccountCashbackSnapshot = {
