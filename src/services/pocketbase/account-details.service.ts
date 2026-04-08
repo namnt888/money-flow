@@ -1187,9 +1187,6 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const byPocketBaseId = new Map(records.map((item) => [item.id, item]));
-  const pocketBaseToSource = new Map(
-    records.map((item) => [item.id, item.slug || item.id]),
-  );
 
   // Pre-calculate child counts
   const childCounts = new Map<string, number>();
@@ -1207,9 +1204,7 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
     const parentPocketBaseId = sourceRecord?.parent_account_id || null;
     const securedByPocketBaseId = sourceRecord?.secured_by_account_id || null;
     
-    const normalizedParentId = parentPocketBaseId
-      ? pocketBaseToSource.get(parentPocketBaseId) || null
-      : null;
+    const normalizedParentId = parentPocketBaseId || null;
 
     // Find children for this account
     const children = mapped
@@ -1224,16 +1219,14 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
       }));
 
     // Find parent info
-    const parentAccount = normalizedParentId 
-      ? mapped.find(a => a.id === normalizedParentId)
+    const parentAccount = parentPocketBaseId
+      ? mapped.find(a => a.id === parentPocketBaseId)
       : null;
 
     return {
       ...account,
       parent_account_id: normalizedParentId,
-      secured_by_account_id: securedByPocketBaseId
-        ? pocketBaseToSource.get(securedByPocketBaseId) || null
-        : null,
+      secured_by_account_id: securedByPocketBaseId || null,
       relationships: {
         is_parent: children.length > 0,
         child_count: children.length,

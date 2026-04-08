@@ -847,9 +847,9 @@ export function AccountRowV2({
                   <ArrowLeft className="h-3.5 w-3.5 text-slate-400" />
                   <HoverCard openDelay={120} closeDelay={80}>
                     <HoverCardTrigger asChild>
-                      <div>
+                      <button type="button" className="cursor-help">
                         {renderAccountBadge(relatedAccounts[0] || null)}
-                      </div>
+                      </button>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-72 p-2 space-y-1.5" align="start">
                       <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
@@ -1527,11 +1527,9 @@ export function AccountRowV2({
             : remainingPercent < 80
               ? "bg-amber-50 text-amber-700 border-amber-300"
               : "bg-emerald-50 text-emerald-700 border-emerald-300"
-          : Math.abs(finalBalance) > 100000000
+          : finalBalance < 0
             ? "bg-rose-50 text-rose-700 border-rose-300"
-            : Math.abs(finalBalance) >= 50000000
-              ? "bg-amber-50 text-amber-700 border-amber-300"
-              : "bg-emerald-50 text-emerald-700 border-emerald-300";
+            : "bg-emerald-50 text-emerald-700 border-emerald-300";
 
         return (
           <TooltipProvider>

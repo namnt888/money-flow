@@ -168,6 +168,11 @@ const formatSignedAmount = (value: number) => {
   return normalized < 0 ? `-${formatCashbackAmount(Math.abs(normalized))}` : formatCashbackAmount(normalized);
 };
 
+const normalizeNearZero = (value: number, epsilon = 0.5) => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.abs(value) < epsilon ? 0 : value;
+};
+
 import { Badge } from "@/components/ui/badge";
 import { CycleBadge } from "@/components/transactions-v2/badge/CycleBadge";
 
@@ -628,6 +633,56 @@ export const UnifiedTransactionTable = React.forwardRef<
       null,
     );
 
+    const contextAccount = useMemo(() => {
+      const scopedId = contextId || accountId;
+      if (!scopedId) return undefined;
+      return accounts.find((item) => item.id === scopedId);
+    }, [accounts, contextId, accountId]);
+
+    const hasCashbackConfigured = useMemo(() => {
+      if (!contextAccount) return false;
+      const normalized = normalizeCashbackConfig(
+        (contextAccount as any).cashback_config,
+        contextAccount,
+      );
+      const hasRuleLevels = (normalized.levels || []).some(
+        (level) => (level.rules || []).length > 0,
+      );
+      const hasCbType =
+        typeof (contextAccount as any).cb_type === "string" &&
+        (contextAccount as any).cb_type !== "none";
+
+      return (
+        hasCbType ||
+        hasRuleLevels ||
+        Number(normalized.defaultRate || 0) > 0 ||
+        Number(normalized.maxBudget || 0) > 0 ||
+        Number(normalized.minSpendTarget || 0) > 0
+      );
+    }, [contextAccount]);
+
+    const isAccountCashbackEnabled = useCallback((account?: Account) => {
+      if (!account) return false;
+      const normalized = normalizeCashbackConfig(
+        (account as any).cashback_config,
+        account,
+      );
+      const hasRuleLevels = (normalized.levels || []).some(
+        (level) => (level.rules || []).length > 0,
+      );
+      const hasCbType =
+        typeof (account as any).cb_type === "string" &&
+        (account as any).cb_type !== "none";
+
+      return (
+        hasCbType ||
+        hasRuleLevels ||
+        Number(normalized.defaultRate || 0) > 0 ||
+        Number(normalized.maxBudget || 0) > 0 ||
+        Number(normalized.minSpendTarget || 0) > 0
+      );
+    }, []);
+
     const handleCellMouseDown = (
       txnId: string,
       colKey: ColumnKey,
@@ -871,7 +926,7 @@ export const UnifiedTransactionTable = React.forwardRef<
           runningReward += Math.max(0, Number.isFinite(bankReward) ? bankReward : 0);
 
           // Project FIFO cashback by final cycle tier (retroactive application across cycle).
-          if (acc?.type === "credit_card" && (txn.type === "expense" || txn.type === "debt")) {
+          if (isAccountCashbackEnabled(acc) && (txn.type === "expense" || txn.type === "debt")) {
             const minSpendTarget = getMinSpendTarget(acc);
             if (minSpendTarget > 0 && cycleSpentTotal < minSpendTarget) {
               return;
@@ -906,7 +961,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       });
 
       return statsMap;
-    }, [tableData, accounts, categories]);
+    }, [tableData, accounts, categories, isAccountCashbackEnabled]);
 
     const resolveCashbackFields = useCallback((txn: TransactionWithDetails, account?: Account) => {
       const metadata = parseMetadata((txn as any).metadata);
@@ -1135,8 +1190,12 @@ export const UnifiedTransactionTable = React.forwardRef<
     useEffect(() => {
       setVisibleColumns((prev) => {
         const next = { ...prev };
-        const showShareColumn = context === "person" || accountType === "credit_card";
-        const showAdvancedCashback = accountType === "credit_card";
+        const showShareColumn =
+          context === "person" ||
+          accountType === "credit_card" ||
+          hasCashbackConfigured;
+        const showAdvancedCashback =
+          accountType === "credit_card" || hasCashbackConfigured;
 
         // Only update if changed
         if (
@@ -1154,7 +1213,7 @@ export const UnifiedTransactionTable = React.forwardRef<
         next.net_profit = showAdvancedCashback;
         return next;
       });
-    }, [accountType, context]);
+    }, [accountType, context, hasCashbackConfigured]);
 
     useEffect(() => {
       const updateIsMobile = () => {
@@ -2067,7 +2126,7 @@ export const UnifiedTransactionTable = React.forwardRef<
               a.id === txn.target_account_id,
           );
 
-        if (!account || account.type !== "credit_card")
+        if (!isAccountCashbackEnabled(account))
           return {
             estimated: 0,
             rawEstimated: 0,
@@ -2172,6 +2231,7 @@ export const UnifiedTransactionTable = React.forwardRef<
         getAccountMinSpendTarget,
         inferTieredPolicyByCategoryName,
         transactionCycleStats,
+        isAccountCashbackEnabled,
       ],
     );
 
@@ -2283,7 +2343,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       tableData.forEach((txn) => {
         const accountId = getSpendAccountId(txn);
         const acc = accounts.find((a) => a.id === accountId);
-        if (!acc || acc.type !== "credit_card") return;
+        if (!isAccountCashbackEnabled(acc)) return;
         const cycleTag = getCycleTag(txn);
         if (!cycleTag) return;
         const key = `${acc.id}-${cycleTag}`;
@@ -2354,7 +2414,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       });
 
       return map;
-    }, [tableData, accounts, estimateTxnCashback, resolveCashbackFields]);
+    }, [tableData, accounts, estimateTxnCashback, resolveCashbackFields, isAccountCashbackEnabled]);
 
     const renderActionMenuItems = (
       txn: TransactionWithDetails,
@@ -3446,8 +3506,9 @@ export const UnifiedTransactionTable = React.forwardRef<
 
                             const profitDetail =
                               transactionProfitBalance.get(txn.id) || null;
-                            const runningProfit =
-                              profitDetail?.runningProfit ?? 0;
+                            const runningProfit = normalizeNearZero(
+                              profitDetail?.runningProfit ?? 0,
+                            );
 
                             return (
                               <CustomTooltip
@@ -3569,7 +3630,9 @@ export const UnifiedTransactionTable = React.forwardRef<
 
                             const profitDetail =
                               transactionProfitBalance.get(txn.id) || null;
-                            const rawProfit = profitDetail?.delta ?? 0;
+                            const rawProfit = normalizeNearZero(
+                              profitDetail?.delta ?? 0,
+                            );
 
                             return (
                               <CustomTooltip
@@ -5374,16 +5437,23 @@ export const UnifiedTransactionTable = React.forwardRef<
                                 ? shareBaseAmount
                                 : baseAmount;
                             const computedShared = formulaBaseAmount * shareRate + fixedDisp;
+                            const explicitSharedAmount = shareAmount > 0 ? shareAmount : computedShared;
+                            const hasExplicitShare =
+                              percentDisp > 0 || fixedDisp > 0 || explicitSharedAmount > 0;
 
                             const cashbackAmount =
                               context === "person"
-                                ? (shareAmount > 0 ? shareAmount : computedShared)
-                                : (shareAmount > 0
-                                  ? shareAmount
+                                ? explicitSharedAmount
+                                : (hasExplicitShare
+                                  ? explicitSharedAmount
                                   : (calculatedPolicy?.metadata?.estimated_cashback ?? bankBack));
 
+                            const shouldUseStoredFinalPrice =
+                              context !== "person" &&
+                              !hasExplicitShare &&
+                              typeof txn.final_price === "number";
                             const finalDisp =
-                              context !== "person" && typeof txn.final_price === "number"
+                              shouldUseStoredFinalPrice
                                 ? Math.abs(txn.final_price)
                                 : cashbackAmount > baseAmount
                                   ? baseAmount

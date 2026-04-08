@@ -39,11 +39,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -61,6 +56,7 @@ import { isToday, isTomorrow, differenceInDays, startOfDay } from "date-fns";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolveTransactionCycleTag } from "@/lib/cycle-utils";
+import { computeAccountTotals } from "@/lib/account-balance";
 
 interface AccountDetailHeaderV2Props {
   account: Account;
@@ -166,42 +162,129 @@ export function AccountDetailHeaderV2({
   const currentYear = new Date().getFullYear().toString();
   const isHistoricalYear = !!selectedYear && selectedYear !== currentYear;
 
+  const ledgerBalance = React.useMemo(() => {
+    const totals = computeAccountTotals({
+      accountId: account.id,
+      accountType: account.type,
+      transactions: initialTransactions.map((txn: any) => ({
+        amount: txn?.amount ?? 0,
+        final_price: txn?.final_price ?? null,
+        type: txn?.type ?? null,
+        account_id: txn?.account_id ?? null,
+        target_account_id: txn?.target_account_id ?? txn?.to_account_id ?? null,
+        status: txn?.status ?? null,
+      })),
+    });
+
+    return totals.currentBalance;
+  }, [account.id, account.type, initialTransactions]);
+
   const availableBalance = isCreditCard
-    ? getCreditCardAvailableBalance(account)
-    : (account.current_balance ?? 0);
+    ? getCreditCardAvailableBalance({
+        type: account.type,
+        credit_limit: account.credit_limit ?? 0,
+        current_balance: ledgerBalance,
+      })
+    : ledgerBalance;
   const outstandingBalance = isCreditCard
-    ? Math.abs(account.current_balance ?? 0)
+    ? Math.abs(ledgerBalance)
     : 0;
 
   // Family Balance Calculation
-  const isParent = !!account.relationships?.is_parent;
-  const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
-  const parentAccount = isParent ? account : (balParentId ? allAccounts.find(a => a.id === balParentId) : null);
-  const accountFamilyId = isParent ? account.id : balParentId;
-  const isFamily = !!accountFamilyId;
+  const accountSlug = (account as any)?.slug as string | undefined;
+  const hasChildren = allAccounts.some((item) => {
+    const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+    return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+  });
+  const isParent = !!account.relationships?.is_parent || hasChildren;
+  const rawParentRef = account.parent_account_id || account.relationships?.parent_info?.id || null;
+  const directParentAcc = isParent
+    ? null
+    : allAccounts.find(
+        (item) =>
+          item.id === rawParentRef ||
+          (((item as any)?.slug as string | undefined) && ((item as any).slug === rawParentRef)),
+      );
+  const inferredParentAcc = isParent
+    ? null
+    : allAccounts.find((item) =>
+        (item.relationships?.child_accounts || []).some(
+          (child: any) =>
+            child.id === account.id ||
+            child.id === rawParentRef ||
+            (accountSlug ? child.id === accountSlug : false),
+        ),
+      );
+  const effectiveParentAcc = directParentAcc || inferredParentAcc || null;
+  const parentAccount = isParent ? account : effectiveParentAcc;
 
-  // Calculate total family debt (Parent + All Children)
-  const childrenBalancesSum = accountFamilyId
-    ? allAccounts
-        .filter((a) => a.parent_account_id === accountFamilyId)
-        .reduce((sum, child) => sum + (child.current_balance || 0), 0)
-    : 0;
+  const familyMemberIds = React.useMemo(() => {
+    const knownChildIds = new Set<string>(
+      ((isParent
+        ? account.relationships?.child_accounts
+        : effectiveParentAcc?.relationships?.child_accounts) || [])
+        .map((child: any) => String(child?.id || ""))
+        .filter(Boolean),
+    );
+    const groupRefs = new Set<string>();
+    if (isParent) {
+      groupRefs.add(account.id);
+      if (accountSlug) groupRefs.add(accountSlug);
+    } else {
+      if (rawParentRef) groupRefs.add(rawParentRef);
+      if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+      const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+      if (parentSlug) groupRefs.add(parentSlug);
+      if (!rawParentRef && !effectiveParentAcc) {
+        groupRefs.add(account.id);
+        if (accountSlug) groupRefs.add(accountSlug);
+      }
+    }
 
-  const familyDebtAbs = Math.abs((parentAccount?.current_balance || 0) + childrenBalancesSum);
-  const soloDebtAbs = Math.abs(account.current_balance || 0);
+    const relatedIds = new Set<string>(
+      allAccounts
+        .filter(
+          (item) =>
+            knownChildIds.has(item.id) ||
+            groupRefs.has(item.id) ||
+            groupRefs.has(item.parent_account_id || ""),
+        )
+        .map((item) => item.id),
+    );
+    relatedIds.add(account.id);
+    return relatedIds;
+  }, [account, allAccounts, isParent, effectiveParentAcc, rawParentRef, accountSlug]);
+  const isStandalone = !isParent && !effectiveParentAcc;
+  const isFamily = !isStandalone;
+
+  const familyDebtAbs = Math.abs(
+    allAccounts
+      .filter((item) => familyMemberIds.has(item.id))
+      .reduce((sum, item) => sum + (item.current_balance || 0), 0),
+  );
+  const soloDebtAbs = Math.abs(ledgerBalance || 0);
 
   // Available Limit: Shared for family if set
-  const familyLimit = parentAccount?.credit_limit || 0;
+  const familyLimit = parentAccount?.credit_limit || account.credit_limit || 0;
   const familyAvailableBalance = isCreditCard 
     ? Math.max(0, familyLimit - familyDebtAbs) 
-    : ((parentAccount?.current_balance || 0) + childrenBalancesSum);
+    : allAccounts
+        .filter((item) => familyMemberIds.has(item.id))
+        .reduce((sum, item) => sum + (item.current_balance || 0), 0);
+
+  const familyRoleLabel = isParent
+    ? "Parent"
+    : isStandalone
+      ? "Standalone"
+      : "Child";
+  const statementDayValue = account.statement_day ?? account.credit_card_info?.statement_day ?? null;
 
   const displayBalance = (isFamily && isCreditCard) ? familyAvailableBalance : availableBalance;
   const displayOutstanding = (isFamily && isCreditCard) ? familyDebtAbs : outstandingBalance;
   const displayLimit = (isFamily && isCreditCard) ? familyLimit : (account.credit_limit || 0);
 
   // Individual card available capacity (Solo Limit)
-  const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : account.current_balance;
+  const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : ledgerBalance;
 
 
   // Cleanup 'tab' param if present (fix for persistent url)
@@ -702,6 +785,97 @@ export function AccountDetailHeaderV2({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            <div className="flex items-center gap-1.5 mt-2 flex-nowrap overflow-x-auto scrollbar-hide">
+              {familyRoleLabel === "Parent" ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest cursor-pointer select-none",
+                        "bg-indigo-50 text-indigo-700 border-indigo-200",
+                      )}
+                    >
+                      <User className="h-3 w-3" />
+                      {familyRoleLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2 space-y-1.5" align="start" sideOffset={8}>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
+                    {allAccounts.filter((item) => {
+                      const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+                      return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+                    }).length > 0 ? (
+                      allAccounts.filter((item) => {
+                        const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+                        return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+                      }).map((child) => (
+                        <div key={child.id} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                          <div className="h-6 w-6 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                            {child.image_url ? (
+                              <img src={child.image_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <Wallet className="h-3 w-3 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[11px] font-bold text-slate-700 truncate">{child.name}</div>
+                            <div className="text-[10px] text-slate-400 truncate">{child.id}</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-[10px] text-slate-400 italic px-1 py-1">No child linked</div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              ) : familyRoleLabel === "Child" && effectiveParentAcc ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest cursor-pointer select-none",
+                      "bg-sky-50 text-sky-700 border-sky-200",
+                    )}>
+                      <User className="h-3 w-3" />
+                      {familyRoleLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2 space-y-1.5" align="start" sideOffset={8}>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Parent Account</div>
+                    <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                      <div className="h-7 w-7 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                        {effectiveParentAcc.image_url ? (
+                          <img src={effectiveParentAcc.image_url} alt="" className="w-full h-full object-contain" />
+                        ) : (
+                          <User className="h-3.5 w-3.5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-bold text-slate-700 truncate">{effectiveParentAcc.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate">{effectiveParentAcc.id}</div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest",
+                  familyRoleLabel === "Parent"
+                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                    : "bg-slate-50 text-slate-600 border-slate-200",
+                )}>
+                  <User className="h-3 w-3" />
+                  {familyRoleLabel}
+                </span>
+              )}
+              {isCreditCard && Number(statementDayValue || 0) > 0 && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200">
+                  <Calendar className="h-3 w-3" />
+                  Statement {statementDayValue}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -796,6 +970,14 @@ export function AccountDetailHeaderV2({
               </PopoverContent>
             </Popover>
           )}
+          {rewardsCount === 0 && (
+            <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 shadow-sm overflow-hidden shrink-0">
+              <div className="flex items-center gap-1.5 px-3 py-1.5">
+                <Info className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-[11px] font-black text-slate-600 uppercase tracking-wider">CAT: NO RULE CONFIG</span>
+              </div>
+            </div>
+          )}
         </div>
       </HeaderSection>
 
@@ -881,11 +1063,28 @@ export function AccountDetailHeaderV2({
         </TooltipProvider>
       ) : (
         <>
-          <HeaderSection label="Cash Flow" borderColor="border-sky-100" className="flex-1 min-w-[260px] bg-sky-50/10 flex flex-col gap-0 py-2">
+          <HeaderSection label="Balance" borderColor="border-emerald-100" className="flex-[1.25] min-w-[280px] bg-emerald-50/10 flex flex-col gap-0 py-2">
             <div className="flex flex-col h-full justify-between py-1 px-1">
               <div className="flex justify-between items-center mb-1">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black text-sky-700 uppercase tracking-widest">{((summary?.yearPureIncomeTotal || 0) > 0 || (summary?.yearPureExpenseTotal || 0) > 0) ? "Net Efficiency" : "Aggregate Cashflow"}</span>
+                  <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest">Final Balance</span>
+                  <span className={cn("text-2xl font-black tabular-nums tracking-tighter drop-shadow-sm", availableBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    {formatMoneyVND(Math.ceil(availableBalance))}
+                  </span>
+                </div>
+                <div className="p-2 bg-white rounded-xl shadow-sm border border-emerald-100"><Calculator className="h-6 w-6 text-emerald-500" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-emerald-200/30">
+                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Incoming</span><span className="text-[15px] font-black text-emerald-600 tabular-nums">+{formatMoneyVND(summary?.yearPureIncomeTotal || 0)}</span></div>
+                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Outgoing</span><span className="text-[15px] font-black text-rose-500 tabular-nums">-{formatMoneyVND(summary?.yearPureExpenseTotal || 0)}</span></div>
+              </div>
+            </div>
+          </HeaderSection>
+          <HeaderSection label="Movement" borderColor="border-sky-100" className="flex-1 min-w-[220px] bg-sky-50/10 flex flex-col gap-0 py-2">
+            <div className="flex flex-col h-full justify-between py-1 px-1">
+              <div className="flex justify-between items-center mb-1">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black text-sky-700 uppercase tracking-widest">Net Movement</span>
                   <span className={cn("text-2xl font-black tabular-nums tracking-tighter drop-shadow-sm", ((summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0) >= 0) ? "text-emerald-600" : "text-rose-600")}>
                     {formatMoneyVND(((summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0)))}
                   </span>
@@ -893,17 +1092,10 @@ export function AccountDetailHeaderV2({
                 <div className="p-2 bg-white rounded-xl shadow-sm border border-sky-100"><TrendingUp className="h-6 w-6 text-sky-500" /></div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-sky-200/30">
-                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Incoming</span><span className="text-[15px] font-black text-emerald-600 tabular-nums">+{formatMoneyVND(summary?.yearPureIncomeTotal || 0)}</span></div>
-                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Outgoing</span><span className="text-[15px] font-black text-rose-500 tabular-nums">-{formatMoneyVND(summary?.yearPureExpenseTotal || 0)}</span></div>
+                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Balance Type</span><span className="text-[15px] font-black text-slate-900 tabular-nums">{account.type === "bank" ? "Cash" : "Asset"}</span></div>
+                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Focus</span><span className="text-[15px] font-black text-sky-600 tabular-nums">Balance First</span></div>
               </div>
             </div>
-          </HeaderSection>
-          <HeaderSection label="Available" className="flex-1 min-w-[200px] bg-emerald-50/10 flex flex-col gap-0 py-2">
-             <div className="flex flex-col h-full justify-center items-center gap-2">
-                <div className="p-2.5 bg-white rounded-2xl shadow-md border border-emerald-100 mb-1 animate-pulse"><Calculator className="h-7 w-7 text-emerald-500" /></div>
-                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Liquid Capital</span>
-                <div className={cn("text-2xl font-black tracking-tighter tabular-nums text-center leading-none", availableBalance >= 0 ? "text-emerald-700" : "text-rose-700")}>{formatMoneyVND(Math.ceil(availableBalance))}</div>
-             </div>
           </HeaderSection>
         </>
       )}
