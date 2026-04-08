@@ -3913,7 +3913,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid`;
+                                          const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid&recordId=${encodeURIComponent(txn.id)}`;
                                           window.open(
                                             url,
                                             "_blank",
@@ -4893,7 +4893,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid`;
+                                              const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid&recordId=${encodeURIComponent(txn.id)}`;
                                               window.open(url, "_blank", "noopener,noreferrer");
                                             }}
                                             className="p-1 hover:bg-amber-50 rounded text-slate-400 hover:text-amber-600 transition-colors"
@@ -5079,7 +5079,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid`;
+                                        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_txn_001&filter=${encodeURIComponent(txn.id)}&sort=-%40rowid&recordId=${encodeURIComponent(txn.id)}`;
                                         window.open(url, "_blank", "noopener,noreferrer");
                                       }}
                                       className="p-1 hover:bg-amber-50 rounded text-slate-400 hover:text-amber-600 transition-colors"
