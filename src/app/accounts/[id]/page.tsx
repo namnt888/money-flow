@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { cache } from 'react'
 import {
   getPocketBaseAccountDetails,
   getPocketBaseAccounts,
@@ -18,10 +17,6 @@ import { Loader2 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-const getCachedPocketBaseAccountDetails = cache(async (id: string) => {
-  return getPocketBaseAccountDetails(id)
-})
-
 type PageProps = {
   params: Promise<{
     id: string
@@ -38,7 +33,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { id } = await params
   const { tab } = await searchParams
-  const account = await getCachedPocketBaseAccountDetails(id)
+  const account = await getPocketBaseAccountDetails(id)
 
   if (!account) return { title: 'Account Not Found' }
 
@@ -67,7 +62,7 @@ export default async function AccountPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
-  const account = await getCachedPocketBaseAccountDetails(id)
+  const account = await getPocketBaseAccountDetails(id)
 
   if (!account) {
     notFound()

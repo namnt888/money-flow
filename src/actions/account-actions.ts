@@ -37,8 +37,10 @@ function mapAccountRow(record: any) {
     cb_cycle_type: record.cb_cycle_type ?? 'calendar_month',
     statement_day: Number(record.statement_day ?? 0),
     due_date: Number(record.due_date ?? 0),
+    is_favorite: typeof record.is_favorite === 'boolean' ? record.is_favorite : false,
     holder_type: record.holder_type ?? null,
     holder_person_id: record.holder_person_id ?? null,
+    metadata: record.metadata ?? null,
     created_at: record.created ?? null,
     updated_at: record.updated ?? null,
   }
@@ -68,6 +70,8 @@ type CreateAccountParams = {
   dueDate?: number | null
   holder_type?: 'me' | 'relative' | 'other'
   holder_person_id?: string | null
+  isFavorite?: boolean
+  metadata?: Json | null
 }
 
 export async function createAccount(params: CreateAccountParams) {
@@ -93,6 +97,7 @@ export async function createAccount(params: CreateAccountParams) {
       due_date: params.dueDate,
       holder_type: params.holder_type,
       holder_person_id: params.holder_person_id,
+      is_favorite: params.isFavorite ?? false,
       // Rebooted CB columns
       cb_type: params.cb_type,
       cb_base_rate: params.cb_base_rate,
@@ -101,6 +106,7 @@ export async function createAccount(params: CreateAccountParams) {
       cb_rules_json: params.cb_rules_json,
       cb_min_spend: params.cb_min_spend,
       cb_cycle_type: params.cb_cycle_type,
+      metadata: params.metadata,
       // Initial state
       current_balance: 0,
       is_active: true,
@@ -177,6 +183,8 @@ export async function updateAccountConfigAction(params: {
   dueDate?: number | null
   holder_type?: 'me' | 'relative' | 'other'
   holder_person_id?: string | null
+  isFavorite?: boolean
+  metadata?: Json | null
 }) {
   console.log('[DB:PB] accounts.updateConfig START', {
     id: params.id,
@@ -206,6 +214,8 @@ export async function updateAccountConfigAction(params: {
       due_date: params.dueDate,
       holder_type: params.holder_type,
       holder_person_id: params.holder_person_id,
+      is_favorite: params.isFavorite,
+      metadata: params.metadata,
       // cb_* columns + cashback_config JSON
       ...({
         cb_type: params.cb_type,
@@ -220,6 +230,26 @@ export async function updateAccountConfigAction(params: {
     })
 
     if (!success) throw new Error('Failed to update account config in PocketBase')
+
+    // Recompute cycle tags/stats when cycle-related config changes (e.g. statement day).
+    const shouldRefreshCashback =
+      params.type === 'credit_card' ||
+      params.statementDay !== undefined ||
+      params.dueDate !== undefined ||
+      params.cb_cycle_type !== undefined ||
+      params.cashbackConfig !== undefined
+
+    if (shouldRefreshCashback) {
+      try {
+        const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service')
+        await refreshAccountCashback(params.id)
+      } catch (refreshError) {
+        console.warn('[DB:PB] accounts.updateConfig refreshAccountCashback failed', {
+          id: params.id,
+          error: String(refreshError),
+        })
+      }
+    }
 
     console.log('[DB:PB] accounts.updateConfig SUCCESS', { id: params.id })
     revalidatePath('/accounts')
@@ -333,4 +363,9 @@ export async function syncAllAccountsCashbackAction() {
 export async function getRecentAccountsAction(limit: number = 5) {
   const { getRecentAccountsByTransactions } = await import('@/services/account.service')
   return await getRecentAccountsByTransactions(limit)
+}
+
+export async function getFavoriteAccountsAction(limit: number = 6) {
+  const { getFavoriteAccounts } = await import('@/services/account.service')
+  return await getFavoriteAccounts(limit)
 }

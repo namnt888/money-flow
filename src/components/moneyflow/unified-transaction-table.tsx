@@ -158,6 +158,16 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const formatCashbackAmount = (value: number) => {
+  if (!Number.isFinite(value) || Math.abs(value) < 0.5) return "0";
+  return numberFormatter.format(Math.round(value));
+};
+
+const formatSignedAmount = (value: number) => {
+  const normalized = Number.isFinite(value) ? value : 0;
+  return normalized < 0 ? `-${formatCashbackAmount(Math.abs(normalized))}` : formatCashbackAmount(normalized);
+};
+
 import { Badge } from "@/components/ui/badge";
 import { CycleBadge } from "@/components/transactions-v2/badge/CycleBadge";
 
@@ -438,18 +448,18 @@ export const UnifiedTransactionTable = React.forwardRef<
       { key: "date", label: "Date", defaultWidth: 138, minWidth: 124 },
       { key: "shop", label: "Notes Flow", defaultWidth: 300, minWidth: 220 },
       { key: "account", label: "Money Flow", defaultWidth: 380, minWidth: 280 },
-      { key: "amount", label: "BASE", defaultWidth: 180, minWidth: 140 },
+      { key: "amount", label: "BASE", defaultWidth: 100, minWidth: 90 },
       {
-        key: "total_back",
-        label: "Total Back",
+        key: "est_share",
+        label: "Cashback Shared",
         defaultWidth: 120,
         minWidth: 100,
       },
       {
         key: "final_price",
         label: "Net Value",
-        defaultWidth: 180,
-        minWidth: 140,
+        defaultWidth: 100,
+        minWidth: 90,
       },
       { key: "cycle", label: "Debt Cycle", defaultWidth: 120, minWidth: 100 },
       { key: "people", label: "People", defaultWidth: 150 },
@@ -461,20 +471,28 @@ export const UnifiedTransactionTable = React.forwardRef<
         minWidth: 100,
       },
       {
-        key: "est_share",
-        label: "Cashback Shared",
-        defaultWidth: 100,
-        minWidth: 80,
+        key: "net_profit_raw",
+        label: "Profit Raw",
+        defaultWidth: 110,
+        minWidth: 90,
       },
-      { key: "net_profit", label: "Profit", defaultWidth: 100, minWidth: 80 },
+      { key: "net_profit", label: "Profit Cum", defaultWidth: 110, minWidth: 90 },
+      { key: "category", label: "Categ", defaultWidth: 140, minWidth: 110 },
       { key: "actions", label: "Action", defaultWidth: 100, minWidth: 60 },
-      { key: "category", label: "Category", defaultWidth: 100, minWidth: 80 },
     ];
+
+    const normalizeColumnOrder = (order: ColumnKey[]) => {
+      const validKeys = new Set(defaultColumns.map((c) => c.key));
+      const deduped = Array.from(new Set(order)).filter((k) => validKeys.has(k));
+      const content = deduped.filter((k) => k !== "date" && k !== "actions");
+      return ["date", ...content, "actions"] as ColumnKey[];
+    };
+
     const [isColumnCustomizerOpen, setIsColumnCustomizerOpen] = useState(false);
 
     // Initialize with prop or default
     const [customColumnOrder, setCustomColumnOrder] = useState<ColumnKey[]>(
-      () => columnOrder ?? defaultColumns.map((c) => c.key),
+      () => normalizeColumnOrder(columnOrder ?? defaultColumns.map((c) => c.key)),
     );
 
     const mobileColumnOrder: ColumnKey[] = [
@@ -487,6 +505,8 @@ export const UnifiedTransactionTable = React.forwardRef<
     const router = useRouter();
     // Internal state removed for activeTab, now using prop with fallback
     const lastSelectedIdRef = useRef<string | null>(null);
+    const hoverToastIdRef = useRef<Record<string, string>>({});
+    const activeHoverToastKeyRef = useRef<string | null>(null);
     const [showSelectedOnly, setShowSelectedOnly] = useState(false);
     const [showTotals, setShowTotals] = useState(false);
     const [internalSelection, setInternalSelection] = useState<Set<string>>(
@@ -504,11 +524,11 @@ export const UnifiedTransactionTable = React.forwardRef<
         account: true,
         amount: true,
         final_price: true,
-        total_back: false,
         id: false,
         actions: true,
         actual_cashback: false,
         est_share: false,
+        net_profit_raw: false,
         net_profit: false,
         back_info: false,
         people: false,
@@ -556,7 +576,7 @@ export const UnifiedTransactionTable = React.forwardRef<
           const missing = defaultColumns
             .filter((c) => !parsed.includes(c.key))
             .map((c) => c.key);
-          setCustomColumnOrder([...parsed, ...missing]);
+          setCustomColumnOrder(normalizeColumnOrder([...parsed, ...missing]));
         }
         if (savedVis) {
           const parsedVis = JSON.parse(savedVis);
@@ -590,11 +610,11 @@ export const UnifiedTransactionTable = React.forwardRef<
         );
     }, [customColumnOrder]);
 
-    useEffect(() => {
+    React.useEffect(() => {
       localStorage.setItem("mf_v3_col_vis", JSON.stringify(visibleColumns));
     }, [visibleColumns]);
 
-    useEffect(() => {
+    React.useEffect(() => {
       localStorage.setItem("mf_v3_col_width", JSON.stringify(columnWidths));
     }, [columnWidths]);
 
@@ -676,6 +696,46 @@ export const UnifiedTransactionTable = React.forwardRef<
       setIsSelectingCells(false);
     };
 
+    const getAccountMinSpendTarget = useCallback((account?: Account) => {
+      if (!account) return 0;
+      const parsedConfig = parseCashbackConfig((account as any).cashback_config);
+      const normalizedConfig = normalizeCashbackConfig(parsedConfig as any);
+      const fromConfig = Number((normalizedConfig as any)?.program?.minSpendTarget ?? 0);
+      const fromFlat = Number((account as any)?.cb_min_spend ?? 0);
+      const resolved = Number.isFinite(fromConfig) && fromConfig > 0 ? fromConfig : fromFlat;
+      return Number.isFinite(resolved) && resolved > 0 ? resolved : 0;
+    }, []);
+
+    const dismissHoverToast = useCallback((toastKey: string) => {
+      const toastId = hoverToastIdRef.current[toastKey];
+      if (toastId) {
+        toast.dismiss(toastId);
+        delete hoverToastIdRef.current[toastKey];
+        if (activeHoverToastKeyRef.current === toastKey) {
+          activeHoverToastKeyRef.current = null;
+        }
+      }
+    }, []);
+
+    const showHoverToast = useCallback(
+      (toastKey: string, title: string, description: string, type: "info" | "warning" | "success" = "info") => {
+        if (activeHoverToastKeyRef.current === toastKey) {
+          return;
+        }
+
+        toast.dismiss();
+        activeHoverToastKeyRef.current = toastKey;
+        dismissHoverToast(toastKey);
+        const toastId = toast[type](title, {
+          description,
+          duration: 4500,
+          closeButton: true,
+        });
+        hoverToastIdRef.current[toastKey] = String(toastId);
+      },
+      [dismissHoverToast],
+    );
+
     // Clear selection when mode changes
     useEffect(() => {
       if (!isExcelMode) {
@@ -687,20 +747,75 @@ export const UnifiedTransactionTable = React.forwardRef<
 
     // MF5.3: Pre-calculate cycle stats for FIFO cashback logic
     const transactionCycleStats = useMemo(() => {
-      const statsMap = new Map<string, { spentBefore: number; rewardBefore: number }>();
+      const statsMap = new Map<
+        string,
+        {
+          spentBefore: number;
+          rewardBefore: number;
+          cycleSpentTotal: number;
+          projectedRewardBefore: number;
+        }
+      >();
       const grouped = new Map<string, TransactionWithDetails[]>();
+
+      const getSpendAccountId = (txn: TransactionWithDetails) => {
+        return (
+          txn.source_account_id ||
+          txn.account_id ||
+          (txn as any).to_account_id ||
+          txn.target_account_id ||
+          null
+        );
+      };
+
+      const getTxnDate = (txn: TransactionWithDetails) => {
+        const rawDate =
+          txn.occurred_at ||
+          (txn as any).date ||
+          "";
+        const parsed = new Date(rawDate);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      const getCycleTag = (txn: TransactionWithDetails) => {
+        const normalizedTag = normalizeMonthTag(
+          (txn as any).persisted_cycle_tag ||
+            (txn as any).account_billing_cycle ||
+            (txn as any).statement_cycle_tag ||
+            "",
+        );
+        if (normalizedTag) return normalizedTag;
+        const txnDate = getTxnDate(txn);
+        if (!txnDate) return null;
+        const year = txnDate.getFullYear();
+        const month = String(txnDate.getMonth() + 1).padStart(2, "0");
+        return `${year}-${month}`;
+      };
+
+      const getMinSpendTarget = (acc?: Account) => {
+        if (!acc) return 0;
+        const parsedConfig = parseCashbackConfig((acc as any).cashback_config);
+        const normalizedConfig = normalizeCashbackConfig(parsedConfig as any);
+        const fromConfig = Number(
+          (normalizedConfig as any)?.program?.minSpendTarget ?? 0,
+        );
+        const fromFlat = Number((acc as any)?.cb_min_spend ?? 0);
+        const resolved = Number.isFinite(fromConfig) && fromConfig > 0
+          ? fromConfig
+          : fromFlat;
+        return Number.isFinite(resolved) && resolved > 0 ? resolved : 0;
+      };
 
       // 1. Group by account + cycle window
       tableData.forEach((txn) => {
-        const acc = accounts.find((a) => a.id === (txn.account_id || txn.source_account_id || txn.target_account_id));
+        const accountId = getSpendAccountId(txn);
+        const acc = accounts.find((a) => a.id === accountId);
         if (!acc) return;
 
-        const cycleType = acc.cb_cycle_type || "calendar_month";
-        const windowKey =
-          cycleType === "calendar_month"
-            ? `${acc.id}-${txn.date.substring(0, 7)}`
-            : `${acc.id}-${txn.statement_cycle_tag || txn.date.substring(0, 7)}`;
+        const cycleTag = getCycleTag(txn);
+        if (!cycleTag) return;
 
+        const windowKey = `${acc.id}-${cycleTag}`;
         if (!grouped.has(windowKey)) grouped.set(windowKey, []);
         grouped.get(windowKey)!.push(txn);
       });
@@ -708,34 +823,90 @@ export const UnifiedTransactionTable = React.forwardRef<
       // 2. Compute cumulative stats per group
       grouped.forEach((txns) => {
         // Sort chronologically (ascending) to compute "what happened before this txn"
-        const sorted = [...txns].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const sorted = [...txns].sort((a, b) => {
+          const aTs = getTxnDate(a)?.getTime() ?? 0;
+          const bTs = getTxnDate(b)?.getTime() ?? 0;
+          if (aTs !== bTs) return aTs - bTs;
+          return String(a.id).localeCompare(String(b.id));
+        });
         let runningSpent = 0;
         let runningReward = 0;
+        let runningProjectedReward = 0;
+
+        const cycleSpentTotal = sorted.reduce((sum, txn) => {
+          const status = String(txn.status || "").toLowerCase();
+          if (status === "void") return sum;
+          if (txn.type !== "expense" && txn.type !== "debt") return sum;
+          return sum + Math.abs(txn.amount || 0);
+        }, 0);
+
+        const accountId = sorted[0] ? getSpendAccountId(sorted[0]) : null;
+        const acc = accountId
+          ? accounts.find((item) => item.id === accountId)
+          : undefined;
 
         sorted.forEach((txn) => {
           statsMap.set(txn.id, {
             spentBefore: runningSpent,
             rewardBefore: runningReward,
+            cycleSpentTotal,
+            projectedRewardBefore: runningProjectedReward,
           });
 
-          // Track eligible spend (expenses/debts)
+          const status = String(txn.status || "").toLowerCase();
+          if (status === "void") return;
+
+          // Track eligible spend for historical counters.
           if (txn.type === "expense" || txn.type === "debt") {
             runningSpent += Math.abs(txn.amount || 0);
           }
 
-          // Track reward (prefer final_price difference if available, else metadata)
+          // Track reward (prefer final_price difference if available, else metadata).
           const metadata = parseMetadata(txn.metadata) as any;
           const bankReward =
             typeof txn.final_price === "number"
               ? Math.max(0, Math.abs(txn.amount || 0) - Math.abs(txn.final_price))
               : Number(metadata?.cashback?.estimated_cashback ?? metadata?.bank_back ?? 0);
-              
-          runningReward += bankReward;
+
+          runningReward += Math.max(0, Number.isFinite(bankReward) ? bankReward : 0);
+
+          // Project FIFO cashback by final cycle tier (retroactive application across cycle).
+          if (acc?.type === "credit_card" && (txn.type === "expense" || txn.type === "debt")) {
+            const minSpendTarget = getMinSpendTarget(acc);
+            if (minSpendTarget > 0 && cycleSpentTotal < minSpendTarget) {
+              return;
+            }
+
+            const categoryName =
+              txn.category_name ||
+              categories.find((c) => c.id === txn.category_id)?.name ||
+              (txn as any)?.category?.name;
+
+            const policy = resolveCashbackPolicy({
+              account: acc as any,
+              amount: Math.abs(txn.amount || 0),
+              categoryId: txn.category_id,
+              categorySlug: (txn as any)?.category?.slug,
+              categoryName,
+              cycleTotals: {
+                spent: cycleSpentTotal,
+                accumulatedReward: runningProjectedReward,
+              },
+            });
+
+            const projectedReward = Number(
+              policy?.metadata?.estimated_cashback ??
+                Math.abs(txn.amount || 0) * Number(policy?.rate || 0),
+            );
+            if (Number.isFinite(projectedReward) && projectedReward > 0) {
+              runningProjectedReward += projectedReward;
+            }
+          }
         });
       });
 
       return statsMap;
-    }, [tableData, accounts]);
+    }, [tableData, accounts, categories]);
 
     const resolveCashbackFields = useCallback((txn: TransactionWithDetails, account?: Account) => {
       const metadata = parseMetadata((txn as any).metadata);
@@ -747,20 +918,53 @@ export const UnifiedTransactionTable = React.forwardRef<
         return undefined;
       };
 
+      const splitMeta = (metadata as any)?.split_bill;
+      const isSplitShareRow =
+        (metadata as any)?.is_split_share === true ||
+        (metadata as any)?.split_role === "participant" ||
+        (metadata as any)?.split_role === "participant_parent";
+      const splitSharePerRow = Number(
+        (metadata as any)?.split_cashback_back_amount ??
+          fromMetadata("split_cashback_back_amount") ??
+          0,
+      );
+      const splitPeopleBase = Array.isArray(splitMeta?.participants)
+        ? splitMeta.participants.reduce(
+            (sum: number, participant: any) =>
+              sum + Math.max(0, Number(participant?.base_amount ?? participant?.amount ?? 0)),
+            0,
+          )
+        : 0;
+
       // 1. Try to RE-CALCULATE based on CURRENT account rules for "Intelligent" Tooltip
       let calculatedPolicy: any = null;
       if (account?.cb_rules_json) {
         try {
-          const stats = transactionCycleStats.get(txn.id) || { spentBefore: 0, rewardBefore: 0 };
+          const stats = transactionCycleStats.get(txn.id) || {
+            spentBefore: 0,
+            rewardBefore: 0,
+            cycleSpentTotal: 0,
+            projectedRewardBefore: 0,
+          };
+          const cycleSpentForTier =
+            stats.cycleSpentTotal > 0
+              ? stats.cycleSpentTotal
+              : stats.spentBefore + Math.abs(txn.amount || 0);
           calculatedPolicy = resolveCashbackPolicy({
             account,
             amount: Math.abs(txn.amount || 0),
             categoryId: txn.category_id,
-            categorySlug: txn.category?.slug,
-            categoryName: txn.category?.name,
+            categorySlug: (txn as any)?.category?.slug,
+            categoryName:
+              txn.category_name ||
+              categories.find((c) => c.id === txn.category_id)?.name ||
+              (txn as any)?.category?.name,
             cycleTotals: {
-              spent: stats.spentBefore,
-              accumulatedReward: stats.rewardBefore
+              spent: cycleSpentForTier,
+              accumulatedReward:
+                stats.projectedRewardBefore > 0
+                  ? stats.projectedRewardBefore
+                  : stats.rewardBefore,
             }
           });
         } catch (e) {
@@ -772,14 +976,12 @@ export const UnifiedTransactionTable = React.forwardRef<
         txn.cashback_share_percent ??
           fromMetadata("cashback_share_percent") ??
           fromMetadata("share_percent") ??
-          calculatedPolicy?.rate ??
           0,
       );
       const fixedRaw = Number(
         txn.cashback_share_fixed ??
           fromMetadata("cashback_share_fixed") ??
           fromMetadata("share_fixed") ??
-          calculatedPolicy?.fixedReward ??
           0,
       );
 
@@ -789,11 +991,28 @@ export const UnifiedTransactionTable = React.forwardRef<
       const amountAbs = Math.abs(
         Number(txn.original_amount ?? txn.amount ?? 0),
       );
+      const shareBaseAmount =
+        splitPeopleBase > 0
+          ? splitPeopleBase
+          : amountAbs;
       const normalizedPercent =
         percentMagnitude > 1 ? percentMagnitude / 100 : percentMagnitude;
-      const shareComputed = amountAbs * normalizedPercent + fixedMagnitude;
+      const shareComputed = shareBaseAmount * normalizedPercent + fixedMagnitude;
+
+      const splitSharedFromMeta = Number(
+        splitMeta?.cashback_back_total_to_people ??
+          (metadata as any)?.cashback_back_total_to_people ??
+          0,
+      );
+      const effectiveSplitSharedFromMeta =
+        Number.isFinite(splitSharePerRow) && splitSharePerRow > 0
+          ? splitSharePerRow
+          : isSplitShareRow && Number.isFinite(splitSharedFromMeta) && splitSharedFromMeta > 0
+            ? splitSharedFromMeta
+            : undefined;
 
       const shareAmountRaw = Number(
+        effectiveSplitSharedFromMeta ??
         txn.cashback_share_amount ??
           fromMetadata("cashback_share_amount") ??
           fromMetadata("share_amount") ??
@@ -814,19 +1033,18 @@ export const UnifiedTransactionTable = React.forwardRef<
 
       // If share is policy-based and policy is capped, the share should be capped too
       const shareIsCapped = !!calculatedPolicy?.metadata?.reason?.includes("Max Reached");
-      const effectiveShare = (calculatedPolicy && !txn.cashback_share_percent && !txn.cashback_share_amount)
-        ? (calculatedPolicy.metadata?.estimated_cashback ?? finalShareAmount)
-        : finalShareAmount;
+      const effectiveShare = finalShareAmount;
 
       return {
         percentRaw: Number.isFinite(percentMagnitude) ? percentMagnitude : 0,
         fixedRaw: Number.isFinite(fixedMagnitude) ? fixedMagnitude : 0,
         shareAmount: effectiveShare,
+        shareBaseAmount,
         bankBack: Number.isFinite(bankBackRaw) ? Math.abs(bankBackRaw) : 0,
         calculatedPolicy,
         isShareCapped: shareIsCapped
       };
-    }, [transactionCycleStats]);
+    }, [transactionCycleStats, categories]);
 
     const selectedStats = useMemo(() => {
       if (selectedCells.size === 0 || !selectedColumn)
@@ -917,23 +1135,26 @@ export const UnifiedTransactionTable = React.forwardRef<
     useEffect(() => {
       setVisibleColumns((prev) => {
         const next = { ...prev };
-        const showCashback = accountType === "credit_card";
+        const showShareColumn = context === "person" || accountType === "credit_card";
+        const showAdvancedCashback = accountType === "credit_card";
 
         // Only update if changed
         if (
-          prev.actual_cashback === showCashback &&
-          prev.est_share === showCashback &&
-          prev.net_profit === showCashback
+          prev.actual_cashback === showAdvancedCashback &&
+          prev.est_share === showShareColumn &&
+          prev.net_profit_raw === showAdvancedCashback &&
+          prev.net_profit === showAdvancedCashback
         ) {
           return prev;
         }
 
-        next.actual_cashback = showCashback;
-        next.est_share = showCashback;
-        next.net_profit = showCashback;
+        next.actual_cashback = showAdvancedCashback;
+        next.est_share = showShareColumn;
+        next.net_profit_raw = showAdvancedCashback;
+        next.net_profit = showAdvancedCashback;
         return next;
       });
-    }, [accountType]);
+    }, [accountType, context]);
 
     useEffect(() => {
       const updateIsMobile = () => {
@@ -1105,6 +1326,28 @@ export const UnifiedTransactionTable = React.forwardRef<
       setIsVoiding(false);
     };
 
+    const getLinkedRolloverId = useCallback(
+      (txn: TransactionWithDetails | null | undefined): string | null => {
+        if (!txn) return null;
+        const note = String(txn.note || "").toLowerCase();
+        if (!note.includes("rollover")) return null;
+
+        const metadata = parseMetadata(txn.metadata) as any;
+        const linkedId =
+          typeof txn.linked_transaction_id === "string"
+            ? txn.linked_transaction_id
+            : typeof metadata?.linked_transaction_id === "string"
+              ? metadata.linked_transaction_id
+              : null;
+
+        if (!linkedId || linkedId === txn.id) return null;
+        return linkedId;
+      },
+      [],
+    );
+
+    const confirmVoidLinkedRolloverId = getLinkedRolloverId(confirmVoidTarget);
+
     const handleRestore = async (txn: TransactionWithDetails) => {
       setIsRestoring(true);
       try {
@@ -1241,6 +1484,11 @@ export const UnifiedTransactionTable = React.forwardRef<
           return;
         }
         setStatusOverrides((prev) => ({ ...prev, [targetId]: "void" }));
+        if (confirmVoidLinkedRolloverId) {
+          toast.success("Rollover pair voided", {
+            description: `Linked transaction ${confirmVoidLinkedRolloverId} was voided and synced as well.`,
+          });
+        }
         if (onSuccess) await onSuccess();
         window.dispatchEvent(new CustomEvent("refresh-account-data"));
         router.refresh();
@@ -1639,6 +1887,21 @@ export const UnifiedTransactionTable = React.forwardRef<
       sortState,
     ]);
 
+    const sequenceByTxnId = useMemo(() => {
+      const sortedByDate = [...displayedTransactions].sort((a, b) => {
+        const dateA = new Date(a.occurred_at ?? a.created_at ?? 0).getTime();
+        const dateB = new Date(b.occurred_at ?? b.created_at ?? 0).getTime();
+        if (dateA !== dateB) return dateA - dateB;
+        return String(a.id).localeCompare(String(b.id));
+      });
+
+      const map = new Map<string, number>();
+      sortedByDate.forEach((txn, index) => {
+        map.set(txn.id, index + 1);
+      });
+      return map;
+    }, [displayedTransactions]);
+
     const paginatedTransactions = useMemo(() => {
       const start = (currentPage - 1) * pageSize;
       return displayedTransactions.slice(start, start + pageSize);
@@ -1775,6 +2038,20 @@ export const UnifiedTransactionTable = React.forwardRef<
 
     const estimateTxnCashback = useCallback(
       (txn: TransactionWithDetails) => {
+        const metadata = parseMetadata((txn as any).metadata) as any;
+        const splitMeta = metadata?.split_bill;
+        const splitMeBaseAmount = Number(splitMeta?.me_base_amount ?? 0);
+        const isSplitMeRow =
+          metadata?.is_split_bill === true ||
+          metadata?.is_split_bill_base === true ||
+          metadata?.split_role === "me";
+
+        const spendAccountId =
+          txn.source_account_id ||
+          txn.account_id ||
+          (txn as any).to_account_id ||
+          txn.target_account_id ||
+          null;
         const scopedAccount =
           context === "account" && contextId
             ? accounts.find((a) => a.id === contextId)
@@ -1784,6 +2061,7 @@ export const UnifiedTransactionTable = React.forwardRef<
           scopedAccount ??
           accounts.find(
             (a) =>
+              a.id === spendAccountId ||
               a.id === txn.account_id ||
               a.id === txn.source_account_id ||
               a.id === txn.target_account_id,
@@ -1792,22 +2070,55 @@ export const UnifiedTransactionTable = React.forwardRef<
         if (!account || account.type !== "credit_card")
           return {
             estimated: 0,
+            rawEstimated: 0,
             rate: 0,
             maxReward: undefined as number | undefined,
             isFallback: false,
+            isMinSpendMet: true,
+            minSpendTarget: 0,
+            minSpendRemaining: 0,
+            reason: "Not a cashback credit card account",
+            policySource: "none",
+            isRuleMaxReached: false,
+            isGlobalMaxReached: false,
+            estimateBaseAmount: 0,
           };
 
-        const amountAbs = Math.abs(txn.amount);
+        const amountAbs =
+          isSplitMeRow && Number.isFinite(splitMeBaseAmount) && splitMeBaseAmount > 0
+            ? splitMeBaseAmount
+            : Math.abs(txn.amount);
         const categoryName =
           txn.category_name ||
           categories.find((c) => c.id === txn.category_id)?.name ||
           undefined;
+        const stats = transactionCycleStats.get(txn.id) || {
+          spentBefore: 0,
+          rewardBefore: 0,
+          cycleSpentTotal: 0,
+          projectedRewardBefore: 0,
+        };
+
+        const minSpendTarget = getAccountMinSpendTarget(account);
+        const minSpendRemaining = Math.max(0, minSpendTarget - stats.cycleSpentTotal);
+        const isMinSpendMet = !(minSpendTarget > 0) || stats.cycleSpentTotal >= minSpendTarget;
+
+        const cycleSpentForTier =
+          stats.cycleSpentTotal > 0
+            ? stats.cycleSpentTotal
+            : stats.spentBefore + amountAbs;
         const policy = resolveCashbackPolicy({
           account: account as any,
           categoryId: txn.category_id,
           amount: amountAbs,
           categoryName,
-          cycleTotals: { spent: 0 },
+          cycleTotals: {
+            spent: cycleSpentForTier,
+            accumulatedReward:
+              stats.projectedRewardBefore > 0
+                ? stats.projectedRewardBefore
+                : stats.rewardBefore,
+          },
         });
 
         const fallback = inferTieredPolicyByCategoryName(account, categoryName);
@@ -1823,19 +2134,45 @@ export const UnifiedTransactionTable = React.forwardRef<
           : policy.maxReward;
 
         const baseVal = amountAbs * effectiveRate;
-        const estimated =
-          effectiveMaxReward !== undefined && effectiveMaxReward !== null
-            ? Math.min(baseVal, effectiveMaxReward)
-            : baseVal;
+        const estimatedFromPolicy = Number(
+          (policy.metadata as any)?.estimated_cashback,
+        );
+        const rawEstimated =
+          !shouldUseFallback && Number.isFinite(estimatedFromPolicy)
+            ? Math.max(0, estimatedFromPolicy)
+            : effectiveMaxReward !== undefined && effectiveMaxReward !== null
+              ? Math.min(baseVal, effectiveMaxReward)
+              : baseVal;
+
+        const estimated = isMinSpendMet ? rawEstimated : 0;
+        const reason = String(policy?.metadata?.reason || "");
+        const policySource = String(policy?.metadata?.policySource || "unknown");
+        const isRuleMaxReached = /Rule Max Reached/i.test(reason);
+        const isGlobalMaxReached = /Global Max Reached/i.test(reason);
 
         return {
           estimated,
+          rawEstimated,
           rate: effectiveRate,
           maxReward: effectiveMaxReward,
           isFallback: shouldUseFallback,
+          isMinSpendMet,
+          minSpendTarget,
+          minSpendRemaining,
+          reason,
+          policySource,
+          isRuleMaxReached,
+          isGlobalMaxReached,
+          estimateBaseAmount: amountAbs,
         };
       },
-      [accounts, categories, inferTieredPolicyByCategoryName],
+      [
+        accounts,
+        categories,
+        getAccountMinSpendTarget,
+        inferTieredPolicyByCategoryName,
+        transactionCycleStats,
+      ],
     );
 
     const tableTotals = useMemo(() => {
@@ -1898,6 +2235,127 @@ export const UnifiedTransactionTable = React.forwardRef<
       estimateTxnCashback,
       resolveCashbackFields,
     ]);
+
+    const transactionProfitBalance = useMemo(() => {
+      const map = new Map<
+        string,
+        {
+          runningProfit: number;
+          previousProfit: number;
+          estimatedBack: number;
+          sharedCashback: number;
+          delta: number;
+        }
+      >();
+      const grouped = new Map<string, TransactionWithDetails[]>();
+
+      const getSpendAccountId = (txn: TransactionWithDetails) => {
+        return (
+          txn.source_account_id ||
+          txn.account_id ||
+          (txn as any).to_account_id ||
+          txn.target_account_id ||
+          null
+        );
+      };
+
+      const getTxnDate = (txn: TransactionWithDetails) => {
+        const rawDate = txn.occurred_at || (txn as any).date || "";
+        const parsed = new Date(rawDate);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      const getCycleTag = (txn: TransactionWithDetails) => {
+        const normalizedTag = normalizeMonthTag(
+          (txn as any).persisted_cycle_tag ||
+            (txn as any).account_billing_cycle ||
+            (txn as any).statement_cycle_tag ||
+            "",
+        );
+        if (normalizedTag) return normalizedTag;
+        const txnDate = getTxnDate(txn);
+        if (!txnDate) return null;
+        const year = txnDate.getFullYear();
+        const month = String(txnDate.getMonth() + 1).padStart(2, "0");
+        return `${year}-${month}`;
+      };
+
+      tableData.forEach((txn) => {
+        const accountId = getSpendAccountId(txn);
+        const acc = accounts.find((a) => a.id === accountId);
+        if (!acc || acc.type !== "credit_card") return;
+        const cycleTag = getCycleTag(txn);
+        if (!cycleTag) return;
+        const key = `${acc.id}-${cycleTag}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key)!.push(txn);
+      });
+
+      grouped.forEach((txns) => {
+        const sorted = [...txns].sort((a, b) => {
+          const aTs = getTxnDate(a)?.getTime() ?? 0;
+          const bTs = getTxnDate(b)?.getTime() ?? 0;
+          if (aTs !== bTs) return aTs - bTs;
+          return String(a.id).localeCompare(String(b.id));
+        });
+
+        let runningProfit = 0;
+        sorted.forEach((txn) => {
+          const previousProfit = runningProfit;
+          let estimatedBack = 0;
+          let sharedCashback = 0;
+          let delta = 0;
+
+          const status = String(txn.status || "").toLowerCase();
+          const visualType = (txn as any).displayType ?? txn.type;
+          const isTypeIn =
+            visualType === "income" ||
+            txn.type === "income" ||
+            txn.type === "repayment" ||
+            txn.type === "credit_pay";
+          const isTransfer = txn.type === "transfer";
+          const note = String(txn?.note || "").toLowerCase();
+          const isCreateInitial =
+            note.includes("create initial") ||
+            note.includes("số dư đầu") ||
+            note.includes("opening balance") ||
+            note.includes("rollover");
+
+          if (
+            status !== "void" &&
+            !isTypeIn &&
+            !isTransfer &&
+            !isCreateInitial
+          ) {
+            const estimate = estimateTxnCashback(txn);
+            const { fixedRaw, percentRaw, shareAmount, bankBack } =
+              resolveCashbackFields(
+                txn,
+                accounts.find((a) => a.id === getSpendAccountId(txn)) ||
+                  undefined,
+              );
+            const amountAbs = Math.abs(txn.amount || 0);
+            const shareRate = percentRaw > 1 ? percentRaw / 100 : percentRaw;
+            const computedShared = amountAbs * shareRate + fixedRaw;
+            sharedCashback = shareAmount > 0 ? shareAmount : computedShared;
+            estimatedBack = Math.max(Number(estimate.estimated || 0), bankBack);
+            delta = estimatedBack - sharedCashback;
+            runningProfit += delta;
+          }
+
+          map.set(txn.id, {
+            runningProfit,
+            previousProfit,
+            estimatedBack,
+            sharedCashback,
+            delta,
+          });
+        });
+      });
+
+      return map;
+    }, [tableData, accounts, estimateTxnCashback, resolveCashbackFields]);
+
     const renderActionMenuItems = (
       txn: TransactionWithDetails,
       isVoided: boolean,
@@ -2488,6 +2946,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                       const isVoided = effectiveStatus === "void";
                       const isMenuOpen = actionMenuOpen === txn.id;
                       const sequenceNumber =
+                        sequenceByTxnId.get(txn.id) ??
                         (currentPage - 1) * pageSize + rowIndex + 1;
                       const txnMetadata = parseMetadata(txn.metadata);
                       const refundStatus =
@@ -2595,7 +3054,7 @@ export const UnifiedTransactionTable = React.forwardRef<
 
                                 <CustomTooltip content={fullDateStr}>
                                   <div className="group flex cursor-help items-center gap-2 min-w-0">
-                                    <span className="inline-flex h-5 min-w-[22px] items-center justify-center rounded-md border border-slate-200 bg-white px-1 text-[10px] font-black text-slate-500 shrink-0">
+                                    <span className="inline-flex h-5 min-w-[22px] items-center justify-center rounded-md border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50 px-1 text-[10px] font-black text-sky-700 shadow-sm shrink-0">
                                       {sequenceNumber}
                                     </span>
                                     <div className="flex min-w-0 flex-col items-start justify-center">
@@ -2662,9 +3121,14 @@ export const UnifiedTransactionTable = React.forwardRef<
                             if (status === "void")
                               return <span className="text-slate-300">-</span>;
 
-                            const isIncome = txn.type === "income";
+                            const visualType =
+                              (txn as any).displayType ?? txn.type;
+                            const isIncome =
+                              visualType === "income" ||
+                              txn.type === "income" ||
+                              txn.type === "repayment" ||
+                              txn.type === "credit_pay";
                             const isTransfer = txn.type === "transfer";
-                            const isRepayment = txn.type === "repayment";
                             const note = String(txn?.note || "").toLowerCase();
                             const isCreateInitial =
                               note.includes("create initial") ||
@@ -2675,7 +3139,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                             if (
                               isIncome ||
                               isTransfer ||
-                              isRepayment ||
                               isCreateInitial
                             ) {
                               return <span className="text-slate-300">-</span>;
@@ -2683,14 +3146,42 @@ export const UnifiedTransactionTable = React.forwardRef<
 
                             const estimate = estimateTxnCashback(txn);
                             const policyRate = estimate.rate;
-                            const baseVal = amountAbs * policyRate;
-                            const val = estimate.estimated;
+                            const estimateBaseAmount =
+                              Number((estimate as any).estimateBaseAmount || 0) > 0
+                                ? Number((estimate as any).estimateBaseAmount)
+                                : amountAbs;
+                            const baseVal = estimateBaseAmount * policyRate;
+                            const valueToDisplay = estimate.isMinSpendMet
+                              ? estimate.estimated
+                              : estimate.rawEstimated;
+                            const isBlockedByMinSpend = !estimate.isMinSpendMet;
+                            const formattedEst = formatCashbackAmount(valueToDisplay);
+                            const showNegativeTrace =
+                              isBlockedByMinSpend && formattedEst !== "0";
 
-                            if (val === 0)
-                              return <span className="text-slate-300">-</span>;
+                            if (valueToDisplay === 0 && !isBlockedByMinSpend) {
+                              const zeroReason = estimate.isGlobalMaxReached
+                                ? "Cycle max budget reached before this transaction"
+                                : estimate.isRuleMaxReached
+                                  ? "Rule max reward reached before this transaction"
+                                  : estimate.rate === 0
+                                    ? "No cashback rule matched for this category (default rate = 0)"
+                                    : estimate.reason || "Estimated cashback is zero";
+                              return (
+                                <CustomTooltip
+                                  content={
+                                    <div className="text-xs space-y-1.5 max-w-[320px]">
+                                      <div className="font-bold">Est. Cashback = 0</div>
+                                      <div className="text-slate-300">{zeroReason}</div>
+                                      <div className="text-slate-500">Policy source: {estimate.policySource}</div>
+                                    </div>
+                                  }
+                                >
+                                  <span className="font-medium cursor-help border-b border-dotted text-slate-500 border-slate-300">0</span>
+                                </CustomTooltip>
+                              );
+                            }
 
-                            const effectiveRate =
-                              amountAbs > 0 ? val / amountAbs : 0;
                             const isCapped =
                               estimate.maxReward !== undefined &&
                               estimate.maxReward !== null &&
@@ -2699,16 +3190,30 @@ export const UnifiedTransactionTable = React.forwardRef<
                             return (
                               <CustomTooltip
                                 content={
-                                  <div className="text-xs space-y-1.5">
+                                  <div className="text-xs space-y-1.5 max-w-[320px]">
                                     <div className="font-bold">
                                       Est. Cashback (Calculated)
                                     </div>
+                                    {isBlockedByMinSpend ? (
+                                      <>
+                                        <div className="text-rose-300 font-semibold">
+                                          Min spend not reached yet.
+                                        </div>
+                                        <div className="text-slate-300">
+                                          Need {formatCashbackAmount(estimate.minSpendRemaining || 0)} more spend to unlock positive cashback.
+                                        </div>
+                                        <div className="text-slate-400">
+                                          Showing theoretical cashback with a minus sign for tracing.
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-slate-400">
+                                        {formatCashbackAmount(estimateBaseAmount)}×{(policyRate * 100).toFixed((policyRate * 100) % 1 === 0 ? 0 : 2)}%={formatCashbackAmount(baseVal)}
+                                      </div>
+                                    )}
                                     <div className="text-slate-400">
-                                      {numberFormatter.format(amountAbs)} ×{" "}
-                                      {(policyRate * 100).toFixed(
-                                        (policyRate * 100) % 1 === 0 ? 0 : 2,
-                                      )}
-                                      % = {numberFormatter.format(baseVal)}
+                                      Display = {showNegativeTrace ? "-" : ""}
+                                      {formattedEst}
                                     </div>
                                     {isCapped && (
                                       <div className="text-rose-400 font-bold border-t border-white/10 pt-1">
@@ -2732,14 +3237,39 @@ export const UnifiedTransactionTable = React.forwardRef<
                                 }
                               >
                                 <span
+                                  onMouseEnter={() => {
+                                    const toastKey = `est:${txn.id}`;
+                                    if (isBlockedByMinSpend) {
+                                      showHoverToast(
+                                        toastKey,
+                                        "Min spend chưa đạt",
+                                        `Cần thêm ${formatCashbackAmount(estimate.minSpendRemaining || 0)} để cashback dương. Est. Cashback đang hiển thị theo giá trị lý thuyết ${formatCashbackAmount(valueToDisplay)}.`,
+                                        "warning",
+                                      );
+                                      return;
+                                    }
+
+                                    showHoverToast(
+                                      toastKey,
+                                      "Cashback đã đủ điều kiện",
+                                      `Dòng này đang tính theo rate ${(policyRate * 100).toFixed((policyRate * 100) % 1 === 0 ? 0 : 2)}% trên ${formatCashbackAmount(estimateBaseAmount)}. Kết quả = ${formatCashbackAmount(valueToDisplay)}.`,
+                                      "success",
+                                    );
+                                  }}
+                                  onMouseLeave={() =>
+                                    dismissHoverToast(`est:${txn.id}`)
+                                  }
                                   className={cn(
                                     "font-medium cursor-help border-b border-dotted",
-                                    isCapped
+                                    isBlockedByMinSpend
+                                      ? "text-rose-600 border-rose-300"
+                                      : isCapped
                                       ? "text-amber-600 border-amber-200"
                                       : "text-emerald-600 border-emerald-200",
                                   )}
                                 >
-                                  {numberFormatter.format(val)}
+                                  {showNegativeTrace ? "-" : ""}
+                                  {formattedEst}
                                 </span>
                               </CustomTooltip>
                             );
@@ -2752,7 +3282,13 @@ export const UnifiedTransactionTable = React.forwardRef<
                             if (status === "void")
                               return <span className="text-slate-300">-</span>;
 
-                            const isIncome = txn.type === "income";
+                            const visualType =
+                              (txn as any).displayType ?? txn.type;
+                            const isIncome =
+                              visualType === "income" ||
+                              txn.type === "income" ||
+                              txn.type === "repayment" ||
+                              txn.type === "credit_pay";
                             const isTransfer = txn.type === "transfer";
                             const note = String(txn?.note || "").toLowerCase();
                             const isCreateInitial =
@@ -2765,69 +3301,92 @@ export const UnifiedTransactionTable = React.forwardRef<
                               return <span className="text-slate-300">-</span>;
                             }
 
-                            const { fixedRaw, percentRaw, shareAmount, isShareCapped, calculatedPolicy } = resolveCashbackFields(txn);
+                            const { fixedRaw, percentRaw, shareAmount, shareBaseAmount, isShareCapped } =
+                              resolveCashbackFields(txn);
                             const shareRate =
                               percentRaw > 1 ? percentRaw / 100 : percentRaw;
-                            const amountAbs = Math.abs(txn.amount);
-                            const computedShared =
-                              amountAbs * shareRate + fixedRaw;
-                            const val =
-                              shareAmount > 0 ? shareAmount : computedShared;
-                            if (val === 0)
-                              return <span className="text-slate-300">-</span>;
+                            const formulaBaseAmount =
+                              typeof shareBaseAmount === "number" && shareBaseAmount > 0
+                                ? shareBaseAmount
+                                : Math.abs(txn.amount);
+                            const computedShared = formulaBaseAmount * shareRate + fixedRaw;
+                            const val = shareAmount > 0 ? shareAmount : computedShared;
 
-                            const formulaLabelParts: string[] = [];
-                            if (fixedRaw > 0)
-                              formulaLabelParts.push(
-                                numberFormatter.format(fixedRaw),
-                              );
-                            if (shareRate > 0) {
-                              const percentLabel = (shareRate * 100).toFixed(
-                                (shareRate * 100) % 1 === 0 ? 0 : 2,
-                              );
-                              formulaLabelParts.push(`${percentLabel}%`);
-                            }
+                            const percentLabel = (shareRate * 100).toFixed(
+                              (shareRate * 100) % 1 === 0 ? 0 : 2,
+                            );
                             const formulaLabel =
-                              formulaLabelParts.length > 0
-                                ? formulaLabelParts.join(" + ")
-                                : numberFormatter.format(val);
+                              shareRate > 0 && fixedRaw > 0
+                                ? `${percentLabel}%+${formatCashbackAmount(fixedRaw)}=${formatCashbackAmount(val)}`
+                                : shareRate > 0
+                                  ? `${percentLabel}%=${formatCashbackAmount(val)}`
+                                  : formatCashbackAmount(val);
+
+                            const toastKey = `share:${txn.id}`;
 
                             return (
                               <CustomTooltip
                                 content={
-                                  <div className="text-xs space-y-1">
+                                  <div className="text-xs space-y-1 max-w-[320px]">
                                     <div className="font-bold text-orange-400">
                                       Cashback Shared
                                     </div>
                                     <div className="text-slate-400">
                                       {shareRate > 0 && (
                                         <span>
-                                          {numberFormatter.format(amountAbs)} ×{" "}
+                                          {numberFormatter.format(formulaBaseAmount)} × {" "}
                                           {(shareRate * 100).toFixed(
                                             (shareRate * 100) % 1 === 0 ? 0 : 2,
                                           )}
                                           %
                                         </span>
                                       )}
-                                      {shareRate > 0 && fixedRaw > 0 && (
-                                        <span> + </span>
-                                      )}
+                                      {shareRate > 0 && fixedRaw > 0 && <span> + </span>}
                                       {fixedRaw > 0 && (
                                         <span>
-                                          {numberFormatter.format(fixedRaw)}{" "}
-                                          (fixed)
+                                          {numberFormatter.format(fixedRaw)} (fixed)
                                         </span>
                                       )}
-                                      <span>
-                                        {" "}
-                                        = {numberFormatter.format(val)}</span></div> {isShareCapped && <div className="text-rose-400 font-bold border-t border-white/10 pt-1 mt-1">Monthly Cap Reached</div>}
+                                      {(shareRate > 0 || fixedRaw > 0) && (
+                                        <span> = {numberFormatter.format(val)}</span>
+                                      )}
+                                    </div>
+                                    {isShareCapped ? (
+                                      <div className="text-rose-400 font-bold border-t border-white/10 pt-1 mt-1">
+                                        Shared cashback budget exhausted.
+                                      </div>
+                                    ) : (
+                                      <div className="text-slate-500 border-t border-white/10 pt-1 mt-1">
+                                        Shared cashback still available in this cycle.
+                                      </div>
+                                    )}
                                   </div>
                                 }
                               >
-                                <div className="flex items-center gap-1.5">
+                                <div
+                                  className="flex items-center gap-1.5"
+                                  onMouseEnter={() => {
+                                    if (isShareCapped) {
+                                      showHoverToast(
+                                        toastKey,
+                                        "Shared cashback budget exhausted",
+                                        `This row's shared cashback is ${formatCashbackAmount(val)} because the cycle budget is already consumed.`,
+                                        "warning",
+                                      );
+                                      return;
+                                    }
+
+                                    showHoverToast(
+                                      toastKey,
+                                      "Shared cashback available",
+                                      `Shared cashback for this row is ${formatCashbackAmount(val)} from ${formatCashbackAmount(formulaBaseAmount)} at ${(shareRate * 100).toFixed((shareRate * 100) % 1 === 0 ? 0 : 2)}%.`,
+                                      "info",
+                                    );
+                                  }}
+                                  onMouseLeave={() => dismissHoverToast(toastKey)}
+                                >
                                   {percentRaw > 0 && fixedRaw > 0 && (
                                     <span className="inline-flex items-center px-2 h-6 rounded-md text-[10px] font-black bg-sky-100 text-sky-700 border border-sky-200 shrink-0">
-                                      -
                                       {(() => {
                                         const pVal = percentRaw > 1 ? percentRaw : percentRaw * 100;
                                         return pVal % 1 === 0 ? pVal.toFixed(0) : pVal.toFixed(2);
@@ -2837,10 +3396,18 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   )}
                                   {fixedRaw > 0 && (
                                     <span className="inline-flex items-center px-2 h-6 rounded-md text-[10px] font-black bg-sky-100 text-sky-700 border border-sky-200 shrink-0">
-                                      -{numberFormatter.format(fixedRaw)}
+                                      {formatCashbackAmount(fixedRaw)}
                                     </span>
                                   )}
-                                  <span className={cn("cursor-help border-b border-dotted font-bold tabular-nums", isShareCapped ? "text-amber-600 border-amber-200" : "text-orange-600 border-orange-200")}>{isShareCapped && val === 0 ? "CAPPED" : formulaLabel}
+                                  <span
+                                    className={cn(
+                                      "cursor-help border-b border-dotted font-bold tabular-nums",
+                                      isShareCapped
+                                        ? "text-amber-600 border-amber-200"
+                                        : "text-orange-600 border-orange-200",
+                                    )}
+                                  >
+                                    {val === 0 ? "0" : isShareCapped ? "CAPPED" : formulaLabel}
                                   </span>
                                 </div>
                               </CustomTooltip>
@@ -2854,9 +3421,14 @@ export const UnifiedTransactionTable = React.forwardRef<
                             if (status === "void")
                               return <span className="text-slate-300">-</span>;
 
-                            const isIncome = txn.type === "income";
+                            const visualType =
+                              (txn as any).displayType ?? txn.type;
+                            const isIncome =
+                              visualType === "income" ||
+                              txn.type === "income" ||
+                              txn.type === "repayment" ||
+                              txn.type === "credit_pay";
                             const isTransfer = txn.type === "transfer";
-                            const isRepayment = txn.type === "repayment";
                             const note = String(txn?.note || "").toLowerCase();
                             const isCreateInitial =
                               note.includes("create initial") ||
@@ -2867,75 +3439,165 @@ export const UnifiedTransactionTable = React.forwardRef<
                             if (
                               isIncome ||
                               isTransfer ||
-                              isRepayment ||
                               isCreateInitial
                             ) {
                               return <span className="text-slate-300">-</span>;
                             }
 
-                            const amountAbs = Math.abs(txn.amount);
-                            const estimate = estimateTxnCashback(txn);
-                            const {
-                              fixedRaw,
-                              percentRaw,
-                              shareAmount,
-                              bankBack,
-                            } = resolveCashbackFields(txn);
-                            const estimateBack = Math.max(
-                              Number(estimate.estimated || 0),
-                              bankBack,
-                            );
-
-                            const shareRate =
-                              percentRaw > 1 ? percentRaw / 100 : percentRaw;
-                            const computedShared =
-                              amountAbs * shareRate + fixedRaw;
-                            const share =
-                              shareAmount > 0 ? shareAmount : computedShared;
-                            const profit = estimateBack - share;
-
-                            if (
-                              profit === 0 &&
-                              estimateBack === 0 &&
-                              share === 0
-                            )
-                              return <span className="text-slate-300">-</span>;
+                            const profitDetail =
+                              transactionProfitBalance.get(txn.id) || null;
+                            const runningProfit =
+                              profitDetail?.runningProfit ?? 0;
 
                             return (
                               <CustomTooltip
                                 content={
-                                  <div className="text-xs space-y-1">
+                                  <div className="text-xs space-y-1.5 max-w-[340px]">
                                     <div className="font-bold text-indigo-400">
-                                      Profit Calculation
+                                      Profit Balance (FIFO)
                                     </div>
                                     <div className="text-slate-400">
-                                      {numberFormatter.format(estimateBack)}{" "}
-                                      (est) - {numberFormatter.format(share)}{" "}
-                                      (share) ={" "}
+                                      This row follows FIFO in the same cycle.
+                                    </div>
+                                    {profitDetail?.estimatedBack === 0 && (
+                                      <div className="text-rose-300 font-semibold">
+                                        Min spend is not reached yet, so est cashback used here is 0.
+                                      </div>
+                                    )}
+                                    <div className="text-slate-400">
+                                      Prev Balance = {numberFormatter.format(profitDetail?.previousProfit || 0)}
+                                    </div>
+                                    <div className="text-slate-400">
+                                      Est Cashback Used = {numberFormatter.format(profitDetail?.estimatedBack || 0)}
+                                    </div>
+                                    {profitDetail?.estimatedBack === 0 && (
+                                      <div className="text-slate-500">
+                                        Theoretical Cashback = {numberFormatter.format((estimateTxnCashback(txn) as any)?.rawEstimated || 0)}
+                                      </div>
+                                    )}
+                                    <div className="text-slate-400">
+                                      Shared Cashback = {numberFormatter.format(profitDetail?.sharedCashback || 0)}
+                                    </div>
+                                    <div className="text-slate-400">
+                                      Delta = Est - Shared = {numberFormatter.format(profitDetail?.delta || 0)}
+                                    </div>
+                                    <div className="text-slate-300 border-t border-white/10 pt-1">
+                                      Balance = Prev + Delta = {numberFormatter.format(profitDetail?.previousProfit || 0)} + {numberFormatter.format(profitDetail?.delta || 0)} ={" "}
                                       <span
                                         className={
-                                          profit > 0
-                                            ? "text-emerald-400"
-                                            : "text-rose-400"
+                                          runningProfit > 0
+                                            ? "text-emerald-400 font-bold"
+                                            : "text-rose-400 font-bold"
                                         }
                                       >
-                                        {numberFormatter.format(profit)}
+                                        {numberFormatter.format(runningProfit)}
                                       </span>
                                     </div>
                                   </div>
                                 }
                               >
                                 <span
+                                  onMouseEnter={() => {
+                                    const toastKey = `profit:${txn.id}`;
+                                    if (profitDetail?.estimatedBack === 0) {
+                                      const estimateInfo = estimateTxnCashback(txn) as any;
+                                      const zeroReason = !estimateInfo.isMinSpendMet
+                                        ? `Chưa đạt min spend (cần thêm ${numberFormatter.format(estimateInfo.minSpendRemaining || 0)}).`
+                                        : estimateInfo.isGlobalMaxReached
+                                          ? "Đã chạm max budget của cycle trước dòng này."
+                                          : estimateInfo.isRuleMaxReached
+                                            ? "Đã chạm max reward của rule trước dòng này."
+                                            : estimateInfo.rate === 0
+                                              ? "Category này không match rule cashback hoặc defaultRate = 0."
+                                              : `Policy trả về cashback = 0 (${estimateInfo.reason || "no reward"}).`;
+                                      showHoverToast(
+                                        toastKey,
+                                        "Giải thích Profit = 0/âm",
+                                        `${zeroReason} Est used = 0, Shared = ${numberFormatter.format(profitDetail?.sharedCashback || 0)}, Balance hiện tại = ${numberFormatter.format(runningProfit)}.`,
+                                        "info",
+                                      );
+                                      return;
+                                    }
+
+                                    showHoverToast(
+                                      toastKey,
+                                      "Profit balance cập nhật",
+                                      `Prev ${numberFormatter.format(profitDetail?.previousProfit || 0)} + Delta ${numberFormatter.format(profitDetail?.delta || 0)} = ${numberFormatter.format(runningProfit)}.`,
+                                      "info",
+                                    );
+                                  }}
+                                  onMouseLeave={() =>
+                                    dismissHoverToast(`profit:${txn.id}`)
+                                  }
                                   className={cn(
-                                    profit > 0
+                                    runningProfit > 0
                                       ? "text-emerald-700 font-black"
-                                      : profit < 0
+                                      : runningProfit < 0
                                         ? "text-rose-500 font-bold"
-                                        : "text-slate-500",
+                                        : "text-slate-500 font-semibold",
                                     "cursor-help border-b border-dotted border-slate-300",
                                   )}
                                 >
-                                  {numberFormatter.format(profit)}
+                                  {numberFormatter.format(runningProfit)}
+                                </span>
+                              </CustomTooltip>
+                            );
+                          }
+                          case "net_profit_raw": {
+                            const status = String(txn?.status || "").toLowerCase();
+                            if (status === "void")
+                              return <span className="text-slate-300">-</span>;
+
+                            const visualType =
+                              (txn as any).displayType ?? txn.type;
+                            const isIncome =
+                              visualType === "income" ||
+                              txn.type === "income" ||
+                              txn.type === "repayment" ||
+                              txn.type === "credit_pay";
+                            const isTransfer = txn.type === "transfer";
+                            const note = String(txn?.note || "").toLowerCase();
+                            const isCreateInitial =
+                              note.includes("create initial") ||
+                              note.includes("số dư đầu") ||
+                              note.includes("opening balance") ||
+                              note.includes("rollover");
+
+                            if (isIncome || isTransfer || isCreateInitial) {
+                              return <span className="text-slate-300">-</span>;
+                            }
+
+                            const profitDetail =
+                              transactionProfitBalance.get(txn.id) || null;
+                            const rawProfit = profitDetail?.delta ?? 0;
+
+                            return (
+                              <CustomTooltip
+                                content={
+                                  <div className="text-xs space-y-1.5 max-w-[320px]">
+                                    <div className="font-bold text-sky-300">
+                                      Profit Raw (non-cumulative)
+                                    </div>
+                                    <div className="text-slate-400">
+                                      Per transaction only: Est Cashback - Shared Cashback.
+                                    </div>
+                                    <div className="text-slate-400">
+                                      {numberFormatter.format(profitDetail?.estimatedBack || 0)} - {numberFormatter.format(profitDetail?.sharedCashback || 0)} = {numberFormatter.format(rawProfit)}
+                                    </div>
+                                  </div>
+                                }
+                              >
+                                <span
+                                  className={cn(
+                                    rawProfit > 0
+                                      ? "text-emerald-700 font-black"
+                                      : rawProfit < 0
+                                        ? "text-rose-500 font-bold"
+                                        : "text-slate-500 font-semibold",
+                                    "cursor-help border-b border-dotted border-slate-300",
+                                  )}
+                                >
+                                  {numberFormatter.format(rawProfit)}
                                 </span>
                               </CustomTooltip>
                             );
@@ -3281,15 +3943,40 @@ export const UnifiedTransactionTable = React.forwardRef<
                                         );
                                       }
 
+                                      const linkedRolloverId = getLinkedRolloverId(txn);
+
                                       return (
-                                        <CustomTooltip content={note}>
-                                          <span
-                                            className="text-slate-900 font-black truncate cursor-help block flex-1"
-                                            style={{ fontSize: `1.15em` }}
-                                          >
-                                            {displayNote}
-                                          </span>
-                                        </CustomTooltip>
+                                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                          {linkedRolloverId ? (
+                                            <CustomTooltip
+                                              content={`Copy linked rollover ID: ${linkedRolloverId}`}
+                                            >
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  void copyToClipboard(
+                                                    linkedRolloverId,
+                                                    "Linked rollover ID",
+                                                  );
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-2 h-[22px] min-w-[72px] justify-center rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold whitespace-nowrap transition-all duration-200 shadow-sm hover:bg-indigo-100"
+                                              >
+                                                <Link2 className="h-3 w-3" />
+                                                ROLLOVER
+                                              </button>
+                                            </CustomTooltip>
+                                          ) : null}
+
+                                          <CustomTooltip content={note}>
+                                            <span
+                                              className="text-slate-900 font-black truncate cursor-help block flex-1"
+                                              style={{ fontSize: `1.15em` }}
+                                            >
+                                              {displayNote}
+                                            </span>
+                                          </CustomTooltip>
+                                        </div>
                                       );
                                     })()}
                                   </div>
@@ -3701,48 +4388,61 @@ export const UnifiedTransactionTable = React.forwardRef<
                             const isInternal =
                               actualCategory?.kind === "internal";
                             const kindLabel = isInternal
+                              ? "inter"
+                              : "exter";
+                            const kindLabelFull = isInternal
                               ? "internal"
                               : "external";
                             const KindIcon = isInternal ? User : Users2;
                             return (
-                              <div className="flex items-center gap-2 min-w-0">
-                                {/* Icon Container (Square as per rules) */}
-                                <div className="shrink-0 h-8 w-8 rounded-none border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm">
-                                  {categoryImage ? (
-                                    <img
-                                      src={categoryImage}
-                                      alt={displayCategory}
-                                      className="h-full w-full object-contain"
-                                    />
-                                  ) : categoryIcon ? (
-                                    <span className="text-sm">
-                                      {categoryIcon}
-                                    </span>
-                                  ) : (
-                                    <Book className="h-4 w-4 text-slate-400" />
-                                  )}
-                                </div>
-
-                                <div className="flex flex-col min-w-0">
-                                  <span
-                                    className="text-sm font-bold text-slate-900 truncate leading-tight"
-                                    title={displayCategory}
-                                  >
-                                    {displayCategory}
-                                  </span>
-                                  <div
-                                    className={cn(
-                                      "flex items-center gap-1 text-[10px] font-black uppercase tracking-widest leading-none mt-0.5",
-                                      isInternal
-                                        ? "text-indigo-600"
-                                        : "text-slate-500",
+                              <CustomTooltip
+                                content={
+                                  <div className="text-xs space-y-1">
+                                    <div className="font-bold text-slate-200">
+                                      {displayCategory}
+                                    </div>
+                                    <div className="text-slate-400">
+                                      Type: {kindLabelFull}
+                                    </div>
+                                  </div>
+                                }
+                              >
+                                <div className="flex items-center gap-2 min-w-0 max-w-full">
+                                  {/* Icon Container (Square as per rules) */}
+                                  <div className="shrink-0 h-8 w-8 rounded-none border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm">
+                                    {categoryImage ? (
+                                      <img
+                                        src={categoryImage}
+                                        alt={displayCategory}
+                                        className="h-full w-full object-contain"
+                                      />
+                                    ) : categoryIcon ? (
+                                      <span className="text-sm">
+                                        {categoryIcon}
+                                      </span>
+                                    ) : (
+                                      <Book className="h-4 w-4 text-slate-400" />
                                     )}
-                                  >
-                                    <KindIcon className="h-2.5 w-2.5" />
-                                    <span>{kindLabel}</span>
+                                  </div>
+
+                                  <div className="flex flex-col min-w-0 max-w-[110px]">
+                                    <span className="text-sm font-bold text-slate-900 truncate leading-tight">
+                                      {displayCategory}
+                                    </span>
+                                    <div
+                                      className={cn(
+                                        "flex items-center gap-1 text-[10px] font-black uppercase tracking-widest leading-none mt-0.5",
+                                        isInternal
+                                          ? "text-indigo-600"
+                                          : "text-slate-500",
+                                      )}
+                                    >
+                                      <KindIcon className="h-2.5 w-2.5" />
+                                      <span>{kindLabel}</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
+                              </CustomTooltip>
                             );
                           }
                           case "account": {
@@ -4533,6 +5233,17 @@ export const UnifiedTransactionTable = React.forwardRef<
                             const rate =
                               percentDisp > 1 ? percentDisp / 100 : percentDisp;
 
+                            const metadata = parseMetadata(txn.metadata);
+                            const splitRawTotalAmount = Number(
+                              (metadata as any)?.split_bill?.raw_total_amount ??
+                                (metadata as any)?.raw_total_amount ??
+                                0,
+                            );
+                            const showRawSplitBadge =
+                              Number.isFinite(splitRawTotalAmount) &&
+                              splitRawTotalAmount > 0 &&
+                              Math.abs(splitRawTotalAmount - Math.abs(amount)) > 0;
+
                             const isRepayment = txn.type === "repayment";
                             const visualType =
                               (txn as any).displayType ?? txn.type;
@@ -4625,6 +5336,11 @@ export const UnifiedTransactionTable = React.forwardRef<
                                     {numberFormatter.format(Math.abs(amount))}
                                   </span>
                                 </div>
+                                {showRawSplitBadge && (
+                                  <span className="inline-flex h-5 items-center rounded-sm border border-amber-300 bg-amber-50 px-2 text-[10px] font-bold text-amber-700">
+                                    raw={numberFormatter.format(Math.abs(splitRawTotalAmount))}
+                                  </span>
+                                )}
                               </div>
                             );
                           }
@@ -4641,24 +5357,37 @@ export const UnifiedTransactionTable = React.forwardRef<
                               percentRaw,
                               fixedRaw,
                               shareAmount,
+                              shareBaseAmount,
                               bankBack,
                               calculatedPolicy
                             } =
                               resolveCashbackFields(txn, txnAccount);
                             const percentDisp = percentRaw;
                             const fixedDisp = fixedRaw;
-                            const cashbackAmount = bankBack || shareAmount;
                             const baseAmount = Math.abs(
                               Number(originalAmount ?? 0),
                             );
+
+                            const shareRate = percentDisp > 1 ? percentDisp / 100 : percentDisp;
+                            const formulaBaseAmount =
+                              typeof shareBaseAmount === "number" && shareBaseAmount > 0
+                                ? shareBaseAmount
+                                : baseAmount;
+                            const computedShared = formulaBaseAmount * shareRate + fixedDisp;
+
+                            const cashbackAmount =
+                              context === "person"
+                                ? (shareAmount > 0 ? shareAmount : computedShared)
+                                : (shareAmount > 0
+                                  ? shareAmount
+                                  : (calculatedPolicy?.metadata?.estimated_cashback ?? bankBack));
+
                             const finalDisp =
-                              calculatedPolicy?.metadata?.policySource !== 'program_default' && calculatedPolicy?.metadata?.estimated_cashback !== undefined
-                                ? Math.max(0, baseAmount - calculatedPolicy.metadata.estimated_cashback)
-                                : typeof txn.final_price === "number"
-                                  ? Math.abs(txn.final_price)
-                                  : cashbackAmount > baseAmount
-                                    ? baseAmount
-                                    : Math.max(0, baseAmount - cashbackAmount);
+                              context !== "person" && typeof txn.final_price === "number"
+                                ? Math.abs(txn.final_price)
+                                : cashbackAmount > baseAmount
+                                  ? baseAmount
+                                  : Math.max(0, baseAmount - cashbackAmount);
                             const estimatedRewardDisplay =
                               cashbackAmount > 0
                                 ? cashbackAmount
@@ -4685,6 +5414,11 @@ export const UnifiedTransactionTable = React.forwardRef<
                               percentDisp > 0 ||
                               fixedDisp > 0 ||
                               cashbackAmount > 0;
+
+                            const rewardLabel =
+                              context === "person"
+                                ? "Cashback Shared:"
+                                : "Est. Refund/Bank Reward:";
 
                             if (!hasCashback) {
                               return (
@@ -4717,7 +5451,7 @@ export const UnifiedTransactionTable = React.forwardRef<
                                         </span>
                                       </div>
                                       <div className="flex justify-between gap-4 text-emerald-600">
-                                        <span>Est. Refund/Bank Reward:</span>
+                                        <span>{rewardLabel}</span>
                                         <span className="font-bold">
                                           {numberFormatter.format(
                                             estimatedRewardDisplay,
@@ -4746,84 +5480,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                                       style={{ fontSize: `0.95em` }}
                                     >
                                       {numberFormatter.format(Math.abs(finalDisp))}
-                                    </span>
-                                  </div>
-                                </CustomTooltip>
-                              </div>
-                            );
-                          }
-                          case "total_back": {
-                            const amount =
-                              typeof txn.amount === "number" ? txn.amount : 0;
-                            const originalAmount =
-                              typeof txn.original_amount === "number"
-                                ? txn.original_amount
-                                : amount;
-                            const baseAmount = Math.abs(
-                              Number(originalAmount ?? 0),
-                            );
-
-                            const {
-                              percentRaw,
-                              fixedRaw,
-                              shareAmount,
-                              bankBack,
-                            } = resolveCashbackFields(txn, accounts.find(a => a.id === (txn.account_id || txn.source_account_id || txn.target_account_id)));
-                            const percentDisp = percentRaw;
-                            const fixedDisp = fixedRaw;
-                            const cashbackAmount =
-                              shareAmount > 0 ? shareAmount : bankBack;
-
-                            if (
-                              cashbackAmount === 0 &&
-                              !percentDisp &&
-                              !fixedDisp
-                            )
-                              return <span className="text-slate-300">-</span>;
-
-                            const effectivePercent =
-                              baseAmount > 0
-                                ? (cashbackAmount / baseAmount) * 100
-                                : 0;
-
-                            return (
-                              <div className="flex flex-col items-end gap-0.5 w-full">
-                                <CustomTooltip
-                                  content={
-                                    <div className="text-xs space-y-1">
-                                      <div className="font-semibold border-b border-slate-200 pb-1 mb-1">
-                                        💰 Total Back Details
-                                      </div>
-                                      <div className="flex justify-between gap-4">
-                                        <span>Base:</span>
-                                        <span className="font-bold">
-                                          {numberFormatter.format(baseAmount)}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between gap-4 text-emerald-600">
-                                        <span>Back:</span>
-                                        <span className="font-bold">
-                                          {numberFormatter.format(
-                                            cashbackAmount,
-                                          )}
-                                        </span>
-                                      </div>
-                                      <div className="text-[10px] text-slate-400 italic pt-1 text-right">
-                                        ~ {effectivePercent.toFixed(2)}%
-                                      </div>
-                                    </div>
-                                  }
-                                >
-                                  <div className="flex items-baseline gap-1.5 justify-end cursor-help">
-                                    <span className="text-[10px] font-bold text-emerald-600">
-                                      -
-                                      {effectivePercent % 1 === 0
-                                        ? effectivePercent.toFixed(0)
-                                        : effectivePercent.toFixed(2)}
-                                      % =
-                                    </span>
-                                    <span className="font-black text-emerald-700 tabular-nums">
-                                      {numberFormatter.format(cashbackAmount)}
                                     </span>
                                   </div>
                                 </CustomTooltip>
@@ -4998,8 +5654,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                           );
                         } else if (col.key === "amount") {
                           content = numberFormatter.format(tableTotals.base);
-                        } else if (col.key === "total_back") {
-                          content = numberFormatter.format(tableTotals.back);
                         } else if (col.key === "final_price") {
                           content = numberFormatter.format(tableTotals.net);
                         } else if (col.key === "actual_cashback") {
@@ -5016,7 +5670,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                             className={cn(
                               "py-2.5 px-3 whitespace-nowrap border-r border-slate-800",
                               (col.key === "amount" ||
-                                col.key === "total_back" ||
                                 col.key === "final_price" ||
                                 col.key === "actual_cashback" ||
                                 col.key === "est_share" ||
@@ -5256,6 +5909,19 @@ export const UnifiedTransactionTable = React.forwardRef<
                     will not be deleted, but it will be hidden from default
                     views and excluded from calculations.
                   </p>
+
+                  {confirmVoidLinkedRolloverId && (
+                    <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex gap-3">
+                      <Link2 className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                      <div className="text-[11px] font-medium text-indigo-800 leading-normal">
+                        <strong className="block text-indigo-900 mb-0.5 uppercase tracking-wider">
+                          Rollover pair detected
+                        </strong>
+                        Voiding this transaction will also void its linked rollover
+                        pair in the other cycle and sync both removals to Sheet.
+                      </div>
+                    </div>
+                  )}
 
                   {/* Specific warning for batch confirmed items */}
                   {(confirmVoidTarget.note?.includes("[C]") ||
@@ -5782,7 +6448,9 @@ export const UnifiedTransactionTable = React.forwardRef<
             }}
             onReset={() => {
               // 1. Reset Order
-              setCustomColumnOrder(defaultColumns.map((c) => c.key));
+              setCustomColumnOrder(
+                normalizeColumnOrder(defaultColumns.map((c) => c.key)),
+              );
               localStorage.removeItem("mf_v3_col_order");
 
               // 2. Reset Visibility
@@ -5794,7 +6462,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                 tag: false,
                 account: true,
                 amount: true,
-                total_back: false,
                 final_price: true,
                 id: false,
                 actions: true,
