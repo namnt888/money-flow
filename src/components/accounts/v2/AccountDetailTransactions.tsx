@@ -276,7 +276,11 @@ export function AccountDetailTransactions({
 
     const currentCycleTag = useMemo(() => {
         const config = parseCashbackConfig(account.cashback_config)
-        const cycleRange = getCashbackCycleRange(config, new Date())
+        const effectiveConfig = {
+            ...config,
+            statementDay: Number(account.statement_day || config.statementDay || 0) || config.statementDay,
+        }
+        const cycleRange = getCashbackCycleRange(effectiveConfig as any, new Date())
         if (cycleRange) {
             return formatIsoCycleTag(cycleRange.end)
         }
@@ -363,11 +367,24 @@ export function AccountDetailTransactions({
                 } : undefined
             }))
 
-            // Merge API cycles and derived cycles to ensure all history is visible
-            // This prevents old cycles (from transactions) disappearing when the API returns proactive cycles
-            const combined = [...apiCycleOptions]
-            txnDerivedCycles.forEach(derived => {
-                if (!combined.some(c => c.value === derived.value)) {
+            // Merge API cycles and derived cycles to ensure all history is visible.
+            // Use derived label/count/highlight as source of truth for existing transaction cycles
+            // so statement-day changes are reflected immediately in cycle history.
+            const derivedByTag = new Map(txnDerivedCycles.map((cycle) => [cycle.value, cycle]))
+            const combined = apiCycleOptions.map((cycle) => {
+                const derived = derivedByTag.get(cycle.value)
+                if (!derived) return cycle
+
+                return {
+                    ...cycle,
+                    label: derived.label,
+                    count: derived.count,
+                    highlight: derived.highlight,
+                }
+            })
+
+            txnDerivedCycles.forEach((derived) => {
+                if (!combined.some((cycle) => cycle.value === derived.value)) {
                     combined.push(derived)
                 }
             })
