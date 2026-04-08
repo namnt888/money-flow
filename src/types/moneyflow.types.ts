@@ -15,6 +15,9 @@ export type Category = {
   image_url?: string | null;
   mcc_codes?: string[] | null;
   keywords?: string[] | null;
+  linked_account_ids?: string[] | null;
+  linked_shop_ids?: string[] | null;
+  default_shop_id?: string | null;
   kind?: "internal" | "external" | null;
   is_archived?: boolean | null;
   slug?: string | null;
@@ -110,6 +113,8 @@ export type Account = {
     statement_day?: number;
     payment_due_day?: number;
   } | null;
+  metadata?: any;
+  is_favorite?: boolean | null;
 };
 
 export type AccountCashbackSnapshot = {

@@ -14,8 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
-import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search } from "lucide-react";
+import { Wallet, Info, Trash2, Banknote, CreditCard, Building, Coins, HandCoins, PiggyBank, Receipt, DollarSign, Plus, Copy, ChevronLeft, CheckCircle2, Check, ChevronsUpDown, RotateCcw, Loader2, RefreshCw, Sparkles, X, Infinity, Building2, Calendar, CalendarClock, FileText, Search, Star } from "lucide-react";
 import { updateAccountConfig } from "@/services/account.service";
 import { createAccount } from "@/actions/account-actions";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ import { SmartAmountInput } from "@/components/ui/smart-amount-input";
 import { CustomTooltip } from "@/components/ui/custom-tooltip";
 import { DayOfMonthPicker } from "@/components/ui/day-of-month-picker";
 import { CategorySlide } from "@/components/accounts/v2/CategorySlide";
+import { ShopSlide } from "@/components/shops/ShopSlide";
 import { CashbackConfigForm } from "./forms/CashbackConfigForm";
 import { CashbackRulesJson } from "@/types/cashback.types";
 import { UnsavedChangesDialog } from "@/components/transaction/slide-v2/unsaved-changes-dialog";
@@ -62,6 +64,7 @@ import { Category, Person, Subscription } from "@/types/moneyflow.types";
 import { PeopleSlideV2 } from "../../people/v2/people-slide-v2";
 import { getPeopleAction } from "@/actions/people-actions";
 import { getServicesAction } from "@/actions/service-actions";
+import { getShops } from "@/services/shop.service";
 
 type CashbackCycleType = 'calendar_month' | 'statement_cycle';
 
@@ -510,6 +513,7 @@ export function AccountSlideV2({
     const [restrictedCategoryIds, setRestrictedCategoryIds] = useState<string[]>([]);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isShopDialogOpen, setIsShopDialogOpen] = useState(false);
     const [isRefreshing, startRefresh] = React.useTransition();
     const [activeCategoryCallback, setActiveCategoryCallback] = useState<((categoryId: string) => void) | null>(null);
     // MF5.5 Rebooted Cashback States (Phase 16)
@@ -528,6 +532,7 @@ export function AccountSlideV2({
     const [openHolderPersonPopover, setOpenHolderPersonPopover] = useState(false);
     const [isPeopleSlideOpen, setIsPeopleSlideOpen] = useState(false);
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [shops, setShops] = useState<any[]>([]);
     const [performingAction, setPerformingAction] = useState(false);
 
     // Form state
@@ -536,6 +541,7 @@ export function AccountSlideV2({
     const [accountNumber, setAccountNumber] = useState("");
     const [creditLimit, setCreditLimit] = useState<number>(0);
     const [isActive, setIsActive] = useState(true);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
 
     // Advanced settings
@@ -608,6 +614,7 @@ export function AccountSlideV2({
                 console.error('[AccountSlideV2] Initial fetch failed:', err);
             });
             getServicesAction().then(res => setSubscriptions(res as any));
+            getShops().then((res) => setShops(res || [])).catch(() => setShops([]));
         }
     }, [open]);
 
@@ -647,6 +654,7 @@ export function AccountSlideV2({
         setAccountNumber(acc.account_number || "");
         setCreditLimit(acc.credit_limit || 0);
         setIsActive(acc.is_active !== false);
+        setIsFavorite(acc.is_favorite === true);
         setImageUrl(acc.image_url || "");
         setHolderType(acc.holder_type || 'me');
         setHolderPersonId(acc.holder_person_id || null);
@@ -765,6 +773,7 @@ export function AccountSlideV2({
             setAccountNumber("");
             setCreditLimit(0);
             setIsActive(true);
+            setIsFavorite(false);
             setImageUrl("");
             setCycleType('calendar_month');
             setStatementDay(null);
@@ -833,6 +842,7 @@ export function AccountSlideV2({
             accountNumber,
             creditLimit,
             isActive,
+            isFavorite,
             imageUrl,
             annualFee,
             receiverName,
@@ -845,7 +855,7 @@ export function AccountSlideV2({
             maxCashback: cbMaxBudget,
             levels: effectiveLevels
         });
-    }, [name, type, accountNumber, creditLimit, isActive, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
+    }, [name, type, accountNumber, creditLimit, isActive, isFavorite, imageUrl, annualFee, receiverName, parentAccountId, securedById, isCollateralLinked, cycleType, statementDay, dueDate, cbBaseRate, cbMaxBudget, cbMinSpend, levels, isCategoryRestricted, restrictedCategoryIds, isAdvancedCashback]);
 
     // Set initial state once when opening
     useEffect(() => {
@@ -869,6 +879,7 @@ export function AccountSlideV2({
                 accountNumber: account.account_number || "",
                 creditLimit: account.credit_limit || 0,
                 isActive: account.is_active !== false,
+                isFavorite: account.is_favorite === true,
                 imageUrl: account.image_url || "",
                 annualFee: account.annual_fee || 0,
                 annualFeeWaiverTarget: account.annual_fee_waiver_target || 0,
@@ -891,6 +902,7 @@ export function AccountSlideV2({
                 accountNumber: "",
                 creditLimit: 0,
                 isActive: true,
+                isFavorite: false,
                 imageUrl: "",
                 annualFee: 0,
                 receiverName: "",
@@ -968,6 +980,10 @@ export function AccountSlideV2({
             };
 
             if (isEdit && account) {
+                const mergedMetadata = {
+                    ...(((account as any)?.metadata || {}) as Record<string, any>),
+                };
+
                 // Determine cb_type
                 let effectiveCbType: 'none' | 'simple' | 'tiered' = 'none';
                 if (isCashbackEnabled) {
@@ -1037,6 +1053,8 @@ export function AccountSlideV2({
                     dueDate: dueDate,
                     holder_type: holderType,
                     holder_person_id: holderPersonId,
+                    isFavorite,
+                    metadata: mergedMetadata as any,
 
                     // Keep legacy config for safety during transition
                     cashbackConfig: isCashbackEnabled ? {
@@ -1047,7 +1065,7 @@ export function AccountSlideV2({
                             minSpendTarget: cbMinSpend,
                             defaultRate: cbBaseRate / 100,
                             maxBudget: cbMaxBudget,
-                            rules_json_v2: transformRulesForSave(cbRulesJson)
+                            rules_json_v2: transformRulesForSave(cbRulesJson),
                         }
                     } as any : null
                 });
@@ -1068,6 +1086,7 @@ export function AccountSlideV2({
                 // Implementation for create
                 console.log('[AccountSlideV2] Creating account...', { name, cbType });
                 const result = await createAccount({
+                    metadata: null,
                     name,
                     type,
                     accountNumber: accountNumber,
@@ -1091,6 +1110,7 @@ export function AccountSlideV2({
                     dueDate: dueDate,
                     holder_type: holderType,
                     holder_person_id: holderPersonId,
+                    isFavorite,
 
                     // Legacy config
                     cashbackConfig: isCashbackEnabled ? {
@@ -1101,7 +1121,7 @@ export function AccountSlideV2({
                             minSpendTarget: cbMinSpend,
                             defaultRate: cbBaseRate / 100,
                             maxBudget: cbMaxBudget,
-                            rules_json_v2: transformRulesForSave(cbRulesJson)
+                            rules_json_v2: transformRulesForSave(cbRulesJson),
                         }
                     } : null
                 });
@@ -1622,6 +1642,28 @@ export function AccountSlideV2({
                                 )
                             }
 
+                            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className={cn(
+                                            "p-1.5 rounded-md",
+                                            isFavorite ? "bg-amber-100" : "bg-slate-100"
+                                        )}>
+                                            <Star className={cn("h-4 w-4", isFavorite ? "text-amber-600 fill-amber-500" : "text-slate-500")} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-slate-800">Favorite</h3>
+                                            <p className="text-[10px] text-slate-500 font-medium italic">Show this account in sidebar favorites list.</p>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={isFavorite}
+                                        onCheckedChange={(checked) => setIsFavorite(checked)}
+                                        className="scale-75 data-[state=checked]:bg-amber-500"
+                                    />
+                                </div>
+                            </div>
+
                             {/* Security & Collateral - Only for Credit Cards */}
                             {
                                 type === 'credit_card' && (
@@ -1899,6 +1941,8 @@ export function AccountSlideV2({
             <CategorySlide
                 open={isCategoryDialogOpen}
                 onOpenChange={setIsCategoryDialogOpen}
+                accounts={allAccounts}
+                shops={shops}
                 defaultType="expense"
                 onBack={() => setIsCategoryDialogOpen(false)}
                 zIndex={zIndex + 100}
@@ -1912,6 +1956,27 @@ export function AccountSlideV2({
                         setIsCategoryDialogOpen(false);
                         toast.success("Category created successfully");
                     });
+                }}
+            />
+
+            <ShopSlide
+                open={isShopDialogOpen}
+                onOpenChange={setIsShopDialogOpen}
+                categories={categories}
+                onBack={() => setIsShopDialogOpen(false)}
+                zIndex={zIndex + 100}
+                onSuccess={async (newShopId) => {
+                    setIsShopDialogOpen(false);
+                    if (!newShopId) return;
+
+                    try {
+                        const latestShops = await getShops();
+                        setShops(latestShops);
+                        toast.success("Shop created and selected");
+                    } catch (error) {
+                        console.error("Failed to refresh shops:", error);
+                        toast.error("Shop created but failed to refresh list");
+                    }
                 }}
             />
         </>

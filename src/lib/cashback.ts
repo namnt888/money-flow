@@ -93,7 +93,7 @@ function parseConfigCandidate(raw: Record<string, unknown> | null, source: strin
           id: String(rule.id || Math.random().toString(36).substring(2, 9)),
           categoryIds: (Array.isArray(rule.categoryIds) ? rule.categoryIds : (Array.isArray(rule.cat_ids) ? rule.cat_ids : [])).map(String),
           rate: Number(rule.rate ?? 0),
-          maxReward: rule.maxReward !== undefined && rule.maxReward !== null ? Number(rule.maxReward) : null,
+          maxReward: rule.maxReward !== undefined && rule.maxReward !== null ? Number(rule.maxReward) : (rule.max !== undefined && rule.max !== null ? Number(rule.max) : null),
         })) : [],
       })) : (Array.isArray(p.rules_json_v2) ? [{
         id: 'rules_v2_default',
@@ -104,7 +104,7 @@ function parseConfigCandidate(raw: Record<string, unknown> | null, source: strin
           id: String(rule.id || Math.random().toString(36).substring(2, 9)),
           categoryIds: (Array.isArray(rule.categoryIds) ? rule.categoryIds : (Array.isArray(rule.cat_ids) ? rule.cat_ids : [])).map(String),
           rate: Number(rule.rate ?? 0),
-          maxReward: rule.maxReward !== undefined && rule.maxReward !== null ? Number(rule.maxReward) : null,
+          maxReward: rule.maxReward !== undefined && rule.maxReward !== null ? Number(rule.maxReward) : (rule.max !== undefined && rule.max !== null ? Number(rule.max) : null),
         }))
       }] : undefined),
     };

@@ -7,12 +7,12 @@ export type ColumnKey =
   | "note" // Added Note Column
   | "account" // Merged Flow & Entity
   | "amount"
-  | "total_back" // Added Total Back
   | "final_price" // Net Value
   | "id"
   | "actions"
   | "actual_cashback"
   | "est_share"
+  | "net_profit_raw"
   | "net_profit"
   | "back_info" // Legacy, keep for safety
   | "people"
@@ -30,6 +30,8 @@ export const defaultColumns: ColumnConfig[] = [
   { key: "shop", label: "Note", defaultWidth: 200, minWidth: 150 },
   { key: "account", label: "Flow & Entity", defaultWidth: 280, minWidth: 200 },
   { key: "amount", label: "Value", defaultWidth: 140, minWidth: 120 }, // Merged column
+  { key: "est_share", label: "Cashback Shared", defaultWidth: 120, minWidth: 100 },
+  { key: "final_price", label: "Net Value", defaultWidth: 140, minWidth: 120 },
   { key: "category", label: "Category", defaultWidth: 180 },
   { key: "cycle", label: "Debt Cycle", defaultWidth: 120, minWidth: 100 },
   { key: "people", label: "People", defaultWidth: 150 },

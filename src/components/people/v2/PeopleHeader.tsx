@@ -171,14 +171,16 @@ function MetricItem({
     colorClass = "text-slate-900", 
     icon: Icon,
     prefix = "",
-    className
+    className,
+    subText,
 }: { 
     label: string, 
     value: number | string, 
     colorClass?: string, 
     icon?: any,
     prefix?: string,
-    className?: string
+    className?: string,
+    subText?: string,
 }) {
     const isRemains = label.toLowerCase() === 'remains'
     const isValueZero = typeof value === 'number' && Math.abs(value) < 100
@@ -195,6 +197,11 @@ function MetricItem({
             )}>
                 {isRemains && isValueZero ? 'SETTLED' : (typeof value === 'number' ? `${prefix}${numberFormatter.format(Math.abs(value))}` : value)}
             </span>
+            {subText ? (
+                <span className="text-[9px] font-medium text-slate-500 leading-none">
+                    {subText}
+                </span>
+            ) : null}
         </div>
     )
 }
@@ -222,7 +229,14 @@ export function PeopleHeader({
     onOpenAudit
 }: PeopleHeaderProps) {
     const isSettled = Math.abs(stats.remains) < 100
+    const isAdvance = stats.remains < -100
+    const remainsHintText = isSettled
+        ? 'Đã tất toán'
+        : isAdvance
+            ? `${person.name} đã trả dư nợ`
+            : 'Còn nợ cần trả thêm'
     const currentCycleRepayPercent = stats.netLend > 0 ? Math.min(100, Math.round((Math.abs(stats.repay) / Math.abs(stats.netLend)) * 100)) : 0
+    const cycleStatusLabel = isSettled ? 'SETTLED' : isAdvance ? 'ADVANCE' : 'ACTIVE'
     
     const cashbackGoalPercent = (cashbackStatus && hasFilter) ? (
         cashbackStatus.needToSpend > 0 
@@ -253,9 +267,13 @@ export function PeopleHeader({
                             <h1 className="text-base font-bold text-slate-900 truncate tracking-tight">{person.name}</h1>
                             <span className={cn(
                                 "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest",
-                                isSettled ? "bg-emerald-500 text-white shadow-sm" : "bg-slate-900 text-white"
+                                isSettled
+                                    ? "bg-emerald-500 text-white shadow-sm"
+                                    : isAdvance
+                                        ? "bg-indigo-500 text-white shadow-sm"
+                                        : "bg-slate-900 text-white"
                             )}>
-                                {isSettled ? 'SETTLED' : 'ACTIVE'}
+                                {cycleStatusLabel}
                             </span>
                         </div>
                         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-orange-100 bg-orange-50/50 w-fit">
@@ -299,6 +317,7 @@ export function PeopleHeader({
                             
                             <StatsPopover
                                 personId={person.id}
+                                personName={person.name}
                                 tag={activeCycle?.tag}
                                 originalLend={stats.originalLend}
                                 cashback={stats.cashback}
@@ -312,7 +331,8 @@ export function PeopleHeader({
                                     <MetricItem 
                                         label="Remains" 
                                         value={isSettled ? "SETTLED" : stats.remains} 
-                                        colorClass={isSettled ? "text-emerald-500" : "text-rose-600"} 
+                                        colorClass={isSettled ? "text-emerald-500" : isAdvance ? "text-indigo-600" : "text-rose-600"}
+                                        subText={remainsHintText}
                                     />
                                 </button>
                             </StatsPopover>

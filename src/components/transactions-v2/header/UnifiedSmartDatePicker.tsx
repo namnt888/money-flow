@@ -443,10 +443,13 @@ export function UnifiedSmartDatePicker({
                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Fixed Shortcuts</span>
                     <div className="grid grid-cols-2 gap-2">
                         <button 
-                            onClick={() => { setLocalCycle('all'); setLocalMode('all'); onModeChange('all'); onYearSelect?.(null); setOpen(false); }}
+                      onClick={() => {
+                        setLocalCycle('all')
+                            setLocalMode('cycle')
+                      }}
                             className={cn(
                                 "flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-xs font-bold",
-                                mode === 'all' && !selectedYearValue ? "bg-amber-100 border-amber-300 text-amber-900 shadow-sm" : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
+                            localMode === 'cycle' && localCycle === 'all' ? "bg-amber-100 border-amber-300 text-amber-900 shadow-sm" : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
                             )}
                         >
                             <History className="h-3.5 w-3.5" /> All History
@@ -512,6 +515,7 @@ export function UnifiedSmartDatePicker({
                           const isSelected = localCycle === cycle.value
                           const remains = statType === 'debt' ? (cycle.stats?.remains || 0) : (cycle.stats?.profit || 0)
                           const isSettled = cycle.stats?.isSettled || Math.abs(Number(remains)) < 100
+                          const isAdvance = statType === 'debt' && Number(remains) < -100
 
                           return (
                             <motion.div
@@ -570,6 +574,12 @@ export function UnifiedSmartDatePicker({
                                           {isSettled ? (
                                             <div className="h-7 px-3 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0 w-fit hover:bg-emerald-100 transition-colors">
                                               <span className="text-[8px] font-black uppercase tracking-widest">SETTLED</span>
+                                            </div>
+                                          ) : isAdvance ? (
+                                            <div className="flex flex-col items-center justify-center py-1 px-3 rounded-lg bg-indigo-50 border border-indigo-100 shrink-0 w-fit min-w-[70px] hover:bg-indigo-100 transition-colors">
+                                              <span className="text-[12px] font-black text-indigo-600 tabular-nums">
+                                                {numberFormatter.format(Math.abs(Math.round(remains)))}
+                                              </span>
                                             </div>
                                           ) : (
                                             <div className="flex flex-col items-center justify-center py-1 px-3 rounded-lg bg-rose-50 border border-rose-100 shrink-0 w-fit min-w-[70px] hover:bg-rose-100 transition-colors group/profit">

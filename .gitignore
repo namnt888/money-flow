@@ -32,3 +32,27 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local troubleshooting artifacts
+build_output*.txt
+build_errors.txt
+build.log
+push_output*.txt
+current_errors*.txt
+ts_error*.txt
+ts_errors.txt
+tsc*.txt
+tsc*.log
+
+# local throwaway scripts
+_*.py
+tmp_*.mjs
+tmp-*.ts
+temp_*.sql
+temp_*.txt
+fix_file.js
+fix-lady-config.mjs
+
+# duplicate editor/export leftovers
+.gitignore [0-9]*
+*.dmg

@@ -38,6 +38,8 @@ export function Breadcrumbs() {
 
     if (breadcrumbs.length === 0) return null;
 
+    const shouldOpenParentsInNewTab = breadcrumbs.length > 1;
+
     return (
         <nav className="flex items-center gap-1.5 px-4 py-2 border-b bg-slate-50/50" aria-label="Breadcrumb">
             <Link
@@ -58,8 +60,8 @@ export function Breadcrumbs() {
                     ) : (
                         <Link
                             href={crumb.href}
-                            target={crumb.href === '/people' ? "_blank" : undefined}
-                            rel={crumb.href === '/people' ? "noopener noreferrer" : undefined}
+                            target={shouldOpenParentsInNewTab ? "_blank" : undefined}
+                            rel={shouldOpenParentsInNewTab ? "noopener noreferrer" : undefined}
                             className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors truncate max-w-[150px]"
                         >
                             {crumb.name}

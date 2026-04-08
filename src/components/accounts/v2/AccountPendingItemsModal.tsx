@@ -30,6 +30,8 @@ interface AccountPendingItemsModalProps {
     pendingRefundCount: number
     pendingRefundAmount: number
     onSuccess?: () => void
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 export function AccountPendingItemsModal({
@@ -37,9 +39,11 @@ export function AccountPendingItemsModal({
     pendingItems: initialPendingItems,
     pendingRefundCount,
     pendingRefundAmount,
-    onSuccess
+    onSuccess,
+    open,
+    onOpenChange,
 }: AccountPendingItemsModalProps) {
-    const [isOpen, setIsOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
     const [isConfirming, setIsConfirming] = useState(false)
     const [submittingId, setSubmittingId] = useState<string | null>(null)
@@ -47,17 +51,34 @@ export function AccountPendingItemsModal({
     const [localPendingItems, setLocalPendingItems] = useState<PendingBatchItem[]>(initialPendingItems)
     const router = useRouter()
 
+    const isControlled = typeof open === 'boolean'
+    const isOpen = isControlled ? Boolean(open) : internalOpen
+    const setModalOpen = (next: boolean) => {
+        if (isControlled) {
+            onOpenChange?.(next)
+            return
+        }
+        setInternalOpen(next)
+    }
+
     useEffect(() => {
+        if (isControlled) return
+
         const handleOpen = (e: any) => {
             if (e.detail?.accountId === accountId) {
-                setIsOpen(true)
+                setModalOpen(true)
                 // Select all by default
                 setSelectedIds(new Set(initialPendingItems.map(item => item.id)))
             }
         }
         window.addEventListener('open-pending-items-modal', handleOpen)
         return () => window.removeEventListener('open-pending-items-modal', handleOpen)
-    }, [accountId, initialPendingItems])
+    }, [accountId, initialPendingItems, isControlled])
+
+    useEffect(() => {
+        if (!isOpen) return
+        setSelectedIds(new Set(localPendingItems.map(item => item.id)))
+    }, [isOpen, localPendingItems])
 
     // Sync local state when props change (fix for stale data)
     useEffect(() => {
@@ -110,7 +131,7 @@ export function AccountPendingItemsModal({
                 setSelectedIds(new Set())
 
                 if (remaining.length === 0) {
-                    setIsOpen(false)
+                    setModalOpen(false)
                 }
 
                 if (onSuccess) await onSuccess()
@@ -150,7 +171,7 @@ export function AccountPendingItemsModal({
                 setSelectedIds(newSelected)
 
                 if (remaining.length === 0) {
-                    setIsOpen(false)
+                    setModalOpen(false)
                 }
 
                 if (onSuccess) await onSuccess()
@@ -191,7 +212,7 @@ export function AccountPendingItemsModal({
                 setSelectedIds(newSelected)
 
                 if (remaining.length === 0) {
-                    setIsOpen(false)
+                    setModalOpen(false)
                 }
 
                 if (onSuccess) await onSuccess()
@@ -210,7 +231,7 @@ export function AccountPendingItemsModal({
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={setModalOpen}>
             <DialogContent className="sm:max-w-[500px] p-0 border-none shadow-2xl">
                 {/* Global Loading Overlay for Modal */}
                 {(isConfirming || !!voidingId) && (
@@ -354,7 +375,7 @@ export function AccountPendingItemsModal({
                 </div>
 
                 <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100">
-                    <Button variant="ghost" onClick={() => setIsOpen(false)} className="text-xs font-bold uppercase text-slate-500">
+                    <Button variant="ghost" onClick={() => setModalOpen(false)} className="text-xs font-bold uppercase text-slate-500">
                         Cancel
                     </Button>
                     <Button

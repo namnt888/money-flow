@@ -70,7 +70,6 @@ const getColumnIcon = (key: string) => {
         case 'category': return <LayoutGrid className="h-4 w-4" />;
         case 'account': return <Wallet className="h-4 w-4" />;
         case 'amount': return <Sigma className="h-4 w-4" />;
-        case 'total_back': return <Undo2 className="h-4 w-4" />;
         case 'final_price': return <Zap className="h-4 w-4" />;
         case 'tag': return <Tag className="h-4 w-4" />;
         case 'id': return <Hash className="h-4 w-4" />;

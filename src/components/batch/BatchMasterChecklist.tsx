@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, Trash2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
@@ -25,6 +25,8 @@ interface BatchMasterChecklistProps {
     bankType: 'MBB' | 'VIB'
     accounts: any[]
     bankMappings?: any[]
+    globalSheetUrl?: string | null
+    globalSheetName?: string | null
     period?: 'before' | 'after'
     monthYear?: string
     initialPhaseId?: string | null
@@ -38,6 +40,8 @@ export function BatchMasterChecklist({
     bankType,
     accounts,
     bankMappings = [],
+    globalSheetUrl,
+    globalSheetName,
     period,
     monthYear,
     initialPhaseId = null,
@@ -166,6 +170,18 @@ export function BatchMasterChecklist({
             }
         } catch (error) {
             console.error('Fast refresh failed', error)
+        }
+    }
+
+    async function handleSmartSort() {
+        setPerformingAction(true)
+        try {
+            await handleFastRefresh()
+            toast.success('✓ Smart sort triggered - reloading data')
+        } catch (error) {
+            toast.error('✗ Smart sort failed')
+        } finally {
+            setPerformingAction(false)
         }
     }
 
@@ -774,19 +790,36 @@ export function BatchMasterChecklist({
                             </Tooltip>
                         </div>
 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    onClick={handleGlobalToSheet}
-                                    disabled={performingAction}
-                                    className="h-11 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest gap-2 bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"
-                                >
-                                    {performingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
-                                    <span>Step 2 <span className="text-[10px] opacity-60 ml-1 font-bold">To Sheet ({phaseNameText})</span></span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Step 2: Sync list to Google Sheet for Auto-transfer</TooltipContent>
-                        </Tooltip>
+                        <div className="flex items-center rounded-xl shadow-md overflow-hidden">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        onClick={handleGlobalToSheet}
+                                        disabled={performingAction}
+                                        className="h-11 px-6 rounded-none font-black text-[11px] uppercase tracking-widest gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                                    >
+                                        {performingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                                        <span>Step 2 <span className="text-[10px] opacity-60 ml-1 font-bold">To Sheet ({phaseNameText})</span></span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Step 2: Sync list to Google Sheet for Auto-transfer</TooltipContent>
+                            </Tooltip>
+                            {globalSheetUrl && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href={globalSheetUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="h-11 w-11 inline-flex items-center justify-center bg-indigo-700 text-indigo-100 hover:bg-indigo-800 border-l border-indigo-500 transition-colors"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{globalSheetName || 'Open Google Sheet in new tab'}</TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
 
                         <div className="flex bg-emerald-600 rounded-xl shadow-md overflow-hidden">
                             <Tooltip>
@@ -966,6 +999,9 @@ export function BatchMasterChecklist({
                             onEditMasterItem={openMasterItemEditor}
                             onAddMasterItem={() => openMasterItemAdder(phase.id)}
                             focusedMasterItemId={focusedMasterItemId}
+                            onSmartSort={handleSmartSort}
+                            bankMappings={bankMappings}
+                            performingAction={performingAction}
                         />
                     </TabsContent>
                 ))}
@@ -1138,12 +1174,51 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId }: any) {
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings, performingAction }: any) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
     const [savingPhaseAmounts, setSavingPhaseAmounts] = useState(false)
     const lastDirtyRef = React.useRef<boolean | null>(null)
+    const sortedItems = useMemo(() => {
+        const normalize = (value: string) => value.trim().toLowerCase()
+        const getGroupKey = (item: any) => item.bank_code || item.accounts?.bank_code || item.bank_name || item.accounts?.name || ''
+        const groupMaxAmounts = new Map<string, number>()
+
+        items.forEach((item: any) => {
+            const groupKey = getGroupKey(item)
+            const amount = Math.abs(item.amount || 0)
+            const prevMax = groupMaxAmounts.get(groupKey) || 0
+            if (amount > prevMax) {
+                groupMaxAmounts.set(groupKey, amount)
+            }
+        })
+
+        return [...items].sort((a: any, b: any) => {
+            const groupA = getGroupKey(a)
+            const groupB = getGroupKey(b)
+            const groupMaxA = groupMaxAmounts.get(groupA) || 0
+            const groupMaxB = groupMaxAmounts.get(groupB) || 0
+
+            if (groupMaxA !== groupMaxB) {
+                return groupMaxB - groupMaxA
+            }
+
+            const amountA = Math.abs(a.amount || 0)
+            const amountB = Math.abs(b.amount || 0)
+            if (amountA !== amountB) {
+                return amountB - amountA
+            }
+
+            const bankA = normalize(a.bank_name || a.accounts?.name || '')
+            const bankB = normalize(b.bank_name || b.accounts?.name || '')
+            if (bankA !== bankB) {
+                return bankA.localeCompare(bankB)
+            }
+
+            return normalize(a.receiver_name || '').localeCompare(normalize(b.receiver_name || ''))
+        })
+    }, [items])
     const totalConfirmed = items.filter((i: any) => i.status === 'confirmed').length
     const createdTransactions = items.filter((i: any) => Boolean(i.transaction_id))
     const progress = items.length > 0 ? (totalConfirmed / items.length) * 100 : 0
@@ -1337,6 +1412,27 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                     {isPhaseEditing ? 'Editing' : 'Edit'}
                 </Button>
 
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onSmartSort}
+                    disabled={performingAction}
+                    className="h-8 px-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                    title="Smart sort"
+                >
+                    {performingAction ? (
+                        <>
+                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin text-emerald-500" />
+                            Sorting...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="h-3.5 w-3.5 mr-1" />
+                            Smart Sort
+                        </>
+                    )}
+                </Button>
+
                 {isPhaseEditing && (
                     <Button
                         size="sm"
@@ -1352,46 +1448,47 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
 
             {/* Body */}
             <div className="px-4 pb-4 pt-3 space-y-3">
-                    {/* Controls row: select-all + search */}
-                    {items.length > 0 && (
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 shrink-0" title="Select All Pending">
-                                <input
-                                    type="checkbox"
-                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                    checked={
-                                        items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').length > 0 &&
-                                        items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').every((i: any) => selectedItemIds.has(i.batch_item_id))
-                                    }
-                                    onChange={(e) => {
-                                        const pendingIds = items.filter((i: any) => i.batch_item_id && i.status !== 'confirmed').map((i: any) => i.batch_item_id)
-                                        const next = new Set(selectedItemIds)
-                                        if (e.target.checked) pendingIds.forEach((id: string) => next.add(id))
-                                        else pendingIds.forEach((id: string) => next.delete(id))
-                                        setSelectedItemIds(next)
-                                    }}
-                                />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">All</span>
-                            </div>
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                                <Input
-                                    placeholder="Search in this phase..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-9 h-9 bg-slate-50 border-slate-200 rounded-xl text-sm"
-                                />
-                                {searchQuery && (
-                                    <button
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                                    >
-                                        <XCircle className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
-                            </div>
+                {items.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 ml-2 shrink-0">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleOpenEditPhase(phase, e)}
+                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                title="Edit phase"
+                            >
+                                <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => handleInitiateDeletePhase(phase, e)}
+                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                                title="Delete phase"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
-                    )}
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <Input
+                                placeholder="Search in this phase..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-9 h-9 bg-slate-50 border-slate-200 rounded-xl text-sm"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                >
+                                    <XCircle className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                     {/* Progress bar */}
                     <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -1467,19 +1564,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             "grid gap-3",
                             isStandalone ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
-                            {[...items].sort((a: any, b: any) => {
-                                const getDaysLeft = (item: any) => {
-                                    const dueDay = item.accounts?.due_date as number | undefined
-                                    if (!dueDay) return Infinity
-                                    const now = new Date()
-                                    const d = new Date()
-                                    d.setDate(dueDay)
-                                    d.setHours(0, 0, 0, 0)
-                                    if (d < startOfDay(now)) d.setMonth(d.getMonth() + 1)
-                                    return differenceInDays(d, startOfDay(now))
-                                }
-                                return getDaysLeft(a) - getDaysLeft(b)
-                            }).map((item: any) => {
+                            {sortedItems.map((item: any) => {
                                 let isHighlighted = false
                                 if (searchQuery) {
                                     const query = searchQuery.toLowerCase()
@@ -1504,6 +1589,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                         isPhaseEditing={isPhaseEditing}
                                         draftAmount={draftAmounts[item.id] ?? ''}
                                         batches={batches}
+                                        bankMappings={bankMappings}
                                         onDraftAmountChange={(value: string) => updateDraftAmount(item.id, value)}
                                         isSelected={item.batch_item_id ? selectedItemIds.has(item.batch_item_id) : false}
                                         isMasterFocused={focusedMasterItemId === item.id}
@@ -1524,7 +1610,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     )
 }
 
-function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType }: any) {
+function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType, bankMappings }: any) {
     const [saving, setSaving] = useState(false)
     const [isEditingRowAmount, setIsEditingRowAmount] = useState(false)
     const [rowDraftAmount, setRowDraftAmount] = useState(draftAmount)
@@ -1668,7 +1754,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
     function handleOpenBatchItemInDb(e: React.MouseEvent) {
         e.stopPropagation()
         if (!item.batch_item_id) return
-        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_bai_001&filter=${encodeURIComponent(item.batch_item_id)}&sort=-%40rowid`
+        const url = `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_bai_001&filter=${encodeURIComponent(item.batch_item_id)}&sort=-%40rowid&recordId=${item.batch_item_id}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 
@@ -1762,12 +1848,26 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                 </TooltipProvider>
             )}
 
+            {/* Bank Mapping Badge - shows if card group matches expected mapping */}
+            {(() => {
+                const foundMapping = bankMappings?.find((m: any) => 
+                    m.bank_code === item.bank_code || 
+                    (m.bank_name?.toLowerCase() === item.bank_name?.toLowerCase() && m.bank_type === bankType)
+                )
+                const displayCode = item.bank_code || foundMapping?.bank_code || '?'
+                return (
+                    <div className="shrink-0 inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 shadow-sm">
+                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{displayCode}</span>
+                    </div>
+                )
+            })()}
+
             {item.accounts?.image_url ? (
-                <div className="shrink-0 h-10 w-10 rounded-none overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden flex items-center justify-center">
                     <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
                 </div>
             ) : (
-                <div className="shrink-0 h-10 w-10 rounded-none bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 shadow-sm">
+                <div className="shrink-0 h-12 w-12 rounded-none flex items-center justify-center text-[10px] font-black text-slate-400">
                     {item.bank_name?.substring(0, 2)}
                 </div>
             )}
@@ -1840,11 +1940,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                             {dueBadge.label} · {dueBadge.daysLeft}d
                         </span>
                     )}
-                    {isDueMismatch && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] font-black text-amber-500 uppercase tracking-wider">
-                            <AlertCircle className="h-2.5 w-2.5" /> Wrong phase
-                        </span>
-                    )}
+
                     {item.cutoff_period && (
                         <TooltipProvider>
                             <Tooltip>

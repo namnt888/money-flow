@@ -40,6 +40,7 @@ import { bulkCreateTransactions } from "@/actions/bulk-transaction-actions";
 import { logToServer, logErrorToServer } from "@/actions/log-actions";
 import {
   createTransaction,
+  createSplitTransactions,
   updateTransaction,
 } from "@/services/transaction.service";
 import { getCategories } from "@/services/category.service";
@@ -91,6 +92,8 @@ function upsertFeeNote(note: string, principal: number, fee: number): string {
   const marker = `(${formatVndNumber(principal)} | Fee: ${formatVndNumber(fee)})`;
   return cleaned ? `${cleaned} ${marker}` : marker;
 }
+
+const SPLIT_BILL_SYSTEM_ACCOUNT_ID = "88888888-9999-9999-9999-888888888888";
 
 function normalizeLookup(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -201,9 +204,11 @@ export function TransactionSlideV2({
   // Unsaved Changes Dialog State
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
-  const isEditingContext = Boolean(
-    editingId || initialData || operationMode !== "add",
+  const effectiveEditingId = useMemo(
+    () => (operationMode === "add" ? undefined : editingId),
+    [editingId, operationMode],
   );
+  const isEditingContext = operationMode === "edit" || Boolean(effectiveEditingId);
 
   // DEBUG: Verify schemas are defined
   useEffect(() => {
@@ -290,6 +295,10 @@ export function TransactionSlideV2({
             ? initialData.cashback_share_percent * 100
             : null,
         cashback_share_fixed: initialData.cashback_share_fixed ?? null,
+        split_include_me:
+          (initialData.metadata as any)?.split_bill?.include_me !== false,
+        split_me_note:
+          (initialData.metadata as any)?.split_bill?.me_note || "",
         ui_is_cashback_expanded: initialData.ui_is_cashback_expanded ?? false,
         is_installment: initialData.is_installment ?? false,
         metadata: initialData.metadata ?? null,
@@ -326,6 +335,8 @@ export function TransactionSlideV2({
       tag: null,
       cashback_share_percent: null,
       cashback_share_fixed: null,
+      split_include_me: true,
+      split_me_note: "",
       is_installment: false,
       metadata: null,
       ui_quantity: null,
@@ -588,6 +599,8 @@ export function TransactionSlideV2({
           defaultFormValues.cashback_share_percent ||
         currentValues.cashback_share_fixed !==
           defaultFormValues.cashback_share_fixed ||
+        currentValues.split_include_me !== defaultFormValues.split_include_me ||
+        currentValues.split_me_note !== defaultFormValues.split_me_note ||
         currentValues.service_fee !== defaultFormValues.service_fee ||
         currentValues.ui_quantity !== defaultFormValues.ui_quantity ||
         currentValues.ui_market_price !== defaultFormValues.ui_market_price ||
@@ -773,10 +786,10 @@ export function TransactionSlideV2({
 
   // Fetch data if editingId provided but no initialData
   useEffect(() => {
-    if (open && editingId && !initialData) {
+    if (open && effectiveEditingId && !initialData) {
       setIsLoadingEdit(true);
       import("@/services/transaction.service").then(({ loadTransactions }) => {
-        loadTransactions({ transactionId: editingId, limit: 1 })
+        loadTransactions({ transactionId: effectiveEditingId, limit: 1 })
           .then(([txn]) => {
             if (txn) {
               const isIncome =
@@ -802,6 +815,9 @@ export function TransactionSlideV2({
                     ? txn.cashback_share_percent * 100
                     : null,
                 cashback_share_fixed: txn.cashback_share_fixed || null,
+                split_include_me:
+                  (txn.metadata as any)?.split_bill?.include_me !== false,
+                split_me_note: (txn.metadata as any)?.split_bill?.me_note || "",
                 ui_is_cashback_expanded:
                   !!txn.is_installment ||
                   (!!txn.cashback_mode && txn.cashback_mode !== "none_back"),
@@ -828,7 +844,7 @@ export function TransactionSlideV2({
           });
       });
     }
-  }, [open, editingId, initialData, singleForm]);
+  }, [open, effectiveEditingId, initialData, singleForm]);
 
   const onSingleSubmit = async (data: SingleTransactionFormValues) => {
     if (!data || (Object.keys(data).length === 0 && operationMode !== "add")) {
@@ -844,14 +860,15 @@ export function TransactionSlideV2({
       target_account_id: data.target_account_id,
       amount: data.amount,
       mode: operationMode,
+      effectiveEditingId,
     });
 
     console.log("✅ onSingleSubmit called - Form validation PASSED");
     console.log("📋 Form data raw:", data);
-    console.log("🎯 Operation:", operationMode, "| editingId:", editingId);
+    console.log("🎯 Operation:", operationMode, "| editingId:", effectiveEditingId);
     console.log(
       "🔀 Will call:",
-      editingId ? "updateTransaction()" : "createTransaction()",
+      effectiveEditingId ? "updateTransaction()" : "createTransaction()",
     );
 
     const effectiveServiceFee =
@@ -866,10 +883,99 @@ export function TransactionSlideV2({
       effectiveServiceFee,
     );
 
+    const rawParticipants = Array.isArray(data.participants)
+      ? data.participants.filter(
+          (participant) => participant && participant.person_id,
+        )
+      : [];
+
+    const splitIncludeMe = data.split_include_me !== false;
+    const splitRawTotal = Math.max(0, Number(data.amount) || 0);
+    const hasAnyManualSplitAmount = rawParticipants.some(
+      (participant) => Number(participant.amount || 0) > 0,
+    );
+
+    const normalizedParticipants = hasAnyManualSplitAmount
+      ? rawParticipants
+          .filter((participant) => Number(participant.amount || 0) > 0)
+          .map((participant) => ({
+            person_id: participant.person_id,
+            amount: Math.max(0, Number(participant.amount || 0)),
+            note: String(participant.note || "").trim(),
+          }))
+      : (() => {
+          if (rawParticipants.length === 0 || splitRawTotal <= 0) return [];
+
+          const totalSlots = rawParticipants.length + (splitIncludeMe ? 1 : 0);
+          if (totalSlots <= 0) return [];
+
+          const share = Math.floor(splitRawTotal / totalSlots);
+          const peopleLeftover = splitRawTotal - share * totalSlots;
+
+          return rawParticipants.map((participant, index) => ({
+            person_id: participant.person_id,
+            amount: Math.max(0, index === 0 ? share + peopleLeftover : share),
+            note: String(participant.note || "").trim(),
+          }));
+        })();
+
+    const splitPeopleNotes = normalizedParticipants
+      .filter((participant) => participant.note.length > 0)
+      .map((participant) => participant.note);
+    const meSplitNote = String(data.split_me_note || "").trim();
+    if (meSplitNote.length > 0) {
+      splitPeopleNotes.push(
+        meSplitNote.includes(":") ? meSplitNote : `${meSplitNote}: Me`,
+      );
+    }
+    const splitSummaryNote = splitPeopleNotes.join(" | ");
+    const mergedTxnNote = [finalNote?.trim(), splitSummaryNote]
+      .filter(Boolean)
+      .join(" | ");
+
+    const splitPeopleTotal = normalizedParticipants.reduce(
+      (sum, participant) => sum + participant.amount,
+      0,
+    );
+    const splitMeBase = splitIncludeMe
+      ? Math.max(0, splitRawTotal - splitPeopleTotal)
+      : 0;
+
+    const isSharingMode = ["real_percent", "real_fixed", "voluntary"].includes(
+      data.cashback_mode || "none_back",
+    );
+    const splitSharedBase = splitPeopleTotal > 0 ? splitPeopleTotal : Number(data.amount) || 0;
+    const splitCashbackRaw = isSharingMode
+      ? splitSharedBase * ((Number(data.cashback_share_percent) || 0) / 100) +
+        (Number(data.cashback_share_fixed) || 0)
+      : 0;
+    const splitCashbackToPeople = Math.max(
+      0,
+      Math.min(splitCashbackRaw, splitPeopleTotal),
+    );
+
+    let splitCashbackAllocated = 0;
+    const splitParticipants = normalizedParticipants.map((participant, index, arr) => {
+      const isLast = index === arr.length - 1;
+      const ratio = splitPeopleTotal > 0 ? participant.amount / splitPeopleTotal : 0;
+      const cashbackBack = isLast
+        ? splitCashbackToPeople - splitCashbackAllocated
+        : Math.round(splitCashbackToPeople * ratio);
+      splitCashbackAllocated += cashbackBack;
+
+      return {
+        person_id: participant.person_id,
+        note: participant.note,
+        base_amount: participant.amount,
+        cashback_back_amount: Math.max(0, cashbackBack),
+        final_amount: Math.max(0, participant.amount - cashbackBack),
+      };
+    });
+
     const payload: any = {
       occurred_at: data.occurred_at.toISOString(),
       amount: data.amount + effectiveServiceFee,
-      note: finalNote,
+      note: mergedTxnNote,
       type: data.type,
       // Directional Logic:
       // For Income/Repayment: Money goes TO target_account_id. Service expects principal in source_account_id.
@@ -898,6 +1004,22 @@ export function TransactionSlideV2({
         service_fee: effectiveServiceFee || undefined,
         quantity: data.ui_quantity || undefined,
         market_price: data.ui_market_price || undefined,
+        split_bill:
+          splitParticipants.length > 0
+            ? {
+                participants: splitParticipants,
+                include_me: splitIncludeMe,
+                raw_total_amount: splitRawTotal,
+                me_base_amount: splitMeBase,
+                me_note: meSplitNote || undefined,
+                note_summary: splitSummaryNote || undefined,
+                cashback_back_total_to_people: splitCashbackToPeople,
+                cashback_back_note:
+                  splitCashbackToPeople > 0
+                    ? "Shared cashback allocated to split people (excluding Me)."
+                    : "",
+              }
+            : undefined,
       },
     };
 
@@ -928,10 +1050,41 @@ export function TransactionSlideV2({
 
     try {
       let success = false;
-      let finalTxnId = editingId;
+      let finalTxnId = effectiveEditingId;
 
-      if (editingId) {
-        success = await updateTransaction(editingId, payload);
+      if (splitParticipants.length > 0 && effectiveEditingId) {
+        toast.error(
+          "Split edit creates linking risk. Please void old split txns and create new split.",
+        );
+        return;
+      }
+
+      if (splitParticipants.length > 0 && !effectiveEditingId) {
+        const splitResult = await createSplitTransactions({
+          basePayload: payload,
+          includeMe: splitIncludeMe,
+          meBaseAmount: splitMeBase,
+          serviceFee: effectiveServiceFee,
+          meNote: mergedTxnNote || finalNote || meSplitNote || data.note || "",
+          participants: splitParticipants,
+          rawTotalAmount: splitRawTotal,
+          splitSummaryNote,
+          cashbackBackTotalToPeople: splitCashbackToPeople,
+          systemAccountId: SPLIT_BILL_SYSTEM_ACCOUNT_ID,
+        });
+
+        if (!splitResult.success || !splitResult.parentId) {
+          toast.error(splitResult.error || "Failed to create split transactions");
+          return;
+        }
+
+        success = true;
+        finalTxnId = splitResult.parentId;
+        toast.success(
+          `Split created: 1 Me txn + ${splitResult.participantIds.length} people txn(s)`,
+        );
+      } else if (effectiveEditingId) {
+        success = await updateTransaction(effectiveEditingId, payload);
         if (success) toast.success("Transaction updated successfully");
         else toast.error("Failed to update transaction");
       } else {
@@ -1236,6 +1389,7 @@ export function TransactionSlideV2({
 
                         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 space-y-6">
                           <CategoryShopSection
+                            accounts={accounts}
                             shops={localShops}
                             categories={localCategories}
                             onAddNewCategory={() =>
@@ -1251,16 +1405,18 @@ export function TransactionSlideV2({
                             <AmountSection
                               accounts={accounts}
                               categories={categories}
+                              splitSection={
+                                <SplitBillSection
+                                  people={people}
+                                  forceShow={isEditingContext}
+                                />
+                              }
                             />
                           </div>
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
                           <InstallmentSelector forceShow={isEditingContext} />
-                          <SplitBillSection
-                            people={people}
-                            forceShow={isEditingContext}
-                          />
                         </div>
                       </div>
                     </form>
@@ -1318,6 +1474,8 @@ export function TransactionSlideV2({
           <CategorySlide
             open={isCategoryDialogOpen}
             onOpenChange={setIsCategoryDialogOpen}
+            accounts={accounts}
+            shops={localShops}
             defaultType={categoryDefaults.type}
             defaultKind={categoryDefaults.kind}
             onBack={() => setIsCategoryDialogOpen(false)}

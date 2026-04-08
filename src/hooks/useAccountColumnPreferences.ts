@@ -18,12 +18,12 @@ export interface AccountColumnConfig {
 }
 
 const defaultAccountColumns: AccountColumnConfig[] = [
-    { key: 'account', label: 'Account Name', defaultWidth: 250, minWidth: 200, frozen: true },
-    { key: 'role', label: 'Role & Ownership', defaultWidth: 200, minWidth: 180 },
-    { key: 'limit', label: 'Limit', defaultWidth: 120, minWidth: 100 },
-    { key: 'rewards', label: 'Rewards', defaultWidth: 150, minWidth: 130 },
-    { key: 'due', label: 'Due', defaultWidth: 140, minWidth: 120 },
+    { key: 'account', label: 'Account Name', defaultWidth: 195, minWidth: 150, frozen: true },
     { key: 'balance', label: 'Balance', defaultWidth: 180, minWidth: 150 },
+    { key: 'due', label: 'Due', defaultWidth: 160, minWidth: 140 },
+    { key: 'role', label: 'Role & Ownership', defaultWidth: 180, minWidth: 160 },
+    { key: 'limit', label: 'Limit', defaultWidth: 155, minWidth: 130 },
+    { key: 'rewards', label: 'Rewards', defaultWidth: 150, minWidth: 130 },
     { key: 'action', label: 'Actions', defaultWidth: 120, minWidth: 100, frozen: true },
 ];
 
@@ -34,10 +34,10 @@ export function useAccountColumnPreferences() {
 
     const [visibleColumns, setVisibleColumns] = useState<Record<AccountColumnKey, boolean>>({
         account: true,
+        due: true,
         role: true,
         limit: true,
         rewards: true,
-        due: false,
         balance: true,
         action: true,
     });
@@ -61,10 +61,44 @@ export function useAccountColumnPreferences() {
                 // Filter out keys that no longer exist in our definition to incorrect lookups
                 const parsed = JSON.parse(savedOrder);
                 const validKeys = defaultAccountColumns.map(c => c.key);
-                setColumnOrder(parsed.filter((k: any) => validKeys.includes(k)));
+                const filtered = parsed.filter((k: any) => validKeys.includes(k));
+
+                // Force Balance right after Account for consistent UX.
+                const withoutBalance = filtered.filter((k: AccountColumnKey) => k !== 'balance');
+                const accountIdx = withoutBalance.indexOf('account');
+                if (accountIdx >= 0) {
+                    withoutBalance.splice(accountIdx + 1, 0, 'balance');
+                } else {
+                    withoutBalance.unshift('account', 'balance');
+                }
+
+                // Ensure no missing columns remain.
+                const fullOrder = [...withoutBalance];
+                defaultAccountColumns.forEach((c) => {
+                    if (!fullOrder.includes(c.key)) {
+                        fullOrder.push(c.key);
+                    }
+                });
+
+                setColumnOrder(fullOrder);
             }
-            if (savedVis) setVisibleColumns(JSON.parse(savedVis));
-            if (savedWidths) setColumnWidths(JSON.parse(savedWidths));
+            if (savedVis) {
+                const parsedVis = JSON.parse(savedVis);
+                setVisibleColumns({ ...parsedVis, balance: true });
+            }
+            if (savedWidths) {
+                const parsedWidths = JSON.parse(savedWidths) as Partial<Record<AccountColumnKey, number>>;
+                const nextWidths = {} as Record<AccountColumnKey, number>;
+
+                defaultAccountColumns.forEach((col) => {
+                    const raw = Number(parsedWidths[col.key] ?? col.defaultWidth);
+                    const fallback = Number.isFinite(raw) ? raw : col.defaultWidth;
+                    const min = col.minWidth ?? col.defaultWidth;
+                    nextWidths[col.key] = Math.max(min, fallback);
+                });
+
+                setColumnWidths(nextWidths);
+            }
         } catch (e) {
             console.error("Failed to load account column settings", e);
         }
@@ -94,11 +128,11 @@ export function useAccountColumnPreferences() {
         setColumnOrder(defaultAccountColumns.map(c => c.key));
         setVisibleColumns({
             account: true,
+            balance: true,
+            due: true,
             role: true,
             limit: true,
             rewards: true,
-            due: false,
-            balance: true,
             action: true,
         });
         const map = {} as Record<AccountColumnKey, number>;

@@ -34,6 +34,7 @@ export function mapPocketBaseAccountRow(record: any): AccountRow {
     due_date: Number(record.due_date ?? 0),
     holder_type: record.holder_type ?? null,
     holder_person_id: record.holder_person_id ?? null,
+    metadata: record.metadata ?? null,
     created_at: record.created ?? null,
     updated_at: record.updated ?? null,
   } as AccountRow;

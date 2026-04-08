@@ -437,6 +437,8 @@ export function BatchPageClientV2({
                                     bankType={bankType as 'MBB' | 'VIB'}
                                     accounts={accounts}
                                     bankMappings={bankMappings}
+                                    globalSheetUrl={globalSheetUrl}
+                                    globalSheetName={globalSheetName}
                                     monthYear={currentMonth || ''}
                                     initialPhaseId={currentPhaseId}
                                     refreshNonce={checklistRefreshNonce}

@@ -13,7 +13,7 @@ You MUST read the following files in order to build your mental model of the rep
 
 1.  **`.agent/AGENT_CONTEXT.md`**: Read this first to understand the current Phase (Phase 15+), project status, and high-level architecture.
 2.  **`.agent/README.md`**: Understand the core features and development status.
-3.  **`.agent/prompts/ONBOARDING.md`**: Review the "Master Onboarding" guidelines.
+3.  **`.agent/knowledge/root-docs/ONBOARDING.md`**: Review the "Master Onboarding" guidelines.
 4.  **`.agent/rules/rules.md`**: Memorize the core coding standards (pnpm, server actions, lockfile sync).
 5.  **`.agent/rules/ui_rules.md`**: **STRICT COMPLIANCE REQUIRED**. Pay attention to:
     *   **NO Monospace fonts** in UI.

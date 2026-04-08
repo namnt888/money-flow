@@ -10,7 +10,7 @@ Money Flow 3 is a high-density, professional personal finance application focuse
 > To maintain project integrity and follow strict UI/UX standards, every new agent session **MUST** start by reading these entry points sequentially.
 
 1. **[MASTER_CONTEXT_LOAD.md](./.agent/prompts/MASTER_CONTEXT_LOAD.md)** - Initialize your session with full technical & architectural context.
-2. **[ONBOARDING.md](./.agent/prompts/ONBOARDING.md)** - Understand the documentation ecosystem and core reading list.
+2. **[ONBOARDING.md](./.agent/knowledge/root-docs/ONBOARDING.md)** - Understand the documentation ecosystem and core reading list.
 3. **[AGENT_CONTEXT.md](./.agent/AGENT_CONTEXT.md)** - Real-time snapshot of features, state, and technical design.
 4. **[LATEST_HANDOVER.md](./.agent/HANDOVER_PHASE_16_CASHBACK_FIX_2026_03_22.md)** - CRITICAL notes from the last session (Cashback Fixes & Header Optimization).
 
@@ -55,6 +55,10 @@ Understand the core complexity of the application's financial engine.
 - `src/actions`: Server actions for mutations.
 - `src/types`: Centralized TypeScript definitions.
 - `.agent`: Master documentation & project rules (Internal Knowledge Base).
+
+### Legacy Docs Location
+
+- Historical phase/debug/onboarding docs moved from root to **[.agent/knowledge/root-docs](./.agent/knowledge/root-docs/)**.
 
 ---
 

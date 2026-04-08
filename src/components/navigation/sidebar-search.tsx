@@ -100,9 +100,19 @@ export function SidebarSearch({
     const query = searchValue.toLowerCase().trim()
     const isSearching = query.length > 0
 
+    const rankByFavoriteThenName = <T extends { is_favorite?: boolean | null; name?: string }>(items: T[]) => {
+      return [...items].sort((left, right) => {
+        const favDelta = Number(Boolean(right.is_favorite)) - Number(Boolean(left.is_favorite))
+        if (favDelta !== 0) return favDelta
+        return (left.name || '').localeCompare(right.name || '')
+      })
+    }
+
     // Search Mode: Match all types
     const filter = (list: any[], type: ResultItem['type'], limit = 2) => {
-      const matched = list.filter(item => item?.name?.toLowerCase()?.includes(query))
+      const matched = rankByFavoriteThenName(
+        list.filter(item => item?.name?.toLowerCase()?.includes(query))
+      )
       return matched.slice(0, limit).map(item => ({
         id: item.id,
         route_id: item.route_id,
@@ -112,9 +122,31 @@ export function SidebarSearch({
       }))
     }
 
+    const favoriteAccounts = rankByFavoriteThenName(data.accounts)
+      .filter((item) => item.is_favorite === true)
+      .slice(0, 2)
+      .map((item) => ({
+        id: item.id,
+        route_id: undefined,
+        name: item.name,
+        image: item.image_url,
+        type: 'account' as const,
+      }))
+
+    const favoritePeople = rankByFavoriteThenName(data.people)
+      .filter((item) => item.is_favorite === true)
+      .slice(0, 2)
+      .map((item) => ({
+        id: item.id,
+        route_id: item.route_id,
+        name: item.name,
+        image: item.image_url,
+        type: 'person' as const,
+      }))
+
     const results = {
-      account: filter(data.accounts, 'account'),
-      person: filter(data.people, 'person'),
+      account: isSearching ? filter(data.accounts, 'account') : favoriteAccounts,
+      person: isSearching ? filter(data.people, 'person') : favoritePeople,
       shop: isSearching ? filter(data.shops, 'shop') : [],
       category: isSearching ? filter(data.categories, 'category') : []
     }

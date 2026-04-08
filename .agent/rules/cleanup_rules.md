@@ -58,7 +58,7 @@
 ## ✅ Proper File Locations
 
 ### Documentation
-- **Onboarding**: `.agent/prompts/onboarding.md`
+- **Onboarding**: `.agent/knowledge/root-docs/ONBOARDING.md`
 - **Handovers**: `.agent/HANDOVER_PHASE_X.md`
 - **Plans**: `.agent/PHASE_X_PLAN.md`
 - **Rules**: `.agent/rules/`

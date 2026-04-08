@@ -71,6 +71,8 @@ export function CashbackSection({
     control: form.control,
     name: "cashback_share_fixed",
   });
+  const splitParticipants =
+    useWatch({ control: form.control, name: "participants" }) || [];
   const categoryId = useWatch({ control: form.control, name: "category_id" });
   const occurredAt = useWatch({ control: form.control, name: "occurred_at" });
 
@@ -211,6 +213,22 @@ export function CashbackSection({
     cashbackMode,
   );
 
+  const splitPeopleBaseAmount = useMemo(
+    () =>
+      splitParticipants.reduce(
+        (sum: number, participant: any) =>
+          sum + Math.max(0, Number(participant?.amount || 0)),
+        0,
+      ),
+    [splitParticipants],
+  );
+
+  const isSplitEnabled = splitParticipants.length > 0;
+  const sharedFormulaBase =
+    isSplitEnabled && splitPeopleBaseAmount > 0
+      ? splitPeopleBaseAmount
+      : totalGrossAmount;
+
   const cycleSpendInsight = useMemo(() => {
     if (!activeAccount) return null;
 
@@ -260,8 +278,8 @@ export function CashbackSection({
   const totalSharedVal = useMemo(() => {
     if (!isSharing) return 0;
     const rate = (sharePercent || 0) / 100;
-    return totalGrossAmount * rate + (shareFixed || 0);
-  }, [totalGrossAmount, sharePercent, shareFixed, isSharing]);
+    return sharedFormulaBase * rate + (shareFixed || 0);
+  }, [sharedFormulaBase, sharePercent, shareFixed, isSharing]);
 
   const netProfitValue = useMemo(() => {
     return previewBankReward - totalSharedVal;
@@ -761,6 +779,9 @@ export function CashbackSection({
                             )}
                         </div>
                       </div>
+                      <div className="text-[9px] text-slate-400 mt-0.5">
+                        Formula: {formatVN(totalGrossAmount)} x {((displayPolicy?.rate || 0) * 100).toFixed(2)}%
+                      </div>
                       {actualBankReward === 0 &&
                         activeAccount?.type === "credit_card" &&
                         policy?.metadata?.reason?.includes(
@@ -817,18 +838,23 @@ export function CashbackSection({
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex justify-between items-center text-xs group cursor-help">
-                      <div className="flex items-center gap-2 text-slate-500 group-hover:text-amber-600 transition-colors">
-                        <div className="w-5 h-5 rounded-md bg-white border border-slate-100 flex items-center justify-center shadow-sm">
-                          <Heart className="h-3 w-3 text-amber-500" />
+                    <div className="text-xs group cursor-help">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2 text-slate-500 group-hover:text-amber-600 transition-colors">
+                          <div className="w-5 h-5 rounded-md bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                            <Heart className="h-3 w-3 text-amber-500" />
+                          </div>
+                          <span className="font-medium tracking-tight">
+                            Shared with People
+                          </span>
                         </div>
-                        <span className="font-medium tracking-tight">
-                          Shared with People
+                        <span className="font-black text-amber-600 tabular-nums tracking-tight">
+                          -{formatVN(totalSharedVal)}
                         </span>
                       </div>
-                      <span className="font-black text-amber-600 tabular-nums tracking-tight">
-                        -{formatVN(totalSharedVal)}
-                      </span>
+                      <div className="text-[9px] text-slate-400 mt-0.5">
+                        Base: {formatVN(sharedFormulaBase)} ({isSplitEnabled ? "Split people" : "Txn amount"})
+                      </div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent
@@ -841,7 +867,7 @@ export function CashbackSection({
                       </span>
                       <div className="bg-white/10 p-2 rounded text-[11px] font-mono">
                         {sharePercent
-                          ? `(${formatVN(totalGrossAmount)} × ${sharePercent}%)`
+                          ? `(${formatVN(sharedFormulaBase)} × ${sharePercent}%)`
                           : ""}
                         {sharePercent && shareFixed ? " + " : ""}
                         {shareFixed ? formatVN(shareFixed) : ""}
@@ -850,7 +876,9 @@ export function CashbackSection({
                         </div>
                       </div>
                       <span className="text-[9px] opacity-60 pt-1">
-                        Amount deducted from reward to person.
+                        {isSplitEnabled
+                          ? `Split ON: shared base uses split people total (${formatVN(sharedFormulaBase)}).`
+                          : `Split OFF: shared base uses full transaction amount (${formatVN(sharedFormulaBase)}).`}
                       </span>
                     </div>
                   </TooltipContent>

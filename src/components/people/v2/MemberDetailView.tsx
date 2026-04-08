@@ -481,8 +481,10 @@ export function MemberDetailView({
 
         // 1. Calculate stats from local debtCycles based on selection
         if (urlTag === 'all') {
-            // Apply 2026 cutoff as requested by user ("chỉ lấy 2026 về sau")
+            // All History must only aggregate real monthly cycles.
+            // Exclude synthetic groups such as `all`, `year`, or `3m` to avoid double counting.
             const targets = debtCycles.filter(c => {
+                if (!isYYYYMM(c.tag)) return false
                 if (selectedYear && selectedYear !== 'All Time' && selectedYear !== 'Other') {
                     return c.tag.startsWith(selectedYear)
                 }

@@ -30,6 +30,7 @@ import {
   CircleDashed,
   Crown,
   UserSquare2,
+  ArrowLeft,
   ArrowRight,
   Copy,
   Database,
@@ -41,7 +42,8 @@ import {
   Sigma,
   ChevronRight,
   Calculator,
-  AlertCircle
+  CalendarDays,
+  Hourglass,
 } from "lucide-react";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 
@@ -68,6 +70,8 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { AccountRewardsCell } from "./cells/account-rewards-cell";
+import { getEffectiveCreditLimit } from "@/lib/account-family";
+import { computeCreditAvailableBalance, resolveCreditLimit } from "@/lib/credit-balance";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,6 +92,7 @@ interface AccountRowProps {
   onTransfer: (account: Account) => void;
   onClone?: (account: Account) => void;
   onAudit: (account: Account) => void;
+  onOpenPending?: (account: Account) => void;
   familyBalance?: number;
   allAccounts?: Account[];
   categories?: Category[];
@@ -118,6 +123,7 @@ export function AccountRowV2({
   onTransfer,
   onClone,
   onAudit,
+  onOpenPending,
   familyBalance,
   allAccounts,
   categories,
@@ -158,8 +164,6 @@ export function AccountRowV2({
 
   const renderCell = (key: AccountColumnKey) => {
     const stats = account.stats;
-    const badgeBase =
-      "h-6 px-3 text-[10px] font-semibold uppercase tracking-wide rounded-full border flex items-center justify-center gap-1 min-w-[96px]";
 
     const renderRoleBadge = (role: "parent" | "child" | "standalone") => {
       const base =
@@ -359,17 +363,11 @@ export function AccountRowV2({
           allAccounts?.filter(
             (a: Account) => a.parent_account_id === account.id,
           ) || [];
-        const pendingCount = Number(
-          pendingSummaryMap?.[account.id]?.count || 0,
-        );
-        const pendingTotalAmount = Number(
-          pendingSummaryMap?.[account.id]?.totalAmount || 0,
-        );
 
         const MainPlaceholderIcon = getPlaceholderIcon(account.type);
 
         return (
-          <div className="flex flex-col gap-2 min-w-[170px]">
+          <div className="flex flex-col gap-2 min-w-[140px]">
             <div className="flex items-center gap-3 w-full">
               <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-none overflow-hidden">
                 {account.image_url ? (
@@ -455,32 +453,19 @@ export function AccountRowV2({
                       href={`/accounts/${account.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate"
+                      className="font-bold text-sm tracking-tight text-slate-900 hover:text-indigo-600 hover:underline transition-all truncate max-w-[150px]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {account.name}
                     </Link>
 
-                    {pendingCount > 0 && (
-                      <Link
-                        href={`/accounts/${account.id}?pending=1`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-600 hover:bg-rose-100 shrink-0"
-                        title={`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <AlertCircle className="h-2.5 w-2.5" />
-                        {pendingCount} Pending
-                      </Link>
-                    )}
                   </div>
 
                   {/* Sub-row for Receiver Info (Standardized location) */}
                   <div className="flex items-center gap-1.5 min-w-0 mt-0.5 whitespace-nowrap">
                     {account.receiver_name && (
                       <span
-                        className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]"
+                        className="text-[10px] font-bold text-slate-400 truncate max-w-[90px]"
                         title={account.receiver_name}
                       >
                         {account.receiver_name}
@@ -553,7 +538,7 @@ export function AccountRowV2({
                               <div className="flex items-center gap-1.5 bg-indigo-50/50 border border-indigo-100/50 rounded-md px-2 py-0.5 hover:bg-indigo-100/50 transition-all cursor-help group/rewards shadow-sm">
                                 <Zap className="w-3 h-3 text-indigo-500 animate-pulse" />
                                 <div className="flex items-center gap-1 text-[10px] font-black text-indigo-700 uppercase tracking-tight">
-                                  <span className="truncate max-w-[160px]">
+                                  <span className="truncate max-w-[110px]">
                                     {badgeLabel}
                                   </span>
                                   <span className="text-indigo-400 font-bold ml-0.5">
@@ -706,145 +691,215 @@ export function AccountRowV2({
       }
       case "role": {
         const isCC = account.type === "credit_card";
-        const isParent = !!account.relationships?.is_parent || (allAccounts?.some(a => a.parent_account_id === account.id) ?? false);
-        const grpId = account.parent_account_id || (isParent ? account.id : '');
-        const relatedAccounts = (grpId && allAccounts)
-          ? allAccounts.filter(a => (a.id === grpId || a.parent_account_id === grpId) && a.id !== account.id) 
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          ) ?? false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
+              ),
+            );
+        const effectiveParentAcc = parentAcc || inferredParentAcc || null;
+
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAcc?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+          const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
+        }
+
+        const relatedAccounts = allAccounts
+          ? allAccounts.filter(
+              (item) =>
+                item.id !== account.id &&
+                (
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || "")
+                ),
+            )
           : [];
-        const parentAcc = isParent ? null : allAccounts?.find(a => a.id === grpId);
 
-        // Group Total Balance (Debt)
-        const totalGroupDebt = familyBalance !== undefined ? familyBalance : (grpId 
-          ? allAccounts?.filter(a => a.id === grpId || a.parent_account_id === grpId).reduce((sum, a) => sum + (a.current_balance || 0), 0)
-          : account.current_balance) || 0;
+        const isStandalone = !isParent && !effectiveParentAcc;
+        const parentLimit = isCC ? (isParent ? account.credit_limit : effectiveParentAcc?.credit_limit) || 0 : 0;
+        const singleCardDebt = Math.abs(account.current_balance || 0);
+        const peopleSource = (people.length > 0 ? people : (initialPeople || []));
+        const ownerPerson = account.holder_person_id
+          ? peopleSource.find((p) => p.id === account.holder_person_id)
+          : undefined;
 
-        const parentLimit = isCC ? (isParent ? account.credit_limit : parentAcc?.credit_limit) || 0 : 0;
-        const totalAvailable = isCC ? parentLimit - Math.abs(totalGroupDebt) : null;
+        const renderAccountBadge = (acc: Account | null) => (
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="h-9 w-[52px] inline-flex items-center justify-center cursor-help">
+                  <div className="h-9 w-12 rounded-none overflow-hidden bg-transparent flex items-center justify-center">
+                    {acc?.image_url ? (
+                      <img src={acc.image_url} alt="" className="w-full h-full object-contain" />
+                    ) : (
+                      <Wallet className="h-4 w-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="text-[10px] font-bold">
+                {acc ? `${acc.name} (${acc.id})` : 'No linked account'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+
+        const renderOwnerBadge = () => {
+          if (account.holder_type === 'relative' && ownerPerson) {
+            return (
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <div className="h-9 inline-flex items-center cursor-help">
+                      <div className="h-9 w-12 rounded-none overflow-hidden bg-transparent flex items-center justify-center">
+                        {ownerPerson.image_url ? (
+                          <img src={ownerPerson.image_url} alt="" className="w-full h-full object-contain" />
+                        ) : (
+                          <User className="h-4 w-4 text-emerald-500" />
+                        )}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-[10px] font-bold">
+                    {`Owner: ${ownerPerson.name}`}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          }
+
+          return (
+            <TooltipProvider>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <div className="h-9 w-12 inline-flex items-center justify-center cursor-help">
+                    <div className="h-9 w-12 rounded-none bg-transparent flex items-center justify-center">
+                      <Crown className="h-4 w-4 text-amber-500" />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px] font-bold">Owner: Me</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        };
 
         return (
-          <div className="flex flex-col items-center justify-center min-w-[190px] gap-1 group/role-cell">
-            {/* Group Balance Badge (Upper Text) */}
+          <div className="flex flex-col items-center justify-center min-w-[185px] gap-1 group/role-cell">
+            {/* Singular debt view per row */}
             {isCC && parentLimit > 0 && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50/50 border border-indigo-100/50 rounded-full text-[9px] font-black text-indigo-500 tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-0.5 transition-all group-hover/role-cell:bg-indigo-100 group-hover/role-cell:border-indigo-200 whitespace-nowrap">
                 <Sigma className="w-2.5 h-2.5" />
-                <span>Group Balance: {formatMoneyVND(totalAvailable || 0)}</span>
+                <span>Single Debt: {formatMoneyVND(singleCardDebt)}</span>
               </div>
             )}
 
-            <div className="flex flex-row items-center justify-center w-full">
-              <HoverCard openDelay={200}>
-                <HoverCardTrigger asChild>
-                  <div
+              <div className="grid w-full grid-cols-[108px_14px_52px_28px_14px_42px] items-center justify-items-center gap-x-1">
+              <div
+                className={cn(
+                    "h-8 w-[108px] px-2 rounded-full border inline-flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap",
+                  isParent
+                    ? "bg-indigo-600 text-white border-indigo-500"
+                    : isStandalone
+                      ? "bg-slate-100 text-slate-700 border-slate-300"
+                      : "bg-white text-slate-700 border-slate-200",
+                )}
+              >
+                {isParent ? <Crown className="h-3 w-3" /> : isStandalone ? <Wallet className="h-3 w-3" /> : <UserSquare2 className="h-3 w-3" />}
+                <span>{isParent ? 'Parent' : isStandalone ? 'Standalone' : 'Child'}</span>
+              </div>
+
+              {isParent ? (
+                <>
+                  <ArrowLeft className="h-3.5 w-3.5 text-slate-400" />
+                  <HoverCard openDelay={120} closeDelay={80}>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        {renderAccountBadge(relatedAccounts[0] || null)}
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-72 p-2 space-y-1.5" align="start">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
+                      {relatedAccounts.length > 0 ? relatedAccounts.map((child) => (
+                        <div key={child.id} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                          <div className="h-6 w-6 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                            {child.image_url ? (
+                              <img src={child.image_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <Wallet className="h-3 w-3 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-bold text-slate-700 truncate">{child.name}</div>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="text-[10px] text-slate-400 italic px-1 py-1">No child linked</div>
+                      )}
+                    </HoverCardContent>
+                  </HoverCard>
+                  <span
                     className={cn(
-                      "inline-flex items-center rounded-md border px-2.5 py-1.5 text-[10px] font-black tracking-widest uppercase cursor-help shadow-sm transition-all hover:scale-105 active:scale-95",
-                      isParent
-                        ? "border-indigo-200 bg-indigo-600 text-white shadow-indigo-100"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                      "h-6 min-w-[24px] px-1 inline-flex items-center justify-center rounded-md text-[10px] font-black leading-none",
+                      relatedAccounts.length > 1
+                        ? "bg-indigo-50 text-indigo-600 border border-indigo-200"
+                        : "border border-transparent text-transparent",
                     )}
                   >
-                    <div className={cn(
-                      "mr-2 h-4 w-4 flex items-center justify-center rounded-full border shadow-sm shrink-0",
-                      isParent ? "bg-white/20 border-white/30" : "bg-slate-50 border-slate-100"
-                    )}>
-                      {account.holder_type === 'me' ? (
-                        <Crown className={cn("h-2.5 w-2.5", isParent ? "text-white" : "text-indigo-500")} />
-                      ) : (
-                        <User className={cn("h-2.5 w-2.5", isParent ? "text-indigo-100" : "text-slate-500")} />
-                      )}
-                    </div>
-                    <span>{isParent ? "Parent" : "Child"}</span>
-                    {account.receiver_name && (
-                        <span className={cn("ml-1.5 opacity-80 font-bold border-l pl-1.5", isParent ? "border-white/30" : "border-slate-200")}>
-                            {account.receiver_name}
-                        </span>
-                    )}
-                    <ArrowRight className={cn("ml-1.5 h-3 w-3 opacity-50", isParent ? "text-white" : "text-slate-400")} />
-                  </div>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-80 p-0 rounded-2xl shadow-2xl border-indigo-100 overflow-hidden z-[100]" align="start">
-                  <div className="p-3 bg-indigo-600 text-white">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Group: {isParent ? account.name : (parentAcc?.name || 'Shared Core')}
-                    </h4>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    {isParent ? (
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider">Sub-Accounts (Children)</p>
-                        <div className="space-y-2">
-                          {relatedAccounts && relatedAccounts.length > 0 ? (
-                            relatedAccounts.map(a => (
-                              <div key={a.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-                                <div className="h-8 w-8 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                                  {a.image_url ? (
-                                    <img src={a.image_url} alt="" className="h-full w-full object-contain" />
-                                  ) : (
-                                    <Wallet className="h-4 w-4 text-slate-300" />
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[11px] font-bold text-slate-700 truncate">{a.name}</p>
-                                  <p className="text-[9px] text-slate-400 font-medium tabular-nums">Current Debt: {formatMoneyVND(Math.abs(a.current_balance || 0))}</p>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-[10px] text-slate-400 italic">No sub-accounts linked.</p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Main Account (Parent)</p>
-                          {parentAcc ? (
-                            <div className="flex items-center gap-3 p-2 bg-indigo-50 rounded-xl border border-indigo-100">
-                              <div className="h-8 w-8 rounded-none border border-indigo-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-md">
-                                {parentAcc.image_url ? (
-                                  <img src={parentAcc.image_url} alt="" className="h-full w-full object-contain" />
-                                ) : (
-                                  <Crown className="h-4 w-4 text-indigo-400" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[11px] font-bold text-indigo-700 truncate">{parentAcc.name}</p>
-                                <p className="text-[9px] text-indigo-400 font-medium tracking-tight">LIMIT: {formatMoneyVND(parentAcc.credit_limit || 0)}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[9px] font-black text-indigo-300 uppercase">Available</p>
-                                <p className="text-[10px] font-bold text-indigo-600 tabular-nums">{formatMoneyVND(totalAvailable || 0)}</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 italic">Parent account not found.</p>
-                          )}
-                        </div>
-                        
-                        {relatedAccounts.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100">
-                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-wider mb-2">Sibling Accounts</p>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {relatedAccounts.map(a => (
-                                <div key={a.id} className="flex items-center gap-3 p-1.5 bg-slate-50/50 rounded-lg border border-slate-100">
-                                  <div className="h-6 w-6 rounded-none border border-slate-100 bg-white flex items-center justify-center overflow-hidden shrink-0">
-                                    {a.image_url ? (
-                                      <img src={a.image_url} alt="" className="h-full w-full object-contain" />
-                                    ) : (
-                                      <Wallet className="h-3 w-3 text-slate-300" />
-                                    )}
-                                  </div>
-                                  <p className="text-[10px] font-bold text-slate-600 truncate">{a.name}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+                    {relatedAccounts.length > 1 ? `+${relatedAccounts.length - 1}` : "+0"}
+                  </span>
+                </>
+              ) : !isStandalone ? (
+                <>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                  {renderAccountBadge(effectiveParentAcc)}
+                  <span className="h-6 min-w-[24px] px-1 inline-flex items-center justify-center border border-transparent text-transparent text-[10px] font-black leading-none">
+                    +0
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-3.5 w-3.5" />
+                  <span className="h-9 w-[52px]" />
+                  <span className="h-6 min-w-[24px]" />
+                </>
+              )}
+
+              <Network className="h-3.5 w-3.5 text-slate-400" />
+              {renderOwnerBadge()}
             </div>
           </div>
         );
@@ -877,33 +932,69 @@ export function AccountRowV2({
           );
         }
 
-        const isParent = account.relationships?.is_parent;
-        const parentId = account.parent_account_id;
-        const parentAccount = parentId
-          ? allAccounts?.find((a) => a.id === parentId)
-          : null;
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          ) || false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
+              ),
+            );
+        const effectiveParentAccount = parentAcc || inferredParentAcc || null;
 
-        const displayLimit = parentAccount
-          ? parentAccount.credit_limit || 0
-          : account.credit_limit || 0;
-        const cardDebtAbs = Math.abs(account.current_balance || 0);
-        let familyDebt = account.current_balance || 0;
-        let parentBalance = account.parent_account_id
-          ? parentAccount?.current_balance || 0
-          : account.current_balance || 0;
-        let childrenBalances = 0;
-
-        if (isParent && allAccounts) {
-          childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === account.id)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          familyDebt = (account.current_balance || 0) + childrenBalances;
-        } else if (parentId && parentAccount && allAccounts) {
-          childrenBalances = allAccounts
-            .filter((a) => a.parent_account_id === parentId)
-            .reduce((sum, child) => sum + (child.current_balance || 0), 0);
-          familyDebt = (parentAccount.current_balance || 0) + childrenBalances;
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAccount?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAccount?.id) groupRefs.add(effectiveParentAccount.id);
+          const parentSlug = (effectiveParentAccount as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
+          if (!rawParentRef && !effectiveParentAccount) {
+            groupRefs.add(account.id);
+            if (accountSlug) groupRefs.add(accountSlug);
+          }
         }
+
+        const displayLimit = effectiveParentAccount
+          ? effectiveParentAccount.credit_limit || 0
+          : account.credit_limit || 0;
+
+        const familyDebt = allAccounts
+          ? allAccounts
+              .filter(
+                (item) =>
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || ""),
+              )
+              .reduce((sum, item) => sum + (item.current_balance || 0), 0)
+          : account.current_balance || 0;
 
         const familyDebtAbs = Math.abs(familyDebt);
         const limit = displayLimit;
@@ -917,7 +1008,7 @@ export function AccountRowV2({
         );
 
         return (
-          <div className="flex flex-col items-end gap-2 min-w-[140px] py-1">
+          <div className="flex flex-col items-end gap-1.5 min-w-[160px] py-1">
             <div className="flex flex-col items-end gap-1.5 w-full group/limit">
               <div className="flex items-center gap-2 justify-end w-full px-0.5 min-h-[16px]">
                 {!!account.secured_by_account_id && (
@@ -988,71 +1079,51 @@ export function AccountRowV2({
                       </div>
                     );
                   })()}
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
-                  Limit
-                </span>
-                <span
-                  className={cn(
-                    "font-black text-[11px] tabular-nums leading-none",
-                    displayLimit > 100000000
-                      ? "text-rose-600"
-                      : displayLimit >= 50000000
-                        ? "text-amber-600"
-                        : "text-emerald-600",
-                  )}
-                >
-                  {displayLimit ? formatMoneyVND(displayLimit) : "—"}
-                </span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Limit</span>
+                <TooltipProvider>
+                  <Tooltip delayDuration={250}>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={cn(
+                          "h-5 px-2 rounded-full inline-flex items-center text-[9px] font-black uppercase tracking-wider border cursor-help",
+                          displayLimit > 100000000
+                            ? "bg-rose-100 text-rose-700 border-rose-200"
+                            : displayLimit >= 50000000
+                              ? "bg-amber-100 text-amber-700 border-amber-200"
+                              : "bg-emerald-100 text-emerald-700 border-emerald-200",
+                        )}
+                      >
+                        {displayLimit ? formatMoneyVND(displayLimit) : "—"}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-white border-slate-200 text-slate-700">
+                      <div className="text-[10px] font-bold mb-1">Limit (Text)</div>
+                      <VietnameseCurrency amount={displayLimit} variant="none" className="text-[11px]" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               {displayLimit > 0 && (
-                <div
-                  className={cn(
-                    "relative w-full h-6 bg-slate-100/50 rounded-lg border border-slate-200 overflow-hidden group transition-all duration-300 hover:border-indigo-300 hover:shadow-inner",
-                    hasWaiver &&
-                      "border-amber-200 shadow-[inset_0_0_8px_rgba(245,158,11,0.05)]",
-                  )}
-                >
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-
-                  <div
-                    className={cn(
-                      "absolute inset-0 h-full transition-all duration-700 ease-in-out shadow-[0_0_15px_rgba(0,0,0,0.1)]",
-                      remainingPercent < 10
-                        ? "bg-gradient-to-r from-rose-500 to-rose-600"
-                        : remainingPercent < 30
-                          ? "bg-gradient-to-r from-amber-500 to-amber-600"
-                          : "bg-gradient-to-r from-indigo-500 to-indigo-600",
-                    )}
-                    style={{ width: `${Math.max(remainingPercent, 0)}%` }}
-                  />
-                  {hasWaiver && (
-                    <div className="absolute top-0 left-0 w-full h-[1.5px] bg-amber-400/80 blur-[0.5px] z-10" />
-                  )}
-
-                  <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none">
-                    <div className="flex items-center gap-1">
-                      {hasWaiver && (
-                        <Zap className="w-2.5 h-2.5 text-white animate-pulse drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
-                      )}
-                      <span className="text-[10px] font-black text-white drop-shadow-sm tabular-nums">
-                        {remainingPercLabel}%{" "}
-                        <span className="text-[7px] opacity-70 ml-0.5">
-                          REMAINING
-                        </span>
-                      </span>
-                    </div>
-                    <div />
-                  </div>
-
+                <div className="w-full flex flex-col items-end gap-1">
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
-                        <div className="absolute inset-0 flex items-center justify-end px-2.5 cursor-help pointer-events-auto">
-                          <span className="text-[9px] font-black text-slate-700/80 tabular-nums bg-white/40 backdrop-blur-sm px-1.5 py-0.5 rounded transition-colors group-hover:bg-white/80 flex items-center gap-1">
+                        <div className="cursor-help">
+                          <span
+                            className={cn(
+                              "h-6 px-2 rounded-full inline-flex items-center text-[8px] font-black uppercase tracking-wider gap-1.5 whitespace-nowrap",
+                              remainingPercent < 10
+                                ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                : remainingPercent < 30
+                                  ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                  : "bg-indigo-100 text-indigo-700 border border-indigo-200",
+                            )}
+                          >
                             <Calculator className="w-2.5 h-2.5 opacity-60" />
-                            {numberFormatter.format(familyDebtAbs)}
+                            <span>{remainingPercLabel}% Remaining</span>
+                            <span className="opacity-50">•</span>
+                            <span>Debt {numberFormatter.format(familyDebtAbs)}</span>
                           </span>
                         </div>
                       </TooltipTrigger>
@@ -1070,19 +1141,19 @@ export function AccountRowV2({
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between gap-4">
                                 <span className="text-slate-400">
-                                  Card Active Balance:
+                                  Card Active Debt:
                                 </span>
                                 <span className="font-bold tabular-nums text-white">
-                                  {formatMoneyVND(parentBalance)}
+                                  {formatMoneyVND(Math.abs(account.current_balance || 0))}
                                 </span>
                               </div>
-                              {childrenBalances > 0 && (
+                              {familyDebtAbs > Math.abs(account.current_balance || 0) && (
                                 <div className="flex justify-between gap-4">
                                   <span className="text-slate-400">
-                                    Supplementary Cards:
+                                    Other Family Cards:
                                   </span>
                                   <span className="font-bold tabular-nums text-indigo-300">
-                                    + {formatMoneyVND(childrenBalances)}
+                                    + {formatMoneyVND(familyDebtAbs - Math.abs(account.current_balance || 0))}
                                   </span>
                                 </div>
                               )}
@@ -1157,6 +1228,20 @@ export function AccountRowV2({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+
+                  <div className="w-[170px] h-2 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shadow-inner">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-500",
+                        remainingPercent < 20
+                          ? "bg-rose-500"
+                          : remainingPercent <= 80
+                            ? "bg-amber-500"
+                            : "bg-emerald-500",
+                      )}
+                      style={{ width: `${Math.max(0, Math.min(100, remainingPercent))}%` }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -1207,12 +1292,58 @@ export function AccountRowV2({
       case "due": {
         const isDueAccount =
           account.type === "credit_card" || account.type === "debt";
-        const dueDate = stats?.due_date ? new Date(stats.due_date) : null;
+        const dueDateRaw = stats?.due_date || (account as any)?.due_date || null;
+
+        const resolveDueDate = (): Date | null => {
+          if (!dueDateRaw) return null;
+
+          if (dueDateRaw instanceof Date && !Number.isNaN(dueDateRaw.getTime())) {
+            return dueDateRaw;
+          }
+
+          // Many accounts store only due day (e.g., 21). Map it to next calendar occurrence.
+          const rawText = String(dueDateRaw).trim();
+          const isNumericDay = /^\d{1,2}$/.test(rawText);
+          if (isNumericDay) {
+            const day = Number(rawText);
+            if (day >= 1 && day <= 31) {
+              const now = new Date();
+              const y = now.getFullYear();
+              const m = now.getMonth();
+              const clampDay = (year: number, month: number, d: number) => {
+                const endOfMonth = new Date(year, month + 1, 0).getDate();
+                return Math.min(d, endOfMonth);
+              };
+
+              const thisMonthDay = clampDay(y, m, day);
+              const candidate = new Date(y, m, thisMonthDay);
+              candidate.setHours(0, 0, 0, 0);
+
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (candidate >= today) return candidate;
+
+              const nextMonth = m === 11 ? 0 : m + 1;
+              const nextYear = m === 11 ? y + 1 : y;
+              const nextMonthDay = clampDay(nextYear, nextMonth, day);
+              const nextCandidate = new Date(nextYear, nextMonth, nextMonthDay);
+              nextCandidate.setHours(0, 0, 0, 0);
+              return nextCandidate;
+            }
+          }
+
+          const parsed = new Date(rawText);
+          return Number.isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        const dueDate = resolveDueDate();
         let daysLeft = Infinity;
         if (dueDate) {
           const diffTime = dueDate.getTime() - new Date().getTime();
           daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
+        const pendingCount = Number(pendingSummaryMap?.[account.id]?.count || 0);
+        const pendingTotalAmount = Number(pendingSummaryMap?.[account.id]?.totalAmount || 0);
 
         const formatDate = (date: Date | null) =>
           date
@@ -1222,17 +1353,11 @@ export function AccountRowV2({
               }).format(date)
             : "";
 
-        const badgeWidth = "w-[140px]";
-        const baseClass = cn(badgeBase, badgeWidth);
-
-        if (!isDueAccount || daysLeft === Infinity) {
+        if (!isDueAccount && pendingCount === 0) {
           return (
             <div className="flex justify-center">
               <span
-                className={cn(
-                  baseClass,
-                  "bg-slate-50 text-slate-300 border-slate-100 italic shadow-none",
-                )}
+                className="h-6 px-2.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-400"
               >
                 No Due Date
               </span>
@@ -1240,103 +1365,188 @@ export function AccountRowV2({
           );
         }
 
-        const dayDate = startOfDay(dueDate!);
-        const isDueToday = isToday(dayDate);
-        const isDueTomorrow = isTomorrow(dayDate);
+        const isDueToday = dueDate ? isToday(startOfDay(dueDate)) : false;
+        const isDueTomorrow = dueDate ? isTomorrow(startOfDay(dueDate)) : false;
 
         const tone = isDueToday
-          ? "bg-rose-100 text-rose-800 border-rose-400 shadow-[0_0_12px_rgba(225,29,72,0.2)]"
-          : isDueTomorrow || (daysLeft > 0 && daysLeft <= 10)
-            ? "bg-amber-100 text-amber-800 border-amber-300"
+          ? "border-rose-300 bg-rose-50 text-rose-700"
+          : isDueTomorrow || (daysLeft > 0 && daysLeft <= 5)
+            ? "border-rose-300 bg-rose-50 text-rose-700"
             : daysLeft <= 0
-              ? "bg-rose-100 text-rose-800 border-rose-300"
-              : "bg-emerald-100 text-emerald-800 border-emerald-300";
+              ? "border-rose-300 bg-rose-50 text-rose-700"
+              : "border-emerald-300 bg-emerald-50 text-emerald-700";
 
         const labelDate = formatDate(dueDate);
-        const [month, day] = labelDate.split(" ");
+        const [month, day] = (labelDate || "").split(" ");
 
         return (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center justify-center gap-1">
             <span
-              className={cn(baseClass, tone, isDueToday && "animate-pulse")}
+              className={cn(
+                "h-7 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border text-[10px] font-black tracking-wide",
+                tone,
+                isDueToday && "animate-pulse",
+              )}
             >
               {isDueToday ? (
-                <span className="font-black text-xs uppercase tracking-tighter">
-                  Today Due
-                </span>
+                <>
+                  <span>Today Due</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
               ) : isDueTomorrow ? (
-                <span className="font-black text-xs uppercase tracking-tighter">
-                  Tomorrow
-                </span>
+                <>
+                  <span>Tomorrow</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
+              ) : daysLeft === Infinity ? (
+                <>
+                  <span>No Due</span>
+                  <CalendarDays className="h-3 w-3" />
+                </>
               ) : (
                 <>
-                  <span className="font-medium text-xs">
-                    <b className="font-extrabold">{Math.abs(daysLeft)}</b> Days
-                  </span>
-                  <span className="text-slate-400 mx-0.5 opacity-30">|</span>
-                  <span className="font-medium text-xs uppercase tracking-tighter">
-                    {month} <b className="font-extrabold">{day}</b>
-                  </span>
+                  <span><span className="text-[12px] font-black">{Math.abs(daysLeft)}</span> Left</span>
+                  <CalendarDays className="h-3 w-3" />
+                  <span className="font-bold">{month} {day}</span>
                 </>
               )}
             </span>
+
+            {pendingCount > 0 && (
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPending?.(account);
+                      }}
+                      className="h-7 w-[170px] px-2.5 inline-flex items-center justify-center gap-1 rounded-full border border-amber-300 bg-amber-50 text-[10px] font-black tracking-wide text-amber-700 hover:bg-amber-100"
+                    >
+                      <Hourglass className="h-3 w-3" />
+                      <span>{pendingCount} Pending</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {`Pending confirm: ${pendingCount} item(s), ${formatMoneyVND(pendingTotalAmount)}`}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         );
       }
       case "balance": {
         const isCC = account.type === "credit_card";
-        const isParent = !!account.relationships?.is_parent;
-        const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
-        const parentAccount = balParentId
-          ? allAccounts?.find((a) => a.id === balParentId)
-          : null;
+        const accountSlug = (account as any)?.slug as string | undefined;
+        const hasChildren =
+          allAccounts?.some(
+            (item) =>
+              item.parent_account_id === account.id ||
+              (accountSlug ? item.parent_account_id === accountSlug : false),
+          ) || false;
+        const isParent = !!account.relationships?.is_parent || hasChildren;
+        const parentHintId = account.relationships?.parent_info?.id || null;
+        const rawParentRef = account.parent_account_id || parentHintId || null;
+        const parentAcc = isParent
+          ? null
+          : allAccounts?.find(
+              (item) =>
+                item.id === rawParentRef ||
+                ((item as any)?.slug && (item as any).slug === rawParentRef),
+            );
+        const inferredParentAcc = isParent
+          ? null
+          : allAccounts?.find((item) =>
+              (item.relationships?.child_accounts || []).some(
+                (child: any) =>
+                  child.id === account.id ||
+                  child.id === rawParentRef ||
+                  (accountSlug ? child.id === accountSlug : false),
+              ),
+            );
+        const effectiveParentAcc = parentAcc || inferredParentAcc || null;
 
-        // Use passed familyBalance if available for consistent family-aware reporting
-        let displayBalance = familyBalance;
-
-        // Determine effective grouping
-        const effectiveParentId = account.relationships?.is_parent || isParent ? account.id : account.parent_account_id;
-
-        // If no familyBalance prop, try to calculate it again (safety fallback)
-        if (displayBalance === undefined || displayBalance === null) {
-          if (effectiveParentId) {
-            const familyMembers = allAccounts?.filter(a => a.id === effectiveParentId || a.parent_account_id === effectiveParentId) || [];
-            displayBalance = familyMembers.reduce((sum, a) => sum + (a.current_balance || 0), 0);
-          } else {
-            displayBalance = account.current_balance || 0;
+        const groupRefs = new Set<string>();
+        const knownChildIds = new Set<string>(
+          ((isParent ? account.relationships?.child_accounts : effectiveParentAcc?.relationships?.child_accounts) || [])
+            .map((child: any) => String(child?.id || ""))
+            .filter(Boolean),
+        );
+        if (isParent) {
+          groupRefs.add(account.id);
+          if (accountSlug) groupRefs.add(accountSlug);
+        } else {
+          if (rawParentRef) groupRefs.add(rawParentRef);
+          if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+          const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+          if (parentSlug) groupRefs.add(parentSlug);
+          if (!rawParentRef && !effectiveParentAcc) {
+            groupRefs.add(account.id);
+            if (accountSlug) groupRefs.add(accountSlug);
           }
         }
 
-        // For Credit Cards, Balance means Available (Total Family Limit - Total Family Debt)
-        const limit = isCC
-          ? (account.credit_limit || parentAccount?.credit_limit || 0)
+        const computedGroupDebt = allAccounts
+          ? allAccounts
+              .filter(
+                (item) =>
+                  knownChildIds.has(item.id) ||
+                  groupRefs.has(item.id) ||
+                  groupRefs.has(item.parent_account_id || ""),
+              )
+              .reduce((sum, item) => sum + (item.current_balance || 0), 0)
+          : account.current_balance || 0;
+
+        const sharedFamilyDebt = familyBalance !== undefined ? familyBalance : computedGroupDebt;
+
+        // Keep Balance column in lockstep with Role's family math.
+        const familyLimit = isCC
+          ? resolveCreditLimit({
+              ownLimit: account.credit_limit,
+              parentLimit: effectiveParentAcc?.credit_limit,
+            })
           : 0;
-        const debt = isCC ? Math.abs(displayBalance || 0) : 0;
-        const finalBalance = isCC ? limit - debt : displayBalance || 0;
+        const debt = isCC ? Math.abs(sharedFamilyDebt || 0) : 0;
+        const limit = isCC ? familyLimit : getEffectiveCreditLimit(account, allAccounts);
+        const finalBalance = isCC
+          ? computeCreditAvailableBalance({
+              ownLimit: account.credit_limit,
+              parentLimit: effectiveParentAcc?.credit_limit,
+              debt,
+            })
+          : account.current_balance || 0;
+        const remainingPercent = isCC && limit > 0
+          ? Math.max(0, Math.min(100, (finalBalance / limit) * 100))
+          : null;
+
+        const balanceTone = isCC && remainingPercent !== null
+          ? remainingPercent < 30
+            ? "bg-rose-50 text-rose-700 border-rose-300"
+            : remainingPercent < 80
+              ? "bg-amber-50 text-amber-700 border-amber-300"
+              : "bg-emerald-50 text-emerald-700 border-emerald-300"
+          : Math.abs(finalBalance) > 100000000
+            ? "bg-rose-50 text-rose-700 border-rose-300"
+            : Math.abs(finalBalance) >= 50000000
+              ? "bg-amber-50 text-amber-700 border-amber-300"
+              : "bg-emerald-50 text-emerald-700 border-emerald-300";
 
         return (
           <TooltipProvider>
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <div className="flex flex-col items-end text-right gap-0.5 cursor-help min-w-[120px]">
-                  <div
+                <div className="flex items-center justify-end text-right cursor-help min-w-[120px]">
+                  <span
                     className={cn(
-                      "tabular-nums text-[13px] font-black tracking-tight",
-                    Math.abs(finalBalance) > 100000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.8)
-                      ? "text-rose-600"
-                      : Math.abs(finalBalance) >= 50000000 || (isCC && limit > 0 && (limit - finalBalance) / limit > 0.5)
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                      "h-7 px-3 rounded-full inline-flex items-center text-[11px] font-black tabular-nums border",
+                      balanceTone,
                     )}
                   >
                     {finalBalance < 0 ? "-" : ""}
                     {formatMoneyVND(Math.round(Math.abs(finalBalance)))}
-                  </div>
-                  <VietnameseCurrency
-                    amount={finalBalance}
-                    variant="stylized"
-                    className="text-[11px]"
-                  />
+                  </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent
@@ -1355,6 +1565,10 @@ export function AccountRowV2({
 
                   {isCC ? (
                     <div className="space-y-1.5 pt-1">
+                      <div className="pb-1 border-b border-slate-700">
+                        <div className="text-[10px] text-slate-400 mb-1">Amount (Text)</div>
+                        <VietnameseCurrency amount={finalBalance} variant="none" className="text-[11px]" />
+                      </div>
                       <div className="flex justify-between text-[11px]">
                         <span className="text-slate-400">Credit Limit:</span>
                         <span className="font-bold">

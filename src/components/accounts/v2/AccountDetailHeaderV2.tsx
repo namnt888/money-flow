@@ -99,6 +99,13 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const toDisplayPercent = (rate: number | string) => {
+  const parsed = typeof rate === "string" ? Number(rate.replace("%", "").trim()) : Number(rate);
+  if (!Number.isFinite(parsed)) return "0";
+  const normalized = parsed <= 1 ? parsed * 100 : parsed;
+  return Number.isInteger(normalized) ? normalized.toFixed(0) : normalized.toFixed(2);
+};
+
 const formatVNShort = (amount: number) => {
   const absAmount = Math.abs(amount);
   if (absAmount >= 1_000_000_000)
@@ -223,6 +230,13 @@ export function AccountDetailHeaderV2({
     }
   }, [account.id]);
 
+  const handleOpenPocketBase = React.useCallback(() => {
+    window.open(
+      `https://api-db.reiwarden.io.vn/_/#/collections?collection=pvl_acc_001&filter=${account.id}&sort=-%40rowid&recordId=${account.id}`,
+      "_blank",
+    );
+  }, [account.id]);
+
   const selectedCycleMetrics = React.useMemo(() => {
     if (
       !selectedCycle ||
@@ -254,8 +268,18 @@ export function AccountDetailHeaderV2({
       ["expense", "debt", "service"].includes(tx.type),
     );
 
-    // Calculate earned (est) from cashback_entries
+    // Estimate cashback from policy metadata first, fallback to cashback entries.
     const est = cycleSpendRows.reduce((sum: number, tx: any) => {
+      const policy = tx?.metadata?.cashback_policy;
+      const txAmount = Math.abs(Number(tx.amount || 0));
+      const policyRate = Number(policy?.rate || 0);
+      const policyCap = Number(policy?.ruleMaxReward || 0);
+      if (policyRate > 0) {
+        const byRate = txAmount * policyRate;
+        const byPolicy = policyCap > 0 ? Math.min(byRate, policyCap) : byRate;
+        return sum + byPolicy;
+      }
+
       const entries = Array.isArray(tx.cashback_entries)
         ? tx.cashback_entries
         : [];
@@ -472,21 +496,51 @@ export function AccountDetailHeaderV2({
     );
   }, [account, startOfDay]);
 
+  const fallbackRules = React.useMemo(() => {
+    const program = normalizeCashbackConfig(account.cashback_config, account);
+    const levelRules = (program.levels || [])
+      .flatMap((level: any) => level?.rules || [])
+      .map((rule: any) => ({
+        name: rule.description || "Rules",
+        rate: rule.rate,
+        max: rule.maxReward ?? rule.max,
+      }));
+
+    const directProgramRules = Array.isArray((program as any).rules_json_v2)
+      ? (program as any).rules_json_v2.map((rule: any) => ({
+          name: "Rules",
+          rate: rule?.rate,
+          max: rule?.max,
+        }))
+      : [];
+
+    const legacyRules = Array.isArray((account as any).cb_rules_json)
+      ? (account as any).cb_rules_json.map((rule: any) => ({
+          name: "Rules",
+          rate: rule?.rate,
+          max: rule?.max,
+        }))
+      : [];
+
+    const merged = [...levelRules, ...directProgramRules, ...legacyRules].filter(
+      (rule: any) => Number(rule?.rate || 0) > 0,
+    );
+
+    return merged;
+  }, [account.cashback_config, account]);
+
 
   const rewardsCount = React.useMemo(() => {
     try {
-      const program = normalizeCashbackConfig(account.cashback_config, account);
-      const counts = (program.levels || []).reduce(
-        (acc: number, lvl: any) => acc + (lvl.rules?.length || 0),
-        0,
-      );
+      const counts = fallbackRules.length;
       if (counts > 0) return counts;
+      const program = normalizeCashbackConfig(account.cashback_config, account);
       if (program.defaultRate > 0) return 1;
       return 0;
     } catch (e) {
       return 0;
     }
-  }, [account.cashback_config]);
+  }, [fallbackRules, account.cashback_config, account]);
 
   const cycleMetricSnapshot = React.useMemo(() => {
     const activeRuleEarned = (dynamicCashbackStats?.activeRules || []).reduce(
@@ -526,7 +580,7 @@ export function AccountDetailHeaderV2({
         : activeRuleEarned;
     const actualEarn = rawActualEarn;
     const sharedAmount = selectedCycleMetrics ? derivedShared : snapshotShared;
-    const totalProfit = estCashback - sharedAmount;
+    const totalProfit = selectedCycleMetrics ? derivedProfit : estCashback - sharedAmount;
 
     return {
       estCashback,
@@ -551,8 +605,10 @@ export function AccountDetailHeaderV2({
       totalNetBenefit: summary.netProfitYearly || 0
     };
   }, [summary]);
+  const pendingCount = summary?.pendingCount || 0;
+
   return (
-    <div className="bg-white border-b border-slate-200 px-6 py-2.5 flex gap-4 items-stretch sticky top-0 z-60 shadow-sm transition-all duration-500">
+    <div className="bg-white border-b border-slate-200 px-5 py-1.5 flex gap-3 items-stretch sticky top-0 z-60 shadow-sm transition-all duration-500">
       <AccountSlideV2
         open={isSlideOpen}
         onOpenChange={setIsSlideOpen}
@@ -564,7 +620,7 @@ export function AccountDetailHeaderV2({
       />
 
       {/* CARD 1: ACCOUNT */}
-      <HeaderSection label="Account" className="flex-[3] min-w-[300px] max-w-[340px] flex flex-col gap-0 py-2">
+      <HeaderSection label="Account" badge={<span className="bg-sky-50 text-sky-700 border border-sky-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">ACC</span>} className="flex-[3] min-w-[280px] max-w-[320px] flex flex-col gap-0 py-1.5">
         <div className="flex items-start gap-3 flex-1 h-12">
           <div className="shrink-0 h-10 flex items-center pr-1 border-r border-slate-50">
             {account.image_url ? (
@@ -588,61 +644,70 @@ export function AccountDetailHeaderV2({
                   <TooltipContent>Copy account ID</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Popover open={isEditPopoverOpen} onOpenChange={setIsEditPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button className="text-slate-300 hover:text-indigo-500 transition-colors transform hover:scale-110"><Edit className="h-3.5 w-3.5" /></button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] z-[100] shadow-[0_20px_50px_rgba(79,70,229,0.15)] border-indigo-100 rounded-2xl" align="start">
-                   <div className="space-y-4 p-2">
-                    <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><Edit className="h-3.5 w-3.5 text-indigo-500" /><h4 className="text-[11px] font-black uppercase text-slate-700 tracking-widest">Update Identification</h4></div>
-                    <div className="space-y-3">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider ml-1">Account Number</label>
-                        <Input value={editValues.account_number} onChange={(e) => setEditValues((p) => ({ ...p, account_number: e.target.value }))} placeholder="Enter number..." className="h-9 text-xs font-medium bg-slate-50/50 border-slate-100 focus:bg-white transition-all shadow-sm rounded-lg" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider ml-1">Receiver Name</label>
-                        <Input value={editValues.receiver_name} onChange={(e) => setEditValues((p) => ({ ...p, receiver_name: e.target.value }))} placeholder="Enter name..." className="h-9 text-xs font-medium bg-slate-50/50 border-slate-100 focus:bg-white transition-all shadow-sm rounded-lg" />
-                      </div>
-                    </div>
-                    <button onClick={handleSaveInfo} className="w-full h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-widest rounded-xl mt-2 shadow-lg shadow-indigo-600/10 transition-all active:scale-[0.98]">Update Details</button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => setIsSlideOpen(true)} className="text-slate-300 hover:text-indigo-600 transition-colors transform hover:scale-110" aria-label="Open settings">
+                      <Settings className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Config</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={handleOpenPocketBase} className="text-slate-300 hover:text-amber-600 transition-colors transform hover:scale-110" aria-label="Open in PocketBase admin">
+                      <Database className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Open in PocketBase Admin</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 mt-1.5 max-w-full cursor-help">
+                    <span className="text-[11px] font-black text-slate-600 tracking-widest tabular-nums bg-slate-50 px-2 py-0.5 rounded border border-slate-100 truncate">
+                      {(account.account_number || "•••••").slice(0, 5)}... {account.receiver_name ? `${account.receiver_name.slice(0, 10)}...` : ""}
+                    </span>
+                    <Popover open={isEditPopoverOpen} onOpenChange={setIsEditPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button className="text-slate-300 hover:text-indigo-500 transition-colors transform hover:scale-110" aria-label="Edit account number and receiver">
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] z-[100] shadow-[0_20px_50px_rgba(79,70,229,0.15)] border-indigo-100 rounded-2xl" align="start">
+                        <div className="space-y-4 p-2">
+                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><Edit className="h-3.5 w-3.5 text-indigo-500" /><h4 className="text-[11px] font-black uppercase text-slate-700 tracking-widest">Update Identification</h4></div>
+                          <div className="space-y-3">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider ml-1">Account Number</label>
+                              <Input value={editValues.account_number} onChange={(e) => setEditValues((p) => ({ ...p, account_number: e.target.value }))} placeholder="Enter number..." className="h-9 text-xs font-medium bg-slate-50/50 border-slate-100 focus:bg-white transition-all shadow-sm rounded-lg" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider ml-1">Receiver Name</label>
+                              <Input value={editValues.receiver_name} onChange={(e) => setEditValues((p) => ({ ...p, receiver_name: e.target.value }))} placeholder="Enter name..." className="h-9 text-xs font-medium bg-slate-50/50 border-slate-100 focus:bg-white transition-all shadow-sm rounded-lg" />
+                            </div>
+                          </div>
+                          <button onClick={handleSaveInfo} className="w-full h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-widest rounded-xl mt-2 shadow-lg shadow-indigo-600/10 transition-all active:scale-[0.98]">Update Details</button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[11px] font-black text-slate-600 tracking-widest tabular-nums bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{account.account_number || "•••• •••• ••••"}</span>
-              {account.receiver_name && <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[120px] opacity-80">{account.receiver_name}</span>}
-            </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {account.account_number || "N/A"} {account.receiver_name || ""}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
         {/* MIDDLE ROW SYSTEM (h-12) */}
         <div className="flex items-center gap-2 h-12 w-full border-t border-slate-50 mt-1 pt-1">
-          <div className="flex items-center gap-2 flex-1 scrollbar-hide overflow-x-auto py-1">
-            <button onClick={() => setIsSlideOpen(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all text-[9.5px] font-black uppercase tracking-[0.1em] shadow-sm"><Settings className="w-3 h-3" />CONFIG</button>
-            {summary && (
-              <button
-                onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-pending-items-modal", { detail: { accountId: account.id } })); }}
-                className={cn("flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[9.5px] font-black uppercase tracking-[0.1em] transition-all shadow-sm", (summary.pendingCount || 0) > 0 ? "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100 animate-pulse" : "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100")}
-              >
-                {(summary.pendingCount || 0) > 0 ? (
-                  <><span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span></span>{summary.pendingCount} WAIT</>
-                ) : <><Check className="h-3 w-3" />NO WAIT</>}
-              </button>
-            )}
-            {isCreditCard && (
-              <button
-                onClick={async () => {
-                  try { setIsSyncing(true); const { syncAccountCashbackAction } = await import("@/actions/account-actions"); const result = await syncAccountCashbackAction(account.id); if (result && (result as any).success) { toast.success("Sync OK"); router.refresh(); } } catch { toast.error("Sync error"); } finally { setIsSyncing(false); }
-                }}
-                disabled={isSyncing}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all text-[9.5px] font-black uppercase tracking-[0.1em] shadow-sm disabled:opacity-50"
-              >
-                {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}SYNC
-              </button>
-            )}
-          </div>
+          <div className="flex items-center gap-1.5 flex-1 scrollbar-hide overflow-x-auto py-1" />
         </div>
 
         {/* BOTTOM ROW Awards (h-10) */}
@@ -650,19 +715,54 @@ export function AccountDetailHeaderV2({
           {rewardsCount > 0 && (
             <Popover>
               <PopoverTrigger asChild>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF9E6] border border-[#FFE082] rounded-lg cursor-help hover:bg-[#FFF3C8] transition-all group shrink-0 shadow-sm">
+                <div className="flex items-center rounded-lg border border-[#FFE082] bg-[#FFF9E6] shadow-sm overflow-hidden shrink-0">
+                  {isCreditCard && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                setIsSyncing(true);
+                                const { syncAccountCashbackAction } = await import("@/actions/account-actions");
+                                const result = await syncAccountCashbackAction(account.id);
+                                if (result && (result as any).success) {
+                                  toast.success("Sync OK");
+                                  router.refresh();
+                                }
+                              } catch {
+                                toast.error("Sync error");
+                              } finally {
+                                setIsSyncing(false);
+                              }
+                            }}
+                            disabled={isSyncing}
+                            className="h-full px-2.5 py-1.5 border-r border-[#FFE082] text-[#B45309] hover:bg-[#FFF3C8] transition-all disabled:opacity-50"
+                          >
+                            {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Sync rules</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 cursor-help hover:bg-[#FFF3C8] transition-all group">
                   <Zap className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B] group-hover:scale-110 transition-transform" />
                   {(() => {
-                    const rules = dynamicCashbackStats?.activeRules || [];
-                    const program = normalizeCashbackConfig(account.cashback_config, account);
-                    const displayRules = rules.length > 0 ? rules : (program.levels?.[0]?.rules || []).map((r: any) => ({ name: r.description || "Rules", rate: r.rate }));
+                    const activeRules = dynamicCashbackStats?.activeRules || [];
+                    const displayRules = fallbackRules.length > 0 ? fallbackRules : activeRules;
                     const topRule = displayRules[0];
                     const remaining = rewardsCount - 1;
+                    const topRate = topRule?.rate || 0;
                     return (<>
-                      <span className="text-[11px] font-black text-[#92400E] uppercase tracking-wider">{topRule?.name || "REWARDS"}</span>
+                      <span className="text-[11px] font-black text-[#92400E] uppercase tracking-wider">
+                        {topRule ? `RULE ${toDisplayPercent(topRate)}%` : "REWARDS"}
+                      </span>
                       {remaining > 0 && <span className="text-[11px] font-bold text-[#D97706] uppercase ml-1 opacity-60">+{remaining} MORE</span>}
                     </>);
                   })()}
+                  </div>
                 </div>
               </PopoverTrigger>
               <PopoverContent className="p-0 border-none shadow-[0_25px_60px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden w-[380px] z-[120]" align="start" sideOffset={12}>
@@ -672,15 +772,14 @@ export function AccountDetailHeaderV2({
                 </div>
                 <div className="bg-[#F8F9FB] p-5 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar shadow-inner">
                   {(() => {
-                    const rules = dynamicCashbackStats?.activeRules || [];
-                    const program = normalizeCashbackConfig(account.cashback_config, account);
-                    const displayRules = rules.length > 0 ? rules : (program.levels || []).flatMap(l => l.rules || []).map((r: any) => ({ name: r.description || "Rules", rate: r.rate, max: r.maxReward }));
+                    const activeRules = dynamicCashbackStats?.activeRules || [];
+                    const displayRules = fallbackRules.length > 0 ? fallbackRules : activeRules;
                     return displayRules.map((rule: any, idx: number) => (
                       <div key={idx} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow space-y-3 relative overflow-hidden group/rule">
                         <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-500 opacity-0 group-hover/rule:opacity-100 transition-opacity" />
                         <div className="flex justify-between items-start">
                           <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Rule Priority</span><div className="text-[12px] font-black text-slate-800 uppercase tracking-tight">{rule.name}</div></div>
-                          <span className="text-[18px] font-black text-emerald-600 tabular-nums bg-emerald-50 px-2 rounded-lg">{rule.rate}%</span>
+                          <span className="text-[18px] font-black text-emerald-600 tabular-nums bg-emerald-50 px-2 rounded-lg">{toDisplayPercent(rule.rate || 0)}%</span>
                         </div>
                         <div className="flex items-center gap-2.5 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
                            <div className="flex flex-1 flex-col gap-1">
@@ -705,8 +804,8 @@ export function AccountDetailHeaderV2({
         <TooltipProvider>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
-              <HeaderSection label="Credit Health" borderColor="border-indigo-100" className="flex-[6] min-w-[450px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-2 border-dashed">
-                <div className="grid grid-cols-5 gap-3 items-start flex-1 pt-1.5 px-2">
+              <HeaderSection label="Credit Health" badge={<span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">HEALTH</span>} borderColor="border-indigo-100" className="flex-[6] min-w-[420px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-1.5 border-dashed">
+                <div className="grid grid-cols-5 gap-2 items-start flex-1 pt-1 px-2">
                   <div className="flex flex-col gap-1.5 border-r border-indigo-100/50 pr-4">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">AVAILABLE</span>
                     <div className={cn("text-[17px] font-black tracking-tight leading-none tabular-nums drop-shadow-sm", displayBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>{formatMoneyVND(Math.ceil(displayBalance))}</div>
@@ -723,29 +822,34 @@ export function AccountDetailHeaderV2({
                   </div>
 
                   <div className="flex justify-center pt-1 animate-in fade-in zoom-in duration-700">{dueDateBadge}</div>
-                  <div className="flex flex-col items-end pt-1 gap-1.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-0.5">HEALTH</span>
-                    <div className="text-[10px] font-black text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-200 tracking-wider shadow-sm flex items-center gap-1.5 active:scale-95 transition-all"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />STABLE</div>
+                  <div className="flex flex-col items-center justify-center pt-1 gap-1">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">Pending</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-pending-items-modal", { detail: { accountId: account.id } })); }}
+                      className={cn("text-[9px] font-black px-2 py-1 rounded-full tracking-tight shadow-sm flex items-center gap-1 active:scale-95 transition-all border whitespace-nowrap", pendingCount > 0 ? "text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100" : "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100")}
+                    >
+                      {isLoadingPending ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : pendingCount > 0 ? <Clock className="h-2.5 w-2.5" /> : <Check className="h-2.5 w-2.5" />}
+                      <span>{isLoadingPending ? "LOADING WAIT" : pendingCount > 0 ? `${pendingCount} WAIT` : "NO WAIT"}</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between h-12 border-t border-slate-100/40 mt-1.5 pt-1.5 px-2">
-                  <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-sm bg-indigo-400" /><span className="text-[10px] font-black text-indigo-400/80 uppercase tracking-[0.15em]">{selectedYear || currentYear} SPENDING PACE</span></div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[14px] font-black text-slate-700 tabular-nums bg-slate-50 px-3 py-0.5 rounded-lg border border-slate-100 shadow-sm">{formatMoneyVND(Math.ceil(summary?.yearPureExpenseTotal || 0))} / {formatMoneyVND(account.credit_limit || 0)}</span>
-                  </div>
-                </div>
-
-                <div className="h-10 w-full border-t border-slate-100/40 pt-1.5 px-2">
-                  <div className="relative w-full h-[36px] bg-slate-200/50 rounded-full overflow-hidden border border-slate-200/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] p-0.5">
+                <div className="h-12 w-full border-t border-slate-100/40 mt-1 px-2 pt-1.5 space-y-1.5">
+                  <div className="relative w-full h-[14px] bg-slate-200/50 rounded-full overflow-hidden border border-slate-200/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] p-0.5">
                     <div
-                      className={cn("h-full transition-all duration-1200 rounded-full flex items-center justify-center min-w-[5rem] shadow-[0_4px_12px_rgba(0,0,0,0.1)] relative group", (displayLimit && (displayOutstanding / displayLimit) > 0.8) ? "bg-gradient-to-r from-rose-600 via-rose-500 to-rose-400" : "bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-400")}
+                      className={cn("h-full transition-all duration-1200 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] relative", (displayLimit && (displayOutstanding / displayLimit) > 0.8) ? "bg-gradient-to-r from-rose-600 via-rose-500 to-rose-400" : "bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-400")}
                       style={{ width: `${Math.max((displayLimit ? (displayOutstanding / displayLimit) * 100 : 0), 8)}%` }}
                     >
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:25px_25px] animate-[shimmer_2s_infinite_linear]"></div>
-                      <span className="text-[12px] font-black text-white uppercase tracking-[0.2em] drop-shadow-md z-10 transition-transform group-hover:scale-105">{(displayLimit ? (displayOutstanding / displayLimit) * 100 : 0).toFixed(1)}% RATIO</span>
                     </div>
-
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black text-indigo-700 tabular-nums bg-white px-2 py-0.5 rounded-full border border-indigo-200/80 shadow-sm">
+                      RATIO {(displayLimit ? (displayOutstanding / displayLimit) * 100 : 0).toFixed(1)}%
+                    </span>
+                    <span className="text-[10px] font-black text-slate-700 tabular-nums bg-white px-2 py-0.5 rounded-full border border-slate-200/80 shadow-sm">
+                      {(selectedYear || currentYear)} PACE {formatMoneyVND(Math.ceil(summary?.yearPureExpenseTotal || 0))}/{formatMoneyVND(account.credit_limit || 0)}
+                    </span>
                   </div>
                 </div>
               </HeaderSection>
@@ -806,7 +910,7 @@ export function AccountDetailHeaderV2({
 
       {/* CARD 3: CASHBACK PERFORMANCE */}
       {isCreditCard && (
-        <HeaderSection label="Cashback Performance" borderColor="border-emerald-100" className="flex-[6] min-w-[420px] bg-emerald-50/10 flex flex-col gap-0 py-2 relative overflow-hidden" hideHintInHeader>
+        <HeaderSection label="Cashback Performance" badge={<span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">CB PERF</span>} borderColor="border-emerald-100" className="flex-[6] min-w-[420px] bg-emerald-50/10 flex flex-col gap-0 py-1.5 relative" hideHintInHeader>
           <div className="absolute top-0 right-0 p-1 opacity-20 hover:opacity-100 transition-opacity"><Sparkles className="h-4 w-4 text-emerald-400" /></div>
           <div className="flex items-start gap-5 flex-1 h-12 pt-1 px-2">
             {dynamicCashbackStats && selectedCycle && selectedCycle !== "all" ? (
@@ -909,22 +1013,7 @@ export function AccountDetailHeaderV2({
             )}
           </div>
 
-          <div className="flex items-center gap-3 h-12 border-t border-slate-100/40 mt-1.5 pt-1.5 px-2">
-             <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">CYCLE CONTEXT:</span>
-             <div className="flex items-center gap-2">
-               {dynamicCashbackStats?.currentTierName && (
-                 <div className="flex items-center gap-2 px-3.5 py-1.5 bg-indigo-950 text-white border border-indigo-900 rounded-lg shadow-sm hover:translate-y-[-1px] transition-all cursor-default group">
-                   <Sparkles className="h-3 w-3 text-amber-400 fill-amber-400 group-hover:animate-spin" />
-                   <span className="text-[10px] font-black uppercase tracking-[0.15em]">{dynamicCashbackStats.currentTierName} STATUS</span>
-                 </div>
-               )}
-               <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-lg shadow-sm">
-                 <span className="text-[9.5px] font-black text-slate-500 uppercase tracking-tight tabular-nums">CURRENT SPEND: {formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}</span>
-               </div>
-             </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 h-10 w-full border-t border-slate-100/40 pt-1.5 px-2">
+          <div className="flex items-center gap-2.5 h-9 w-full border-t border-slate-100/40 mt-1 pt-1 px-2">
             <TooltipProvider>
               <Tooltip delayDuration={200}>
                 <TooltipTrigger asChild>
@@ -1035,15 +1124,21 @@ export function AccountDetailHeaderV2({
                   <div className={cn("flex items-center gap-2.5 px-4 py-2.5 rounded-xl h-full border transition-all cursor-help hover:shadow-md active:scale-95 transform shadow-sm relative group overflow-hidden flex-1", (dynamicCashbackStats?.is_min_spend_met ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-800"))}>
                     <div className={cn("absolute inset-y-0 left-0 w-1 transition-all group-hover:w-2", (dynamicCashbackStats?.is_min_spend_met ? "bg-emerald-600" : "bg-amber-600"))} />
                     <Zap className={cn("h-4.5 w-4.5 fill-current transition-transform group-hover:scale-110", (dynamicCashbackStats?.is_min_spend_met ? "text-emerald-600" : "text-amber-600"))} />
-                    <div className="flex items-center justify-between flex-1 ml-0.5">
-                      <span className="text-[11px] font-black uppercase tracking-[0.15em]">
-                        {dynamicCashbackStats?.is_min_spend_met 
-                          ? "QUALIFIED" 
-                          : `NEEDS: ${formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - (dynamicCashbackStats?.currentSpend || 0)))}`}
-                      </span>
-                      <span className="text-[11px] font-black uppercase tracking-[0.15em] opacity-40">
-                         SPENT: {formatMoneyVND(Math.ceil(dynamicCashbackStats?.currentSpend || 0))}
-                      </span>
+                    <div className="flex items-center justify-between flex-1 ml-0.5 gap-4 min-w-0">
+                      <div className="flex flex-col leading-none gap-1 min-w-0">
+                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Needs</span>
+                        <span className={cn("text-[12px] font-black tabular-nums tracking-tight truncate", dynamicCashbackStats?.is_min_spend_met ? "text-emerald-700" : "text-rose-700") }>
+                          {dynamicCashbackStats?.is_min_spend_met
+                            ? "QUALIFIED"
+                            : formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - (dynamicCashbackStats?.currentSpend || 0)))}
+                        </span>
+                      </div>
+                      <div className="flex flex-col leading-none gap-1 items-end min-w-0">
+                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Spent</span>
+                        <span className="text-[12px] font-black tabular-nums tracking-tight text-slate-700 truncate">
+                          {formatMoneyVND(Math.ceil(dynamicCashbackStats?.currentSpend || 0))}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </TooltipTrigger>

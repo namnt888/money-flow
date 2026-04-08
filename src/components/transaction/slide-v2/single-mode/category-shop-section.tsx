@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { SingleTransactionFormValues } from "../types";
-import { Category, Shop } from "@/types/moneyflow.types";
+import { Account, Category, Shop } from "@/types/moneyflow.types";
 import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,6 +25,7 @@ import {
 } from "@/actions/cascade-actions";
 
 type CategoryShopSectionProps = {
+  accounts: Account[];
   shops: Shop[];
   categories: Category[];
   onAddNewCategory?: () => void;
@@ -35,6 +36,7 @@ type CategoryShopSectionProps = {
 };
 
 export function CategoryShopSection({
+  accounts,
   shops,
   categories,
   onAddNewCategory,
@@ -98,9 +100,6 @@ export function CategoryShopSection({
   const [categoryHistoricalShopIds, setCategoryHistoricalShopIds] = useState<
     string[]
   >([]);
-  const [prefilledAccountId, setPrefilledAccountId] = useState<string | null>(
-    null,
-  );
 
   // Filter categories based on transaction type
   const filteredCategories = useMemo(() => {
@@ -162,6 +161,10 @@ export function CategoryShopSection({
     "invest",
   ].includes(transactionType);
 
+  const allowFavoritePrefill = ["expense", "debt", "credit_pay"].includes(
+    transactionType,
+  );
+
   const isValidUrl = (url: string | null | undefined): url is string => {
     if (!url) return false;
     try {
@@ -202,16 +205,33 @@ export function CategoryShopSection({
     }
 
     const historicalSet = new Set(effectiveCategoryHistoricalShopIds);
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    const linkedShopSet = new Set(
+      Array.isArray((selectedCategory as any)?.linked_shop_ids)
+        ? (((selectedCategory as any).linked_shop_ids as string[]) || [])
+        : [],
+    );
+    const defaultShopId = (selectedCategory as any)?.default_shop_id || null;
 
     // Filter and sort:
     // 1. Matches via default_category_id or History
     // 2. Others below
     return [...shops]
       .sort((a, b) => {
-        const aMatch =
-          a.default_category_id === categoryId || historicalSet.has(a.id);
-        const bMatch =
-          b.default_category_id === categoryId || historicalSet.has(b.id);
+        const aScore =
+          (defaultShopId && a.id === defaultShopId ? 100 : 0) +
+          (linkedShopSet.has(a.id) ? 50 : 0) +
+          (a.default_category_id === categoryId ? 20 : 0) +
+          (historicalSet.has(a.id) ? 10 : 0);
+        const bScore =
+          (defaultShopId && b.id === defaultShopId ? 100 : 0) +
+          (linkedShopSet.has(b.id) ? 50 : 0) +
+          (b.default_category_id === categoryId ? 20 : 0) +
+          (historicalSet.has(b.id) ? 10 : 0);
+        if (aScore !== bScore) return bScore - aScore;
+
+        const aMatch = a.default_category_id === categoryId || historicalSet.has(a.id);
+        const bMatch = b.default_category_id === categoryId || historicalSet.has(b.id);
         if (aMatch && !bMatch) return -1;
         if (!aMatch && bMatch) return 1;
         return 0;
@@ -231,7 +251,7 @@ export function CategoryShopSection({
           <Store className="w-4 h-4 text-slate-400" />
         ),
       }));
-  }, [shops, categoryId, effectiveCategoryHistoricalShopIds]);
+  }, [shops, categories, categoryId, effectiveCategoryHistoricalShopIds]);
 
   const categoryOptions = filteredCategories.map((c) => {
     let badgeLabel =
@@ -310,6 +330,11 @@ export function CategoryShopSection({
     if (!categoryId) return;
 
     const currentShopId = form.getValues("shop_id");
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    const categoryDefaultShopId = resolveShopValue((selectedCategory as any)?.default_shop_id || null);
+    const categoryLinkedShopIds = Array.isArray((selectedCategory as any)?.linked_shop_ids)
+      ? ((selectedCategory as any).linked_shop_ids as string[])
+      : [];
 
     const fetchShops = async () => {
       // Fetch multiple historical shops to improve the dropdown sorting
@@ -317,7 +342,15 @@ export function CategoryShopSection({
       setCategoryHistoricalShopIds(recentShopIds);
 
       if (!currentShopId) {
-        if (recentShopIds.length > 0) {
+        if (categoryDefaultShopId) {
+          form.setValue("shop_id", categoryDefaultShopId, { shouldDirty: true });
+        } else if (categoryLinkedShopIds.length > 0) {
+          const linkedShopId = resolveShopValue(categoryLinkedShopIds[0]);
+          if (linkedShopId) {
+            form.setValue("shop_id", linkedShopId, { shouldDirty: true });
+            return;
+          }
+        } else if (recentShopIds.length > 0) {
           form.setValue("shop_id", recentShopIds[0], { shouldDirty: true });
         } else {
           // Fallback to the single most recent shop logic
@@ -330,12 +363,103 @@ export function CategoryShopSection({
     };
 
     fetchShops();
-  }, [categoryId, form, shops]);
+  }, [categoryId, categories, form, shops, resolveShopValue]);
 
-  // CASCADE: Select Shop -> Auto-set Category
+  useEffect(() => {
+    if (isEditingMode) return;
+    if (!activeAccountId) return;
+
+    const linkedCategories = filteredCategories.filter((category) =>
+      Array.isArray(category.linked_account_ids)
+        ? category.linked_account_ids.includes(activeAccountId)
+        : false,
+    );
+
+    if (linkedCategories.length === 0) return;
+
+    const preferredKindForType: "internal" | "external" | null =
+      transactionType === "debt" || transactionType === "repayment"
+        ? "internal"
+        : transactionType === "expense" || transactionType === "income"
+          ? "external"
+          : null;
+
+    const preferredCategory = [...linkedCategories].sort((left, right) => {
+      if (preferredKindForType) {
+        const leftKindScore = left.kind === preferredKindForType ? 1 : 0;
+        const rightKindScore = right.kind === preferredKindForType ? 1 : 0;
+        if (leftKindScore !== rightKindScore) {
+          return rightKindScore - leftKindScore;
+        }
+      }
+
+      const leftHasDefault = left.default_shop_id ? 1 : 0;
+      const rightHasDefault = right.default_shop_id ? 1 : 0;
+      if (leftHasDefault !== rightHasDefault) return rightHasDefault - leftHasDefault;
+
+      const leftLinkedShopCount = left.linked_shop_ids?.length || 0;
+      const rightLinkedShopCount = right.linked_shop_ids?.length || 0;
+      if (leftLinkedShopCount !== rightLinkedShopCount) {
+        return rightLinkedShopCount - leftLinkedShopCount;
+      }
+
+      return left.name.localeCompare(right.name);
+    })[0];
+
+    const nextCategoryId = resolveCategoryValue(preferredCategory.id);
+    const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
+
+    if (nextCategoryId && nextCategoryId !== currentCategoryId) {
+      form.setValue("category_id", nextCategoryId, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+
+    if (isShopHidden) {
+      form.setValue("shop_id", null, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      return;
+    }
+
+    const linkedShopIds = Array.isArray(preferredCategory.linked_shop_ids)
+      ? preferredCategory.linked_shop_ids
+      : [];
+
+    let nextShopId: string | null = null;
+    if (
+      preferredCategory.default_shop_id &&
+      linkedShopIds.includes(preferredCategory.default_shop_id)
+    ) {
+      nextShopId = preferredCategory.default_shop_id;
+    } else if (linkedShopIds.length > 0) {
+      nextShopId = linkedShopIds[0];
+    }
+
+    const resolvedNextShopId = resolveShopValue(nextShopId);
+    const currentShopId = resolveShopValue(form.getValues("shop_id"));
+
+    if (resolvedNextShopId && resolvedNextShopId !== currentShopId) {
+      form.setValue("shop_id", resolvedNextShopId, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+  }, [
+    activeAccountId,
+    filteredCategories,
+    form,
+    isEditingMode,
+    isShopHidden,
+    transactionType,
+    resolveCategoryValue,
+    resolveShopValue,
+  ]);
+
   useEffect(() => {
     if (!shopId) return;
-
     const currentCategoryId = form.getValues("category_id");
     if (currentCategoryId) {
       return;
@@ -346,11 +470,23 @@ export function CategoryShopSection({
       // Fetch historical categories for this shop to check compatibility
       const recentCategoryIds = await getRecentCategoriesByShopId(shopId);
       setShopHistoricalCategoryIds(recentCategoryIds);
+      const linkedCategory = categories.find((category) => {
+        const linkedShopIds = Array.isArray((category as any).linked_shop_ids)
+          ? ((category as any).linked_shop_ids as string[])
+          : [];
+        return linkedShopIds.includes(shopId);
+      });
 
       // Determine if current category is compatible with the new shop
       if (!currentCategoryId) {
-        // 1. Try default category from shop definition
-        if (selectedShop?.default_category_id) {
+        // 1. Prefer explicit category->shop linkage
+        if (linkedCategory?.id) {
+          form.setValue("category_id", linkedCategory.id, {
+            shouldDirty: true,
+          });
+        }
+        // 2. Try default category from shop definition
+        else if (selectedShop?.default_category_id) {
           form.setValue(
             "category_id",
             resolveCategoryValue(selectedShop.default_category_id),
@@ -359,7 +495,7 @@ export function CategoryShopSection({
             },
           );
         }
-        // 2. Or use the most recent one from history
+        // 3. Or use the most recent one from history
         else if (recentCategoryIds.length > 0) {
           form.setValue("category_id", resolveCategoryValue(recentCategoryIds[0]), {
             shouldDirty: true,
@@ -369,12 +505,11 @@ export function CategoryShopSection({
     };
 
     applyCategory();
-  }, [shopId, form, shops, resolveCategoryValue]);
+  }, [shopId, categories, form, shops, resolveCategoryValue]);
 
   useEffect(() => {
     if (isEditingMode) return;
     if (!activeAccountId) return;
-    if (prefilledAccountId === activeAccountId) return;
 
     const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
     const currentShopId = resolveShopValue(form.getValues("shop_id"));
@@ -383,6 +518,35 @@ export function CategoryShopSection({
     let cancelled = false;
 
     const hydrateRecentForAccount = async () => {
+      if (allowFavoritePrefill) {
+        const linkedCategory = categories.find((category) => {
+          const linkedAccountIds = Array.isArray((category as any).linked_account_ids)
+            ? ((category as any).linked_account_ids as string[])
+            : [];
+          if (!linkedAccountIds.includes(activeAccountId)) return false;
+
+          const txType = (transactionType || "expense").toLowerCase();
+          if (["expense", "debt", "credit_pay"].includes(txType)) {
+            return category.type === "expense";
+          }
+          if (["income", "repayment"].includes(txType)) {
+            return category.type === "income";
+          }
+          if (txType === "transfer") {
+            return category.type === "transfer";
+          }
+          return true;
+        });
+
+        if (linkedCategory?.id) {
+          form.setValue("category_id", linkedCategory.id, {
+            shouldDirty: false,
+            shouldTouch: false,
+          });
+          return;
+        }
+      }
+
       const recent = await getRecentCategoryShopByAccountId(activeAccountId);
       if (cancelled) return;
 
@@ -391,19 +555,17 @@ export function CategoryShopSection({
 
       if (nextCategoryId) {
         form.setValue("category_id", nextCategoryId, {
-          shouldDirty: true,
-          shouldTouch: true,
+          shouldDirty: false,
+          shouldTouch: false,
         });
       }
 
       if (nextShopId && !isShopHidden) {
         form.setValue("shop_id", nextShopId, {
-          shouldDirty: true,
-          shouldTouch: true,
+          shouldDirty: false,
+          shouldTouch: false,
         });
       }
-
-      setPrefilledAccountId(activeAccountId);
     };
 
     hydrateRecentForAccount();
@@ -412,11 +574,14 @@ export function CategoryShopSection({
       cancelled = true;
     };
   }, [
+    accounts,
+    categories,
     activeAccountId,
     form,
     isEditingMode,
     isShopHidden,
-    prefilledAccountId,
+    allowFavoritePrefill,
+    transactionType,
     resolveCategoryValue,
     resolveShopValue,
   ]);
@@ -424,9 +589,28 @@ export function CategoryShopSection({
   // Auto-select defaults logic
   useEffect(() => {
     const currentCategoryId = resolveCategoryValue(form.getValues("category_id"));
+    const shouldDeferToAccountLinkedPrefill =
+      !isEditingMode &&
+      Boolean(activeAccountId) &&
+      allowFavoritePrefill &&
+      !currentCategoryId;
+
+    if (shouldDeferToAccountLinkedPrefill) return;
+
     const isCurrentCategoryCompatible =
       !!currentCategoryId &&
       filteredCategories.some((c) => c.id === currentCategoryId);
+
+    const currentShopId = resolveShopValue(form.getValues("shop_id"));
+
+    if (
+      !isEditingMode &&
+      !activeAccountId &&
+      !currentShopId &&
+      !currentCategoryId
+    ) {
+      return;
+    }
 
     if (isEditingMode && isCurrentCategoryCompatible) return;
     if (isCurrentCategoryCompatible) return;
@@ -465,7 +649,9 @@ export function CategoryShopSection({
     filteredCategories,
     form,
     isEditingMode,
+    activeAccountId,
     resolveCategoryValue,
+    resolveShopValue,
   ]);
 
   // Auto-clear shop if hidden
