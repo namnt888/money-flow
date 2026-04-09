@@ -63,6 +63,25 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
             }
         }
 
+        const batchItemIds = batchItems.map((item: any) => String(item?.id || '').trim()).filter(Boolean)
+        let transactionByBatchItemId = new Map<string, any>()
+        if (batchItemIds.length > 0) {
+            try {
+                const allTransactions = await loadPocketBaseTransactions({ limit: 3000 })
+                transactionByBatchItemId = new Map(
+                    allTransactions
+                        .map((txn: any) => {
+                            const meta: any = txn?.metadata || {}
+                            const batchItemId = String(meta?.batch_item_id || '').trim()
+                            return batchItemId ? [batchItemId, txn] as const : null
+                        })
+                        .filter(Boolean) as Array<readonly [string, any]>
+                )
+            } catch (txnErr) {
+                console.warn('[BatchAction] Failed to map transactions to batch items', txnErr)
+            }
+        }
+
         // 4. Fetch Phases
         let phases: any[] = []
         try {
@@ -114,7 +133,21 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
 
         const enrichedBatches = batches.map((b: any) => ({
             ...b,
-            batch_items: batchItems.filter((item: any) => item.batch_id === b.id),
+            batch_items: batchItems
+                .filter((item: any) => item.batch_id === b.id)
+                .map((item: any) => {
+                    const txn = transactionByBatchItemId.get(String(item.id || '').trim()) || null
+                    return {
+                        ...item,
+                        transaction_id: txn?.id || item.transaction_id || null,
+                        transaction: txn || null,
+                        metadata: {
+                            ...(item.metadata || {}),
+                            transaction_id: txn?.id || item.metadata?.transaction_id || null,
+                            txn_id: txn?.id || item.metadata?.txn_id || null,
+                        },
+                    }
+                }),
             funding_transaction: b.funding_transaction_id ? null : fallbackFundingByBatchMap.get(b.id) // Map will be merged later if ID exists
         }))
 

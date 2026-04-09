@@ -22,10 +22,23 @@ interface PendingBatchItem {
     id: string
     amount: number
     batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 interface AccountPendingItemsModalProps {
     accountId: string
+    accountName?: string
     pendingItems: PendingBatchItem[]
     pendingRefundCount: number
     pendingRefundAmount: number
@@ -36,6 +49,7 @@ interface AccountPendingItemsModalProps {
 
 export function AccountPendingItemsModal({
     accountId,
+    accountName,
     pendingItems: initialPendingItems,
     pendingRefundCount,
     pendingRefundAmount,
@@ -50,6 +64,25 @@ export function AccountPendingItemsModal({
     const [voidingId, setVoidingId] = useState<string | null>(null)
     const [localPendingItems, setLocalPendingItems] = useState<PendingBatchItem[]>(initialPendingItems)
     const router = useRouter()
+
+    const buildBatchLink = (item: PendingBatchItem) => {
+        const bankType = String(item.batch?.bank_type || item.bank_type || '').trim().toLowerCase()
+        const month = String(item.batch?.month_year || item.month_year || '').trim()
+        const period = String(item.batch?.period || item.period || 'before').trim()
+        const phase = String(item.batch?.phase_id || item.phase_id || '').trim()
+        const search = String(accountName || '').trim()
+
+        if ((bankType === 'mbb' || bankType === 'vib') && month) {
+            const params = new URLSearchParams()
+            params.set('month', month)
+            params.set('period', period || 'before')
+            if (phase) params.set('phase', phase)
+            if (search) params.set('search', search)
+            return `/batch/${bankType}?${params.toString()}`
+        }
+
+        return `/batch/detail/${item.batch_id}`
+    }
 
     const isControlled = typeof open === 'boolean'
     const isOpen = isControlled ? Boolean(open) : internalOpen
@@ -291,7 +324,7 @@ export function AccountPendingItemsModal({
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <Link
-                                                                href={`/batch/detail/${item.batch_id}`}
+                                                                href={buildBatchLink(item)}
                                                                 target="_blank"
                                                                 className="text-xs font-black text-indigo-600 hover:text-indigo-800 underline underline-offset-2 truncate block"
                                                             >

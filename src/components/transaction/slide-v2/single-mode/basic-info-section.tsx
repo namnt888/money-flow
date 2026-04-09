@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormContext, useWatch } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, subMonths } from "date-fns";
 import { CalendarIcon, Tag, RefreshCw, History, Check, X, Users } from "lucide-react";
 
@@ -33,11 +33,66 @@ type BasicInfoSectionProps = {
     onAddNewPerson?: () => void;
 };
 
+function parseDateInput(value: string): Date | null {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const compact = trimmed.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (compact) {
+        const day = Number(compact[1]);
+        const month = Number(compact[2]);
+        const year = Number(compact[3]);
+        const parsed = new Date(year, month - 1, day);
+        if (
+            parsed.getFullYear() === year &&
+            parsed.getMonth() === month - 1 &&
+            parsed.getDate() === day
+        ) {
+            return parsed;
+        }
+        return null;
+    }
+
+    const dmyMatch = trimmed.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+    if (dmyMatch) {
+        const day = Number(dmyMatch[1]);
+        const month = Number(dmyMatch[2]);
+        const year = Number(dmyMatch[3]);
+        const parsed = new Date(year, month - 1, day);
+        if (
+            parsed.getFullYear() === year &&
+            parsed.getMonth() === month - 1 &&
+            parsed.getDate() === day
+        ) {
+            return parsed;
+        }
+        return null;
+    }
+
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (isoMatch) {
+        const year = Number(isoMatch[1]);
+        const month = Number(isoMatch[2]);
+        const day = Number(isoMatch[3]);
+        const parsed = new Date(year, month - 1, day);
+        if (
+            parsed.getFullYear() === year &&
+            parsed.getMonth() === month - 1 &&
+            parsed.getDate() === day
+        ) {
+            return parsed;
+        }
+    }
+
+    return null;
+}
+
 export function BasicInfoSection({ people, operationMode, onAddNewPerson }: BasicInfoSectionProps) {
     const form = useFormContext<SingleTransactionFormValues>();
 
     // Sync Tag with Date - ONLY if empty and in ADD mode
     const occurredAt = useWatch({ control: form.control, name: "occurred_at" });
+    const [typedDate, setTypedDate] = useState('');
 
     const peopleItems = useMemo(
         () =>
@@ -70,6 +125,10 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson }: Basi
         }
     }, [occurredAt, form, operationMode]);
 
+    useEffect(() => {
+        setTypedDate(occurredAt ? format(occurredAt, "dd/MM/yyyy") : '');
+    }, [occurredAt]);
+
     return (
         <div className="space-y-3">
 
@@ -84,24 +143,87 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson }: Basi
                             Date
                         </FormLabel>
                         <Popover>
-                            <PopoverTrigger asChild>
+                            <div className="flex items-center gap-2">
                                 <FormControl>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal h-10 border-slate-200 bg-white",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                    >
-                                        {field.value ? (
-                                            format(field.value, "dd/MM/yyyy")
-                                        ) : (
-                                            <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder="dd/mm/yyyy"
+                                        value={typedDate}
+                                        onChange={(e) => {
+                                            const next = e.target.value;
+                                            setTypedDate(next);
+
+                                            const parsedDate = parseDateInput(next);
+                                            if (!parsedDate) return;
+
+                                            const current = field.value || new Date();
+                                            parsedDate.setHours(
+                                                current.getHours(),
+                                                current.getMinutes(),
+                                                current.getSeconds(),
+                                                current.getMilliseconds(),
+                                            );
+                                            field.onChange(parsedDate);
+                                        }}
+                                        onBlur={() => {
+                                            const next = typedDate.trim();
+                                            if (!next) {
+                                                field.onChange(undefined);
+                                                return;
+                                            }
+
+                                            const parsedDate = parseDateInput(next);
+                                            if (!parsedDate) {
+                                                setTypedDate(field.value ? format(field.value, "dd/MM/yyyy") : '');
+                                                return;
+                                            }
+
+                                            const current = field.value || new Date();
+                                            parsedDate.setHours(
+                                                current.getHours(),
+                                                current.getMinutes(),
+                                                current.getSeconds(),
+                                                current.getMilliseconds(),
+                                            );
+                                            field.onChange(parsedDate);
+                                            setTypedDate(format(parsedDate, "dd/MM/yyyy"));
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key !== 'Enter') return;
+
+                                            const next = typedDate.trim();
+                                            if (!next) {
+                                                field.onChange(undefined);
+                                                return;
+                                            }
+
+                                            const parsedDate = parseDateInput(next);
+                                            if (!parsedDate) return;
+
+                                            const current = field.value || new Date();
+                                            parsedDate.setHours(
+                                                current.getHours(),
+                                                current.getMinutes(),
+                                                current.getSeconds(),
+                                                current.getMilliseconds(),
+                                            );
+                                            field.onChange(parsedDate);
+                                            setTypedDate(format(parsedDate, "dd/MM/yyyy"));
+                                        }}
+                                        className="h-10 border-slate-200 bg-white"
+                                    />
                                 </FormControl>
-                            </PopoverTrigger>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant={"outline"}
+                                        className="h-10 w-10 p-0 border-slate-200 bg-white shrink-0"
+                                    >
+                                        <CalendarIcon className="h-4 w-4 opacity-60" />
+                                    </Button>
+                                </PopoverTrigger>
+                            </div>
                             <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                     mode="single"
@@ -116,6 +238,25 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson }: Basi
                                     disabled={(date) =>
                                         date > new Date() || date < new Date("1900-01-01")
                                     }
+                                    footer={(
+                                        <div className="flex items-center justify-end border-t border-slate-100 px-2 py-2 mt-2">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700"
+                                                onClick={() => {
+                                                    const today = new Date();
+                                                    const current = field.value || today;
+                                                    const next = new Date(today);
+                                                    next.setHours(current.getHours(), current.getMinutes(), current.getSeconds(), current.getMilliseconds());
+                                                    field.onChange(next);
+                                                }}
+                                            >
+                                                Today
+                                            </Button>
+                                        </div>
+                                    )}
                                     initialFocus
                                 />
                             </PopoverContent>

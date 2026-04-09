@@ -8,7 +8,7 @@ import { BatchMasterChecklist } from '@/components/batch/BatchMasterChecklist'
 import { BatchMasterSlide } from '@/components/batch/BatchMasterSlide'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, RotateCcw, FileSpreadsheet, Pause, CheckCircle2 } from 'lucide-react'
+import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, FileSpreadsheet, CheckCircle2, CheckCircle, CircleDashed, Snowflake, Leaf, Flower2, SunMedium, CloudSun } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -31,6 +31,7 @@ interface BatchPageClientV2Props {
     phases?: any[]
     selectedPhaseId?: string | null
     checklistData?: any
+    batchSettings?: any
 }
 
 export function BatchPageClientV2({
@@ -48,6 +49,7 @@ export function BatchPageClientV2({
     phases = [],
     selectedPhaseId = null,
     checklistData,
+    batchSettings,
 }: BatchPageClientV2Props) {
     const router = useRouter()
     const [settingsOpen, setSettingsOpen] = useState(false)
@@ -203,6 +205,98 @@ export function BatchPageClientV2({
     }))
     const MONTH_NAMES_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const getSeasonIcon = (monthNum: number) => {
+        if (monthNum === 12 || monthNum <= 2) return Snowflake
+        if (monthNum <= 4) return Flower2
+        if (monthNum <= 8) return SunMedium
+        if (monthNum <= 10) return Leaf
+        return CloudSun
+    }
+    const getMonthStatusMeta = (mTotal: number, mConfirmed: number) => {
+        if (mTotal === 0) {
+            return { label: 'None', tone: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200', icon: CircleDashed }
+        }
+        if (mConfirmed >= mTotal) {
+            return { label: 'Done', tone: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: CheckCircle }
+        }
+        return { label: 'Process', tone: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', icon: Loader2 }
+    }
+    const getPhaseLabel = (phase: any) => {
+        const cutoff = String(phase?.cutoff_day || cutoffDay).padStart(2, '0')
+        if (phase?.label) return phase.label
+        return phase?.period_type === 'before' ? `Before ${cutoff}` : `After ${cutoff}`
+    }
+    const normalizePhaseText = (value: string) =>
+        String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim()
+    const getMonthBatches = (monthYear: string) => {
+        const activeMonthBatches = Array.isArray(checklistData?.batches) ? checklistData.batches : []
+        const sourceBatches = activeMonthBatches.length > 0 && monthYear === effectiveMonth
+            ? activeMonthBatches
+            : batches
+        return sourceBatches.filter((batch) => batch.month_year === monthYear)
+    }
+    const getBatchCounts = (batch: any) => {
+        const totalFromField = Number(batch?.total_items || 0)
+        const confirmedFromField = Number(batch?.confirmed_items || 0)
+        if (totalFromField > 0 || confirmedFromField > 0) {
+            return { total: totalFromField, confirmed: confirmedFromField }
+        }
+        const rows = Array.isArray(batch?.batch_items) ? batch.batch_items : []
+        const total = rows.length
+        const confirmed = rows.filter((row: any) => row?.status === 'confirmed').length
+        return { total, confirmed }
+    }
+    const getMonthPhaseSummary = (monthYear: string) => {
+        const monthBatches = getMonthBatches(monthYear)
+        const usedBatchIds = new Set<string>()
+
+        const phaseRows = effectivePhases.map((phase: any) => {
+            const phaseLabel = normalizePhaseText(getPhaseLabel(phase))
+            const pickBatch = (predicate: (b: any) => boolean) => {
+                const found = monthBatches.find((b: any) => {
+                    const id = String(b?.id || '')
+                    if (id && usedBatchIds.has(id)) return false
+                    return predicate(b)
+                })
+                if (found?.id) usedBatchIds.add(String(found.id))
+                return found || null
+            }
+
+            let batch = pickBatch((b: any) => String(b.phase_id || '') === String(phase.id || ''))
+
+            if (!batch && phaseLabel) {
+                batch = pickBatch((b: any) => normalizePhaseText(String(b.name || '')).includes(phaseLabel))
+            }
+
+            if (!batch) {
+                batch = pickBatch((b: any) => String(b.period || '') === String(phase.period_type || ''))
+            }
+
+            if (!batch) {
+                batch = pickBatch(() => true)
+            }
+
+            const { total, confirmed } = getBatchCounts(batch)
+            const status = getMonthStatusMeta(total, confirmed)
+            return { phase, total, confirmed, status }
+        })
+
+        const doneCount = phaseRows.filter((row) => row.total > 0 && row.confirmed >= row.total).length
+        const processCount = phaseRows.filter((row) => row.total > 0 && row.confirmed < row.total).length
+        const progressCount = doneCount + processCount
+        const totalPhases = effectivePhases.length || phaseRows.length || 0
+
+        const monthStatus = processCount > 0
+            ? getMonthStatusMeta(1, 0)
+            : doneCount > 0
+                ? getMonthStatusMeta(1, 1)
+                : getMonthStatusMeta(0, 0)
+
+        return { phaseRows, doneCount, processCount, progressCount, totalPhases, monthStatus }
+    }
     const monthSelectorItems = MONTH_NAMES_FULL.map((name, i) => {
         const monthNum = i + 1
         const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
@@ -242,7 +336,7 @@ export function BatchPageClientV2({
             <div className="bg-white border-b border-slate-200 z-50 shadow-sm">
                 <div className="w-full px-6 py-3">
                     <div className="flex items-center justify-between gap-4">
-                        {/* LEFT: LOGO, BANK TYPE & PROGRESS */}
+                        {/* LEFT: LOGO & BANK TYPE */}
                         <div className="flex items-center gap-6 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className={cn(
@@ -255,54 +349,23 @@ export function BatchPageClientV2({
                                     {bankType} Batch
                                 </h1>
                             </div>
-
-                            <div className="h-8 w-px bg-slate-100 mx-2 hidden md:block" />
-
-                            <div className="bg-indigo-50/50 px-3 py-1.5 rounded-xl border border-indigo-100/50 flex items-center gap-3">
-                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">Total Progress</span>
-                                <span className="text-sm font-black text-indigo-700 leading-none">
-                                    {batches.reduce((acc, b) => acc + (b.confirmed_items || 0), 0)}/{batches.reduce((acc, b) => acc + (b.total_items || 0), 0)}
-                                </span>
-                            </div>
                         </div>
 
                         {/* RIGHT: MONTH TABS & ACTIONS */}
                         <div className="flex items-center gap-4 flex-1 justify-end min-w-0">
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    {/* Re-align Button - Moved before months */}
-                                    <Button 
-                                        size="sm" 
-                                        variant="ghost" 
-                                        className="h-8 w-8 rounded-lg p-0 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                                        onClick={async () => {
-                                            const { migrateBatchItemsToPhasesAction } = await import('@/actions/batch-master.actions')
-                                            const result = await migrateBatchItemsToPhasesAction({ bankType: bankType as any })
-                                            if (result.success) {
-                                                toast.success(`Đã đồng bộ ${result.updatedCount} items`)
-                                                router.refresh()
-                                            } else {
-                                                toast.error('Đồng bộ thất bại')
-                                            }
-                                        }}
-                                        title="Re-align Master Templates"
-                                    >
-                                        <RotateCcw className="h-4 w-4" />
-                                    </Button>
-
-                                    <div className="h-4 w-px bg-slate-100 mx-1" />
-
+                                <div className="flex flex-col gap-1.5 shrink-0">
                                     <TooltipProvider delayDuration={100}>
-                                        {MONTH_NAMES_FULL.map((name, i) => {
+                                        {[...Array(2)].map((_, rowIdx) => (
+                                            <div key={`month-row-${rowIdx}`} className="flex items-center gap-1.5">
+                                                {MONTH_NAMES_FULL.slice(rowIdx * 6, rowIdx * 6 + 6).map((name, iLocal) => {
+                                            const i = rowIdx * 6 + iLocal
                                             const monthNum = i + 1
                                             const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
                                             const isActive = optimisticMonth === mStr
                                             const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
-                                            
-                                            // Calculate stats for tooltips
-                                            const monthBatches = batches.filter(b => b.month_year === mStr)
-                                            const mTotal = monthBatches.reduce((acc, b) => acc + (b.total_items || 0), 0)
-                                            const mConfirmed = monthBatches.reduce((acc, b) => acc + (b.confirmed_items || 0), 0)
-                                            const mPending = Math.max(0, mTotal - mConfirmed)
+                                            const SeasonIcon = getSeasonIcon(monthNum)
+                                            const { phaseRows, progressCount, totalPhases, monthStatus } = getMonthPhaseSummary(mStr)
+                                            const MonthStatusIcon = monthStatus.icon
 
                                             return (
                                                 <Tooltip key={mStr}>
@@ -311,32 +374,29 @@ export function BatchPageClientV2({
                                                             onClick={() => handleMonthSelect(mStr)}
                                                             disabled={isPending}
                                                             className={cn(
-                                                                "px-3 h-8 rounded-lg flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap",
+                                                                "px-3 h-10 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap min-w-[108px]",
                                                                 isActive 
-                                                                    ? "bg-indigo-600 text-white border-indigo-700 shadow-sm" 
+                                                                    ? "bg-slate-900 text-white border-slate-950 shadow-lg shadow-slate-200 ring-2 ring-slate-900/10 -translate-y-0.5" 
                                                                     : isCurrent
-                                                                        ? "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
-                                                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                                                                        ? "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
+                                                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                                                             )}
                                                         >
                                                             {loadingMonth === mStr ? (
                                                                 <Loader2 className="h-3 w-3 animate-spin" />
                                                             ) : (
                                                                 <>
-                                                                    <span>{name}</span>
-                                                                    {mTotal > 0 && (
-                                                                        <div className={cn(
-                                                                            "flex items-center gap-1 pl-1.5 border-l",
-                                                                            isActive ? "border-white/20" : "border-slate-100"
-                                                                        )}>
-                                                                            <span>{mPending}</span>
-                                                                            {mPending > 0 ? (
-                                                                                <Pause className="h-2.5 w-2.5 fill-current" />
-                                                                            ) : (
-                                                                                <CheckCircle2 className="h-2.5 w-2.5" />
-                                                                            )}
-                                                                        </div>
-                                                                    )}
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <SeasonIcon className={cn("h-3.5 w-3.5", isActive ? "text-white/80" : isCurrent ? "text-indigo-500" : "text-slate-300")} />
+                                                                        <span>{monthNum} {name.slice(0, 3)}</span>
+                                                                    </div>
+                                                                    <div className={cn(
+                                                                        "flex items-center gap-1 pl-1.5 border-l",
+                                                                        isActive ? "border-white/20" : "border-slate-100"
+                                                                    )}>
+                                                                        <MonthStatusIcon className={cn("h-3.5 w-3.5", isPending ? "animate-pulse" : "", isActive ? "text-white/90" : monthStatus.tone)} />
+                                                                        <span className={cn("text-[10px] tabular-nums", isActive ? "text-white/90" : monthStatus.tone)}>{progressCount}/{totalPhases}</span>
+                                                                    </div>
                                                                 </>
                                                             )}
                                                         </button>
@@ -349,30 +409,34 @@ export function BatchPageClientV2({
                                                             {name} Status
                                                         </p>
                                                         <div className="space-y-1.5">
-                                                            {monthBatches.length > 0 ? monthBatches.map(b => {
-                                                                const phase = phases.find(p => p.id === b.phase_id)
+                                                            {phaseRows.length > 0 ? phaseRows.map(({ phase, total, confirmed, status }) => {
+                                                                const StatusIconRow = status.icon
                                                                 return (
-                                                                    <div key={b.id} className="flex items-center justify-between gap-4">
-                                                                        <span className="text-[10px] font-medium text-slate-300">
-                                                                            {phase?.label || b.period || 'Phase'}
-                                                                        </span>
-                                                                        <span className="text-[10px] font-black tabular-nums">
-                                                                            {b.confirmed_items}/{b.total_items}
+                                                                <div key={`${mStr}-${phase.id}`} className={cn("flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 border", status.bg, status.border)}>
+                                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                                        <StatusIconRow className={cn("h-3.5 w-3.5 shrink-0", status.tone, status.icon === Loader2 ? "animate-spin" : "")} />
+                                                                        <span className={cn("text-[10px] font-black truncate", status.tone)}>
+                                                                            {getPhaseLabel(phase)}
                                                                         </span>
                                                                     </div>
-                                                                )
-                                                            }) : (
+                                                                    <span className={cn("text-[10px] font-black tabular-nums", status.tone)}>
+                                                                        {status.label} {confirmed}/{total}
+                                                                    </span>
+                                                                </div>
+                                                            )}) : (
                                                                 <p className="text-[9px] text-slate-500 italic">No cycles started</p>
                                                             )}
                                                         </div>
                                                         <div className="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center">
                                                             <span className="text-[10px] font-black text-indigo-400">TOTAL</span>
-                                                            <span className="text-[10px] font-black">{mConfirmed}/{mTotal}</span>
+                                                            <span className="text-[10px] font-black">{progressCount}/{totalPhases}</span>
                                                         </div>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             )
-                                        })}
+                                                })}
+                                            </div>
+                                        ))}
                                     </TooltipProvider>
                                 </div>
                                 <div className="h-8 w-px bg-slate-100 mx-1 shrink-0" />
@@ -437,6 +501,7 @@ export function BatchPageClientV2({
                                     bankType={bankType as 'MBB' | 'VIB'}
                                     accounts={accounts}
                                     bankMappings={bankMappings}
+                                    batchSettings={batchSettings}
                                     globalSheetUrl={globalSheetUrl}
                                     globalSheetName={globalSheetName}
                                     monthYear={currentMonth || ''}

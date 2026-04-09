@@ -684,7 +684,13 @@ export function UnifiedSmartDatePicker({
       <PopoverContent
         className={cn(
           'p-0 border-slate-200/60 shadow-2xl backdrop-blur-xl bg-white/95 rounded-2xl overflow-hidden',
-          localMode === 'range' ? 'min-w-[360px]' : localMode === 'cycle' ? 'w-[850px] max-w-[95vw]' : 'w-[450px]'
+          localMode === 'cycle'
+            ? 'w-[850px] max-w-[95vw]'
+            : localMode === 'range'
+              ? 'w-[420px] max-w-[92vw]'
+              : localMode === 'date'
+                ? 'w-[350px] max-w-[92vw]'
+                : 'w-[390px] max-w-[92vw]'
         )}
         align="start"
         sideOffset={6}
@@ -722,17 +728,19 @@ export function UnifiedSmartDatePicker({
           {localMode === 'cycle' && <CyclePickerContent />}
 
           {localMode === 'date' && (
-            <Calendar
-              mode="single"
-              selected={localDate}
-              onSelect={(d: Date | undefined) => {
-                if (!d) return
-                setLocalDate(d)
-                setTypedInput(format(d, 'dd-MM-yyyy'))
-              }}
-              captionLayout="label"
-              disabled={disabledMatchers}
-            />
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={localDate}
+                onSelect={(d: Date | undefined) => {
+                  if (!d) return
+                  setLocalDate(d)
+                  setTypedInput(format(d, 'dd-MM-yyyy'))
+                }}
+                captionLayout="label"
+                disabled={disabledMatchers}
+              />
+            </div>
           )}
 
           {localMode === 'month' && (

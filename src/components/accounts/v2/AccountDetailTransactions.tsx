@@ -422,6 +422,14 @@ export function AccountDetailTransactions({
     // Derive cycles from persisted_cycle_tag on transactions (always available as fallback)
     const txnDerivedCycles = useMemo<CycleOption[]>(() => {
         const statementDay = Number(account.statement_day || 0)
+        const parsedConfig = parseCashbackConfig(account.cashback_config)
+        const accountCycleType = String(
+            parsedConfig.program?.cycleType ||
+            parsedConfig.cycleType ||
+            (account as any).cb_cycle_type ||
+            ''
+        ).toLowerCase()
+        const isStatementCycle = accountCycleType === 'statement_cycle'
         const tags = new Set<string>()
         transactions.forEach(t => {
             const tag = resolveTransactionCycleTag(t, account)
@@ -434,7 +442,7 @@ export function AccountDetailTransactions({
                 const year = parseInt(parsed[0] || '0', 10)
                 const month = parseInt(parsed[1] || '1', 10)
                 let label = tag
-                if (!Number.isNaN(year) && !Number.isNaN(month) && statementDay > 0) {
+                if (!Number.isNaN(year) && !Number.isNaN(month) && isStatementCycle && statementDay > 0) {
                     const end = new Date(year, month - 1, statementDay - 1)
                     const start = new Date(year, month - 2, statementDay)
                     const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`

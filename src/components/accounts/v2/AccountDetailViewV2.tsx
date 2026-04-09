@@ -30,6 +30,18 @@ type PendingBatchItem = {
     id: string
     amount: number
     batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 interface AccountDetailViewV2Props {
@@ -539,6 +551,7 @@ export function AccountDetailViewV2({
 
             <AccountPendingItemsModal
                 accountId={account.id}
+                accountName={account.name}
                 pendingItems={pendingItems}
                 pendingRefundCount={pendingRefundCount}
                 pendingRefundAmount={pendingRefundAmount}

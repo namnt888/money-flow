@@ -558,26 +558,78 @@ export async function getPendingBatchItemsByAccount(accountId: string) {
             return target === normalizedAccountId && isPendingLike && !hasTxn && amount > 0
         })
 
+        const batchIdSet = new Set<string>()
+        filtered.forEach((item: any) => {
+            const batchId = String(item?.batch_id || '').trim()
+            if (batchId) batchIdSet.add(batchId)
+        })
+
+        const loadAllBatches = async () => {
+            const perPage = 200
+            let page = 1
+            let totalPages = 1
+            const rows: any[] = []
+
+            do {
+                const resp = await pocketbaseList<any>('batches', {
+                    page,
+                    perPage,
+                })
+                rows.push(...(resp.items || []))
+                totalPages = Number(resp.totalPages || 1)
+                page += 1
+            } while (page <= totalPages)
+
+            return rows
+        }
+
+        const allBatches = batchIdSet.size > 0 ? await loadAllBatches() : []
+        const batchById = new Map(
+            allBatches
+                .filter((batch: any) => batchIdSet.has(String(batch?.id || '')))
+                .map((batch: any) => [
+                    String(batch.id),
+                    {
+                        id: batch.id,
+                        name: batch.name || null,
+                        month_year: batch.month_year || null,
+                        period: batch.period || null,
+                        phase_id: batch.phase_id || null,
+                        bank_type: batch.bank_type || null,
+                    },
+                ]),
+        )
+
         return filtered.map((item: any) => ({
             id: item.id,
             amount: Number(item.amount || 0),
             receiver_name: item.receiver_name || null,
             note: item.note || null,
             batch_id: item.batch_id,
-            batch: null,
+            month_year: item.month_year || null,
+            period: item.period || null,
+            phase_id: item.phase_id || null,
+            bank_type: item.bank_type || null,
+            batch: batchById.get(String(item.batch_id || '')) || null,
         }))
     }
 
     const supabase: any = createClient()
     const { data, error } = await supabase
         .from('batch_items')
-        .select('id, amount, receiver_name, note, batch_id, batch:batches(name)')
+        .select('id, amount, receiver_name, note, batch_id, batch:batches(id,name,month_year,period,phase_id,bank_type)')
         .eq('target_account_id', accountId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data as any[]
+    return (data || []).map((row: any) => ({
+        ...row,
+        month_year: row?.batch?.month_year || null,
+        period: row?.batch?.period || null,
+        phase_id: row?.batch?.phase_id || null,
+        bank_type: row?.batch?.bank_type || null,
+    })) as any[]
 }
 
 export async function getPendingBatchItemsSummary(): Promise<Array<{

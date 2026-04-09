@@ -1,6 +1,7 @@
 'use server'
 
 import { pocketbaseCreate, pocketbaseList, pocketbaseUpdate, toPocketBaseId } from '@/services/pocketbase/server'
+import { getBatchSettings } from '@/services/batch.service'
 import { revalidatePath } from 'next/cache'
 
 interface UpsertBatchItemParams {
@@ -31,6 +32,7 @@ function generateBatchItemNote(params: {
     bankType: 'MBB' | 'VIB'
     accountName?: string
     phaseName?: string
+    template?: string | null
 }) {
     const [year, month] = params.monthYear.split('-')
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -39,8 +41,29 @@ function generateBatchItemNote(params: {
     const bankTypeName = params.bankType === 'MBB' ? 'Mbb' : 'Vib'
     const accountPart = params.accountName || params.receiverName
     const phasePart = params.phaseName || (params.period === 'before' ? 'Before' : 'After')
-    
-    return `${accountPart} ${phasePart} ${monthYearStr} by ${bankTypeName}`
+    const defaultNote = `${accountPart} ${phasePart} ${monthYearStr} by ${bankTypeName}`
+    const template = String(params.template || '').trim()
+
+    if (!template) return defaultNote
+
+    return template.replace(/\{(receiverName|accountName|phaseName|monthYear|monthYearStr|bankType)\}/g, (_match, token) => {
+        switch (token) {
+            case 'receiverName':
+                return params.receiverName
+            case 'accountName':
+                return accountPart
+            case 'phaseName':
+                return phasePart
+            case 'monthYear':
+                return params.monthYear
+            case 'monthYearStr':
+                return monthYearStr
+            case 'bankType':
+                return bankTypeName
+            default:
+                return ''
+        }
+    })
 }
 
 /**
@@ -49,6 +72,8 @@ function generateBatchItemNote(params: {
  */
 export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams) {
     try {
+        const settings = await getBatchSettings(params.bankType)
+        const noteTemplate = String(settings?.note_format || '').trim() || null
         // monthYear is YYYY-MM
         const [year, month] = params.monthYear.split('-')
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -170,7 +195,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                         phaseName: params.phaseName,
                         period: params.period,
                         monthYear: params.monthYear,
-                        bankType: params.bankType
+                        bankType: params.bankType,
+                        template: noteTemplate,
                     }),
                     metadata: params.metadata || { last_updated: new Date().toISOString() },
                 })
@@ -189,7 +215,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                         phaseName: params.phaseName,
                         period: params.period,
                         monthYear: params.monthYear,
-                        bankType: params.bankType
+                        bankType: params.bankType,
+                        template: noteTemplate,
                     }),
                 })
             }
@@ -214,7 +241,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             phaseName: params.phaseName,
                             period: params.period,
                             monthYear: params.monthYear,
-                            bankType: params.bankType
+                            bankType: params.bankType,
+                            template: noteTemplate,
                         }),
                         metadata: params.metadata || { created_at: new Date().toISOString() },
                         status: 'draft'
@@ -240,7 +268,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             metadata: params.metadata || { last_updated: new Date().toISOString() },
                             status: 'draft',
@@ -261,7 +290,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             status: 'draft',
                         })
@@ -286,7 +316,8 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             status: 'draft',
                         })
@@ -315,6 +346,8 @@ export async function bulkInitializeFromMasterAction(params: {
     phaseId?: string
 }) {
     try {
+        const settings = await getBatchSettings(params.bankType)
+        const noteTemplate = String(settings?.note_format || '').trim() || null
         // 1. Fetch all active master items (prefer phase_id, fallback to cutoff_period)
         let masterItems: any[] = []
         let phaseLabel: string | undefined = undefined
@@ -473,7 +506,8 @@ export async function bulkInitializeFromMasterAction(params: {
                     phaseName: phaseLabel,
                     period: params.period,
                     monthYear: params.monthYear,
-                    bankType: params.bankType
+                    bankType: params.bankType,
+                    template: noteTemplate,
                 }),
                 status: 'draft'
             }))

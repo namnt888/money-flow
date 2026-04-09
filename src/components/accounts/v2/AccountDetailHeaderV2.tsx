@@ -278,6 +278,21 @@ export function AccountDetailHeaderV2({
       ? "Standalone"
       : "Child";
   const statementDayValue = account.statement_day ?? account.credit_card_info?.statement_day ?? null;
+  const normalizedCashbackConfig = normalizeCashbackConfig(account.cashback_config as any);
+  const cashbackCycleType = String(
+    (account as any).cb_cycle_type ||
+      normalizedCashbackConfig.program?.cycleType ||
+      normalizedCashbackConfig.cycleType ||
+      "",
+  ).toLowerCase();
+  const isMonthlyCycle = cashbackCycleType === "calendar_month";
+  const isStatementCycle = cashbackCycleType === "statement_cycle";
+  const shouldShowCycleBadge = isMonthlyCycle || isStatementCycle || (isCreditCard && Number(statementDayValue || 0) > 0);
+  const cycleBadgeText = isMonthlyCycle
+    ? "Monthly"
+    : Number(statementDayValue || 0) > 0
+      ? `Cycle ${statementDayValue}`
+      : "Cycle";
 
   const displayBalance = (isFamily && isCreditCard) ? familyAvailableBalance : availableBalance;
   const displayOutstanding = (isFamily && isCreditCard) ? familyDebtAbs : outstandingBalance;
@@ -869,10 +884,10 @@ export function AccountDetailHeaderV2({
                   {familyRoleLabel}
                 </span>
               )}
-              {isCreditCard && Number(statementDayValue || 0) > 0 && (
+              {shouldShowCycleBadge && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200">
                   <Calendar className="h-3 w-3" />
-                  Statement {statementDayValue}
+                  {cycleBadgeText}
                 </span>
               )}
             </div>

@@ -110,6 +110,8 @@ export function resolveTransactionCycleTag(
   account: {
     type?: string | null;
     statement_day?: number | string | null;
+    cb_cycle_type?: string | null;
+    cashback_config?: unknown;
   }
 ): string {
   const persisted = normalizeMonthTag(transaction.persisted_cycle_tag || "");
@@ -119,7 +121,15 @@ export function resolveTransactionCycleTag(
   if (derived) return derived;
 
   const statementDay = Number(account.statement_day || 0);
-  if (account.type === "credit_card" && statementDay > 0) {
+  const cashbackConfig = (account.cashback_config || {}) as {
+    cycleType?: string;
+    program?: { cycleType?: string };
+  };
+  const cycleType = String(
+    account.cb_cycle_type || cashbackConfig.program?.cycleType || cashbackConfig.cycleType || ""
+  ).toLowerCase();
+
+  if (account.type === "credit_card") {
     const rawDate =
       transaction.occurred_at || transaction.date || transaction.created_at;
     if (rawDate) {
@@ -127,13 +137,22 @@ export function resolveTransactionCycleTag(
       if (!Number.isNaN(parsed.getTime())) {
         let year = parsed.getFullYear();
         let month = parsed.getMonth() + 1;
-        if (parsed.getDate() > statementDay) {
-          month += 1;
-          if (month > 12) {
-            month = 1;
-            year += 1;
-          }
+
+        if (cycleType === "calendar_month") {
+          return `${year}-${String(month).padStart(2, "0")}`;
         }
+
+        if (statementDay > 0) {
+          if (parsed.getDate() > statementDay) {
+            month += 1;
+            if (month > 12) {
+              month = 1;
+              year += 1;
+            }
+          }
+          return `${year}-${String(month).padStart(2, "0")}`;
+        }
+
         return `${year}-${String(month).padStart(2, "0")}`;
       }
     }
