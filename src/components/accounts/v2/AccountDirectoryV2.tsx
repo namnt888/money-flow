@@ -41,6 +41,18 @@ type PendingBatchItem = {
     id: string
     amount: number
     batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 export function AccountDirectoryV2({
@@ -83,6 +95,7 @@ export function AccountDirectoryV2({
     }>>({});
     const [pendingModalOpen, setPendingModalOpen] = useState(false)
     const [pendingModalAccountId, setPendingModalAccountId] = useState<string>('')
+    const [pendingModalAccountName, setPendingModalAccountName] = useState<string>('')
     const [pendingModalItems, setPendingModalItems] = useState<PendingBatchItem[]>([])
 
     // CRUD state (Account)
@@ -461,6 +474,7 @@ export function AccountDirectoryV2({
             const rows = await res.json()
             setPendingModalItems(Array.isArray(rows) ? rows : [])
             setPendingModalAccountId(account.id)
+            setPendingModalAccountName(account.name || '')
             setPendingModalOpen(true)
         } catch {
             toast.error('Unable to load pending items')
@@ -590,9 +604,8 @@ export function AccountDirectoryV2({
                     open={pendingModalOpen}
                     onOpenChange={setPendingModalOpen}
                     accountId={pendingModalAccountId}
+                    accountName={pendingModalAccountName}
                     pendingItems={pendingModalItems}
-                    pendingRefundCount={0}
-                    pendingRefundAmount={0}
                     onSuccess={async () => {
                         const res = await fetch('/api/batch/pending-summary', {
                             method: 'GET',

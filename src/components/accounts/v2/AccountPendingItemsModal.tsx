@@ -22,13 +22,24 @@ interface PendingBatchItem {
     id: string
     amount: number
     batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 interface AccountPendingItemsModalProps {
     accountId: string
+    accountName?: string
     pendingItems: PendingBatchItem[]
-    pendingRefundCount: number
-    pendingRefundAmount: number
     onSuccess?: () => void
     open?: boolean
     onOpenChange?: (open: boolean) => void
@@ -36,9 +47,8 @@ interface AccountPendingItemsModalProps {
 
 export function AccountPendingItemsModal({
     accountId,
+    accountName,
     pendingItems: initialPendingItems,
-    pendingRefundCount,
-    pendingRefundAmount,
     onSuccess,
     open,
     onOpenChange,
@@ -50,6 +60,25 @@ export function AccountPendingItemsModal({
     const [voidingId, setVoidingId] = useState<string | null>(null)
     const [localPendingItems, setLocalPendingItems] = useState<PendingBatchItem[]>(initialPendingItems)
     const router = useRouter()
+
+    const buildBatchLink = (item: PendingBatchItem) => {
+        const bankType = String(item.batch?.bank_type || item.bank_type || '').trim().toLowerCase()
+        const month = String(item.batch?.month_year || item.month_year || '').trim()
+        const period = String(item.batch?.period || item.period || 'before').trim()
+        const phase = String(item.batch?.phase_id || item.phase_id || '').trim()
+        const search = String(accountName || '').trim()
+
+        if ((bankType === 'mbb' || bankType === 'vib') && month) {
+            const params = new URLSearchParams()
+            params.set('month', month)
+            params.set('period', period || 'before')
+            if (phase) params.set('phase', phase)
+            if (search) params.set('search', search)
+            return `/batch/${bankType}?${params.toString()}`
+        }
+
+        return `/batch/detail/${item.batch_id}`
+    }
 
     const isControlled = typeof open === 'boolean'
     const isOpen = isControlled ? Boolean(open) : internalOpen
@@ -291,7 +320,7 @@ export function AccountPendingItemsModal({
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <Link
-                                                                href={`/batch/detail/${item.batch_id}`}
+                                                                href={buildBatchLink(item)}
                                                                 target="_blank"
                                                                 className="text-xs font-black text-indigo-600 hover:text-indigo-800 underline underline-offset-2 truncate block"
                                                             >
@@ -301,8 +330,9 @@ export function AccountPendingItemsModal({
                                                         <TooltipContent>Open batch in new tab</TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
-                                                <div className="text-[10px] font-bold text-slate-400">
-                                                    ID: {item.id.slice(0, 8)}...
+                                                <div className="text-[10px] font-bold text-slate-400 space-y-0.5">
+                                                    <div>Month: {item.month_year || item.batch?.month_year || '—'}</div>
+                                                    <div>Phase: {item.phase_id || item.batch?.phase_id || '—'} ({item.period || item.batch?.period || 'before'})</div>
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
@@ -350,28 +380,6 @@ export function AccountPendingItemsModal({
                         </div>
                     )}
 
-                    {/* Pending Refunds Section */}
-                    {pendingRefundCount > 0 && (
-                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                                <div className="text-xs font-bold text-amber-900 leading-none mb-1">
-                                    {pendingRefundCount} Pending Refunds
-                                </div>
-                                <div className="text-[11px] text-amber-700 font-medium">
-                                    You have items marked as &quot;Waiting Refund&quot; totaling <strong className="font-black">{formatMoneyVND(pendingRefundAmount)}</strong>
-                                </div>
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-[10px] font-black uppercase bg-white border-amber-200 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
-                                onClick={() => router.push('/transactions?status=pending')}
-                            >
-                                View All
-                            </Button>
-                        </div>
-                    )}
                 </div>
 
                 <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100">

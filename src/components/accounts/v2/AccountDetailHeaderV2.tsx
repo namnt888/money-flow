@@ -39,11 +39,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -61,6 +56,7 @@ import { isToday, isTomorrow, differenceInDays, startOfDay } from "date-fns";
 import { normalizeCashbackConfig } from "@/lib/cashback";
 import { normalizeMonthTag } from "@/lib/month-tag";
 import { resolveTransactionCycleTag } from "@/lib/cycle-utils";
+import { computeAccountTotals } from "@/lib/account-balance";
 
 interface AccountDetailHeaderV2Props {
   account: Account;
@@ -142,6 +138,9 @@ export function AccountDetailHeaderV2({
   const effectiveIsCashbackLoading = isCashbackLoading ?? false;
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isAccountIdCopied, setIsAccountIdCopied] = React.useState(false);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = React.useState(true);
+  const [isRewardsPopoverOpen, setIsRewardsPopoverOpen] = React.useState(false);
+  const [selectedRuleTierKey, setSelectedRuleTierKey] = React.useState<string>("");
 
   // Sync selected year with URL
   React.useEffect(() => {
@@ -166,42 +165,144 @@ export function AccountDetailHeaderV2({
   const currentYear = new Date().getFullYear().toString();
   const isHistoricalYear = !!selectedYear && selectedYear !== currentYear;
 
+  const ledgerBalance = React.useMemo(() => {
+    const totals = computeAccountTotals({
+      accountId: account.id,
+      accountType: account.type,
+      transactions: initialTransactions.map((txn: any) => ({
+        amount: txn?.amount ?? 0,
+        final_price: txn?.final_price ?? null,
+        type: txn?.type ?? null,
+        account_id: txn?.account_id ?? null,
+        target_account_id: txn?.target_account_id ?? txn?.to_account_id ?? null,
+        status: txn?.status ?? null,
+      })),
+    });
+
+    return totals.currentBalance;
+  }, [account.id, account.type, initialTransactions]);
+
   const availableBalance = isCreditCard
-    ? getCreditCardAvailableBalance(account)
-    : (account.current_balance ?? 0);
+    ? getCreditCardAvailableBalance({
+        type: account.type,
+        credit_limit: account.credit_limit ?? 0,
+        current_balance: ledgerBalance,
+      })
+    : ledgerBalance;
   const outstandingBalance = isCreditCard
-    ? Math.abs(account.current_balance ?? 0)
+    ? Math.abs(ledgerBalance)
     : 0;
 
   // Family Balance Calculation
-  const isParent = !!account.relationships?.is_parent;
-  const balParentId = account.parent_account_id || account.relationships?.parent_info?.id;
-  const parentAccount = isParent ? account : (balParentId ? allAccounts.find(a => a.id === balParentId) : null);
-  const accountFamilyId = isParent ? account.id : balParentId;
-  const isFamily = !!accountFamilyId;
+  const accountSlug = (account as any)?.slug as string | undefined;
+  const hasChildren = allAccounts.some((item) => {
+    const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+    return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+  });
+  const isParent = !!account.relationships?.is_parent || hasChildren;
+  const rawParentRef = account.parent_account_id || account.relationships?.parent_info?.id || null;
+  const directParentAcc = isParent
+    ? null
+    : allAccounts.find(
+        (item) =>
+          item.id === rawParentRef ||
+          (((item as any)?.slug as string | undefined) && ((item as any).slug === rawParentRef)),
+      );
+  const inferredParentAcc = isParent
+    ? null
+    : allAccounts.find((item) =>
+        (item.relationships?.child_accounts || []).some(
+          (child: any) =>
+            child.id === account.id ||
+            child.id === rawParentRef ||
+            (accountSlug ? child.id === accountSlug : false),
+        ),
+      );
+  const effectiveParentAcc = directParentAcc || inferredParentAcc || null;
+  const parentAccount = isParent ? account : effectiveParentAcc;
 
-  // Calculate total family debt (Parent + All Children)
-  const childrenBalancesSum = accountFamilyId
-    ? allAccounts
-        .filter((a) => a.parent_account_id === accountFamilyId)
-        .reduce((sum, child) => sum + (child.current_balance || 0), 0)
-    : 0;
+  const familyMemberIds = React.useMemo(() => {
+    const knownChildIds = new Set<string>(
+      ((isParent
+        ? account.relationships?.child_accounts
+        : effectiveParentAcc?.relationships?.child_accounts) || [])
+        .map((child: any) => String(child?.id || ""))
+        .filter(Boolean),
+    );
+    const groupRefs = new Set<string>();
+    if (isParent) {
+      groupRefs.add(account.id);
+      if (accountSlug) groupRefs.add(accountSlug);
+    } else {
+      if (rawParentRef) groupRefs.add(rawParentRef);
+      if (effectiveParentAcc?.id) groupRefs.add(effectiveParentAcc.id);
+      const parentSlug = (effectiveParentAcc as any)?.slug as string | undefined;
+      if (parentSlug) groupRefs.add(parentSlug);
+      if (!rawParentRef && !effectiveParentAcc) {
+        groupRefs.add(account.id);
+        if (accountSlug) groupRefs.add(accountSlug);
+      }
+    }
 
-  const familyDebtAbs = Math.abs((parentAccount?.current_balance || 0) + childrenBalancesSum);
-  const soloDebtAbs = Math.abs(account.current_balance || 0);
+    const relatedIds = new Set<string>(
+      allAccounts
+        .filter(
+          (item) =>
+            knownChildIds.has(item.id) ||
+            groupRefs.has(item.id) ||
+            groupRefs.has(item.parent_account_id || ""),
+        )
+        .map((item) => item.id),
+    );
+    relatedIds.add(account.id);
+    return relatedIds;
+  }, [account, allAccounts, isParent, effectiveParentAcc, rawParentRef, accountSlug]);
+  const isStandalone = !isParent && !effectiveParentAcc;
+  const isFamily = !isStandalone;
+
+  const familyDebtAbs = Math.abs(
+    allAccounts
+      .filter((item) => familyMemberIds.has(item.id))
+      .reduce((sum, item) => sum + (item.current_balance || 0), 0),
+  );
+  const soloDebtAbs = Math.abs(ledgerBalance || 0);
 
   // Available Limit: Shared for family if set
-  const familyLimit = parentAccount?.credit_limit || 0;
+  const familyLimit = parentAccount?.credit_limit || account.credit_limit || 0;
   const familyAvailableBalance = isCreditCard 
     ? Math.max(0, familyLimit - familyDebtAbs) 
-    : ((parentAccount?.current_balance || 0) + childrenBalancesSum);
+    : allAccounts
+        .filter((item) => familyMemberIds.has(item.id))
+        .reduce((sum, item) => sum + (item.current_balance || 0), 0);
+
+  const familyRoleLabel = isParent
+    ? "Parent"
+    : isStandalone
+      ? "Standalone"
+      : "Child";
+  const statementDayValue = account.statement_day ?? account.credit_card_info?.statement_day ?? null;
+  const normalizedCashbackConfig = normalizeCashbackConfig(account.cashback_config as any);
+  const cashbackCycleType = String(
+    (account as any).cb_cycle_type ||
+      normalizedCashbackConfig.program?.cycleType ||
+      normalizedCashbackConfig.cycleType ||
+      "",
+  ).toLowerCase();
+  const isMonthlyCycle = cashbackCycleType === "calendar_month";
+  const isStatementCycle = cashbackCycleType === "statement_cycle";
+  const shouldShowCycleBadge = isMonthlyCycle || isStatementCycle || (isCreditCard && Number(statementDayValue || 0) > 0);
+  const cycleBadgeText = isMonthlyCycle
+    ? "Monthly"
+    : Number(statementDayValue || 0) > 0
+      ? `Cycle ${statementDayValue}`
+      : "Cycle";
 
   const displayBalance = (isFamily && isCreditCard) ? familyAvailableBalance : availableBalance;
   const displayOutstanding = (isFamily && isCreditCard) ? familyDebtAbs : outstandingBalance;
   const displayLimit = (isFamily && isCreditCard) ? familyLimit : (account.credit_limit || 0);
 
   // Individual card available capacity (Solo Limit)
-  const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : account.current_balance;
+  const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : ledgerBalance;
 
 
   // Cleanup 'tab' param if present (fix for persistent url)
@@ -496,51 +597,187 @@ export function AccountDetailHeaderV2({
     );
   }, [account, startOfDay]);
 
+  const collapsedDueInfo = React.useMemo(() => {
+    const now = startOfDay(new Date());
+    const config = normalizeCashbackConfig(account.cashback_config, account);
+    const rawDueDay = account.due_date || account.credit_card_info?.payment_due_day || config?.dueDate;
+    if (!rawDueDay) return "-";
+    const d = new Date();
+    d.setDate(rawDueDay);
+    if (d < now) d.setMonth(d.getMonth() + 1);
+    const daysLeft = Math.max(0, differenceInDays(startOfDay(d), now));
+    return `${daysLeft} DAYS | ${format(d, "MMM d").toUpperCase()}`;
+  }, [account, startOfDay]);
+
+  const collapsedCycleLabel = React.useMemo(() => {
+    const start = dynamicCashbackStats?.cycle?.start;
+    const end = dynamicCashbackStats?.cycle?.end;
+    if (start && end) {
+      const s = new Date(start);
+      const e = new Date(end);
+      if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
+        return `${format(s, "dd.MM")} - ${format(e, "dd.MM")}`;
+      }
+    }
+    return dynamicCashbackStats?.cycle?.label || "CYCLE";
+  }, [dynamicCashbackStats]);
+
+  const categoryNameById = React.useMemo(
+    () => new Map((categories || []).map((c: any) => [String(c?.id || ""), String(c?.name || "")])),
+    [categories],
+  );
+
+  const buildCategoryLabel = React.useCallback((catIds: string[] | undefined) => {
+    if (!Array.isArray(catIds) || catIds.length === 0) return "Cashback Online";
+    const names = Array.from(
+      new Set(
+        catIds
+          .map((id: string) => categoryNameById.get(String(id)))
+          .map((name) => String(name || "").trim())
+          .filter(Boolean),
+      ),
+    );
+    if (names.length === 1) return names[0];
+    if (names.length > 1) return names[0];
+    return "Cashback Online";
+  }, [categoryNameById]);
+
   const fallbackRules = React.useMemo(() => {
     const program = normalizeCashbackConfig(account.cashback_config, account);
-    const levelRules = (program.levels || [])
-      .flatMap((level: any) => level?.rules || [])
-      .map((rule: any) => ({
-        name: rule.description || "Rules",
-        rate: rule.rate,
-        max: rule.maxReward ?? rule.max,
-      }));
+    const isSimpleRuleConfig =
+      String((account as any)?.cb_type || "").toLowerCase() === "simple" ||
+      Array.isArray((program as any).rules_json_v2) ||
+      Array.isArray((account as any).cb_rules_json);
 
-    const directProgramRules = Array.isArray((program as any).rules_json_v2)
+    const levelRules = (program.levels || []).flatMap((level: any) => {
+      const minSpend = Number(level?.minTotalSpend || level?.min_spend || 0);
+      const levelName = String(level?.name || "").trim();
+      return (level?.rules || []).map((rule: any) => {
+        const catIds = Array.isArray(rule?.categoryIds)
+          ? rule.categoryIds.map((id: any) => String(id))
+          : rule?.categoryId
+            ? [String(rule.categoryId)]
+            : [];
+        return {
+          name: String(rule?.description || "").trim() || buildCategoryLabel(catIds),
+          rate: Number(rule?.rate || 0),
+          max: Number(rule?.maxReward ?? rule?.max ?? 0),
+          minSpend,
+          tierName: levelName,
+          categoryIds: catIds,
+        };
+      });
+    });
+
+    // Only parse raw array rules for simple config to avoid duplicate with levelRules.
+    const rawProgramRules = Array.isArray((program as any).rules_json_v2)
       ? (program as any).rules_json_v2.map((rule: any) => ({
-          name: "Rules",
-          rate: rule?.rate,
-          max: rule?.max,
+          name: buildCategoryLabel((rule?.cat_ids || []).map((id: any) => String(id))),
+          rate: Number(rule?.rate || 0),
+          max: Number(rule?.max || 0),
+          minSpend: Number(program?.minSpendTarget || account?.cb_min_spend || 0),
+          tierName: "",
+          categoryIds: Array.isArray(rule?.cat_ids) ? rule.cat_ids.map((id: any) => String(id)) : [],
         }))
       : [];
 
-    const legacyRules = Array.isArray((account as any).cb_rules_json)
+    const rawLegacyRules = Array.isArray((account as any).cb_rules_json)
       ? (account as any).cb_rules_json.map((rule: any) => ({
-          name: "Rules",
-          rate: rule?.rate,
-          max: rule?.max,
+          name: buildCategoryLabel((rule?.cat_ids || []).map((id: any) => String(id))),
+          rate: Number(rule?.rate || 0),
+          max: Number(rule?.max || 0),
+          minSpend: Number(account?.cb_min_spend || 0),
+          tierName: "",
+          categoryIds: Array.isArray(rule?.cat_ids) ? rule.cat_ids.map((id: any) => String(id)) : [],
         }))
       : [];
 
-    const merged = [...levelRules, ...directProgramRules, ...legacyRules].filter(
+    const merged = (
+      isSimpleRuleConfig
+        ? (rawProgramRules.length > 0 ? rawProgramRules : rawLegacyRules)
+        : [...levelRules, ...rawProgramRules, ...rawLegacyRules]
+    ).filter(
       (rule: any) => Number(rule?.rate || 0) > 0,
     );
 
-    return merged;
-  }, [account.cashback_config, account]);
+    const seen = new Set<string>();
+    return merged.filter((rule: any) => {
+      const catKey = Array.isArray(rule?.categoryIds) ? [...rule.categoryIds].sort().join(",") : "";
+      const key = [
+        String(rule?.name || "").trim().toLowerCase(),
+        Number(rule?.rate || 0).toFixed(4),
+        Number(rule?.max || 0).toFixed(2),
+        Number(rule?.minSpend || 0).toFixed(2),
+        catKey,
+      ].join("::");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [account, buildCategoryLabel]);
 
+  const rewardRuleTabs = React.useMemo(() => {
+    const isSimpleCard = String((account as any)?.cb_type || "").toLowerCase() === "simple";
+    const values = Array.from(
+      new Set(
+        fallbackRules
+          .map((rule: any) => Number(rule?.minSpend || 0))
+          .filter((minSpend) => !isSimpleCard || minSpend > 0),
+      ),
+    ).sort((a, b) => a - b);
 
-  const rewardsCount = React.useMemo(() => {
-    try {
-      const counts = fallbackRules.length;
-      if (counts > 0) return counts;
-      const program = normalizeCashbackConfig(account.cashback_config, account);
-      if (program.defaultRate > 0) return 1;
-      return 0;
-    } catch (e) {
-      return 0;
-    }
-  }, [fallbackRules, account.cashback_config, account]);
+    const tabs = values.map((minSpend, idx) => {
+      const matchingRules = fallbackRules.filter((rule: any) => Number(rule?.minSpend || 0) === minSpend);
+      const topRule = matchingRules[0];
+      const rateText = `${toDisplayPercent(topRule?.rate || 0)}%`;
+      const tierText = isSimpleCard
+        ? `${formatVNShort(minSpend)}+`
+        : topRule?.tierName || `Tier ${idx + 1}`;
+
+      return {
+        key: `tier-${minSpend}-${idx}`,
+        minSpend,
+        rate: Number(topRule?.rate || 0),
+        tierName: String(topRule?.tierName || "").trim(),
+        label: isSimpleCard ? tierText : `${rateText}: ${tierText}`,
+      };
+    });
+
+    if (isSimpleCard) return tabs;
+
+    return [{ key: "all", minSpend: -1, rate: 0, tierName: "All", label: "All" }, ...tabs];
+  }, [fallbackRules, account]);
+
+  const selectedRuleTier = React.useMemo(
+    () => rewardRuleTabs.find((tab) => tab.key === selectedRuleTierKey) || rewardRuleTabs[0],
+    [rewardRuleTabs, selectedRuleTierKey],
+  );
+
+  React.useEffect(() => {
+    if (selectedRuleTierKey || rewardRuleTabs.length <= 1) return;
+    const spent = Number(dynamicCashbackStats?.currentSpend || 0);
+    const tiersOnly = rewardRuleTabs.filter((tab) => tab.key !== "all");
+    const matched = tiersOnly
+      .filter((tab) => Number(tab.minSpend || 0) <= spent)
+      .sort((a, b) => Number(b.minSpend || 0) - Number(a.minSpend || 0))[0];
+    setSelectedRuleTierKey(matched?.key || "all");
+  }, [selectedRuleTierKey, rewardRuleTabs, dynamicCashbackStats?.currentSpend]);
+
+  const filteredDisplayRules = React.useMemo(() => {
+    if (!selectedRuleTier || selectedRuleTier.key === "all") return fallbackRules;
+    return fallbackRules.filter((rule: any) => Number(rule?.minSpend || 0) === Number(selectedRuleTier.minSpend));
+  }, [fallbackRules, selectedRuleTier]);
+
+  const tierGuidanceText = React.useMemo(() => {
+    if (!selectedRuleTier || selectedRuleTier.key === "all") return "Showing all reward rules";
+    const spent = Number(dynamicCashbackStats?.currentSpend || 0);
+    const threshold = Number(selectedRuleTier.minSpend || 0);
+    if (threshold <= 0) return "Base tier active";
+    if (spent >= threshold) return `Tier unlocked at ${formatMoneyVND(threshold)}`;
+    return `Need ${formatMoneyVND(threshold - spent)} more to unlock this tier`;
+  }, [dynamicCashbackStats?.currentSpend, selectedRuleTier]);
+
+  const rewardsCount = filteredDisplayRules.length;
 
   const cycleMetricSnapshot = React.useMemo(() => {
     const activeRuleEarned = (dynamicCashbackStats?.activeRules || []).reduce(
@@ -608,7 +845,7 @@ export function AccountDetailHeaderV2({
   const pendingCount = summary?.pendingCount || 0;
 
   return (
-    <div className="bg-white border-b border-slate-200 px-5 py-1.5 flex gap-3 items-stretch sticky top-0 z-60 shadow-sm transition-all duration-500">
+    <div className="relative bg-white border-b border-slate-200 px-5 py-1.5 pr-14 flex gap-3 items-stretch sticky top-0 z-60 shadow-sm transition-all duration-500">
       <AccountSlideV2
         open={isSlideOpen}
         onOpenChange={setIsSlideOpen}
@@ -620,7 +857,89 @@ export function AccountDetailHeaderV2({
       />
 
       {/* CARD 1: ACCOUNT */}
-      <HeaderSection label="Account" badge={<span className="bg-sky-50 text-sky-700 border border-sky-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">ACC</span>} className="flex-[3] min-w-[280px] max-w-[320px] flex flex-col gap-0 py-1.5">
+      <HeaderSection label="Account" badge={<span className="bg-sky-50 text-sky-700 border border-sky-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">ACC</span>} className={cn("flex flex-col gap-0", isHeaderCollapsed ? "flex-[5] min-w-[520px] max-w-[720px] py-1" : "flex-[3] min-w-[280px] max-w-[320px] py-1.5")}>
+        {isHeaderCollapsed ? (
+          <div className="flex items-center gap-2 h-10">
+            <div className="shrink-0 h-9 flex items-center pr-1 border-r border-slate-100">
+              {account.image_url ? (
+                <img src={account.image_url} alt="" className="h-9 w-auto max-w-[64px] object-contain rounded-none shadow-sm border border-slate-100" />
+              ) : (
+                <div className="w-9 h-9 flex items-center justify-center border border-slate-200 bg-slate-50 rounded-none shadow-sm">
+                  <span className="text-lg font-black text-slate-400 capitalize">{account.name.charAt(0)}</span>
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[12px] font-black text-slate-900 truncate uppercase tracking-tight" title={account.name}>{account.name}</div>
+                <div className="text-[10px] font-bold text-slate-500 leading-none whitespace-nowrap overflow-x-auto scrollbar-hide">
+                  {account.account_number || "N/A"} {account.receiver_name || ""}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {shouldShowCycleBadge && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <Calendar className="h-3 w-3" />
+                    {cycleBadgeText}
+                  </span>
+                )}
+                {filteredDisplayRules.length > 0 && (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={150}>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border-amber-200 cursor-help">
+                          <Zap className="h-3 w-3 fill-current" />
+                          {toDisplayPercent(filteredDisplayRules[0]?.rate || 0)}%
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[340px] p-3">
+                        <div className="space-y-1.5">
+                          {filteredDisplayRules.slice(0, 4).map((rule: any, idx: number) => (
+                            <div key={`collapsed-rule-${idx}`} className="flex items-center justify-between gap-2 text-xs">
+                              <span className="font-bold text-slate-700 truncate">{String(rule?.name || "Cashback Online")}</span>
+                              <span className="font-black text-emerald-600 whitespace-nowrap">{toDisplayPercent(rule?.rate || 0)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={(e) => { e.stopPropagation(); handleCopyAccountId(); }} className={cn("text-slate-300 hover:text-emerald-600 transition-colors", isAccountIdCopied && "text-emerald-500")} aria-label="Copy account ID">
+                        {isAccountIdCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy account ID</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={handleOpenPocketBase} className="text-slate-300 hover:text-amber-600 transition-colors" aria-label="Open in PocketBase admin">
+                        <Database className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open in PocketBase Admin</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={() => setIsSlideOpen(true)} className="text-slate-300 hover:text-indigo-600 transition-colors" aria-label="Open settings">
+                        <Settings className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Config</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="flex items-start gap-3 flex-1 h-12">
           <div className="shrink-0 h-10 flex items-center pr-1 border-r border-slate-50">
             {account.image_url ? (
@@ -702,6 +1021,97 @@ export function AccountDetailHeaderV2({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            <div className="flex items-center gap-1.5 mt-2 flex-nowrap overflow-x-auto scrollbar-hide">
+              {familyRoleLabel === "Parent" ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest cursor-pointer select-none",
+                        "bg-indigo-50 text-indigo-700 border-indigo-200",
+                      )}
+                    >
+                      <User className="h-3 w-3" />
+                      {familyRoleLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2 space-y-1.5" align="start" sideOffset={8}>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Children</div>
+                    {allAccounts.filter((item) => {
+                      const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+                      return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+                    }).length > 0 ? (
+                      allAccounts.filter((item) => {
+                        const itemParentId = item.parent_account_id || item.relationships?.parent_info?.id || null;
+                        return itemParentId === account.id || (accountSlug ? itemParentId === accountSlug : false);
+                      }).map((child) => (
+                        <div key={child.id} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                          <div className="h-6 w-6 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                            {child.image_url ? (
+                              <img src={child.image_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <Wallet className="h-3 w-3 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[11px] font-bold text-slate-700 truncate">{child.name}</div>
+                            <div className="text-[10px] text-slate-400 truncate">{child.id}</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-[10px] text-slate-400 italic px-1 py-1">No child linked</div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              ) : familyRoleLabel === "Child" && effectiveParentAcc ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest cursor-pointer select-none",
+                      "bg-sky-50 text-sky-700 border-sky-200",
+                    )}>
+                      <User className="h-3 w-3" />
+                      {familyRoleLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2 space-y-1.5" align="start" sideOffset={8}>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 px-1">Parent Account</div>
+                    <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5">
+                      <div className="h-7 w-7 rounded-none overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
+                        {effectiveParentAcc.image_url ? (
+                          <img src={effectiveParentAcc.image_url} alt="" className="w-full h-full object-contain" />
+                        ) : (
+                          <User className="h-3.5 w-3.5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-bold text-slate-700 truncate">{effectiveParentAcc.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate">{effectiveParentAcc.id}</div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest",
+                  familyRoleLabel === "Parent"
+                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                    : "bg-slate-50 text-slate-600 border-slate-200",
+                )}>
+                  <User className="h-3 w-3" />
+                  {familyRoleLabel}
+                </span>
+              )}
+              {shouldShowCycleBadge && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-200">
+                  <Calendar className="h-3 w-3" />
+                  {cycleBadgeText}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -713,53 +1123,24 @@ export function AccountDetailHeaderV2({
         {/* BOTTOM ROW Awards (h-10) */}
         <div className="flex items-center gap-1.5 h-10 w-full border-t border-slate-50 pt-1">
           {rewardsCount > 0 && (
-            <Popover>
+            <Popover open={isRewardsPopoverOpen} onOpenChange={setIsRewardsPopoverOpen}>
               <PopoverTrigger asChild>
                 <div className="flex items-center rounded-lg border border-[#FFE082] bg-[#FFF9E6] shadow-sm overflow-hidden shrink-0">
-                  {isCreditCard && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                setIsSyncing(true);
-                                const { syncAccountCashbackAction } = await import("@/actions/account-actions");
-                                const result = await syncAccountCashbackAction(account.id);
-                                if (result && (result as any).success) {
-                                  toast.success("Sync OK");
-                                  router.refresh();
-                                }
-                              } catch {
-                                toast.error("Sync error");
-                              } finally {
-                                setIsSyncing(false);
-                              }
-                            }}
-                            disabled={isSyncing}
-                            className="h-full px-2.5 py-1.5 border-r border-[#FFE082] text-[#B45309] hover:bg-[#FFF3C8] transition-all disabled:opacity-50"
-                          >
-                            {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>Sync rules</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
                   <div className="flex items-center gap-1.5 px-3 py-1.5 cursor-help hover:bg-[#FFF3C8] transition-all group">
                   <Zap className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B] group-hover:scale-110 transition-transform" />
                   {(() => {
-                    const activeRules = dynamicCashbackStats?.activeRules || [];
-                    const displayRules = fallbackRules.length > 0 ? fallbackRules : activeRules;
+                    const displayRules = filteredDisplayRules;
                     const topRule = displayRules[0];
-                    const remaining = rewardsCount - 1;
+                    const remaining = Math.max(0, displayRules.length - 1);
                     const topRate = topRule?.rate || 0;
+                    const rawTopName = String(topRule?.name || "Back Online").trim();
+                    const normalizedTopName = displayRules.length <= 1
+                      ? rawTopName.replace(/\s\+\d+$/g, "")
+                      : rawTopName;
                     return (<>
                       <span className="text-[11px] font-black text-[#92400E] uppercase tracking-wider">
-                        {topRule ? `RULE ${toDisplayPercent(topRate)}%` : "REWARDS"}
+                        {topRule ? `${toDisplayPercent(topRate)}% ${normalizedTopName}${remaining > 0 ? ` +${remaining}` : ""}` : "REWARDS"}
                       </span>
-                      {remaining > 0 && <span className="text-[11px] font-bold text-[#D97706] uppercase ml-1 opacity-60">+{remaining} MORE</span>}
                     </>);
                   })()}
                   </div>
@@ -768,23 +1149,67 @@ export function AccountDetailHeaderV2({
               <PopoverContent className="p-0 border-none shadow-[0_25px_60px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden w-[380px] z-[120]" align="start" sideOffset={12}>
                 <div className="bg-gradient-to-r from-orange-600 to-amber-500 px-5 py-4 flex justify-between items-center text-white border-b-2 border-orange-700/20">
                   <div className="flex flex-col"><span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] leading-none mb-1">PROGRAM STATUS</span><div className="flex items-center gap-2"><Zap className="h-4 w-4 fill-white/30" /><span className="text-[14px] font-black uppercase tracking-[0.1em]">Active Rewards</span></div></div>
-                  <span className="bg-white/20 px-3 py-1 rounded-lg text-[10px] font-black text-white uppercase border border-white/20 backdrop-blur-sm">{rewardsCount} Rules Enabled</span>
+                  <span className="bg-white/20 px-3 py-1 rounded-lg text-[10px] font-black text-white uppercase border border-white/20 backdrop-blur-sm">{filteredDisplayRules.length} Rules Enabled</span>
                 </div>
+                {rewardRuleTabs.length > 1 && (
+                  <div className="px-4 py-2 bg-orange-50 border-b border-orange-100">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {rewardRuleTabs.map((tab) => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setSelectedRuleTierKey(tab.key);
+                            setIsRewardsPopoverOpen(true);
+                          }}
+                          className={cn(
+                            "h-7 px-2.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-colors",
+                            selectedRuleTier?.key === tab.key
+                              ? "bg-orange-500 border-orange-600 text-white"
+                              : "bg-white border-orange-200 text-orange-700 hover:bg-orange-100",
+                          )}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-1 text-[10px] font-bold text-orange-700">{tierGuidanceText}</div>
+                  </div>
+                )}
                 <div className="bg-[#F8F9FB] p-5 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar shadow-inner">
                   {(() => {
-                    const activeRules = dynamicCashbackStats?.activeRules || [];
-                    const displayRules = fallbackRules.length > 0 ? fallbackRules : activeRules;
+                    const displayRules = filteredDisplayRules;
                     return displayRules.map((rule: any, idx: number) => (
                       <div key={idx} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow space-y-3 relative overflow-hidden group/rule">
                         <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-500 opacity-0 group-hover/rule:opacity-100 transition-opacity" />
                         <div className="flex justify-between items-start">
-                          <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Rule Priority</span><div className="text-[12px] font-black text-slate-800 uppercase tracking-tight">{rule.name}</div></div>
+                          <div className="flex flex-col gap-0.5"><div className="text-[12px] font-black text-slate-800 uppercase tracking-tight">{String(rule?.name || "Cashback Online").trim()}</div></div>
                           <span className="text-[18px] font-black text-emerald-600 tabular-nums bg-emerald-50 px-2 rounded-lg">{toDisplayPercent(rule.rate || 0)}%</span>
                         </div>
                         <div className="flex items-center gap-2.5 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
                            <div className="flex flex-1 flex-col gap-1">
-                             <div className="flex justify-between text-[9px] font-bold uppercase text-slate-400"><span>Progress</span><span>Limit Cap</span></div>
-                             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner"><div className="h-full bg-orange-500" style={{ width: rule.max ? '40%' : '100%' }} /></div>
+                             <div className="flex justify-between text-[9px] font-bold uppercase text-slate-400">
+                               <span>{Number(rule?.minSpend || 0) > 0 ? 'SPEND TO UNLOCK' : 'REWARD EARNED'}</span>
+                               <span>MAX CAP</span>
+                             </div>
+                             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                               <div 
+                                 className="h-full bg-orange-500 transition-all duration-300" 
+                                 style={{ 
+                                   width: (() => {
+                                     const minSpend = Number(rule?.minSpend || 0);
+                                     const currentSpend = Number(dynamicCashbackStats?.currentSpend || 0);
+                                     if (minSpend > 0) {
+                                       return `${Math.min(100, (currentSpend / minSpend) * 100)}%`;
+                                     }
+                                     const earned = Number(rule?.earned || 0);
+                                     const max = Number(rule?.max || 0);
+                                     return max > 0 ? `${Math.min(100, (earned / max) * 100)}%` : '100%';
+                                   })()
+                                 }} 
+                               />
+                             </div>
                            </div>
                         </div>
                         {(rule as any).max && <div className="flex items-center gap-2 text-indigo-600/70 bg-indigo-50 px-3 py-1.5 rounded-lg w-fit border border-indigo-100/50"><Info className="h-3.5 w-3.5" /><span className="text-xs font-black uppercase tracking-wider">CAP REACHED AT: {formatMoneyVND((rule as any).max)}</span></div>}
@@ -796,15 +1221,25 @@ export function AccountDetailHeaderV2({
               </PopoverContent>
             </Popover>
           )}
+          {rewardsCount === 0 && (
+            <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 shadow-sm overflow-hidden shrink-0">
+              <div className="flex items-center gap-1.5 px-3 py-1.5">
+                <Info className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-[11px] font-black text-slate-600 uppercase tracking-wider">CAT: NO RULE CONFIG</span>
+              </div>
+            </div>
+          )}
         </div>
+        </>
+        )}
       </HeaderSection>
 
       {/* CARD 2: CREDIT HEALTH / CASH FLOW */}
-      {isCreditCard ? (
+      {!isHeaderCollapsed && (isCreditCard ? (
         <TooltipProvider>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
-              <HeaderSection label="Credit Health" badge={<span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">HEALTH</span>} borderColor="border-indigo-100" className="flex-[6] min-w-[420px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-1.5 border-dashed">
+              <HeaderSection label="Balance" badge={<span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">HEALTH</span>} borderColor="border-indigo-100" className="flex-[6] min-w-[420px] bg-indigo-50/10 cursor-help flex flex-col gap-0 py-1.5 border-dashed">
                 <div className="grid grid-cols-5 gap-2 items-start flex-1 pt-1 px-2">
                   <div className="flex flex-col gap-1.5 border-r border-indigo-100/50 pr-4">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">AVAILABLE</span>
@@ -881,11 +1316,28 @@ export function AccountDetailHeaderV2({
         </TooltipProvider>
       ) : (
         <>
-          <HeaderSection label="Cash Flow" borderColor="border-sky-100" className="flex-1 min-w-[260px] bg-sky-50/10 flex flex-col gap-0 py-2">
+          <HeaderSection label="Balance" borderColor="border-emerald-100" className="flex-[1.25] min-w-[280px] bg-emerald-50/10 flex flex-col gap-0 py-2">
             <div className="flex flex-col h-full justify-between py-1 px-1">
               <div className="flex justify-between items-center mb-1">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black text-sky-700 uppercase tracking-widest">{((summary?.yearPureIncomeTotal || 0) > 0 || (summary?.yearPureExpenseTotal || 0) > 0) ? "Net Efficiency" : "Aggregate Cashflow"}</span>
+                  <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest">Final Balance</span>
+                  <span className={cn("text-2xl font-black tabular-nums tracking-tighter drop-shadow-sm", availableBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    {formatMoneyVND(Math.ceil(availableBalance))}
+                  </span>
+                </div>
+                <div className="p-2 bg-white rounded-xl shadow-sm border border-emerald-100"><Calculator className="h-6 w-6 text-emerald-500" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-emerald-200/30">
+                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Incoming</span><span className="text-[15px] font-black text-emerald-600 tabular-nums">+{formatMoneyVND(summary?.yearPureIncomeTotal || 0)}</span></div>
+                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Outgoing</span><span className="text-[15px] font-black text-rose-500 tabular-nums">-{formatMoneyVND(summary?.yearPureExpenseTotal || 0)}</span></div>
+              </div>
+            </div>
+          </HeaderSection>
+          <HeaderSection label="Movement" borderColor="border-sky-100" className="flex-1 min-w-[220px] bg-sky-50/10 flex flex-col gap-0 py-2">
+            <div className="flex flex-col h-full justify-between py-1 px-1">
+              <div className="flex justify-between items-center mb-1">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black text-sky-700 uppercase tracking-widest">Net Movement</span>
                   <span className={cn("text-2xl font-black tabular-nums tracking-tighter drop-shadow-sm", ((summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0) >= 0) ? "text-emerald-600" : "text-rose-600")}>
                     {formatMoneyVND(((summary?.yearPureIncomeTotal || 0) - (summary?.yearPureExpenseTotal || 0)))}
                   </span>
@@ -893,23 +1345,74 @@ export function AccountDetailHeaderV2({
                 <div className="p-2 bg-white rounded-xl shadow-sm border border-sky-100"><TrendingUp className="h-6 w-6 text-sky-500" /></div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-sky-200/30">
-                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Incoming</span><span className="text-[15px] font-black text-emerald-600 tabular-nums">+{formatMoneyVND(summary?.yearPureIncomeTotal || 0)}</span></div>
-                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Outgoing</span><span className="text-[15px] font-black text-rose-500 tabular-nums">-{formatMoneyVND(summary?.yearPureExpenseTotal || 0)}</span></div>
+                <div className="flex flex-col gap-0.5"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Balance Type</span><span className="text-[15px] font-black text-slate-900 tabular-nums">{account.type === "bank" ? "Cash" : "Asset"}</span></div>
+                <div className="flex flex-col gap-0.5 text-right"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Focus</span><span className="text-[15px] font-black text-sky-600 tabular-nums">Balance First</span></div>
               </div>
             </div>
           </HeaderSection>
-          <HeaderSection label="Available" className="flex-1 min-w-[200px] bg-emerald-50/10 flex flex-col gap-0 py-2">
-             <div className="flex flex-col h-full justify-center items-center gap-2">
-                <div className="p-2.5 bg-white rounded-2xl shadow-md border border-emerald-100 mb-1 animate-pulse"><Calculator className="h-7 w-7 text-emerald-500" /></div>
-                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Liquid Capital</span>
-                <div className={cn("text-2xl font-black tracking-tighter tabular-nums text-center leading-none", availableBalance >= 0 ? "text-emerald-700" : "text-rose-700")}>{formatMoneyVND(Math.ceil(availableBalance))}</div>
-             </div>
-          </HeaderSection>
         </>
+      ))}
+
+      {isHeaderCollapsed && isCreditCard && (
+        <HeaderSection
+          label="Balance"
+          badge={<span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">HEALTH</span>}
+          borderColor="border-indigo-100"
+          className="flex-[3] min-w-[420px] bg-indigo-50/10 py-1"
+        >
+          <div className="h-10 flex items-center justify-between gap-3 px-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Available</span>
+              <span className={cn("text-[13px] font-black tabular-nums", displayBalance >= 0 ? "text-emerald-600" : "text-rose-600")}>{formatMoneyVND(Math.ceil(displayBalance))}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-slate-50 text-slate-700 border-slate-200">
+                <Calendar className="h-3 w-3" />
+                Due {collapsedDueInfo}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-pending-items-modal", { detail: { accountId: account.id } })); }}
+                className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest", pendingCount > 0 ? "text-rose-700 bg-rose-50 border-rose-200" : "text-emerald-700 bg-emerald-50 border-emerald-200")}
+              >
+                <Clock className="h-3 w-3" />
+                Pending {pendingCount}
+              </button>
+            </div>
+          </div>
+        </HeaderSection>
+      )}
+
+      {isHeaderCollapsed && isCreditCard && (
+        <HeaderSection
+          label="Cashback Performance"
+          badge={<span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">CB PERF</span>}
+          borderColor="border-emerald-100"
+          className="flex-[4] min-w-[540px] bg-emerald-50/10 py-1"
+          hideHintInHeader
+        >
+          <div className="h-10 flex items-center gap-3 px-2">
+            <div className={cn("flex items-center gap-2 px-2 py-1 rounded-lg border min-w-[220px]", dynamicCashbackStats?.is_min_spend_met ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200")}>
+              <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Needs</span>
+              <span className={cn("text-[11px] font-black uppercase", dynamicCashbackStats?.is_min_spend_met ? "text-emerald-700" : "text-rose-700")}>{dynamicCashbackStats?.is_min_spend_met ? "QUALIFIED" : formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - (dynamicCashbackStats?.currentSpend || 0)))}</span>
+              <div className="h-1.5 w-16 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, ((dynamicCashbackStats?.currentSpend || 0) / Math.max(1, dynamicCashbackStats?.minSpend || 1)) * 100)}%` }} />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-[10px] font-black text-slate-700">Spent {formatMoneyVND(Math.ceil(dynamicCashbackStats?.currentSpend || 0))}</span>
+              <span className="text-[10px] font-black text-rose-600">Shared {formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount || 0))}</span>
+              <span className={cn("text-[10px] font-black", cycleMetricSnapshot.totalProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>Profit {formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit || 0))}</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-700 border-indigo-200">
+                <Calendar className="h-3 w-3" />
+                {collapsedCycleLabel}
+              </span>
+            </div>
+          </div>
+        </HeaderSection>
       )}
 
       {/* CARD 3: CASHBACK PERFORMANCE */}
-      {isCreditCard && (
+      {!isHeaderCollapsed && isCreditCard && (
         <HeaderSection label="Cashback Performance" badge={<span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-1.5 py-0.5 text-[7px] font-black tracking-widest uppercase">CB PERF</span>} borderColor="border-emerald-100" className="flex-[6] min-w-[420px] bg-emerald-50/10 flex flex-col gap-0 py-1.5 relative" hideHintInHeader>
           <div className="absolute top-0 right-0 p-1 opacity-20 hover:opacity-100 transition-opacity"><Sparkles className="h-4 w-4 text-emerald-400" /></div>
           <div className="flex items-start gap-5 flex-1 h-12 pt-1 px-2">
@@ -1173,6 +1676,21 @@ export function AccountDetailHeaderV2({
           </div>
         </HeaderSection>
       )}
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setIsHeaderCollapsed((prev) => !prev)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-indigo-200 bg-white text-indigo-600 shadow-sm hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center"
+              aria-label={isHeaderCollapsed ? "Expand header" : "Collapse header"}
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", isHeaderCollapsed ? "rotate-180" : "rotate-0")} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{isHeaderCollapsed ? "Expand" : "Collapse"}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use server'
 
 import { pocketbaseCreate, pocketbaseList, pocketbaseUpdate, toPocketBaseId } from '@/services/pocketbase/server'
+import { getBatchSettings } from '@/services/batch.service'
 import { revalidatePath } from 'next/cache'
 
 interface UpsertBatchItemParams {
@@ -14,6 +15,7 @@ interface UpsertBatchItemParams {
     bankName: string
     targetAccountId: string | null
     accountName?: string
+    bankNameHint?: string
     phaseName?: string
     phaseId?: string
     note?: string
@@ -30,17 +32,48 @@ function generateBatchItemNote(params: {
     monthYear: string
     bankType: 'MBB' | 'VIB'
     accountName?: string
+    bankName?: string
     phaseName?: string
+    template?: string | null
 }) {
-    const [year, month] = params.monthYear.split('-')
+    const rawMonthYear = String(params.monthYear || '').trim()
+    const monthMatch = rawMonthYear.match(/^(\d{4})-(\d{1,2})$/)
+    const parsedYear = monthMatch?.[1] || String(new Date().getFullYear())
+    const parsedMonth = monthMatch?.[2] ? Number.parseInt(monthMatch[2], 10) : Number.NaN
+    const normalizedMonthYear = Number.isFinite(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+        ? `${parsedYear}-${String(parsedMonth).padStart(2, '0')}`
+        : rawMonthYear
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const monthYearStr = `${monthNames[parseInt(month) - 1]}${year}` // e.g. Mar2026
+    const monthYearStr = Number.isFinite(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+        ? `${monthNames[parsedMonth - 1]}${parsedYear}`
+        : normalizedMonthYear
     
     const bankTypeName = params.bankType === 'MBB' ? 'Mbb' : 'Vib'
-    const accountPart = params.accountName || params.receiverName
+    const accountPart = params.accountName || params.bankName || params.receiverName
     const phasePart = params.phaseName || (params.period === 'before' ? 'Before' : 'After')
-    
-    return `${accountPart} ${phasePart} ${monthYearStr} by ${bankTypeName}`
+    const defaultNote = `${accountPart} ${phasePart} ${monthYearStr} by ${bankTypeName}`
+    const template = String(params.template || '').trim()
+
+    if (!template) return defaultNote
+
+    return template.replace(/\{(receiverName|accountName|phaseName|monthYear|monthYearStr|bankType)\}/g, (_match, token) => {
+        switch (token) {
+            case 'receiverName':
+                return params.receiverName
+            case 'accountName':
+                return accountPart
+            case 'phaseName':
+                return phasePart
+            case 'monthYear':
+                return normalizedMonthYear || params.monthYear
+            case 'monthYearStr':
+                return monthYearStr
+            case 'bankType':
+                return bankTypeName
+            default:
+                return ''
+        }
+    })
 }
 
 /**
@@ -49,6 +82,8 @@ function generateBatchItemNote(params: {
  */
 export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams) {
     try {
+        const settings = await getBatchSettings(params.bankType)
+        const noteTemplate = String(settings?.note_format || '').trim() || null
         // monthYear is YYYY-MM
         const [year, month] = params.monthYear.split('-')
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -167,10 +202,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                     note: params.note || generateBatchItemNote({
                         receiverName: params.receiverName,
                         accountName: params.accountName,
+                        bankName: params.bankName,
                         phaseName: params.phaseName,
                         period: params.period,
                         monthYear: params.monthYear,
-                        bankType: params.bankType
+                        bankType: params.bankType,
+                        template: noteTemplate,
                     }),
                     metadata: params.metadata || { last_updated: new Date().toISOString() },
                 })
@@ -186,10 +223,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                     note: params.note || generateBatchItemNote({
                         receiverName: params.receiverName,
                         accountName: params.accountName,
+                        bankName: params.bankName,
                         phaseName: params.phaseName,
                         period: params.period,
                         monthYear: params.monthYear,
-                        bankType: params.bankType
+                        bankType: params.bankType,
+                        template: noteTemplate,
                     }),
                 })
             }
@@ -211,10 +250,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                         note: params.note || generateBatchItemNote({
                             receiverName: params.receiverName,
                             accountName: params.accountName,
+                            bankName: params.bankName,
                             phaseName: params.phaseName,
                             period: params.period,
                             monthYear: params.monthYear,
-                            bankType: params.bankType
+                            bankType: params.bankType,
+                            template: noteTemplate,
                         }),
                         metadata: params.metadata || { created_at: new Date().toISOString() },
                         status: 'draft'
@@ -237,10 +278,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             note: params.note || generateBatchItemNote({
                                 receiverName: params.receiverName,
                                 accountName: params.accountName,
+                                bankName: params.bankName,
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             metadata: params.metadata || { last_updated: new Date().toISOString() },
                             status: 'draft',
@@ -258,10 +301,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             note: params.note || generateBatchItemNote({
                                 receiverName: params.receiverName,
                                 accountName: params.accountName,
+                                bankName: params.bankName,
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             status: 'draft',
                         })
@@ -283,10 +328,12 @@ export async function upsertBatchItemAmountAction(params: UpsertBatchItemParams)
                             note: params.note || generateBatchItemNote({
                                 receiverName: params.receiverName,
                                 accountName: params.accountName,
+                                bankName: params.bankName,
                                 phaseName: params.phaseName,
                                 period: params.period,
                                 monthYear: params.monthYear,
-                                bankType: params.bankType
+                                bankType: params.bankType,
+                                template: noteTemplate,
                             }),
                             status: 'draft',
                         })
@@ -315,6 +362,8 @@ export async function bulkInitializeFromMasterAction(params: {
     phaseId?: string
 }) {
     try {
+        const settings = await getBatchSettings(params.bankType)
+        const noteTemplate = String(settings?.note_format || '').trim() || null
         // 1. Fetch all active master items (prefer phase_id, fallback to cutoff_period)
         let masterItems: any[] = []
         let phaseLabel: string | undefined = undefined
@@ -351,6 +400,7 @@ export async function bulkInitializeFromMasterAction(params: {
                 filter: fallbackFilter,
                 perPage: 1000,
                 sort: 'sort_order',
+                expand: 'target_account_id'
             })
             masterItems = fallbackResult.items || []
         }
@@ -469,11 +519,13 @@ export async function bulkInitializeFromMasterAction(params: {
                 bank_type: params.bankType,
                 note: generateBatchItemNote({
                     receiverName: m.receiver_name,
-                    accountName: m.expand?.target_account_id?.name || m.bank_name,
+                    accountName: m.expand?.target_account_id?.name || m.account_name || m.bank_name,
+                    bankName: m.bank_name,
                     phaseName: phaseLabel,
                     period: params.period,
                     monthYear: params.monthYear,
-                    bankType: params.bankType
+                    bankType: params.bankType,
+                    template: noteTemplate,
                 }),
                 status: 'draft'
             }))
@@ -508,12 +560,31 @@ export async function toggleBatchItemConfirmAction(params: {
                 perPage: 1,
             })
             const item = itemResult.items[0] || null
-            if (item?.transaction_id) {
+            if (item?.id) {
                 const { voidTransaction } = await import('@/services/transaction.service')
-                await voidTransaction(item.transaction_id)
+                const escapedBatchItemId = String(item.id).replace(/"/g, '\\"')
+                const relatedTxns = await pocketbaseList<any>('pvl_txn_001', {
+                    filter: `status != "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
+                    sort: '-updated,-created',
+                    page: 1,
+                    perPage: 50,
+                }).catch(() => null)
+
+                const activeTxnIds = (relatedTxns?.items || [])
+                    .map((txn: any) => String(txn?.id || '').trim())
+                    .filter(Boolean)
+
+                if (activeTxnIds.length > 0) {
+                    for (const txnId of activeTxnIds) {
+                        await voidTransaction(txnId)
+                    }
+                } else if (item.transaction_id) {
+                    await voidTransaction(item.transaction_id)
+                }
+
                 // Also revert batch item status
                 const { revertBatchItem } = await import('@/services/batch.service')
-                await revertBatchItem(item.transaction_id)
+                await revertBatchItem(item.transaction_id || activeTxnIds[0] || item.id)
             } else {
                 await pocketbaseUpdate<any>('batch_items', batchItemId, { status: 'pending' })
             }

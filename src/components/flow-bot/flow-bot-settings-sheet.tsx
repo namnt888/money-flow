@@ -1,22 +1,22 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type ChangeEvent } from 'react'
 import { Copy, ExternalLink, Globe2, KeyRound, MessageCircle, ShieldCheck, ShieldAlert, TriangleAlert, CheckCircle } from 'lucide-react'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../ui/sheet'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Badge } from '../ui/badge'
+import { Textarea } from '../ui/textarea'
+import { cn } from '../../lib/utils'
 import {
   FLOW_BOT_FREE_PROVIDER_CATALOG,
   type FlowBotProviderConfig,
   type FlowBotProviderId,
   type FlowBotProviderStatus,
   type FlowBotSettings,
-} from '@/lib/flow-bot/flow-bot.types'
+} from '../../lib/flow-bot'
 
 interface FlowBotSettingsSheetProps {
   open: boolean
@@ -137,7 +137,7 @@ export function FlowBotSettingsSheet({
                                 <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">API key</span>
                                 <Input
                                   value={provider.apiKey}
-                                  onChange={(event) => updateProvider(provider.id, { apiKey: event.target.value })}
+                                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateProvider(provider.id, { apiKey: event.target.value })}
                                   placeholder={`Paste ${provider.label} key`}
                                   className="h-11 rounded-xl border-slate-200 bg-white"
                                 />
@@ -146,7 +146,7 @@ export function FlowBotSettingsSheet({
                                 <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Model</span>
                                 <Input
                                   value={provider.model}
-                                  onChange={(event) => updateProvider(provider.id, { model: event.target.value })}
+                                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateProvider(provider.id, { model: event.target.value })}
                                   className="h-11 rounded-xl border-slate-200 bg-white"
                                 />
                               </label>
@@ -156,7 +156,7 @@ export function FlowBotSettingsSheet({
                                   type="number"
                                   min="0"
                                   value={provider.monthlyTokenBudget}
-                                  onChange={(event) => updateProvider(provider.id, { monthlyTokenBudget: Number(event.target.value) || 0 })}
+                                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateProvider(provider.id, { monthlyTokenBudget: Number(event.target.value) || 0 })}
                                   className="h-11 rounded-xl border-slate-200 bg-white"
                                 />
                               </label>
@@ -166,7 +166,7 @@ export function FlowBotSettingsSheet({
                                   type="number"
                                   min="0"
                                   value={provider.usedTokens}
-                                  onChange={(event) => updateProvider(provider.id, { usedTokens: Number(event.target.value) || 0 })}
+                                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateProvider(provider.id, { usedTokens: Number(event.target.value) || 0 })}
                                   className="h-11 rounded-xl border-slate-200 bg-white"
                                 />
                               </label>
@@ -195,7 +195,7 @@ export function FlowBotSettingsSheet({
                                 variant="outline"
                                 className="h-10 rounded-xl border-slate-200 flex-1 sm:flex-none"
                                 onClick={() => {
-                                  const catalogItem = FLOW_BOT_FREE_PROVIDER_CATALOG.find(item => item.id === provider.id)
+                                  const catalogItem = FLOW_BOT_FREE_PROVIDER_CATALOG.find((item) => item.id === provider.id)
                                   if (catalogItem) {
                                     window.open(catalogItem.siteUrl, '_blank')
                                   }
@@ -259,15 +259,15 @@ export function FlowBotSettingsSheet({
                   <CardContent className="grid gap-4 lg:grid-cols-3">
                     <label className="space-y-2">
                       <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Bot token</span>
-                      <Input value={settings.telegram.botToken} onChange={(event) => updateTelegram({ botToken: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="123456:ABC..." />
+                      <Input value={settings.telegram.botToken} onChange={(event: ChangeEvent<HTMLInputElement>) => updateTelegram({ botToken: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="123456:ABC..." />
                     </label>
                     <label className="space-y-2">
                       <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Webhook secret</span>
-                      <Input value={settings.telegram.webhookSecret} onChange={(event) => updateTelegram({ webhookSecret: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="shared-secret" />
+                      <Input value={settings.telegram.webhookSecret} onChange={(event: ChangeEvent<HTMLInputElement>) => updateTelegram({ webhookSecret: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="shared-secret" />
                     </label>
                     <label className="space-y-2">
                       <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Chat id</span>
-                      <Input value={settings.telegram.chatId} onChange={(event) => updateTelegram({ chatId: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="-100..." />
+                      <Input value={settings.telegram.chatId} onChange={(event: ChangeEvent<HTMLInputElement>) => updateTelegram({ chatId: event.target.value })} className="h-11 rounded-xl border-slate-200 bg-white" placeholder="-100..." />
                     </label>
                     <label className="space-y-2 lg:col-span-3">
                       <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Notes</span>
@@ -288,7 +288,7 @@ export function FlowBotSettingsSheet({
 
               <TabsContent value="catalog" className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {FLOW_BOT_FREE_PROVIDER_CATALOG.map((item) => (
+                  {FLOW_BOT_FREE_PROVIDER_CATALOG.map((item: (typeof FLOW_BOT_FREE_PROVIDER_CATALOG)[number]) => (
                     <Card key={item.id} className="border-slate-200/80 shadow-sm">
                       <CardHeader className="space-y-2">
                         <div className="flex items-center justify-between gap-3">

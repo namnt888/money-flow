@@ -63,6 +63,25 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
             }
         }
 
+        const batchItemIds = batchItems.map((item: any) => String(item?.id || '').trim()).filter(Boolean)
+        let transactionByBatchItemId = new Map<string, any>()
+        if (batchItemIds.length > 0) {
+            try {
+                const allTransactions = await loadPocketBaseTransactions({ limit: 3000 })
+                transactionByBatchItemId = new Map(
+                    allTransactions
+                        .map((txn: any) => {
+                            const meta: any = txn?.metadata || {}
+                            const batchItemId = String(meta?.batch_item_id || '').trim()
+                            return batchItemId ? [batchItemId, txn] as const : null
+                        })
+                        .filter(Boolean) as Array<readonly [string, any]>
+                )
+            } catch (txnErr) {
+                console.warn('[BatchAction] Failed to map transactions to batch items', txnErr)
+            }
+        }
+
         // 4. Fetch Phases
         let phases: any[] = []
         try {
@@ -96,15 +115,22 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
             })
             
             txns.forEach((txn: any) => {
-                const meta: any = txn.metadata || {}
-                const bId = meta?.batch_id
-                const isBatchRelated = meta?.batch_funding || meta?.batch_step || txn.note?.includes('Batch')
-                
-                if (bId && isBatchRelated && !fallbackFundingByBatchMap.has(bId)) {
+                const meta: any = txn?.metadata || {}
+                const bId = String(meta?.batch_id || '').trim()
+                const step = String(meta?.batch_step || '').toLowerCase()
+                const status = String(txn?.status || '').toLowerCase()
+
+                // Step 1 must point to the original funding transaction (source -> clearing), never Step 3 lines.
+                if (!bId || step !== 'step1' || status === 'void') return
+
+                const existing = fallbackFundingByBatchMap.get(bId)
+                const existingTime = existing ? new Date(existing.occurred_at || existing.date || 0).getTime() : 0
+                const nextTime = new Date(txn?.occurred_at || txn?.date || 0).getTime()
+                if (!existing || nextTime >= existingTime) {
                     fallbackFundingByBatchMap.set(bId, {
                         ...txn,
-                        account: { id: txn.account_id }, // Simplified for checklist view
-                        target_account: txn.target_account_id ? { id: txn.target_account_id } : null,
+                        account: { id: txn.account_id },
+                        target_account: (txn.target_account_id || txn.to_account_id) ? { id: (txn.target_account_id || txn.to_account_id) } : null,
                     })
                 }
             })
@@ -114,8 +140,23 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
 
         const enrichedBatches = batches.map((b: any) => ({
             ...b,
-            batch_items: batchItems.filter((item: any) => item.batch_id === b.id),
-            funding_transaction: b.funding_transaction_id ? null : fallbackFundingByBatchMap.get(b.id) // Map will be merged later if ID exists
+            batch_items: batchItems
+                .filter((item: any) => item.batch_id === b.id)
+                .map((item: any) => {
+                    const txn = transactionByBatchItemId.get(String(item.id || '').trim()) || null
+                    return {
+                        ...item,
+                        transaction_id: txn?.id || item.transaction_id || null,
+                        transaction: txn || null,
+                        metadata: {
+                            ...(item.metadata || {}),
+                            transaction_id: txn?.id || item.metadata?.transaction_id || null,
+                            txn_id: txn?.id || item.metadata?.txn_id || null,
+                        },
+                    }
+                }),
+            step1_transaction: fallbackFundingByBatchMap.get(b.id) || null,
+            funding_transaction: b.funding_transaction_id ? null : fallbackFundingByBatchMap.get(b.id)
         }))
 
         // Resolve explicit funding transactions if they exist but weren't in fallback results
@@ -129,6 +170,10 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
                     expand: 'account_id,to_account_id'
                 })
                 explicitTxns.items.forEach(txn => {
+                    const meta: any = txn?.metadata || {}
+                    const step = String(meta?.batch_step || '').toLowerCase()
+                    if (step !== 'step1') return
+
                     // Match to batches
                     const batch = enrichedBatches.find(b => b.funding_transaction_id === txn.id)
                     if (batch) {
@@ -137,6 +182,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
                             account: txn?.expand?.account_id || null,
                             target_account: txn?.expand?.to_account_id || null,
                         }
+                        batch.step1_transaction = batch.funding_transaction
                     }
                 })
             } catch {}

@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, ArrowRight, Wallet, ShoppingBag, Edit2, Trash2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X } from 'lucide-react'
+import { User, RotateCcw, CheckCircle2, Circle, Loader2, Calendar, Wallet, ShoppingBag, Edit2, Trash2, XCircle, Info, ExternalLink, ThumbsUp, MapPin, RefreshCw, FileSpreadsheet, Search, ChevronDown, ChevronRight, Check, AlertCircle, Settings, Plus, List, Copy, Database, Sparkles, Lock, PenLine, X, CalendarDays, Snowflake, Leaf, Flower2, SunMedium, CloudSun, PauseCircle } from 'lucide-react'
 import { getChecklistDataAction } from '@/actions/batch-checklist.actions'
 import { upsertBatchItemAmountAction, bulkInitializeFromMasterAction, toggleBatchItemConfirmAction, bulkConfirmBatchItemsAction, bulkUnconfirmBatchItemsAction } from '@/actions/batch-speed.actions'
 import { fundBatchAction, sendBatchToSheetAction } from '@/actions/batch.actions'
@@ -25,6 +26,7 @@ interface BatchMasterChecklistProps {
     bankType: 'MBB' | 'VIB'
     accounts: any[]
     bankMappings?: any[]
+    batchSettings?: any
     globalSheetUrl?: string | null
     globalSheetName?: string | null
     period?: 'before' | 'after'
@@ -40,6 +42,7 @@ export function BatchMasterChecklist({
     bankType,
     accounts,
     bankMappings = [],
+    batchSettings = null,
     globalSheetUrl,
     globalSheetName,
     period,
@@ -63,6 +66,7 @@ export function BatchMasterChecklist({
     const [confirmFundOpen, setConfirmFundOpen] = useState(false)
     const [confirmStep3Open, setConfirmStep3Open] = useState(false)
     const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set())
+    const [pendingFocusAccountKey, setPendingFocusAccountKey] = useState<string | null>(null)
     const [phaseDirtyMap, setPhaseDirtyMap] = useState<Record<string, boolean>>({})
     const [phaseLatestFundTxnMap, setPhaseLatestFundTxnMap] = useState<Record<string, string>>({})
     const [isMasterItemSlideOpen, setIsMasterItemSlideOpen] = useState(false)
@@ -90,8 +94,8 @@ export function BatchMasterChecklist({
 
     // Derived Account Options for Funding
     const bankAccounts = accounts?.filter((a: any) => a.type === 'bank') || []
-    let defaultSource = ''
-    if (bankAccounts.length > 0) {
+    let defaultSource = String(batchSettings?.fund_source_account_id || '').trim()
+    if (!defaultSource && bankAccounts.length > 0) {
         // Try to match exact bankType first
         const matched = bankAccounts.find((a: any) => a.name.toLowerCase().includes(bankType.toLowerCase()))
         defaultSource = matched ? matched.id : bankAccounts[0].id
@@ -136,6 +140,10 @@ export function BatchMasterChecklist({
         if (!initialPhaseId) return
         setSelectedPhaseId(initialPhaseId)
     }, [initialPhaseId])
+
+    useEffect(() => {
+        setPendingFocusAccountKey(null)
+    }, [selectedPhaseId])
 
     useEffect(() => {
         const visible = period
@@ -296,6 +304,14 @@ export function BatchMasterChecklist({
             const targetBatch = matched?.batch || bestPhaseBatch || null
             const existingItem = matched?.item || null
             if (existingItem?.id) usedBatchItemIds.add(String(existingItem.id))
+            const resolvedTxnId = String(
+                existingItem?.transaction_id ||
+                existingItem?.txn_id ||
+                existingItem?.transaction?.id ||
+                existingItem?.metadata?.transaction_id ||
+                existingItem?.metadata?.txn_id ||
+                ''
+            ).trim()
 
             byPhase[phaseId].push({
                 ...master,
@@ -303,7 +319,14 @@ export function BatchMasterChecklist({
                 status: existingItem?.status || 'none',
                 batch_item_id: existingItem?.id,
                 batch_id: targetBatch?.id,
-                transaction_id: existingItem?.transaction_id
+                transaction_id: resolvedTxnId || undefined,
+                txn_id: resolvedTxnId || undefined,
+                transaction: existingItem?.transaction || null,
+                metadata: {
+                    ...(master?.metadata || {}),
+                    ...(existingItem?.metadata || {}),
+                    transaction_id: resolvedTxnId || existingItem?.metadata?.transaction_id || undefined,
+                },
             })
         })
 
@@ -694,14 +717,63 @@ export function BatchMasterChecklist({
             .filter((id: string) => id.length > 0)
     ))
     const latestFundTxnId = selectedPhaseId ? phaseLatestFundTxnMap[selectedPhaseId] : null
-    const step1TxnId = currentBatch?.funding_transaction?.id || latestFundTxnId || null
+    const step1Txn = currentBatch?.step1_transaction || currentBatch?.funding_transaction || null
+    const step1TxnId = step1Txn?.id || latestFundTxnId || null
+    const step1SourceId = String(
+        step1Txn?.account?.id ||
+        step1Txn?.account_id ||
+        step1Txn?.source_account_id ||
+        ''
+    ).trim()
+    const step1TargetId = String(
+        step1Txn?.target_account?.id ||
+        step1Txn?.target_account_id ||
+        step1Txn?.to_account_id ||
+        ''
+    ).trim()
+    const step1SourceName =
+        step1Txn?.account?.name ||
+        accounts?.find((acc: any) => String(acc?.id || '').trim() === step1SourceId)?.name ||
+        'Source Account'
+    const step1TargetName =
+        step1Txn?.target_account?.name ||
+        accounts?.find((acc: any) => String(acc?.id || '').trim() === step1TargetId)?.name ||
+        'Batch Clearing'
+    const getPendingAccountKey = (item: any) => String(
+        item?.accounts?.id ||
+        item?.target_account_id ||
+        item?.accounts?.name ||
+        item?.bank_name ||
+        item?.receiver_name ||
+        ''
+    ).trim().toLowerCase()
     const step3TxnLines = currentPhaseItems
-        .filter((item: any) => Boolean(item.transaction_id))
+        .filter((item: any) => {
+            const status = String(item.status || '').toLowerCase()
+            return (status === 'confirmed' || status === 'done') && Boolean(item.transaction_id)
+        })
         .map((item: any) => ({
             id: item.transaction_id,
-            label: item.receiver_name || 'Confirmed Item',
+            label: item.accounts?.name || item.bank_name || item.receiver_name || 'Confirmed Item',
             amount: Number(item.amount || 0),
         }))
+    const remainingByAccount = Array.from(
+        currentPhaseItems
+            .filter((item: any) => String(item.status || '').toLowerCase() !== 'confirmed')
+            .reduce((acc: Map<string, { key: string; label: string; count: number }>, item: any) => {
+                const label = String(item.accounts?.name || item.bank_name || item.receiver_name || 'Unknown').trim()
+                const key = getPendingAccountKey(item)
+                const existing = acc.get(key)
+                if (existing) {
+                    existing.count += 1
+                } else {
+                    acc.set(key, { key, label, count: 1 })
+                }
+                return acc
+            }, new Map<string, { key: string; label: string; count: number }>())
+            .values()
+    ).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    const pendingCount = totalItems - confirmedCount
     let phaseStatusLabel = 'Active';
     let PhaseStatusIcon = Circle;
     let phaseStatusColor = 'text-slate-500 bg-slate-100';
@@ -855,17 +927,22 @@ export function BatchMasterChecklist({
             <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-3 space-y-2">
                 <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Phase Transaction Steps</div>
 
-                <div className="rounded-xl border border-indigo-100 bg-white px-3 py-2 flex items-center gap-2">
+                <div className="rounded-xl border border-indigo-100 bg-white px-3 py-2 flex items-start gap-2">
                     <span className="rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700">Step 1</span>
                     {step1TxnId ? (
-                        <Link
-                            href={`/transactions?search=${step1TxnId}&highlight=${step1TxnId}`}
-                            target="_blank"
-                            className="inline-flex items-center gap-1.5 text-[11px] text-indigo-700 hover:text-indigo-900"
-                        >
-                            <span className="font-semibold">Funded transaction</span>
-                            <span className="text-slate-400">#{String(step1TxnId).slice(0, 8)}</span>
-                        </Link>
+                        <div className="space-y-1.5">
+                            <Link
+                                href={`/transactions?search=${step1TxnId}&highlight=${step1TxnId}`}
+                                target="_blank"
+                                className="inline-flex items-center gap-1.5 text-[11px] text-indigo-700 hover:text-indigo-900"
+                            >
+                                <span className="font-semibold">Funded transaction</span>
+                                <span className="text-slate-400">#{String(step1TxnId).slice(0, 8)}</span>
+                            </Link>
+                            <div className="text-[11px] text-slate-600 font-semibold">
+                                {step1SourceName} <span className="text-slate-400">{'->'}</span> {step1TargetName}
+                            </div>
+                        </div>
                     ) : (
                         <span className="text-[11px] text-slate-500">Run Step 1 to display funded transaction link.</span>
                     )}
@@ -874,8 +951,33 @@ export function BatchMasterChecklist({
                 <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2 space-y-1">
                     <div className="flex items-center gap-2">
                         <span className="rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700">Step 3</span>
-                        <span className="text-[11px] text-slate-600">{step3TxnLines.length} confirmed transaction(s)</span>
+                        <span className="text-[11px] text-slate-600">{confirmedCount}/{totalItems} confirmed</span>
+                        {totalItems > 0 && pendingCount <= 0 ? (
+                            <span className="text-[11px] text-emerald-700 font-bold">Done</span>
+                        ) : pendingCount > 0 ? (
+                            <span className="text-[11px] text-amber-700 font-bold">{pendingCount} remaining</span>
+                        ) : null}
                     </div>
+                    {remainingByAccount.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {remainingByAccount.slice(0, 8).map((row) => (
+                                <button
+                                    key={`remain-${row.label}`}
+                                    type="button"
+                                    onClick={() => setPendingFocusAccountKey((prev) => prev === row.key ? null : row.key)}
+                                    className={cn(
+                                        "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] transition-colors",
+                                        pendingFocusAccountKey === row.key
+                                            ? "border-amber-400 bg-amber-200 text-amber-900"
+                                            : "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                    )}
+                                >
+                                    <span className="font-semibold truncate max-w-[160px]">{row.label}</span>
+                                    <span className="text-amber-600">{row.count}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     {step3TxnLines.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5">
                             {step3TxnLines.slice(0, 6).map((line: any) => (
@@ -971,11 +1073,25 @@ export function BatchMasterChecklist({
                     <Button
                         variant="ghost"
                         onClick={onManagePhases}
-                        className="h-12 px-4 rounded-2xl border border-dashed border-slate-300 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-white text-[10px] font-black uppercase tracking-widest shrink-0 transition-all gap-2"
+                        className="h-12 px-4 rounded-2xl border border-indigo-200 text-indigo-700 hover:text-indigo-800 hover:border-indigo-300 bg-indigo-50/60 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all gap-2 shadow-sm"
                     >
-                        <Plus className="h-4 w-4" />
+                        <Settings className="h-4 w-4" />
                         <span>Manage Phases</span>
                     </Button>
+
+                    {globalSheetUrl && (
+                        <a
+                            href={globalSheetUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-12 px-4 rounded-2xl border border-emerald-200 text-emerald-700 hover:text-emerald-800 hover:border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100 text-[10px] font-black uppercase tracking-widest shrink-0 transition-all gap-2 inline-flex items-center shadow-sm"
+                            title={globalSheetName || 'Open Google Sheet'}
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            <span>Open Sheet</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                    )}
                 </div>
 
                 {(period ? effectivePhases.filter((p: any) => p.period_type === period) : effectivePhases).map((phase: any) => (
@@ -1002,6 +1118,10 @@ export function BatchMasterChecklist({
                             onSmartSort={handleSmartSort}
                             bankMappings={bankMappings}
                             performingAction={performingAction}
+                            batchSettings={batchSettings}
+                            accounts={accounts}
+                            pendingFocusAccountKey={pendingFocusAccountKey}
+                            setPendingFocusAccountKey={setPendingFocusAccountKey}
                         />
                     </TabsContent>
                 ))}
@@ -1174,19 +1294,29 @@ function PhaseSummaryStrip({ phases, itemsByPhase, batches, openPhaseId, selecte
     )
 }
 
-function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings, performingAction }: any) {
-    const [searchQuery, setSearchQuery] = useState('')
+function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankType, onUpdate, isStandalone, isSelected, currentBatch, batches, selectedItemIds, setSelectedItemIds, onPhaseDirtyChange, onEditMasterItem, onAddMasterItem, focusedMasterItemId, onSmartSort, bankMappings, performingAction, batchSettings, accounts, pendingFocusAccountKey, setPendingFocusAccountKey }: any) {
+    const searchParams = useSearchParams()
+    const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '')
     const [isPhaseEditing, setIsPhaseEditing] = useState(false)
     const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
     const [savingPhaseAmounts, setSavingPhaseAmounts] = useState(false)
     const lastDirtyRef = React.useRef<boolean | null>(null)
     const sortedItems = useMemo(() => {
         const normalize = (value: string) => value.trim().toLowerCase()
-        const getGroupKey = (item: any) => item.bank_code || item.accounts?.bank_code || item.bank_name || item.accounts?.name || ''
+        const getBaseGroupKey = (item: any) => {
+            const rawKey = item.bank_code || item.accounts?.bank_code || item.bank_name || item.accounts?.name || ''
+            return normalize(String(rawKey).replace(/\s*#mom\s*/gi, ' '))
+        }
+        const getOwnershipRank = (item: any) => {
+            const name = normalize(item.accounts?.name || item.bank_name || '')
+            if (name.includes('#mom')) return 1
+            if (item.accounts?.holder_type === 'relative') return 1
+            return 0
+        }
         const groupMaxAmounts = new Map<string, number>()
 
         items.forEach((item: any) => {
-            const groupKey = getGroupKey(item)
+            const groupKey = `${getBaseGroupKey(item)}::${getOwnershipRank(item)}`
             const amount = Math.abs(item.amount || 0)
             const prevMax = groupMaxAmounts.get(groupKey) || 0
             if (amount > prevMax) {
@@ -1195,13 +1325,26 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
         })
 
         return [...items].sort((a: any, b: any) => {
-            const groupA = getGroupKey(a)
-            const groupB = getGroupKey(b)
+            const baseGroupA = getBaseGroupKey(a)
+            const baseGroupB = getBaseGroupKey(b)
+            const ownershipA = getOwnershipRank(a)
+            const ownershipB = getOwnershipRank(b)
+
+            const groupA = `${baseGroupA}::${ownershipA}`
+            const groupB = `${baseGroupB}::${ownershipB}`
             const groupMaxA = groupMaxAmounts.get(groupA) || 0
             const groupMaxB = groupMaxAmounts.get(groupB) || 0
 
             if (groupMaxA !== groupMaxB) {
                 return groupMaxB - groupMaxA
+            }
+
+            if (ownershipA !== ownershipB) {
+                return ownershipA - ownershipB
+            }
+
+            if (baseGroupA !== baseGroupB) {
+                return baseGroupA.localeCompare(baseGroupB)
             }
 
             const amountA = Math.abs(a.amount || 0)
@@ -1220,11 +1363,24 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
         })
     }, [items])
     const totalConfirmed = items.filter((i: any) => i.status === 'confirmed').length
-    const createdTransactions = items.filter((i: any) => Boolean(i.transaction_id))
     const progress = items.length > 0 ? (totalConfirmed / items.length) * 100 : 0
     const totalAmount = items.reduce((sum: number, i: any) => sum + Math.abs(i.amount || 0), 0)
     const allDone = items.length > 0 && totalConfirmed === items.length
     const remaining = items.length - totalConfirmed
+
+    const getItemAccountKey = (item: any) => {
+        const key = item.accounts?.id || item.target_account_id || item.accounts?.name || item.bank_name || item.receiver_name || ''
+        return String(key).trim().toLowerCase()
+    }
+
+    const isPendingItem = (item: any) => String(item?.status || '').toLowerCase() !== 'confirmed'
+    const isConflictItem = (item: any) => {
+        const dueDay = Number(item?.accounts?.due_date || 0)
+        const cutoffDay = Number(phase?.cutoff_day || 0)
+        if (!dueDay || !cutoffDay) return false
+        return phase?.period_type === 'before' ? dueDay > cutoffDay : dueDay <= cutoffDay
+    }
+
 
     useEffect(() => {
         const nextDraft: Record<string, string> = {}
@@ -1450,26 +1606,6 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
             <div className="px-4 pb-4 pt-3 space-y-3">
                 {items.length > 0 && (
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 ml-2 shrink-0">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => handleOpenEditPhase(phase, e)}
-                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                title="Edit phase"
-                            >
-                                <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => handleInitiateDeletePhase(phase, e)}
-                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50"
-                                title="Delete phase"
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                        </div>
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                             <Input
@@ -1487,6 +1623,16 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                 </button>
                             )}
                         </div>
+                        {pendingFocusAccountKey && (
+                            <button
+                                type="button"
+                                onClick={() => setPendingFocusAccountKey?.(null)}
+                                className="h-9 px-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest"
+                                title="Pending focus from Step 3 is active"
+                            >
+                                Pending Focus
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -1497,61 +1643,6 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             style={{ width: `${progress}%` }}
                         />
                     </div>
-
-                    {/* Funding transaction full detail card */}
-                    {currentBatch?.funding_transaction && (
-                        <Link
-                            href={`/transactions?highlight=${currentBatch.funding_transaction.id}`}
-                            target="_blank"
-                            className="bg-indigo-50/50 border border-indigo-100 rounded-none p-3 flex items-center gap-3 hover:bg-indigo-50 transition-colors"
-                        >
-                            <div className="h-8 w-8 rounded-none bg-indigo-100 flex items-center justify-center shrink-0">
-                                <Wallet className="h-4 w-4 text-indigo-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[9px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">Funding Txn (Step 1)</div>
-                                <div className="text-xs font-bold text-slate-700 truncate flex items-center gap-1.5">
-                                    {currentBatch.funding_transaction.account?.name || 'Local Bank'}
-                                    <ArrowRight className="h-3 w-3 text-slate-400" />
-                                    {currentBatch.funding_transaction.target_account?.name || 'Clearing'}
-                                </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                                <div className="text-sm font-black text-indigo-900 leading-none">
-                                    {currentBatch.funding_transaction.amount?.toLocaleString()} ₫
-                                </div>
-                                <div className="text-[9px] font-bold text-indigo-400/80 mt-1">
-                                    {new Date(currentBatch.funding_transaction.occurred_at).toLocaleDateString('vi-VN')}
-                                </div>
-                            </div>
-                        </Link>
-                    )}
-
-                    {createdTransactions.length > 0 && (
-                        <div className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-3 space-y-2">
-                            <div className="flex items-center gap-2 text-[10px] font-black text-emerald-700 uppercase tracking-widest">
-                                <List className="h-3.5 w-3.5" />
-                                Created Transactions In This Phase
-                                <span className="ml-auto inline-flex items-center rounded-md border border-emerald-200 bg-white px-1.5 py-0.5 text-[9px]">
-                                    {createdTransactions.length}
-                                </span>
-                            </div>
-                            <div className="grid gap-1.5">
-                                {createdTransactions.map((item: any) => (
-                                    <Link
-                                        key={`${item.id}-${item.transaction_id}`}
-                                        href={`/transactions?highlight=${item.transaction_id}`}
-                                        target="_blank"
-                                        className="inline-flex items-center gap-2 rounded-lg border border-emerald-100 bg-white px-2.5 py-1.5 text-[11px] text-slate-700 hover:bg-emerald-50 transition-colors"
-                                    >
-                                        <ExternalLink className="h-3 w-3 text-emerald-500" />
-                                        <span className="font-black uppercase tracking-tight truncate max-w-[240px]">{item.receiver_name}</span>
-                                        <span className="text-slate-400 ml-auto truncate max-w-[180px]">{item.transaction_id}</span>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                     {/* Items list */}
                     {items.length === 0 ? (
@@ -1565,10 +1656,14 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                             isStandalone ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
                             {sortedItems.map((item: any) => {
-                                let isHighlighted = false
+                                const matchPendingFocus = pendingFocusAccountKey
+                                    ? isPendingItem(item) && getItemAccountKey(item) === pendingFocusAccountKey
+                                    : false
+                                let isHighlighted = matchPendingFocus
                                 if (searchQuery) {
                                     const query = searchQuery.toLowerCase()
                                     isHighlighted = (
+                                        matchPendingFocus ||
                                         item.receiver_name?.toLowerCase().includes(query) ||
                                         item.bank_name?.toLowerCase().includes(query) ||
                                         item.bank_number?.toLowerCase().includes(query) ||
@@ -1585,7 +1680,7 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                         bankType={bankType}
                                         onUpdate={onUpdate}
                                         isHighlighted={isHighlighted}
-                                        isSearchActive={!!searchQuery}
+                                        isSearchActive={Boolean(searchQuery)}
                                         isPhaseEditing={isPhaseEditing}
                                         draftAmount={draftAmounts[item.id] ?? ''}
                                         batches={batches}
@@ -1600,6 +1695,8 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
                                             setSelectedItemIds(next)
                                         }}
                                         onEditMasterItem={onEditMasterItem}
+                                        batchSettings={batchSettings}
+                                        accounts={accounts}
                                     />
                                 )
                             })}
@@ -1610,21 +1707,72 @@ function PeriodSection({ title, subtitle, phase, items, monthYear, period, bankT
     )
 }
 
-function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType, bankMappings }: any) {
+function buildNoteHintFromTemplate(item: any, phase: any, monthYear: string, bankType: 'MBB' | 'VIB', batchSettings?: any, accounts?: any[]) {
+    const batchTypeKey = String(bankType || '').toUpperCase()
+    const effectiveSettings = (batchSettings && typeof batchSettings === 'object' && batchTypeKey in batchSettings)
+        ? batchSettings[batchTypeKey as keyof typeof batchSettings]
+        : batchSettings
+    const template = String((effectiveSettings as any)?.note_format || batchSettings?.note_format || '').trim() || '{accountName} {phaseName} {monthYearStr} by {bankType}'
+    const rawMonthYear = String(monthYear || '').trim()
+    const monthMatch = rawMonthYear.match(/^(\d{4})-(\d{1,2})$/)
+    const year = monthMatch?.[1] || String(new Date().getFullYear())
+    const monthNum = monthMatch?.[2] ? Number.parseInt(monthMatch[2], 10) : Number.NaN
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const normalizedMonthYear = Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12
+        ? `${year}-${String(monthNum).padStart(2, '0')}`
+        : rawMonthYear
+    const monthYearStr = Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12
+        ? `${monthNames[monthNum - 1]}${year}`
+        : normalizedMonthYear
+
+    const linkedAccountName = accounts?.find((acc: any) => String(acc?.id || '') === String(item?.target_account_id || ''))?.name
+    const accountName = String(linkedAccountName || item?.accounts?.name || item?.bank_name || item?.receiver_name || '').trim()
+    const receiverName = String(item?.receiver_name || accountName || '').trim()
+    const phaseName = String(phase?.label || phase?.name || (phase?.period_type === 'before' ? 'Before' : 'After')).trim()
+    const bankTypeText = bankType === 'MBB' ? 'Mbb' : 'Vib'
+
+    return template.replace(/\{(receiverName|accountName|phaseName|monthYear|monthYearStr|bankType)\}/g, (_m, token) => {
+        switch (token) {
+            case 'receiverName':
+                return receiverName
+            case 'accountName':
+                return accountName || receiverName
+            case 'phaseName':
+                return phaseName
+            case 'monthYear':
+                return normalizedMonthYear
+            case 'monthYearStr':
+                return monthYearStr
+            case 'bankType':
+                return bankTypeText
+            default:
+                return ''
+        }
+    }).trim()
+}
+
+function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive, isPhaseEditing, draftAmount, onDraftAmountChange, isSelected, onSelect, onEditMasterItem, isMasterFocused, batches, monthYear, bankType, bankMappings, batchSettings, accounts }: any) {
     const [saving, setSaving] = useState(false)
     const [isEditingRowAmount, setIsEditingRowAmount] = useState(false)
     const [rowDraftAmount, setRowDraftAmount] = useState(draftAmount)
-    const [rowNote, setRowNote] = useState(item.note || '')
-    const [isEditingNote, setIsEditingNote] = useState(false)
+    const rowTxnId = String(
+        item.transaction_id ||
+        item.txn_id ||
+        item.transaction?.id ||
+        item.metadata?.transaction_id ||
+        item.metadata?.txn_id ||
+        ''
+    ).trim()
+    const isConfirmedLike = String(item.status || '').toLowerCase() === 'confirmed' || String(item.status || '').toLowerCase() === 'done'
+    const rowOpenHref = rowTxnId
+        ? `/transactions?highlight=${rowTxnId}`
+        : ''
+    const canOpenTransaction = isConfirmedLike && Boolean(rowTxnId)
     const rowRef = React.useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
         setRowDraftAmount(draftAmount)
     }, [draftAmount])
-
-    useEffect(() => {
-        setRowNote(item.note || '')
-    }, [item.note])
 
     useEffect(() => {
         if (!isMasterFocused || !rowRef.current) return
@@ -1712,7 +1860,7 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                 accountName: item.accounts?.name || item.bank_name,
                 phaseName: phase?.label,
                 phaseId: phase?.id,
-                note: rowNote,
+                note: item.note || '',
                 metadata: {
                     ...(item.metadata || {}),
                     last_updated: new Date().toISOString(),
@@ -1722,7 +1870,6 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             if (result.success) {
                 toast.success(`Saved for ${item.receiver_name}`)
                 setIsEditingRowAmount(false)
-                setIsEditingNote(false)
                 onDraftAmountChange(String(nextAmount))
                 if (onUpdate) await onUpdate()
             } else {
@@ -1759,6 +1906,13 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
     }
 
     const dueDay = item.accounts?.due_date as number | undefined
+    const techcomFallbackByAccountId: Record<string, string> = {
+        '63svk9': '/banks/techcombank-everyday.svg',
+    }
+    const fallbackImageByName = String(item.accounts?.name || item.bank_name || '').toLowerCase().includes('techcombank everyday')
+        ? '/banks/techcombank-everyday.svg'
+        : ''
+    const resolvedImageUrl = item.accounts?.image_url || techcomFallbackByAccountId[String(item.target_account_id || '')] || fallbackImageByName
     let dueBadge: { label: string; daysLeft: number } | null = null
     let isDueMismatch = false
     if (dueDay) {
@@ -1778,6 +1932,8 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
         }
     }
 
+    const noteHint = buildNoteHintFromTemplate(item, phase, monthYear, bankType, batchSettings, accounts)
+
     return (
         <div ref={rowRef} className={cn(
             "group relative flex items-center gap-3 p-3 border rounded-2xl transition-all",
@@ -1790,63 +1946,43 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
             isSearchActive && !isHighlighted && "opacity-30 grayscale"
         )}>
             {/* Checkbox for Bulk Actions */}
-            {item.batch_item_id && item.status !== 'confirmed' && (
+            {item.batch_item_id && (
                 <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => onSelect(item.batch_item_id, e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer"
+                    disabled={item.status === 'confirmed'}
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 />
             )}
 
             {/* Status Icon - Toggle Confirm */}
-            {item.status === 'confirmed' && item.transaction_id ? (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Link
-                                href={`/transactions?highlight=${item.transaction_id}`}
-                                target="_blank"
-                                className="shrink-0 outline-none flex items-center justify-center p-1 rounded-full hover:bg-emerald-50 transition-colors"
-                            >
-                                <div className="h-6 w-6 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 ring-2 ring-emerald-50">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            onClick={handleToggleConfirm}
+                            disabled={saving}
+                            className="shrink-0 outline-none flex items-center justify-center p-1 rounded-full hover:bg-slate-50 transition-colors"
+                        >
+                            {saving ? (
+                                <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
+                            ) : item.status === 'confirmed' ? (
+                                <div className="h-6 w-6 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 ring-2 ring-indigo-50">
                                     <CheckCircle2 className="h-4 w-4 text-white" />
                                 </div>
-                            </Link>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            Item Confirmed. Click to view transaction detail.
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            ) : (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button
-                                onClick={handleToggleConfirm}
-                                disabled={saving}
-                                className="shrink-0 outline-none flex items-center justify-center p-1 rounded-full hover:bg-slate-50 transition-colors"
-                            >
-                                {saving ? (
-                                    <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-                                ) : item.status === 'confirmed' ? (
-                                    <div className="h-6 w-6 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 ring-2 ring-indigo-50">
-                                        <CheckCircle2 className="h-4 w-4 text-white" />
-                                    </div>
-                                ) : (
-                                    <div className="h-6 w-6 rounded-full border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 flex items-center justify-center transition-all bg-white group-hover:border-slate-400">
-                                        <CheckCircle2 className="h-4 w-4 text-slate-200 group-hover:text-slate-300 transition-colors" />
-                                    </div>
-                                )}
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            {item.status === 'confirmed' ? "Item Confirmed. Click to Uncheck/Revert." : "Item Pending. Click to Quick Confirm (Single Mode)."}
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
+                            ) : (
+                                <div className="h-6 w-6 rounded-full border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 flex items-center justify-center transition-all bg-white group-hover:border-slate-400">
+                                    <CheckCircle2 className="h-4 w-4 text-slate-200 group-hover:text-slate-300 transition-colors" />
+                                </div>
+                            )}
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        {item.status === 'confirmed' ? "Item Confirmed. Click to Uncheck/Revert." : "Item Pending. Click to Quick Confirm (Single Mode)."}
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
 
             {/* Bank Mapping Badge - shows if card group matches expected mapping */}
             {(() => {
@@ -1862,9 +1998,9 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                 )
             })()}
 
-            {item.accounts?.image_url ? (
+            {resolvedImageUrl ? (
                 <div className="shrink-0 h-12 w-12 rounded-none overflow-hidden flex items-center justify-center">
-                    <img src={item.accounts.image_url} alt="" className="w-full h-full object-contain" />
+                    <img src={resolvedImageUrl} alt="" className="w-full h-full object-contain" />
                 </div>
             ) : (
                 <div className="shrink-0 h-12 w-12 rounded-none flex items-center justify-center text-[10px] font-black text-slate-400">
@@ -1941,6 +2077,13 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                         </span>
                     )}
 
+                    {noteHint && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50/70 border border-indigo-100 text-[10px] font-semibold text-indigo-700 tracking-tight">
+                            <span className="h-2 w-2 rounded-full bg-indigo-400" />
+                            {noteHint}
+                        </span>
+                    )}
+
                     {item.cutoff_period && (
                         <TooltipProvider>
                             <Tooltip>
@@ -1963,30 +2106,6 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                     {item.accounts?.account_number && (
                         <span className="text-[9px] font-medium text-slate-300 tabular-nums">
                             • {item.accounts.account_number}
-                        </span>
-                    )}
-                    {isEditingNote ? (
-                        <Input 
-                            value={rowNote}
-                            onChange={(e) => setRowNote(e.target.value)}
-                            onBlur={() => {
-                                if (rowNote === (item.note || '')) setIsEditingNote(false)
-                            }}
-                            placeholder="Add note..."
-                            className="h-6 text-[9px] py-0 px-2 border-indigo-100 focus:ring-indigo-500 rounded-lg w-40 bg-white ml-2"
-                            autoFocus
-                        />
-                    ) : (item.note || rowNote) ? (
-                        <span 
-                            onClick={() => setIsEditingNote(true)}
-                            className="text-[9px] text-indigo-400 font-medium italic truncate max-w-[200px] cursor-pointer hover:text-indigo-600 ml-2"
-                        >
-                            • {item.note || rowNote}
-                        </span>
-                    ) : null}
-                    {item.note && (
-                        <span className="ml-1 text-indigo-400 font-bold italic truncate max-w-[80px] text-[10px]">
-                            • {item.note}
                         </span>
                     )}
                 </div>
@@ -2083,18 +2202,26 @@ function ChecklistItemRow({ item, phase, onUpdate, isHighlighted, isSearchActive
                         </button>
                     )}
                     {!saving && (
-                        <button
-                            onClick={() => setIsEditingNote(!isEditingNote)}
-                            className={cn(
-                                "h-8 w-8 rounded-xl flex items-center justify-center transition-all border",
-                                isEditingNote || item.note
-                                    ? "text-indigo-600 bg-indigo-50 border-indigo-100"
-                                    : "text-slate-300 border-slate-100 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100"
-                            )}
-                            title="Edit Note"
-                        >
-                            <Sparkles className={cn("h-3.5 w-3.5", item.note ? "animate-pulse" : "")} />
-                        </button>
+                        canOpenTransaction ? (
+                            <Link
+                                href={rowOpenHref}
+                                target="_blank"
+                                className="h-8 w-8 rounded-xl flex items-center justify-center transition-all border border-slate-100 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100"
+                                title="Open Transaction"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                            </Link>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled
+                                className="h-8 w-8 rounded-xl flex items-center justify-center transition-all border border-slate-100 text-slate-200 opacity-50 cursor-not-allowed"
+                                title="Open Transaction (available after confirm)"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                            </button>
+                        )
                     )}
                     {!saving && (
                         <button

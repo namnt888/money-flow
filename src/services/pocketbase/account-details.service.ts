@@ -415,6 +415,12 @@ async function listAllRecords(
 // Request-level cache for account record resolution to avoid redundant DB hits
 const accountRecordCache = new Map<string, PocketBaseRecord | null>();
 
+function invalidateAccountRecordCache(sourceOrPocketBaseId: string) {
+  const pbId = toPocketBaseId(sourceOrPocketBaseId, PB_COLLECTIONS.ACCOUNTS);
+  accountRecordCache.delete(sourceOrPocketBaseId);
+  accountRecordCache.delete(pbId);
+}
+
 async function resolvePocketBaseAccountRecord(
   sourceOrPocketBaseId: string,
 ): Promise<PocketBaseRecord | null> {
@@ -1080,6 +1086,7 @@ export async function updatePocketBaseAccountInfo(
         body,
       },
     );
+    invalidateAccountRecordCache(supabaseAccountId);
     return true;
   } catch (err) {
     const msg = (err as Error).message || String(err);
@@ -1094,6 +1101,7 @@ export async function updatePocketBaseAccountInfo(
             body: retryBody,
           },
         );
+        invalidateAccountRecordCache(supabaseAccountId);
         return true;
       } catch (retryErr) {
         console.error("[DB:PB] accounts.updateInfo retry failed:", retryErr);
@@ -1179,9 +1187,6 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const byPocketBaseId = new Map(records.map((item) => [item.id, item]));
-  const pocketBaseToSource = new Map(
-    records.map((item) => [item.id, item.slug || item.id]),
-  );
 
   // Pre-calculate child counts
   const childCounts = new Map<string, number>();
@@ -1199,9 +1204,7 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
     const parentPocketBaseId = sourceRecord?.parent_account_id || null;
     const securedByPocketBaseId = sourceRecord?.secured_by_account_id || null;
     
-    const normalizedParentId = parentPocketBaseId
-      ? pocketBaseToSource.get(parentPocketBaseId) || null
-      : null;
+    const normalizedParentId = parentPocketBaseId || null;
 
     // Find children for this account
     const children = mapped
@@ -1216,16 +1219,14 @@ export async function getPocketBaseAccounts(): Promise<Account[]> {
       }));
 
     // Find parent info
-    const parentAccount = normalizedParentId 
-      ? mapped.find(a => a.id === normalizedParentId)
+    const parentAccount = parentPocketBaseId
+      ? mapped.find(a => a.id === parentPocketBaseId)
       : null;
 
     return {
       ...account,
       parent_account_id: normalizedParentId,
-      secured_by_account_id: securedByPocketBaseId
-        ? pocketBaseToSource.get(securedByPocketBaseId) || null
-        : null,
+      secured_by_account_id: securedByPocketBaseId || null,
       relationships: {
         is_parent: children.length > 0,
         child_count: children.length,

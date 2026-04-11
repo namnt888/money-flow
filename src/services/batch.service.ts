@@ -296,25 +296,132 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
             categoryId = toPocketBaseId(SYSTEM_CATEGORIES.ONLINE_SERVICES, 'categories')
         }
 
-        const { createTransaction } = await import('./transaction.service')
-        const txnId = await createTransaction({
-            occurred_at: new Date().toISOString(),
-            note: `${batchName} - ${item.note || item.receiver_name || 'Confirmed Payment'}`,
-            type: 'transfer',
-            source_account_id: toPocketBaseId(SYSTEM_ACCOUNTS.BATCH_CLEARING, 'accounts'),
-            target_account_id: finalTargetId,
-            amount: Math.abs(item.amount),
-            tag: tag,
-            category_id: categoryId,
-            metadata: { 
-                type: 'batch_funding', 
-                batch_step: 'step3', 
-                batch_id: item.batch_id, 
-                batch_item_id: item.id 
-            } as any
-        })
+        const nowIso = new Date().toISOString()
+        const noteText = `${batchName} - ${item.note || item.receiver_name || 'Confirmed Payment'}`
+        const sourceAccountId = toPocketBaseId(SYSTEM_ACCOUNTS.BATCH_CLEARING, 'accounts')
+        let txnId: string | null = null
 
-        if (!txnId) throw new Error('Failed to create transaction in PocketBase')
+        // Reuse the latest voided transaction for this batch item to avoid duplicate rows.
+        // This supports confirm -> unconfirm(void) -> confirm flows without creating a new transaction each time.
+        const escapedBatchItemId = String(item.id || '').replace(/"/g, '\\"')
+        const existingTxId = String(item.transaction_id || '').trim()
+
+        if (existingTxId) {
+            const existingTxn = await pocketbaseGetById<any>('pvl_txn_001', existingTxId).catch(() => null)
+            if (existingTxn?.id) {
+                txnId = existingTxn.id
+                if (String(existingTxn.status || '').toLowerCase() === 'void') {
+                    await pocketbaseUpdate('pvl_txn_001', existingTxn.id, {
+                        status: 'posted',
+                        occurred_at: nowIso,
+                        note: noteText,
+                        type: 'transfer',
+                        account_id: sourceAccountId,
+                        target_account_id: finalTargetId,
+                        amount: Math.abs(item.amount),
+                        final_price: Math.abs(item.amount),
+                        tag: tag,
+                        category_id: categoryId,
+                        metadata: {
+                            ...(typeof existingTxn.metadata === 'object' && existingTxn.metadata !== null ? existingTxn.metadata : {}),
+                            type: 'batch_funding',
+                            batch_step: 'step3',
+                            batch_id: item.batch_id,
+                            batch_item_id: item.id,
+                            reactivated_at: nowIso,
+                        },
+                    })
+                }
+            }
+        }
+
+        if (!txnId) {
+            const reusableActive = await pocketbaseList<any>('pvl_txn_001', {
+                filter: `status != "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
+                sort: '-updated,-created',
+                page: 1,
+                perPage: 1,
+            }).catch(() => null)
+
+            const activeTxn = reusableActive?.items?.[0]
+            if (activeTxn?.id) {
+                txnId = activeTxn.id
+                await pocketbaseUpdate('pvl_txn_001', activeTxn.id, {
+                    occurred_at: nowIso,
+                    note: noteText,
+                    type: 'transfer',
+                    account_id: sourceAccountId,
+                    target_account_id: finalTargetId,
+                    amount: Math.abs(item.amount),
+                    final_price: Math.abs(item.amount),
+                    tag: tag,
+                    category_id: categoryId,
+                    metadata: {
+                        ...(typeof activeTxn.metadata === 'object' && activeTxn.metadata !== null ? activeTxn.metadata : {}),
+                        type: 'batch_funding',
+                        batch_step: 'step3',
+                        batch_id: item.batch_id,
+                        batch_item_id: item.id,
+                    },
+                })
+            }
+        }
+
+        if (!txnId) {
+            const reusableVoided = await pocketbaseList<any>('pvl_txn_001', {
+                filter: `status = "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
+                sort: '-updated,-created',
+                page: 1,
+                perPage: 1,
+            }).catch(() => null)
+
+            const reusableTxn = reusableVoided?.items?.[0]
+            if (reusableTxn?.id) {
+                txnId = reusableTxn.id
+                await pocketbaseUpdate('pvl_txn_001', reusableTxn.id, {
+                    status: 'posted',
+                    occurred_at: nowIso,
+                    note: noteText,
+                    type: 'transfer',
+                    account_id: sourceAccountId,
+                    target_account_id: finalTargetId,
+                    amount: Math.abs(item.amount),
+                    final_price: Math.abs(item.amount),
+                    tag: tag,
+                    category_id: categoryId,
+                    metadata: {
+                        ...(typeof reusableTxn.metadata === 'object' && reusableTxn.metadata !== null ? reusableTxn.metadata : {}),
+                        type: 'batch_funding',
+                        batch_step: 'step3',
+                        batch_id: item.batch_id,
+                        batch_item_id: item.id,
+                        reactivated_at: nowIso,
+                    },
+                })
+            }
+        }
+
+        if (!txnId) {
+            const { createTransaction } = await import('./transaction.service')
+            txnId = await createTransaction({
+                occurred_at: nowIso,
+                note: noteText,
+                type: 'transfer',
+                source_account_id: sourceAccountId,
+                target_account_id: finalTargetId,
+                amount: Math.abs(item.amount),
+                tag: tag,
+                category_id: categoryId,
+                metadata: {
+                    type: 'batch_funding',
+                    batch_step: 'step3',
+                    batch_id: item.batch_id,
+                    batch_item_id: item.id,
+                } as any
+            })
+        }
+
+        if (!txnId) throw new Error('Failed to create or restore transaction in PocketBase')
 
         await pocketbaseUpdate('batch_items', itemId, {
             status: 'confirmed',
@@ -558,26 +665,78 @@ export async function getPendingBatchItemsByAccount(accountId: string) {
             return target === normalizedAccountId && isPendingLike && !hasTxn && amount > 0
         })
 
+        const batchIdSet = new Set<string>()
+        filtered.forEach((item: any) => {
+            const batchId = String(item?.batch_id || '').trim()
+            if (batchId) batchIdSet.add(batchId)
+        })
+
+        const loadAllBatches = async () => {
+            const perPage = 200
+            let page = 1
+            let totalPages = 1
+            const rows: any[] = []
+
+            do {
+                const resp = await pocketbaseList<any>('batches', {
+                    page,
+                    perPage,
+                })
+                rows.push(...(resp.items || []))
+                totalPages = Number(resp.totalPages || 1)
+                page += 1
+            } while (page <= totalPages)
+
+            return rows
+        }
+
+        const allBatches = batchIdSet.size > 0 ? await loadAllBatches() : []
+        const batchById = new Map(
+            allBatches
+                .filter((batch: any) => batchIdSet.has(String(batch?.id || '')))
+                .map((batch: any) => [
+                    String(batch.id),
+                    {
+                        id: batch.id,
+                        name: batch.name || null,
+                        month_year: batch.month_year || null,
+                        period: batch.period || null,
+                        phase_id: batch.phase_id || null,
+                        bank_type: batch.bank_type || null,
+                    },
+                ]),
+        )
+
         return filtered.map((item: any) => ({
             id: item.id,
             amount: Number(item.amount || 0),
             receiver_name: item.receiver_name || null,
             note: item.note || null,
             batch_id: item.batch_id,
-            batch: null,
+            month_year: item.month_year || null,
+            period: item.period || null,
+            phase_id: item.phase_id || null,
+            bank_type: item.bank_type || null,
+            batch: batchById.get(String(item.batch_id || '')) || null,
         }))
     }
 
     const supabase: any = createClient()
     const { data, error } = await supabase
         .from('batch_items')
-        .select('id, amount, receiver_name, note, batch_id, batch:batches(name)')
+        .select('id, amount, receiver_name, note, batch_id, batch:batches(id,name,month_year,period,phase_id,bank_type)')
         .eq('target_account_id', accountId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data as any[]
+    return (data || []).map((row: any) => ({
+        ...row,
+        month_year: row?.batch?.month_year || null,
+        period: row?.batch?.period || null,
+        phase_id: row?.batch?.phase_id || null,
+        bank_type: row?.batch?.bank_type || null,
+    })) as any[]
 }
 
 export async function getPendingBatchItemsSummary(): Promise<Array<{

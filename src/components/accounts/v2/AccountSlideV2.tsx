@@ -345,14 +345,12 @@ function ReceiverNamePicker({
 function ParentAccountPicker({
     allAccounts,
     currentAccountId,
-    nameFilter,
     selectedId,
     onSelect,
     onClose,
 }: {
     allAccounts: Account[];
     currentAccountId: string | undefined;
-    nameFilter: string;
     selectedId: string | null;
     onSelect: (id: string | null) => void;
     onClose: () => void;
@@ -360,17 +358,17 @@ function ParentAccountPicker({
     const [search, setSearch] = React.useState('');
     const candidates = allAccounts
         .filter(a => a.id !== currentAccountId && (a.type === 'bank' || a.type === 'credit_card' || a.type === 'ewallet'))
-        .filter(a => {
-            if (nameFilter && nameFilter.length >= 3) {
-                const prefix = nameFilter.substring(0, 4).toLowerCase();
-                return a.name.toLowerCase().startsWith(prefix);
-            }
-            return true;
-        })
         .sort((a, b) => a.name.localeCompare(b.name));
 
     const filtered = search
-        ? candidates.filter(a => a.name.toLowerCase().includes(search.toLowerCase()))
+        ? candidates.filter(a => {
+            const q = search.toLowerCase().trim();
+            if (!q) return true;
+            const byName = (a.name || '').toLowerCase().includes(q);
+            const byNumber = (a.account_number || '').toLowerCase().includes(q);
+            const byReceiver = (a.receiver_name || '').toLowerCase().includes(q);
+            return byName || byNumber || byReceiver;
+        })
         : candidates;
 
     return (
@@ -394,7 +392,7 @@ function ParentAccountPicker({
                     <Check className={cn("h-3 w-3 shrink-0", !selectedId ? "opacity-100" : "opacity-0")} />
                     None (Self)
                 </button>
-                {filtered.length === 0 && search && (
+                {filtered.length === 0 && (
                     <div className="py-2 text-center text-[11px] text-slate-400">No account found.</div>
                 )}
                 {filtered.map(a => (
@@ -1538,7 +1536,6 @@ export function AccountSlideV2({
                                                     <ParentAccountPicker
                                                         allAccounts={allAccounts}
                                                         currentAccountId={account?.id}
-                                                        nameFilter={name}
                                                         selectedId={parentAccountId}
                                                         onSelect={(id) => {
                                                             setParentAccountId(id);

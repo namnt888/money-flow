@@ -93,6 +93,40 @@ function upsertFeeNote(note: string, principal: number, fee: number): string {
   return cleaned ? `${cleaned} ${marker}` : marker;
 }
 
+function parsePrincipalFromFeeNote(note: string | null | undefined): number | null {
+  const text = String(note || "").trim();
+  if (!text) return null;
+
+  const match = text.match(/\(([^|]+)\|\s*Fee\s*:\s*[^)]+\)/i);
+  if (!match || !match[1]) return null;
+
+  const raw = match[1].replace(/\./g, "").replace(/,/g, "").trim();
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+function resolveEditablePrincipalAmount(params: {
+  amount?: number | null;
+  originalAmount?: number | null;
+  note?: string | null;
+  serviceFee?: number | null;
+}): number {
+  const totalAbs = Math.abs(Number(params.amount || 0));
+  const originalAbs = Math.abs(Number(params.originalAmount || 0));
+  const feeAbs = Math.max(0, Number(params.serviceFee || 0));
+
+  const principalFromNote = parsePrincipalFromFeeNote(params.note);
+  if (principalFromNote && principalFromNote > 0) return Math.round(principalFromNote);
+
+  if (feeAbs > 0 && totalAbs > feeAbs) {
+    return Math.round(totalAbs - feeAbs);
+  }
+
+  if (originalAbs > 0) return Math.round(originalAbs);
+  return Math.round(totalAbs);
+}
+
 const SPLIT_BILL_SYSTEM_ACCOUNT_ID = "88888888-9999-9999-9999-888888888888";
 
 function normalizeLookup(value: string | null | undefined): string | null {
@@ -273,10 +307,20 @@ export function TransactionSlideV2({
         ? String(candidateTag).trim()
         : generateTag(occurredAt ? new Date(occurredAt) : new Date());
       const values: SingleTransactionFormValues = {
+        
         type,
         category_id: resolveCategoryId(initialData.category_id),
         occurred_at: occurredAt,
-        amount: Math.round(Math.abs(initialData.amount ?? 0)),
+        amount: resolveEditablePrincipalAmount({
+          amount: initialData.amount,
+          originalAmount: (initialData as any).original_amount,
+          note,
+          serviceFee:
+            initialData.service_fee ??
+            (initialData.metadata?.service_fee
+              ? Number(initialData.metadata.service_fee)
+              : 0),
+        }),
         note: note,
         source_account_id: isIncome
           ? null
@@ -796,7 +840,14 @@ export function TransactionSlideV2({
                 txn.type === "income" || txn.type === "repayment";
               const formVal: SingleTransactionFormValues = {
                 type: (txn.type as any) || "expense",
-                amount: txn.original_amount ?? Math.abs(txn.amount),
+                amount: resolveEditablePrincipalAmount({
+                  amount: txn.amount,
+                  originalAmount: (txn as any).original_amount,
+                  note: txn.note || "",
+                  serviceFee: txn.metadata?.service_fee
+                    ? Number(txn.metadata.service_fee)
+                    : 0,
+                }),
                 occurred_at: new Date(txn.occurred_at),
                 note: txn.note || "",
                 source_account_id: isIncome ? null : txn.account_id,

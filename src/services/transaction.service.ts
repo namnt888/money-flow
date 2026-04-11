@@ -358,8 +358,30 @@ async function logHistory(
 
 async function recalcForAccounts(accountIds: Set<string>) {
   if (accountIds.size === 0) return;
+  const { getAccounts } = await import("./account.service");
+  const allAccounts = await getAccounts();
+  const accountMap = new Map(allAccounts.map((account) => [account.id, account]));
+
+  const expandedAccountIds = new Set<string>(accountIds);
+  for (const accountId of Array.from(accountIds)) {
+    const account = accountMap.get(accountId);
+    if (!account) continue;
+
+    if (account.parent_account_id) {
+      expandedAccountIds.add(account.parent_account_id);
+    }
+
+    if (account.relationships?.parent_info?.id) {
+      expandedAccountIds.add(account.relationships.parent_info.id);
+    }
+
+    for (const child of account.relationships?.child_accounts || []) {
+      if (child?.id) expandedAccountIds.add(child.id);
+    }
+  }
+
   const { recalculateBalance } = await import("./account.service");
-  await Promise.all(Array.from(accountIds).map((id) => recalculateBalance(id)));
+  await Promise.all(Array.from(expandedAccountIds).map((id) => recalculateBalance(id)));
 }
 
 async function fetchLookups(rows: FlatTransactionRow[]): Promise<LookupMaps> {

@@ -129,7 +129,7 @@ async function fundBatchPocketbase(batchId: string, sourceAccountId?: string) {
     if (!currentFundingTxn?.id) {
         try {
             const escapedBatchId = String(batchId || '').replace(/"/g, '\\"')
-            const fallbackFilter = `metadata ~ "\\\"batch_id\\\":\\\"${escapedBatchId}\\\"" && (metadata ~ "\\\"batch_step\\\":\\\"step1\\\"" || metadata ~ "\\\"type\\\":\\\"batch_funding\\\"") && status != "void"`
+            const fallbackFilter = `metadata ~ "\\\"batch_id\\\":\\\"${escapedBatchId}\\\"" && metadata ~ "\\\"batch_step\\\":\\\"step1\\\"" && status != "void"`
             const fallbackTxns = await pocketbaseList<any>('pvl_txn_001', {
                 filter: fallbackFilter,
                 perPage: 1,

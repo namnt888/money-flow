@@ -30,6 +30,18 @@ type PendingBatchItem = {
     id: string
     amount: number
     batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 interface AccountDetailViewV2Props {
@@ -288,7 +300,7 @@ export function AccountDetailViewV2({
             yearRepaidTotal,
             yearEligibleSpendForEstimate,
             yearDebtTotal,
-            pendingCount: pendingItems.length + pendingRefundCount,
+            pendingCount: pendingItems.length,
             
             // Legacy fields for type safety
             debtTotal: yearDebtTotal,
@@ -333,20 +345,13 @@ export function AccountDetailViewV2({
                 }
             }
 
-            const [batchRes, refundRes] = await Promise.all([
-                safeFetch(`/api/batch/pending-items?accountId=${account.id}&t=${Date.now()}`),
-                safeFetch(`/api/refunds/pending?accountId=${account.id}&t=${Date.now()}`)
+            const [batchRes] = await Promise.all([
+                safeFetch(`/api/batch/pending-items?accountId=${account.id}&t=${Date.now()}`)
             ])
 
             if (batchRes?.ok) {
                 const data = await batchRes.json()
                 setPendingItems(Array.isArray(data) ? data : [])
-            }
-
-            if (refundRes?.ok) {
-                const data = await refundRes.json()
-                setPendingRefundAmount(Math.max(0, data?.total ?? 0))
-                setPendingRefundCount(Array.isArray(data?.items) ? data.items.length : 0)
             }
         } catch (error) {
             console.error('Failed to fetch pending data', error)
@@ -381,6 +386,12 @@ export function AccountDetailViewV2({
             window.clearInterval(pollTimer)
         }
     }, [account.id, syncPendingStats])
+
+    // Remove pending refund - DB is now PocketBase only, no more Supabase refunds
+    useEffect(() => {
+        setPendingRefundAmount(0)
+        setPendingRefundCount(0)
+    }, [account.id])
 
     const handleConfirmPending = async () => {
         if (isConfirmingPending) return
@@ -433,7 +444,7 @@ export function AccountDetailViewV2({
         if (!wantsPendingModal || isLoadingPending || pendingQueryOpenedRef.current) return
 
         pendingQueryOpenedRef.current = true
-        const pendingCount = pendingItems.length + pendingRefundCount
+        const pendingCount = pendingItems.length
         if (pendingCount > 0) {
             window.dispatchEvent(new CustomEvent('open-pending-items-modal', {
                 detail: { accountId: account.id },
@@ -457,6 +468,9 @@ export function AccountDetailViewV2({
                 selectedCycle={selectedCycle}
                 summary={summary}
                 isLoadingPending={isLoadingPending}
+                pendingBatchCount={pendingItems.length}
+                pendingRefundCount={pendingRefundCount}
+                pendingRefundAmount={pendingRefundAmount}
             />
 
             {/* Tabs Navigation */}
@@ -539,9 +553,8 @@ export function AccountDetailViewV2({
 
             <AccountPendingItemsModal
                 accountId={account.id}
+                accountName={account.name}
                 pendingItems={pendingItems}
-                pendingRefundCount={pendingRefundCount}
-                pendingRefundAmount={pendingRefundAmount}
                 onSuccess={() => syncPendingStats()}
             />
         </div>

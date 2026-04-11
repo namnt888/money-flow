@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { TransactionWithDetails, Account, Category, Person, Shop } from '@/types/moneyflow.types'
 import { parseCashbackConfig, getCashbackCycleRange, formatIsoCycleTag } from '@/lib/cashback'
+import { resolveCashbackPolicy } from '@/services/cashback/policy-resolver'
 import { UnifiedTransactionTable } from '@/components/moneyflow/unified-transaction-table'
 import { AddTransactionDropdown } from '@/components/transactions-v2/header/AddTransactionDropdown'
 import { CycleFilterDropdown } from '@/components/transactions-v2/header/CycleFilterDropdown'
@@ -205,6 +206,17 @@ export function AccountDetailTransactions({
 
     const [cycles, setCycles] = useState<CycleOption[]>([])
     const [isCyclesLoading, setIsCyclesLoading] = useState(false)
+    const hasCashbackConfig = useMemo(() => {
+        const parsed = parseCashbackConfig(account.cashback_config)
+        return Boolean(
+            parsed.program ||
+            parsed.cycleType ||
+            (Number(parsed.rate || 0) > 0) ||
+            parsed.maxAmount !== null ||
+            parsed.minSpend !== null ||
+            parsed.statementDay !== null
+        )
+    }, [account.cashback_config])
     const handleCycleChange = (cycle: string | undefined) => {
         const normalizedCycle = cycle === 'all' ? undefined : cycle
 
@@ -274,9 +286,117 @@ export function AccountDetailTransactions({
         return counts
     }, [transactions, account])
 
+    const localCycleStatsByTag = useMemo(() => {
+        const stats = new Map<string, {
+            spent: number
+            actualEarn: number
+            estEarn: number
+            shared: number
+            profit: number
+        }>()
+
+        if (!hasCashbackConfig) return stats
+
+        const grouped = new Map<string, TransactionWithDetails[]>()
+        transactions.forEach((txn) => {
+            const tag = resolveTransactionCycleTag(txn, account)
+            if (!tag) return
+            if (!grouped.has(tag)) grouped.set(tag, [])
+            grouped.get(tag)!.push(txn)
+        })
+
+        const parsedConfig = parseCashbackConfig(account.cashback_config)
+        const minSpendTarget = Number(parsedConfig.program?.minSpendTarget ?? parsedConfig.minSpend ?? 0)
+        const normalizedMinSpend = Number.isFinite(minSpendTarget) && minSpendTarget > 0 ? minSpendTarget : 0
+
+        grouped.forEach((txns, tag) => {
+            const sorted = [...txns].sort((a, b) => {
+                const aTs = new Date(a.occurred_at || a.created_at || 0).getTime()
+                const bTs = new Date(b.occurred_at || b.created_at || 0).getTime()
+                if (aTs !== bTs) return aTs - bTs
+                return String(a.id).localeCompare(String(b.id))
+            })
+
+            const cycleSpentTotal = sorted.reduce((sum, txn) => {
+                const status = String(txn.status || '').toLowerCase()
+                if (status === 'void') return sum
+                if (!(txn.type === 'expense' || txn.type === 'debt' || txn.type === 'service')) return sum
+                return sum + Math.abs(Number(txn.original_amount ?? txn.amount ?? 0))
+            }, 0)
+
+            let estEarn = 0
+            let shared = 0
+            let spent = 0
+            let accumulatedReward = 0
+
+            sorted.forEach((txn) => {
+                const status = String(txn.status || '').toLowerCase()
+                if (status === 'void') return
+                if (!(txn.type === 'expense' || txn.type === 'debt' || txn.type === 'service')) return
+
+                const amountAbs = Math.abs(Number(txn.original_amount ?? txn.amount ?? 0))
+                if (!Number.isFinite(amountAbs) || amountAbs <= 0) return
+
+                const categoryName =
+                    txn.category_name ||
+                    categories.find((c) => c.id === txn.category_id)?.name ||
+                    undefined
+
+                const policy = resolveCashbackPolicy({
+                    account: account as any,
+                    categoryId: txn.category_id,
+                    amount: amountAbs,
+                    categoryName,
+                    cycleTotals: {
+                        spent: cycleSpentTotal,
+                        accumulatedReward,
+                    },
+                })
+
+                let estimated = Number((policy.metadata as any)?.estimated_cashback)
+                if (!Number.isFinite(estimated)) {
+                    estimated = amountAbs * Number(policy.rate || 0)
+                }
+                if (policy.maxReward !== undefined && policy.maxReward !== null && Number(policy.maxReward) > 0) {
+                    estimated = Math.min(estimated, Number(policy.maxReward))
+                }
+                if (normalizedMinSpend > 0 && cycleSpentTotal < normalizedMinSpend) {
+                    estimated = 0
+                }
+
+                const shareAmountPriority = Number((txn as any).cashback_share_amount || 0)
+                const sharedFixed = Math.abs(Number((txn as any).cashback_share_fixed || 0))
+                const sharedPercentRaw = Math.abs(Number((txn as any).cashback_share_percent || 0))
+                const sharedPercent = sharedPercentRaw > 1 ? sharedPercentRaw / 100 : sharedPercentRaw
+                const sharedTxn = shareAmountPriority > 0
+                    ? shareAmountPriority
+                    : amountAbs * sharedPercent + sharedFixed
+
+                spent += amountAbs
+                estEarn += Math.max(0, Number.isFinite(estimated) ? estimated : 0)
+                shared += Math.max(0, Number.isFinite(sharedTxn) ? sharedTxn : 0)
+                accumulatedReward += Math.max(0, Number.isFinite(estimated) ? estimated : 0)
+            })
+
+            stats.set(tag, {
+                spent,
+                actualEarn: 0,
+                estEarn,
+                shared,
+                profit: estEarn - shared,
+            })
+        })
+
+        return stats
+    }, [transactions, account, categories, hasCashbackConfig])
+
     const currentCycleTag = useMemo(() => {
         const config = parseCashbackConfig(account.cashback_config)
-        const cycleRange = getCashbackCycleRange(config, new Date())
+        const effectiveConfig = {
+            ...config,
+            statementDay: Number(account.statement_day || config.statementDay || 0) || config.statementDay,
+        }
+        const cycleRange = getCashbackCycleRange(effectiveConfig as any, new Date())
         if (cycleRange) {
             return formatIsoCycleTag(cycleRange.end)
         }
@@ -302,6 +422,14 @@ export function AccountDetailTransactions({
     // Derive cycles from persisted_cycle_tag on transactions (always available as fallback)
     const txnDerivedCycles = useMemo<CycleOption[]>(() => {
         const statementDay = Number(account.statement_day || 0)
+        const parsedConfig = parseCashbackConfig(account.cashback_config)
+        const accountCycleType = String(
+            parsedConfig.program?.cycleType ||
+            parsedConfig.cycleType ||
+            (account as any).cb_cycle_type ||
+            ''
+        ).toLowerCase()
+        const isStatementCycle = accountCycleType === 'statement_cycle'
         const tags = new Set<string>()
         transactions.forEach(t => {
             const tag = resolveTransactionCycleTag(t, account)
@@ -314,7 +442,7 @@ export function AccountDetailTransactions({
                 const year = parseInt(parsed[0] || '0', 10)
                 const month = parseInt(parsed[1] || '1', 10)
                 let label = tag
-                if (!Number.isNaN(year) && !Number.isNaN(month) && statementDay > 0) {
+                if (!Number.isNaN(year) && !Number.isNaN(month) && isStatementCycle && statementDay > 0) {
                     const end = new Date(year, month - 1, statementDay - 1)
                     const start = new Date(year, month - 2, statementDay)
                     const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -331,10 +459,10 @@ export function AccountDetailTransactions({
             })
     }, [transactions, account, cycleCountByTag, currentCycleTag])
 
-    // Fetch proper cycles for credit cards using cashback service
-    // Falls back to txnDerivedCycles if the cashback_cycles table is empty
+    // Fetch cycles for cashback-configured accounts using cashback service.
+    // Falls back to txn-derived cycles when the cashback_cycles table is empty.
     useEffect(() => {
-        if (account.type !== 'credit_card') {
+        if (!hasCashbackConfig) {
             setCycles([])
             setIsCyclesLoading(false)
             return
@@ -348,27 +476,72 @@ export function AccountDetailTransactions({
         .then(res => res.ok ? res.json() : { options: [] })
         .then(payload => {
             const options = Array.isArray(payload?.options) ? payload.options : []
-            const apiCycleOptions: CycleOption[] = options.map((opt: any) => ({
-                label: opt.label,
-                value: opt.tag,
-                count: cycleCountByTag.get(opt.tag) || 0,
-                highlight: opt.tag === currentCycleTag,
-                stats: opt.stats ? {
-                    spent: opt.stats.spent_amount,
-                    actualEarn: opt.stats.real_awarded,
-                    estEarn: (Number(opt.stats.real_awarded || 0) + Number((opt.stats as any).virtual_profit || 0)),
-                    earned: opt.stats.real_awarded,
-                    shared: opt.stats.shared_amount,
-                    profit: opt.stats.net_profit
-                } : undefined
-            }))
+            const apiCycleOptions: CycleOption[] = options.map((opt: any) => {
+                const localStats = localCycleStatsByTag.get(opt.tag)
+                const apiRealAwarded = Number(opt.stats?.real_awarded || 0)
+                const apiVirtualProfit = Number((opt.stats as any)?.virtual_profit || 0)
+                const apiEstimated = apiRealAwarded + apiVirtualProfit
+                const shouldPreferLocal = Boolean(localStats) && apiEstimated <= 0 && Number(localStats?.estEarn || 0) > 0
 
-            // Merge API cycles and derived cycles to ensure all history is visible
-            // This prevents old cycles (from transactions) disappearing when the API returns proactive cycles
-            const combined = [...apiCycleOptions]
-            txnDerivedCycles.forEach(derived => {
-                if (!combined.some(c => c.value === derived.value)) {
-                    combined.push(derived)
+                const stats = shouldPreferLocal
+                    ? {
+                        spent: localStats?.spent || 0,
+                        actualEarn: apiRealAwarded,
+                        estEarn: localStats?.estEarn || 0,
+                        earned: apiRealAwarded,
+                        shared: localStats?.shared || 0,
+                        profit: localStats?.profit || 0,
+                    }
+                    : (opt.stats ? {
+                        spent: Number(opt.stats.spent_amount || 0),
+                        actualEarn: apiRealAwarded,
+                        estEarn: apiEstimated,
+                        earned: apiRealAwarded,
+                        shared: Number(opt.stats.shared_amount || 0),
+                        profit: apiEstimated - Number(opt.stats.shared_amount || 0),
+                    } : undefined)
+
+                return {
+                    label: opt.label,
+                    value: opt.tag,
+                    count: cycleCountByTag.get(opt.tag) || 0,
+                    highlight: opt.tag === currentCycleTag,
+                    stats,
+                }
+            })
+
+            // Merge API cycles and derived cycles to ensure all history is visible.
+            // Use derived label/count/highlight as source of truth for existing transaction cycles
+            // so statement-day changes are reflected immediately in cycle history.
+            const derivedByTag = new Map(txnDerivedCycles.map((cycle) => [cycle.value, cycle]))
+            const combined = apiCycleOptions.map((cycle) => {
+                const derived = derivedByTag.get(cycle.value)
+                if (!derived) return cycle
+
+                return {
+                    ...cycle,
+                    label: derived.label,
+                    count: derived.count,
+                    highlight: derived.highlight,
+                }
+            })
+
+            txnDerivedCycles.forEach((derived) => {
+                if (!combined.some((cycle) => cycle.value === derived.value)) {
+                    const localStats = localCycleStatsByTag.get(derived.value)
+                    combined.push(localStats
+                        ? {
+                            ...derived,
+                            stats: {
+                                spent: localStats.spent,
+                                actualEarn: localStats.actualEarn,
+                                estEarn: localStats.estEarn,
+                                earned: localStats.actualEarn,
+                                shared: localStats.shared,
+                                profit: localStats.profit,
+                            }
+                        }
+                        : derived)
                 }
             })
             
@@ -408,7 +581,7 @@ export function AccountDetailTransactions({
             setCycles(txnDerivedCycles)
             setIsCyclesLoading(false)
         })
-    }, [account.id, account.type, txnDerivedCycles, cycleCountByTag, currentCycleTag, setSelectedCycle])
+    }, [account.id, hasCashbackConfig, txnDerivedCycles, cycleCountByTag, currentCycleTag, setSelectedCycle, localCycleStatsByTag])
 
     // Available targets (accounts + people that appear in transactions)
     const availableTargets = useMemo(() => {
@@ -477,7 +650,7 @@ export function AccountDetailTransactions({
             result = result.filter(t => t.status !== 'void')
         }
 
-        // Only apply other filters if filter is active
+        // Only apply type/search/target filters when filter mode is active
         if (isFilterActive) {
             // Type filter
             if (filterType !== 'all') {
@@ -512,34 +685,32 @@ export function AccountDetailTransactions({
                 })
             }
 
-            // Cycle filter (credit cards) - apply only when cycle mode is selected
-            if (dateMode === 'cycle' && selectedCycle && selectedCycle !== 'all') {
-                result = result.filter(t => {
-                    const txCycle = resolveTransactionCycleTag(t, account)
-                    return txCycle === selectedCycle
-                })
-            }
+        }
 
-            // Date filter
-            if (dateMode === 'month') {
-                const monthStart = startOfMonth(date)
-                const monthEnd = endOfMonth(date)
-                result = result.filter(t => {
-                    const txDate = parseISO(t.occurred_at || t.created_at || '')
-                    return isWithinInterval(txDate, { start: monthStart, end: monthEnd })
-                })
-            } else if (dateMode === 'date') {
-                result = result.filter(t => {
-                    const txDate = parseISO(t.occurred_at || t.created_at || '')
-                    return isSameDay(txDate, date)
-                })
-            } else if (dateMode === 'range' && dateRange?.from) {
-                const rangeEnd = dateRange.to || dateRange.from
-                result = result.filter(t => {
-                    const txDate = parseISO(t.occurred_at || t.created_at || '')
-                    return isWithinInterval(txDate, { start: dateRange.from!, end: rangeEnd })
-                })
-            }
+        // Always apply date/cycle mode filters when a specific mode is selected.
+        if (dateMode === 'cycle' && selectedCycle && selectedCycle !== 'all') {
+            result = result.filter(t => {
+                const txCycle = resolveTransactionCycleTag(t, account)
+                return txCycle === selectedCycle
+            })
+        } else if (dateMode === 'month') {
+            const monthStart = startOfMonth(date)
+            const monthEnd = endOfMonth(date)
+            result = result.filter(t => {
+                const txDate = parseISO(t.occurred_at || t.created_at || '')
+                return isWithinInterval(txDate, { start: monthStart, end: monthEnd })
+            })
+        } else if (dateMode === 'date') {
+            result = result.filter(t => {
+                const txDate = parseISO(t.occurred_at || t.created_at || '')
+                return isSameDay(txDate, date)
+            })
+        } else if (dateMode === 'range' && dateRange?.from) {
+            const rangeEnd = dateRange.to || dateRange.from
+            result = result.filter(t => {
+                const txDate = parseISO(t.occurred_at || t.created_at || '')
+                return isWithinInterval(txDate, { start: dateRange.from!, end: rangeEnd })
+            })
         }
 
         return result
@@ -756,7 +927,7 @@ export function AccountDetailTransactions({
                                 setDateMode(mode)
                                 setIsFilterActive(mode !== 'all')
                             }}
-                            statType={account.type === 'credit_card' ? 'cashback' : undefined}
+                            statType={hasCashbackConfig ? 'cashback' : undefined}
                             availableMonths={availableMonths}
                             cycles={cycles}
                             selectedCycleValue={selectedCycle}

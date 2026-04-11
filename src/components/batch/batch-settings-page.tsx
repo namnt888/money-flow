@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical, Database, RefreshCw, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical, Database, RefreshCw, RotateCcw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { updateBatchSettingsAction, getBatchSettingsAction } from '@/actions/batch-settings.actions'
@@ -13,6 +15,142 @@ import { getAccountsAction } from '@/actions/account-actions'
 import { BatchMasterManager } from './BatchMasterManager'
 import { BatchPhaseManager } from './BatchPhaseManager'
 import { toast } from 'sonner'
+import { Combobox } from '@/components/ui/combobox'
+
+const DEFAULT_NOTE_FORMAT = '{accountName} {phaseName} {monthYearStr} by {bankType}'
+
+const NOTE_VARIABLES = [
+    { label: 'accountName', token: '{accountName}' },
+    { label: 'receiverName', token: '{receiverName}' },
+    { label: 'phaseName', token: '{phaseName}' },
+    { label: 'monthYear', token: '{monthYear}' },
+    { label: 'monthYearStr', token: '{monthYearStr}' },
+    { label: 'bankType', token: '{bankType}' },
+]
+
+function renderNotePreview(template: string, bankType: 'Mbb' | 'Vib') {
+    const sample = {
+        accountName: 'Vpbank Lady #Mom',
+        receiverName: 'Vpbank Lady #Mom',
+        phaseName: 'Before 5',
+        monthYear: '2026-04',
+        monthYearStr: 'Apr2026',
+        bankType,
+    }
+
+    return String(template || DEFAULT_NOTE_FORMAT).replace(/\{(accountName|receiverName|phaseName|monthYear|monthYearStr|bankType)\}/g, (_match, token) => {
+        return String(sample[token as keyof typeof sample] || '')
+    })
+}
+
+function insertTokenAtCursor(
+    inputRef: RefObject<HTMLTextAreaElement | HTMLInputElement | null>,
+    currentValue: string,
+    nextToken: string,
+    setValue: (value: string) => void,
+) {
+    const element = inputRef.current
+    if (!element || typeof element.selectionStart !== 'number' || typeof element.selectionEnd !== 'number') {
+        setValue(`${currentValue}${currentValue ? ' ' : ''}${nextToken}`.trim())
+        return
+    }
+
+    const start = element.selectionStart
+    const end = element.selectionEnd
+    const nextValue = `${currentValue.slice(0, start)}${nextToken}${currentValue.slice(end)}`
+    setValue(nextValue)
+
+    requestAnimationFrame(() => {
+        element.focus()
+        const cursor = start + nextToken.length
+        element.setSelectionRange(cursor, cursor)
+    })
+}
+
+function NoteFormatEditor({
+    label,
+    bankType,
+    value,
+    onChange,
+}: {
+    label: string
+    bankType: 'Mbb' | 'Vib'
+    value: string
+    onChange: (value: string) => void
+}) {
+    const inputRef = useRef<HTMLTextAreaElement | null>(null)
+    const preview = renderNotePreview(value || DEFAULT_NOTE_FORMAT, bankType)
+
+    return (
+        <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</Label>
+            <Textarea
+                ref={inputRef}
+                value={value || DEFAULT_NOTE_FORMAT}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={DEFAULT_NOTE_FORMAT}
+                className="min-h-[96px] rounded-xl bg-slate-50 border-slate-100 font-bold text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+                {NOTE_VARIABLES.map((variable) => (
+                    <button
+                        key={variable.token}
+                        type="button"
+                        onClick={() => insertTokenAtCursor(inputRef, value || DEFAULT_NOTE_FORMAT, variable.token, onChange)}
+                        className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                    >
+                        {variable.label}
+                    </button>
+                ))}
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium">
+                Tokens: {"{"}accountName{"}"}, {"{"}receiverName{"}"}, {"{"}phaseName{"}"}, {"{"}monthYear{"}"}, {"{"}monthYearStr{"}"}, {"{"}bankType{"}"}
+            </p>
+            <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 px-3 py-2 text-[11px] font-bold text-indigo-700">
+                Preview: <span className="text-slate-900">{preview}</span>
+            </div>
+        </div>
+    )
+}
+
+function LinkInputField({
+    label,
+    value,
+    onChange,
+    placeholder,
+}: {
+    label: string
+    value: string
+    onChange: (value: string) => void
+    placeholder: string
+}) {
+    const href = String(value || '').trim()
+    const isValid = /^https?:\/\//i.test(href)
+    return (
+        <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</Label>
+            <div className="flex items-center gap-2">
+                <Input
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm"
+                />
+                {isValid && (
+                    <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-10 w-10 shrink-0 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 flex items-center justify-center transition-colors"
+                        title="Open in new tab"
+                    >
+                        <ExternalLink className="h-4 w-4" />
+                    </a>
+                )}
+            </div>
+        </div>
+    )
+}
 
 export function BatchSettingsPage({ 
     hideHeader = false, 
@@ -37,15 +175,20 @@ export function BatchSettingsPage({
     const [vibDisplaySheetName, setVibDisplaySheetName] = useState('')
     const [mbbTabName, setMbbTabName] = useState('')
     const [vibTabName, setVibTabName] = useState('')
+    const [mbbNoteFormat, setMbbNoteFormat] = useState(DEFAULT_NOTE_FORMAT)
+    const [vibNoteFormat, setVibNoteFormat] = useState(DEFAULT_NOTE_FORMAT)
+    const [mbbFundSourceAccountId, setMbbFundSourceAccountId] = useState('')
+    const [vibFundSourceAccountId, setVibFundSourceAccountId] = useState('')
     const [mbbCutoffDay, setMbbCutoffDay] = useState<number>(15)
     const [vibCutoffDay, setVibCutoffDay] = useState<number>(15)
     const [loading, setLoading] = useState(false)
     const [initialLoading, setInitialLoading] = useState(!initialSettings)
     const [accounts, setAccounts] = useState<any[]>(initialAccounts)
+    const bankAccounts = accounts.filter((acc) => acc.type === 'bank')
 
     // Track original values to detect changes
-    const [originalMBB, setOriginalMBB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
-    const [originalVIB, setOriginalVIB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '' })
+    const [originalMBB, setOriginalMBB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '', noteFormat: '', fundSourceAccountId: '' })
+    const [originalVIB, setOriginalVIB] = useState({ sheet: '', image: '', webhook: '', cutoff: 15, displaySheetUrl: '', displaySheetName: '', tabName: '', noteFormat: '', fundSourceAccountId: '' })
 
     const isInitialized = useRef(false)
 
@@ -73,6 +216,8 @@ export function BatchSettingsPage({
                 setMbbDisplaySheetUrl(mbbData.display_sheet_url || '')
                 setMbbDisplaySheetName(mbbData.display_sheet_name || '')
                 setMbbTabName(mbbData.sheet_name || '')
+                setMbbNoteFormat(mbbData.note_format || DEFAULT_NOTE_FORMAT)
+                setMbbFundSourceAccountId(mbbData.fund_source_account_id || '')
                 
                 const originalValue = {
                     sheet: mbbData.sheet_url || '',
@@ -81,7 +226,9 @@ export function BatchSettingsPage({
                     cutoff: mbbData.cutoff_day ?? 15,
                     displaySheetUrl: mbbData.display_sheet_url || '',
                     displaySheetName: mbbData.display_sheet_name || '',
-                    tabName: mbbData.sheet_name || ''
+                    tabName: mbbData.sheet_name || '',
+                    noteFormat: mbbData.note_format || '',
+                    fundSourceAccountId: mbbData.fund_source_account_id || ''
                 }
                 setOriginalMBB(originalValue)
             }
@@ -95,6 +242,8 @@ export function BatchSettingsPage({
                 setVibDisplaySheetUrl(vibData.display_sheet_url || '')
                 setVibDisplaySheetName(vibData.display_sheet_name || '')
                 setVibTabName(vibData.sheet_name || '')
+                setVibNoteFormat(vibData.note_format || DEFAULT_NOTE_FORMAT)
+                setVibFundSourceAccountId(vibData.fund_source_account_id || '')
                 
                 const originalValue = {
                     sheet: vibData.sheet_url || '',
@@ -103,7 +252,9 @@ export function BatchSettingsPage({
                     cutoff: vibData.cutoff_day ?? 15,
                     displaySheetUrl: vibData.display_sheet_url || '',
                     displaySheetName: vibData.display_sheet_name || '',
-                    tabName: vibData.sheet_name || ''
+                    tabName: vibData.sheet_name || '',
+                    noteFormat: vibData.note_format || '',
+                    fundSourceAccountId: vibData.fund_source_account_id || ''
                 }
                 setOriginalVIB(originalValue)
             }
@@ -133,6 +284,8 @@ export function BatchSettingsPage({
                 setMbbDisplaySheetUrl(mbbData.display_sheet_url || '')
                 setMbbDisplaySheetName(mbbData.display_sheet_name || '')
                 setMbbTabName(mbbData.sheet_name || '')
+                setMbbNoteFormat(mbbData.note_format || DEFAULT_NOTE_FORMAT)
+                setMbbFundSourceAccountId(mbbData.fund_source_account_id || '')
                 setOriginalMBB({
                     sheet: mbbData.sheet_url || '',
                     image: mbbData.image_url || '',
@@ -140,7 +293,9 @@ export function BatchSettingsPage({
                     cutoff: mbbData.cutoff_day || 15,
                     displaySheetUrl: mbbData.display_sheet_url || '',
                     displaySheetName: mbbData.display_sheet_name || '',
-                    tabName: mbbData.sheet_name || ''
+                    tabName: mbbData.sheet_name || '',
+                    noteFormat: mbbData.note_format || '',
+                    fundSourceAccountId: mbbData.fund_source_account_id || ''
                 })
             }
 
@@ -153,6 +308,8 @@ export function BatchSettingsPage({
                 setVibDisplaySheetUrl(vibData.display_sheet_url || '')
                 setVibDisplaySheetName(vibData.display_sheet_name || '')
                 setVibTabName(vibData.sheet_name || '')
+                setVibNoteFormat(vibData.note_format || DEFAULT_NOTE_FORMAT)
+                setVibFundSourceAccountId(vibData.fund_source_account_id || '')
                 setOriginalVIB({
                     sheet: vibData.sheet_url || '',
                     image: vibData.image_url || '',
@@ -160,7 +317,9 @@ export function BatchSettingsPage({
                     cutoff: vibData.cutoff_day || 15,
                     displaySheetUrl: vibData.display_sheet_url || '',
                     displaySheetName: vibData.display_sheet_name || '',
-                    tabName: vibData.sheet_name || ''
+                    tabName: vibData.sheet_name || '',
+                    noteFormat: vibData.note_format || '',
+                    fundSourceAccountId: vibData.fund_source_account_id || ''
                 })
             }
         } catch (error) {
@@ -181,7 +340,9 @@ export function BatchSettingsPage({
                 cutoff_day: mbbCutoffDay,
                 display_sheet_url: mbbDisplaySheetUrl || null,
                 display_sheet_name: mbbDisplaySheetName || null,
-                sheet_name: mbbTabName || null
+                sheet_name: mbbTabName || null,
+                note_format: mbbNoteFormat || null,
+                fund_source_account_id: mbbFundSourceAccountId || null
             })
 
             if (result.success) {
@@ -208,7 +369,9 @@ export function BatchSettingsPage({
                 cutoff_day: vibCutoffDay,
                 display_sheet_url: vibDisplaySheetUrl || null,
                 display_sheet_name: vibDisplaySheetName || null,
-                sheet_name: vibTabName || null
+                sheet_name: vibTabName || null,
+                note_format: vibNoteFormat || null,
+                fund_source_account_id: vibFundSourceAccountId || null
             })
 
             if (result.success) {
@@ -233,7 +396,9 @@ export function BatchSettingsPage({
         mbbCutoffDay !== originalMBB.cutoff ||
         mbbDisplaySheetUrl !== originalMBB.displaySheetUrl ||
         mbbDisplaySheetName !== originalMBB.displaySheetName ||
-        mbbTabName !== originalMBB.tabName
+        mbbTabName !== originalMBB.tabName ||
+        mbbNoteFormat !== originalMBB.noteFormat ||
+        mbbFundSourceAccountId !== originalMBB.fundSourceAccountId
 
     const vibHasChanges =
         vibSheetUrl !== originalVIB.sheet ||
@@ -242,7 +407,9 @@ export function BatchSettingsPage({
         vibCutoffDay !== originalVIB.cutoff ||
         vibDisplaySheetUrl !== originalVIB.displaySheetUrl ||
         vibDisplaySheetName !== originalVIB.displaySheetName ||
-        vibTabName !== originalVIB.tabName
+        vibTabName !== originalVIB.tabName ||
+        vibNoteFormat !== originalVIB.noteFormat ||
+        vibFundSourceAccountId !== originalVIB.fundSourceAccountId
 
     if (initialLoading) {
         return (
@@ -301,24 +468,26 @@ export function BatchSettingsPage({
                                     </CardHeader>
                                     <CardContent className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Apps Script URL</Label>
-                                                <Input value={mbbSheetUrl} onChange={(e) => setMbbSheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Sheet URL (Display)</Label>
-                                                <Input value={mbbDisplaySheetUrl} onChange={(e) => setMbbDisplaySheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
+                                            <LinkInputField
+                                                label="Google Apps Script URL"
+                                                value={mbbSheetUrl}
+                                                onChange={setMbbSheetUrl}
+                                                placeholder="https://..."
+                                            />
+                                            <LinkInputField
+                                                label="Google Sheet URL (Display)"
+                                                value={mbbDisplaySheetUrl}
+                                                onChange={setMbbDisplaySheetUrl}
+                                                placeholder="https://..."
+                                            />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">GAS Webhook URL (Legacy/Optional)</Label>
-                                                <Input value={mbbWebhookUrl} onChange={(e) => setMbbWebhookUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cutoff Day</Label>
-                                                <Input type="number" value={mbbCutoffDay} onChange={(e) => setMbbCutoffDay(parseInt(e.target.value) || 15)} className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
+                                            <LinkInputField
+                                                label="GAS Webhook URL"
+                                                value={mbbWebhookUrl}
+                                                onChange={setMbbWebhookUrl}
+                                                placeholder="(Legacy/Optional) https://..."
+                                            />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
@@ -328,6 +497,35 @@ export function BatchSettingsPage({
                                             <div className="space-y-2">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sheet Tab Name</Label>
                                                 <Input value={mbbTabName} onChange={(e) => setMbbTabName(e.target.value)} placeholder="eMB_BulkPayment" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-6">
+                                            <NoteFormatEditor label="Note Format" bankType="Mbb" value={mbbNoteFormat} onChange={setMbbNoteFormat} />
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step 1 Fund Account</Label>
+                                                <Combobox
+                                                    items={bankAccounts.map((acc) => ({
+                                                        value: acc.id,
+                                                        label: acc.name,
+                                                        description: acc.account_number ? `Acc ${acc.account_number}` : undefined,
+                                                        icon: acc.image_url ? (
+                                                            <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                                                                <img src={acc.image_url} alt="" className="h-full w-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="h-7 w-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">
+                                                                {String(acc.name || '?').slice(0, 2).toUpperCase()}
+                                                            </div>
+                                                        ),
+                                                        searchValue: `${acc.name || ''} ${acc.account_number || ''} ${acc.bank_code || ''}`.trim(),
+                                                    }))}
+                                                    value={mbbFundSourceAccountId || undefined}
+                                                    onValueChange={(value) => setMbbFundSourceAccountId(value || '')}
+                                                    placeholder="Select funding source account"
+                                                    inputPlaceholder="Search account name or number..."
+                                                    className="w-full h-11 bg-slate-50 border-slate-100"
+                                                    hideTriggerBadge
+                                                />
                                             </div>
                                         </div>
                                         <Button onClick={handleSaveMBB} disabled={loading || !mbbHasChanges} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100">
@@ -368,24 +566,26 @@ export function BatchSettingsPage({
                                     </CardHeader>
                                     <CardContent className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Apps Script URL</Label>
-                                                <Input value={vibSheetUrl} onChange={(e) => setVibSheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Sheet URL (Display)</Label>
-                                                <Input value={vibDisplaySheetUrl} onChange={(e) => setVibDisplaySheetUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
+                                            <LinkInputField
+                                                label="Google Apps Script URL"
+                                                value={vibSheetUrl}
+                                                onChange={setVibSheetUrl}
+                                                placeholder="https://..."
+                                            />
+                                            <LinkInputField
+                                                label="Google Sheet URL (Display)"
+                                                value={vibDisplaySheetUrl}
+                                                onChange={setVibDisplaySheetUrl}
+                                                placeholder="https://..."
+                                            />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">GAS Webhook URL (Legacy/Optional)</Label>
-                                                <Input value={vibWebhookUrl} onChange={(e) => setVibWebhookUrl(e.target.value)} placeholder="https://..." className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cutoff Day</Label>
-                                                <Input type="number" value={vibCutoffDay} onChange={(e) => setVibCutoffDay(parseInt(e.target.value) || 15)} className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
-                                            </div>
+                                            <LinkInputField
+                                                label="GAS Webhook URL"
+                                                value={vibWebhookUrl}
+                                                onChange={setVibWebhookUrl}
+                                                placeholder="(Legacy/Optional) https://..."
+                                            />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
@@ -395,6 +595,35 @@ export function BatchSettingsPage({
                                             <div className="space-y-2">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sheet Tab Name</Label>
                                                 <Input value={vibTabName} onChange={(e) => setVibTabName(e.target.value)} placeholder="Danh sách chuyển tiền" className="h-11 rounded-xl bg-slate-50 border-slate-100 font-bold text-sm" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-6">
+                                            <NoteFormatEditor label="Note Format" bankType="Vib" value={vibNoteFormat} onChange={setVibNoteFormat} />
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step 1 Fund Account</Label>
+                                                <Combobox
+                                                    items={bankAccounts.map((acc) => ({
+                                                        value: acc.id,
+                                                        label: acc.name,
+                                                        description: acc.account_number ? `Acc ${acc.account_number}` : undefined,
+                                                        icon: acc.image_url ? (
+                                                            <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                                                                <img src={acc.image_url} alt="" className="h-full w-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="h-7 w-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">
+                                                                {String(acc.name || '?').slice(0, 2).toUpperCase()}
+                                                            </div>
+                                                        ),
+                                                        searchValue: `${acc.name || ''} ${acc.account_number || ''} ${acc.bank_code || ''}`.trim(),
+                                                    }))}
+                                                    value={vibFundSourceAccountId || undefined}
+                                                    onValueChange={(value) => setVibFundSourceAccountId(value || '')}
+                                                    placeholder="Select funding source account"
+                                                    inputPlaceholder="Search account name or number..."
+                                                    className="w-full h-11 bg-slate-50 border-slate-100"
+                                                    hideTriggerBadge
+                                                />
                                             </div>
                                         </div>
                                         <Button onClick={handleSaveVIB} disabled={loading || !vibHasChanges} className="w-full bg-indigo-600 hover:bg-indigo-700 h-11 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100">

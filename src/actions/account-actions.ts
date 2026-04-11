@@ -231,6 +231,26 @@ export async function updateAccountConfigAction(params: {
 
     if (!success) throw new Error('Failed to update account config in PocketBase')
 
+    // Recompute cycle tags/stats when cycle-related config changes (e.g. statement day).
+    const shouldRefreshCashback =
+      params.type === 'credit_card' ||
+      params.statementDay !== undefined ||
+      params.dueDate !== undefined ||
+      params.cb_cycle_type !== undefined ||
+      params.cashbackConfig !== undefined
+
+    if (shouldRefreshCashback) {
+      try {
+        const { refreshAccountCashback } = await import('@/services/pocketbase/cashback-refresh.service')
+        await refreshAccountCashback(params.id)
+      } catch (refreshError) {
+        console.warn('[DB:PB] accounts.updateConfig refreshAccountCashback failed', {
+          id: params.id,
+          error: String(refreshError),
+        })
+      }
+    }
+
     console.log('[DB:PB] accounts.updateConfig SUCCESS', { id: params.id })
     revalidatePath('/accounts')
     revalidatePath(`/accounts/${params.id}`)

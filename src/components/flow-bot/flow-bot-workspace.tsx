@@ -1,21 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from 'react'
 import { BotMessageSquare, Copy, Settings2, Sparkles, ShieldCheck, ShieldAlert, TriangleAlert, Activity, Waves, Zap, PanelRightOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { Sheet, SheetTrigger } from '@/components/ui/sheet'
-import { cn } from '@/lib/utils'
+import { Button } from '../ui/button'
+import { Card, CardContent } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { Textarea } from '../ui/textarea'
+import { Sheet, SheetTrigger } from '../ui/sheet'
+import { cn } from '../../lib/utils'
 import {
   FLOW_BOT_STORAGE_KEY,
   createDefaultFlowBotSettings,
   estimateTokens,
   type FlowBotProviderStatus,
   type FlowBotSettings,
-} from '@/lib/flow-bot/flow-bot.types'
-import { FlowBotSettingsSheet } from '@/components/flow-bot/flow-bot-settings-sheet'
+} from '../../lib/flow-bot'
+import { FlowBotSettingsSheet } from './flow-bot-settings-sheet'
 
 type FlowBotMessage = {
   id: string
@@ -90,8 +90,8 @@ export function FlowBotWorkspace() {
   }, [settings.activeProviderId, settings.providers])
 
   const activeSnapshot = activeProvider ? snapshotProvider(activeProvider) : null
-  const totalRemaining = settings.providers.reduce((sum, provider) => sum + Math.max(snapshotProvider(provider).remaining, 0), 0)
-  const readyCount = settings.providers.filter((provider) => snapshotProvider(provider).status === 'ready').length
+  const totalRemaining = settings.providers.reduce((sum: number, provider: FlowBotSettings['providers'][number]) => sum + Math.max(snapshotProvider(provider).remaining, 0), 0)
+  const readyCount = settings.providers.filter((provider: FlowBotSettings['providers'][number]) => snapshotProvider(provider).status === 'ready').length
   const promptTokens = estimateTokens(draft)
 
   const setNextSettings = (nextSettings: FlowBotSettings) => {
@@ -106,16 +106,16 @@ export function FlowBotWorkspace() {
     const assistantContent = `Flow Bot shell captured your message under ${activeProvider.label}. Phase 1 keeps token tracking local until the live runtime lands.`
     const spend = estimateTokens(content) + estimateTokens(assistantContent)
 
-    setMessages((current) => [
+    setMessages((current: FlowBotMessage[]) => [
       ...current,
       { id: `${Date.now()}-user`, role: 'user', content },
       { id: `${Date.now()}-assistant`, role: 'assistant', content: assistantContent },
     ])
 
-    setSettings((current) => ({
+    setSettings((current: FlowBotSettings) => ({
       ...current,
       updatedAt: new Date().toISOString(),
-      providers: current.providers.map((provider) => {
+      providers: current.providers.map((provider: FlowBotSettings['providers'][number]) => {
         if (provider.id !== activeProvider.id) return provider
         return { ...provider, usedTokens: provider.usedTokens + spend }
       }),
@@ -128,7 +128,7 @@ export function FlowBotWorkspace() {
   const handleCopyLink = async (label: string, url: string) => {
     try {
       await navigator.clipboard.writeText(url)
-      setMessages((current) => [
+      setMessages((current: FlowBotMessage[]) => [
         ...current,
         {
           id: `${Date.now()}-copy`,
@@ -137,7 +137,7 @@ export function FlowBotWorkspace() {
         },
       ])
     } catch {
-      setMessages((current) => [
+      setMessages((current: FlowBotMessage[]) => [
         ...current,
         {
           id: `${Date.now()}-copy-fallback`,
@@ -182,8 +182,8 @@ export function FlowBotWorkspace() {
                 settings={settings}
                 onSettingsChange={setNextSettings}
                 onCopyProviderLink={handleCopyLink}
-                onTestToken={(message) => {
-                  setMessages((current) => [
+                onTestToken={(message: string) => {
+                  setMessages((current: FlowBotMessage[]) => [
                     ...current,
                     { id: `${Date.now()}-test`, role: 'assistant', content: message },
                   ])
@@ -234,7 +234,7 @@ export function FlowBotWorkspace() {
                 <div className="space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
                   <Textarea
                     value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setDraft(event.target.value)}
                     placeholder="Ask about cashback, budget, Telegram, or token health..."
                     className="min-h-[110px] rounded-2xl border-slate-200 bg-white text-sm"
                   />

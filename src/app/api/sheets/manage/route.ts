@@ -22,6 +22,199 @@ function makeRequestId(): string {
   }
 }
 
+function getPreviousCycleTag(cycleTag: string): string | null {
+  if (!isYYYYMM(cycleTag)) return null
+
+  const [yearPart, monthPart] = cycleTag.split('-')
+  const year = Number(yearPart)
+  const month = Number(monthPart)
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return null
+
+  const previousDate = new Date(year, month - 2, 1)
+  if (Number.isNaN(previousDate.getTime())) return null
+
+  return `${previousDate.getFullYear()}-${String(previousDate.getMonth() + 1).padStart(2, '0')}`
+}
+
+function getCascadeCycleTags(cycleTag: string): string[] {
+  const tags = [cycleTag]
+  const previousTag = getPreviousCycleTag(cycleTag)
+
+  if (previousTag && previousTag !== cycleTag) {
+    tags.push(previousTag)
+  }
+
+  return tags
+}
+
+async function syncSingleCycleSheet(params: {
+  requestId: string
+  personId: string
+  cycleTag: string
+  isMasterSheet: boolean
+  tableAvailable: boolean
+  pbAvailable: boolean
+}) {
+  const { requestId, personId, cycleTag, isMasterSheet, tableAvailable, pbAvailable } = params
+  const pbId = toPocketBaseId(personId, 'people')
+
+  let normalizedCycle = normalizeMonthTag(cycleTag)
+  if (isMasterSheet && normalizedCycle) {
+    normalizedCycle = normalizedCycle.split('-')[0]
+  }
+
+  if (!normalizedCycle || (!isYYYYMM(normalizedCycle) && !/^\d{4}$/.test(normalizedCycle))) {
+    return {
+      ok: false,
+      error: 'Invalid cycleTag format',
+      normalizedCycle: null as string | null,
+      status: null as ManageCycleSheetResponse['status'] | null,
+      sheetUrl: null as string | null,
+      sheetId: null as string | null,
+      syncResult: null as any,
+    }
+  }
+
+  type CycleSheetRow = { id: string; sheet_id?: string | null; sheet_url?: string | null }
+  let existing: CycleSheetRow | null = null
+
+  if (tableAvailable) {
+    const existingResult = await (createClient() as any)
+      .from('person_cycle_sheets')
+      .select('id, sheet_id, sheet_url')
+      .eq('person_id', personId)
+      .eq('cycle_tag', normalizedCycle)
+      .maybeSingle()
+
+    if (!existingResult.error) {
+      existing = existingResult.data as CycleSheetRow | null
+    }
+  } else if (pbAvailable) {
+    try {
+      const existingList = await pocketbaseList('person_cycle_sheets', {
+        filter: `person_id = "${pbId}" && cycle_tag = "${normalizedCycle}"`
+      })
+      existing = (existingList?.items?.[0] as any) || null
+    } catch (err) {
+      console.warn('[ManageSheet API] person_cycle_sheets (PocketBase) lookup failed:', { requestId, err })
+    }
+  }
+
+  let status: ManageCycleSheetResponse['status'] = 'synced'
+  const existingRowId = existing?.id ?? null
+  const hasSheetInfo = Boolean(existing?.sheet_id || existing?.sheet_url)
+  let sheetUrl =
+    existing?.sheet_url ??
+    (existing?.sheet_id ? `https://docs.google.com/spreadsheets/d/${existing.sheet_id}` : null)
+  let sheetId = existing?.sheet_id ?? null
+
+  if (!hasSheetInfo) {
+    const createResult = await createCycleSheet(personId, normalizedCycle)
+    if (!createResult.success) {
+      return {
+        ok: false,
+        error: createResult.message ?? 'Create failed',
+        normalizedCycle,
+        status: null as ManageCycleSheetResponse['status'] | null,
+        sheetUrl: null as string | null,
+        sheetId: null as string | null,
+        syncResult: null as any,
+      }
+    }
+
+    status = 'created'
+    sheetUrl = createResult.sheetUrl ?? sheetUrl ?? null
+    sheetId = createResult.sheetId ?? sheetId ?? null
+
+    if (tableAvailable) {
+      const sbPayload = {
+        person_id: personId,
+        cycle_tag: normalizedCycle,
+        sheet_id: sheetId,
+        sheet_url: sheetUrl,
+      }
+      if (existingRowId) {
+        await (createClient() as any)
+          .from('person_cycle_sheets')
+          .update(sbPayload)
+          .eq('id', existingRowId)
+      } else {
+        await (createClient() as any)
+          .from('person_cycle_sheets')
+          .insert(sbPayload)
+      }
+    } else if (pbAvailable) {
+      const pbPayload = {
+        person_id: pbId,
+        cycle_tag: normalizedCycle,
+        sheet_id: sheetId,
+        sheet_url: sheetUrl,
+      }
+      try {
+        if (existingRowId) {
+          await pocketbaseUpdate('person_cycle_sheets', existingRowId, pbPayload)
+        } else {
+          await pocketbaseCreate('person_cycle_sheets', pbPayload)
+        }
+      } catch (pbErr) {
+        console.error('[ManageSheet API] failed to store sheet info in PB', { requestId, pbErr })
+      }
+    }
+
+    if (sheetUrl) {
+      if (tableAvailable) {
+        try {
+          await (createClient() as any)
+            .from('profiles')
+            .update({ google_sheet_url: sheetUrl })
+            .eq('id', personId)
+        } catch (profileError) {
+          console.warn('[ManageSheet API] unable to update profile sheet url in Supabase', { requestId, personId, profileError })
+        }
+      } else if (pbAvailable) {
+        try {
+          await pocketbaseUpdate('people', pbId, { google_sheet_url: sheetUrl })
+        } catch (profileError) {
+          console.warn('[ManageSheet API] unable to update profile sheet url in PocketBase', { requestId, personId, profileError })
+        }
+      }
+    }
+  } else if (tableAvailable && existingRowId) {
+    await (createClient() as any)
+      .from('person_cycle_sheets')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', existingRowId)
+  } else if (pbAvailable && existingRowId) {
+    try {
+      await pocketbaseUpdate('person_cycle_sheets', existingRowId, { updated_at: new Date().toISOString() })
+    } catch (pbErr) {
+      console.warn('[ManageSheet API] unable to update timestamp in PB', { requestId, pbErr })
+    }
+  }
+
+  const syncResult = await syncCycleTransactions(personId, normalizedCycle, sheetId)
+  if (!syncResult.success) {
+    return {
+      ok: false,
+      error: syncResult.message ?? 'Sync failed',
+      normalizedCycle,
+      status,
+      sheetUrl,
+      sheetId,
+      syncResult,
+    }
+  }
+
+  return {
+    ok: true,
+    normalizedCycle,
+    status,
+    sheetUrl,
+    sheetId,
+    syncResult,
+  }
+}
+
 function errorResponse(
   requestId: string,
   stage: NonNullable<ManageCycleSheetResponse['stage']>,
@@ -143,120 +336,71 @@ export async function POST(request: Request) {
       }
     }
 
-    let status: ManageCycleSheetResponse['status'] = 'synced'
-    const existingRowId = existing?.id ?? null
-    const hasSheetInfo = Boolean(existing?.sheet_id || existing?.sheet_url)
-    let sheetUrl =
-      existing?.sheet_url ??
-      (existing?.sheet_id ? `https://docs.google.com/spreadsheets/d/${existing.sheet_id}` : null)
-    let sheetId = existing?.sheet_id ?? null
-    console.info('[ManageSheet API] existing', { requestId, found: !!existing, sheetId, sheetUrl, hasSheetInfo })
+    const cascadeTags = getCascadeCycleTags(normalizedCycle)
+    const cycleResults: Array<{
+      tag: string
+      success: boolean
+      status: ManageCycleSheetResponse['status']
+      sheetId: string | null
+      sheetUrl: string | null
+      syncResult: { syncedCount?: number; manualPreserved?: number; totalRows?: number } | null
+    }> = []
 
-    if (!hasSheetInfo) {
-      const createResult = await createCycleSheet(personId, normalizedCycle)
-      console.info('[ManageSheet API] create result', { requestId, success: createResult.success, message: createResult.message, sheetId: createResult.sheetId })
-      if (!createResult.success) {
+    for (const targetCycle of cascadeTags) {
+      const cycleResult = await syncSingleCycleSheet({
+        requestId,
+        personId,
+        cycleTag: targetCycle,
+        isMasterSheet,
+        tableAvailable,
+        pbAvailable,
+      })
+
+      console.info('[ManageSheet API] sync result', {
+        requestId,
+        cycleTag: targetCycle,
+        success: cycleResult.ok,
+        message: cycleResult.ok ? 'ok' : cycleResult.error,
+        syncedCount: (cycleResult.syncResult as any)?.syncedCount,
+      })
+
+      if (!cycleResult.ok) {
         return errorResponse(
           requestId,
-          'create_sheet',
-          createResult.message ?? 'Create failed',
+          'sync_transactions',
+          cycleResult.error ?? 'Sync failed',
           400,
-          createResult.message ?? 'createCycleSheet returned success=false',
+          cycleResult.error ?? 'syncCycleTransactions returned success=false',
         )
       }
 
-      status = 'created'
-      sheetUrl = createResult.sheetUrl ?? sheetUrl ?? null
-      sheetId = createResult.sheetId ?? sheetId ?? null
-
-      if (tableAvailable) {
-        const sbPayload = {
-          person_id: personId,
-          cycle_tag: normalizedCycle,
-          sheet_id: sheetId,
-          sheet_url: sheetUrl,
-        }
-        if (existingRowId) {
-          await (supabase as any)
-            .from('person_cycle_sheets')
-            .update(sbPayload)
-            .eq('id', existingRowId)
-        } else {
-          await (supabase as any)
-            .from('person_cycle_sheets')
-            .insert(sbPayload)
-        }
-      } else if (pbAvailable) {
-        const pbPayload = {
-          person_id: pbId,
-          cycle_tag: normalizedCycle,
-          sheet_id: sheetId,
-          sheet_url: sheetUrl,
-        }
-        try {
-          if (existingRowId) {
-            await pocketbaseUpdate('person_cycle_sheets', existingRowId, pbPayload)
-          } else {
-            await pocketbaseCreate('person_cycle_sheets', pbPayload)
-          }
-        } catch (pbErr) {
-          console.error('[ManageSheet API] failed to store sheet info in PB', { requestId, pbErr })
-        }
-      }
-
-      if (sheetUrl) {
-        // Try both just in case, or prioritize based on available id type
-        if (tableAvailable) {
-          try {
-            await (supabase as any)
-              .from('profiles')
-              .update({ google_sheet_url: sheetUrl })
-              .eq('id', personId)
-          } catch (profileError) {
-            console.warn('[ManageSheet API] unable to update profile sheet url in Supabase', { requestId, personId, profileError })
-          }
-        } else if (pbAvailable) {
-          try {
-            await pocketbaseUpdate('people', pbId, { google_sheet_url: sheetUrl })
-          } catch (profileError) {
-            console.warn('[ManageSheet API] unable to update profile sheet url in PocketBase', { requestId, personId, profileError })
-          }
-        }
-      }
-    } else if (tableAvailable && existingRowId) {
-      await (supabase as any)
-        .from('person_cycle_sheets')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', existingRowId)
-    } else if (pbAvailable && existingRowId) {
-      try {
-        await pocketbaseUpdate('person_cycle_sheets', existingRowId, { updated_at: new Date().toISOString() })
-      } catch (pbErr) {
-        console.warn('[ManageSheet API] unable to update timestamp in PB', { requestId, pbErr })
-      }
+      cycleResults.push({
+        tag: targetCycle,
+        success: true,
+        status: cycleResult.status ?? 'synced',
+        sheetId: cycleResult.sheetId,
+        sheetUrl: cycleResult.sheetUrl,
+        syncResult: cycleResult.syncResult ? {
+          syncedCount: (cycleResult.syncResult as any)?.syncedCount,
+          manualPreserved: (cycleResult.syncResult as any)?.manualPreserved,
+          totalRows: (cycleResult.syncResult as any)?.totalRows,
+        } : null,
+      })
     }
 
-    const syncResult = await syncCycleTransactions(personId, normalizedCycle, sheetId)
-    console.info('[ManageSheet API] sync result', { requestId, success: syncResult.success, message: syncResult.message, syncedCount: (syncResult as any).syncedCount })
-    if (!syncResult.success) {
-      return errorResponse(
-        requestId,
-        'sync_transactions',
-        syncResult.message ?? 'Sync failed',
-        400,
-        syncResult.message ?? 'syncCycleTransactions returned success=false',
-      )
-    }
+    const primaryResult = cycleResults[0] ?? { sheetId: null, sheetUrl: null }
+    const primarySync = primaryResult.syncResult ?? null
 
     return NextResponse.json({
-      status,
-      sheetUrl,
-      sheetId,
+      status: primaryResult.status ?? 'synced',
+      sheetUrl: primaryResult.sheetUrl,
+      sheetId: primaryResult.sheetId,
       requestId,
       stage: 'sync_transactions',
-      syncedCount: (syncResult as any).syncedCount,
-      manualPreserved: (syncResult as any).manualPreserved,
-      totalRows: (syncResult as any).totalRows
+      syncedCount: primarySync?.syncedCount,
+      manualPreserved: primarySync?.manualPreserved,
+      totalRows: primarySync?.totalRows,
+      cascadeTags,
     })
   } catch (error: any) {
     console.error('[ManageSheet API] unexpected failure', {

@@ -155,6 +155,7 @@ export default async function VIBBatchPage(props: {
                 phases={phases}
                 selectedPhaseId={selectedPhaseId}
                 checklistData={checklistData}
+                batchSettings={settings}
             />
         </Suspense>
     )
