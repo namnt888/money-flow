@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { Fragment, useState, useEffect, useTransition } from 'react'
 import { BatchList } from '@/components/batch/batch-list-simple'
 import { BatchDetail } from '@/components/batch/batch-detail'
 import { BatchSettingsSlide } from '@/components/batch/batch-settings-slide'
@@ -8,13 +8,12 @@ import { BatchMasterChecklist } from '@/components/batch/BatchMasterChecklist'
 import { BatchMasterSlide } from '@/components/batch/BatchMasterSlide'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings, Sparkles, Database, Loader2, RefreshCw, ExternalLink, FileSpreadsheet, CheckCircle2, CheckCircle, CircleDashed, Snowflake, Leaf, Flower2, SunMedium, CloudSun } from 'lucide-react'
+import { Settings, Database, Loader2, CheckCircle, CircleDashed, Snowflake, Leaf, Flower2, SunMedium, CloudSun } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { bulkInitializeFromMasterAction } from '@/actions/batch-speed.actions'
 import { Combobox } from '@/components/ui/combobox'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface BatchPageClientV2Props {
     batches: any[]
@@ -60,6 +59,7 @@ export function BatchPageClientV2({
     const [isSyncingMaster, setIsSyncingMaster] = useState(false)
     const [loadingMonth, setLoadingMonth] = useState<string | null>(null)
     const [checklistRefreshNonce, setChecklistRefreshNonce] = useState(0)
+    const [isMonthExpanded, setIsMonthExpanded] = useState(false)
 
     const searchParams = useSearchParams()
     const selectedMonthParam = searchParams.get('month')
@@ -81,6 +81,7 @@ export function BatchPageClientV2({
     const currentPeriod = currentPhase?.period_type || (activeBatch ? (activeBatch.period || 'before') : selectedPeriodParam)
 
     const [optimisticMonth, setOptimisticMonth] = useState<string | null>(currentMonth)
+    const effectiveMonth = optimisticMonth || currentMonth
     const [selectedYear, setSelectedYear] = useState(() =>
         currentMonth ? currentMonth.split('-')[0] : String(new Date().getFullYear())
     )
@@ -329,6 +330,17 @@ export function BatchPageClientV2({
                 ? `Day 1 - ${phase.cutoff_day}`
                 : `Day ${Number(phase.cutoff_day || cutoffDay) + 1} - End`,
     }))
+    const allMonthIndexes = [...Array(12)].map((_, i) => i)
+    const activeMonthIndex = (() => {
+        const source = optimisticMonth || currentMonth
+        if (!source) return new Date().getMonth()
+        const [, m] = String(source).split('-')
+        const parsed = Number(m)
+        return Number.isFinite(parsed) && parsed >= 1 && parsed <= 12 ? parsed - 1 : new Date().getMonth()
+    })()
+    const collapsedOtherMonthIndexes = allMonthIndexes.filter((idx) => idx !== activeMonthIndex)
+    const defaultMonthIndexes = [activeMonthIndex, ...collapsedOtherMonthIndexes].slice(0, 10)
+    const visibleMonthIndexes = isMonthExpanded ? allMonthIndexes : defaultMonthIndexes
 
     return (
         <div className="h-full flex flex-col bg-slate-50/50">
@@ -352,135 +364,96 @@ export function BatchPageClientV2({
                         </div>
 
                         {/* RIGHT: MONTH TABS & ACTIONS */}
-                        <div className="flex items-center gap-4 flex-1 justify-end min-w-0">
-                                <div className="flex flex-col gap-1.5 shrink-0">
-                                    <TooltipProvider delayDuration={100}>
-                                        {[...Array(2)].map((_, rowIdx) => (
-                                            <div key={`month-row-${rowIdx}`} className="flex items-center gap-1.5">
-                                                {MONTH_NAMES_FULL.slice(rowIdx * 6, rowIdx * 6 + 6).map((name, iLocal) => {
-                                            const i = rowIdx * 6 + iLocal
-                                            const monthNum = i + 1
-                                            const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
-                                            const isActive = optimisticMonth === mStr
-                                            const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
-                                            const SeasonIcon = getSeasonIcon(monthNum)
-                                            const { phaseRows, progressCount, totalPhases, monthStatus } = getMonthPhaseSummary(mStr)
-                                            const MonthStatusIcon = monthStatus.icon
+                        <div className="flex items-center gap-3 flex-1 justify-end min-w-0">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-1.5 pr-1">
+                                    {visibleMonthIndexes.map((i, idx) => {
+                                        const name = MONTH_NAMES_FULL[i]
+                                        const monthNum = i + 1
+                                        const mStr = `${selectedYear}-${String(monthNum).padStart(2, '0')}`
+                                        const isActive = optimisticMonth === mStr
+                                        const isCurrent = String(new Date().getFullYear()) === selectedYear && (new Date().getMonth() + 1) === monthNum
+                                        const SeasonIcon = getSeasonIcon(monthNum)
+                                        const { progressCount, totalPhases, monthStatus } = getMonthPhaseSummary(mStr)
+                                        const MonthStatusIcon = monthStatus.icon
 
-                                            return (
-                                                <Tooltip key={mStr}>
-                                                    <TooltipTrigger asChild>
-                                                        <button
-                                                            onClick={() => handleMonthSelect(mStr)}
-                                                            disabled={isPending}
-                                                            className={cn(
-                                                                "px-3 h-10 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap min-w-[108px]",
-                                                                isActive 
-                                                                    ? "bg-slate-900 text-white border-slate-950 shadow-lg shadow-slate-200 ring-2 ring-slate-900/10 -translate-y-0.5" 
-                                                                    : isCurrent
-                                                                        ? "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
-                                                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
-                                                            )}
-                                                        >
-                                                            {loadingMonth === mStr ? (
-                                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                                            ) : (
-                                                                <>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <SeasonIcon className={cn("h-3.5 w-3.5", isActive ? "text-white/80" : isCurrent ? "text-indigo-500" : "text-slate-300")} />
-                                                                        <span>{monthNum} {name.slice(0, 3)}</span>
-                                                                    </div>
-                                                                    <div className={cn(
-                                                                        "flex items-center gap-1 pl-1.5 border-l",
-                                                                        isActive ? "border-white/20" : "border-slate-100"
-                                                                    )}>
-                                                                        <MonthStatusIcon className={cn("h-3.5 w-3.5", isPending ? "animate-pulse" : "", isActive ? "text-white/90" : monthStatus.tone)} />
-                                                                        <span className={cn("text-[10px] tabular-nums", isActive ? "text-white/90" : monthStatus.tone)}>{progressCount}/{totalPhases}</span>
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent 
-                                                        side="bottom" 
-                                                        className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-800 min-w-[160px] z-[100]"
-                                                    >
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 border-b border-slate-800 pb-1">
-                                                            {name} Status
-                                                        </p>
-                                                        <div className="space-y-1.5">
-                                                            {phaseRows.length > 0 ? phaseRows.map(({ phase, total, confirmed, status }) => {
-                                                                const StatusIconRow = status.icon
-                                                                return (
-                                                                <div key={`${mStr}-${phase.id}`} className={cn("flex items-center justify-between gap-4 rounded-xl px-2 py-1.5 border", status.bg, status.border)}>
-                                                                    <div className="flex items-center gap-1.5 min-w-0">
-                                                                        <StatusIconRow className={cn("h-3.5 w-3.5 shrink-0", status.tone, status.icon === Loader2 ? "animate-spin" : "")} />
-                                                                        <span className={cn("text-[10px] font-black truncate", status.tone)}>
-                                                                            {getPhaseLabel(phase)}
-                                                                        </span>
-                                                                    </div>
-                                                                    <span className={cn("text-[10px] font-black tabular-nums", status.tone)}>
-                                                                        {status.label} {confirmed}/{total}
-                                                                    </span>
-                                                                </div>
-                                                            )}) : (
-                                                                <p className="text-[9px] text-slate-500 italic">No cycles started</p>
-                                                            )}
-                                                        </div>
-                                                        <div className="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center">
-                                                            <span className="text-[10px] font-black text-indigo-400">TOTAL</span>
-                                                            <span className="text-[10px] font-black">{progressCount}/{totalPhases}</span>
-                                                        </div>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            )
-                                                })}
-                                            </div>
-                                        ))}
-                                    </TooltipProvider>
+                                        const chipTone = monthNum <= 2 || monthNum === 12
+                                            ? 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100'
+                                            : monthNum <= 4
+                                                ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                                                : monthNum <= 8
+                                                    ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                                                    : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+
+                                        return (
+                                            <Fragment key={mStr}>
+                                                {!isMonthExpanded && idx === 1 && (
+                                                    <div className="h-8 w-px bg-slate-300/80 mx-1 rounded-full" aria-hidden="true" />
+                                                )}
+                                                <button
+                                                    onClick={() => handleMonthSelect(mStr)}
+                                                    disabled={isPending}
+                                                    className={cn(
+                                                        "px-3 h-10 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-tight transition-all border shrink-0 whitespace-nowrap min-w-[104px]",
+                                                        isActive
+                                                            ? "bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-200/60 ring-2 ring-indigo-200/50 -translate-y-0.5"
+                                                            : isCurrent
+                                                                ? "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
+                                                                : chipTone
+                                                    )}
+                                                    title={`${name} ${progressCount}/${totalPhases}`}
+                                                >
+                                                    {loadingMonth === mStr ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <SeasonIcon className={cn("h-3.5 w-3.5", isActive ? "text-white/80" : isCurrent ? "text-indigo-500" : monthStatus.tone)} />
+                                                                <span>{monthNum} {name.slice(0, 3)}</span>
+                                                            </div>
+                                                            <div className={cn("flex items-center gap-1 pl-1.5 border-l", isActive ? "border-white/20" : "border-slate-100")}>
+                                                                <MonthStatusIcon className={cn("h-3.5 w-3.5", isPending ? "animate-pulse" : "", isActive ? "text-white/90" : monthStatus.tone)} />
+                                                                <span className={cn("text-[10px] tabular-nums", isActive ? "text-white/90" : monthStatus.tone)}>{progressCount}/{totalPhases}</span>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </Fragment>
+                                        )
+                                    })}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMonthExpanded((prev) => !prev)}
+                                        className="h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] font-black uppercase tracking-widest"
+                                    >
+                                        {isMonthExpanded ? 'Collapse' : 'More'}
+                                    </button>
                                 </div>
-                                <div className="h-8 w-px bg-slate-100 mx-1 shrink-0" />
-                                <div className="w-[100px] shrink-0">
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="w-[92px] shrink-0">
                                     <Combobox
                                         value={selectedYear}
                                         onValueChange={(v) => v && setSelectedYear(v)}
                                         items={yearSelectorItems}
                                         placeholder="Year"
                                         hideClearButton={true}
-                                        triggerClassName="h-8 border-slate-100 bg-slate-50/50 rounded-lg text-[10px] font-black pr-1"
+                                        triggerClassName="h-9 border-slate-200 bg-white rounded-lg text-[10px] font-black pr-1"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                                {globalSheetUrl && (
-                                    <a
-                                        href={globalSheetUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm shrink-0"
-                                        title={globalSheetName || "Open Google Sheet"}
-                                    >
-                                        <FileSpreadsheet className="h-5 w-5" />
-                                    </a>
-                                )}
-                                <Button
-                                    onClick={() => setTemplateOpen(true)}
-                                    variant="outline"
-                                    className="h-10 px-3 rounded-xl border-amber-200 hover:bg-amber-50 font-black text-[9px] uppercase tracking-widest gap-2 text-amber-600 bg-amber-50/10 shrink-0"
-                                >
-                                    <Sparkles className="h-4 w-4" />
-                                    <span>Phases</span>
-                                </Button>
                                 <Button
                                     onClick={() => setSettingsOpen(true)}
                                     variant="outline"
-                                    className="h-10 px-3 rounded-xl border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-2 text-slate-600 shrink-0"
+                                    className="h-9 px-2.5 rounded-lg border-slate-200 hover:bg-slate-50 font-black text-[9px] uppercase tracking-widest gap-1.5 text-slate-600 shrink-0"
                                 >
-                                    <Settings className="h-4 w-4" />
+                                    <Settings className="h-3.5 w-3.5" />
                                     <span>Settings</span>
                                 </Button>
                             </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

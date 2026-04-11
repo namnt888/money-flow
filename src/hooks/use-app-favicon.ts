@@ -53,7 +53,7 @@ export function useAppFavicon(isLoading: boolean, customIcon?: string) {
             let pageKey = 'dashboard'
             if (pathname) {
                 if (pathname === '/accounts') pageKey = 'accounts'
-                else if (pathname.includes('/accounts/')) pageKey = 'accounts_detail' // Detail pages don't auto-override to bag if no customIcon
+                else if (pathname.includes('/accounts/')) pageKey = 'accounts_detail'
                 else if (pathname.includes('/transactions')) pageKey = 'transactions'
                 else if (pathname.includes('/installments')) pageKey = 'installments'
                 else if (pathname.includes('/categories')) pageKey = 'categories'
@@ -69,10 +69,13 @@ export function useAppFavicon(isLoading: boolean, customIcon?: string) {
             if (pageKey === 'accounts') {
                 targetUrl = '/favicon.svg?v=6';
                 isCustomUrl = true;
+            } else if (pageKey === 'accounts_detail') {
+                targetUrl = '/favicon.svg?v=6';
+                isCustomUrl = true;
             } else {
-                const iconContent = ICONS[pageKey === 'accounts_detail' ? 'accounts' : pageKey] || ICONS.dashboard
+                const iconContent = ICONS[pageKey] || ICONS.dashboard
                 svgContent = `
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="${THEME.blue}">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" color="${THEME.blue}">
                     <g transform="translate(5, 5) scale(0.9)">
                       ${iconContent}
                     </g>

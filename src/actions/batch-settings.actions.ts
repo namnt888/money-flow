@@ -38,8 +38,11 @@ export async function updateBatchSettingsAction(
                 ...payload,
             })
 
+        // Revalidate all batch paths to refresh account display
         revalidatePath('/batch')
         revalidatePath('/batch/settings')
+        revalidatePath('/batch/mbb')
+        revalidatePath('/batch/vib')
 
         return { success: true, data }
     } catch (error: any) {

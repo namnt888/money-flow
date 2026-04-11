@@ -606,8 +606,6 @@ export function AccountDirectoryV2({
                     accountId={pendingModalAccountId}
                     accountName={pendingModalAccountName}
                     pendingItems={pendingModalItems}
-                    pendingRefundCount={0}
-                    pendingRefundAmount={0}
                     onSuccess={async () => {
                         const res = await fetch('/api/batch/pending-summary', {
                             method: 'GET',
