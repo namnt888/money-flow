@@ -48,6 +48,8 @@ type CycleOption = {
     highlight?: boolean
     stats?: {
         spent?: number
+        actualEarn?: number
+        estEarn?: number
         earned?: number
         shared?: number
         profit?: number
@@ -353,6 +355,8 @@ export function AccountDetailTransactions({
                 highlight: opt.tag === currentCycleTag,
                 stats: opt.stats ? {
                     spent: opt.stats.spent_amount,
+                    actualEarn: opt.stats.real_awarded,
+                    estEarn: (Number(opt.stats.real_awarded || 0) + Number((opt.stats as any).virtual_profit || 0)),
                     earned: opt.stats.real_awarded,
                     shared: opt.stats.shared_amount,
                     profit: opt.stats.net_profit
