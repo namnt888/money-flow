@@ -1,89 +1,52 @@
-TASK: Fix UI inconsistencies and resolve runtime/concurrency errors across People Details, Batch Details, and Account Details
+# PROMPT 1 — REPO ONBOARDING (READ DOCS CẦN THIẾT)
 
-  People Details → “View Cycle History” (Debt History modal)
-    Current problems
-      Cycle rows are visually misaligned and do not follow a consistent grid
-      Initial / Total Back / Repaid / Status sections break row balance
-      Settled status overflows card height and breaks layout
-      Color usage is inconsistent (green/red tones vary, status looks like button in some rows)
-      Vertical spacing and padding differ between cycles
+Bạn là Agent mới vào repo Money Flow 3.  
+Mục tiêu: đọc đúng tài liệu cốt lõi, nắm kiến trúc + business rules + workflow an toàn, rồi xuất 1 bản tóm tắt hành động được ngay.
 
-    Expected UI (follow mockup strictly)
-      Each cycle renders as one consistent row card
-      Fixed layout order: Cycle | Initial | Total Back | Repaid | Status
-      Status rendering rules
-        Settled shows as subtle green badge
-        Remain or outstanding shows as red or warning badge
-        Status must never be full height or act like a button
-      Color rules
-        Initial uses neutral color
-        Total Back uses orange
-        Repaid uses green
-      No overflow or wrapping issues on desktop or mobile
+## Quy định bắt buộc
+- Đọc theo đúng thứ tự ưu tiên bên dưới.
+- Khi trích dẫn file, dùng địa chỉ thuần dạng path, ví dụ: .agent\AGENT_CONTEXT.md
+- Không dùng link URL cho file nội bộ.
+- Không code vội. Chỉ research + summarize + risk map.
 
-    Technical constraints
-      Use CSS Grid or Flex with fixed columns
-      Do not hardcode heights
-      Center status badge vertically
-      Reuse existing design tokens or Tailwind utilities
+## Thứ tự đọc bắt buộc
+1. .agent\AGENT_CONTEXT.md
+2. docs\AGENT_SAFETY_RULES.md
+3. .github\copilot-instructions.md
+4. .cursorrules
+5. README.md
+6. docs\handovers\SPRINT_PLAN_2026-04-07_CHATBOT_CALENDAR_HANDOVER.md
+7. .agent\handovers\HANDOVER_2026-04-11_HEADER_UI_REDESIGN_AND_CHATBOT_STATUS.md
+8. .agent\handovers\PLAN_2026-04-11_ACCOUNT_HEADER_REDESIGN.md
+9. .agent\handovers\PLAN_2026-04-11_CHATBOT_RECOVERY_AND_DELIVERY.md
+10. .agent\knowledge\MEMORY_BANK_2026-04-11_NEXT_AGENT_CATCHUP.md
+11. src\components\accounts\v2\AccountDetailHeaderV2.tsx
+12. src\app\chatbot\page.tsx
+13. src\actions\chatbot-actions.ts
+14. src\services\bot-query.service.ts
+15. src\lib\bot\bot-handler.ts
 
-  Batch Details page → Runtime error and console spam
-    Context
-      URL: /batch/mbb?month=2026-03&period=after&phase=71ged91y4seybfu
-      Stack: Next.js 16 (Turbopack), PocketBase
+## Output yêu cầu
+Xuất đúng 5 phần:
 
-    Observed issues
-      Runtime AbortError: Lock broken by another request with the 'steal' option
-      Console continuously logs failed requests
-        PocketBase request failed with status 400
-        Endpoint: /api/collections/transactions/records
-        Payload is an empty object
+1. Repo Mental Model
+- Kiến trúc app (UI, actions, services, data layer).
+- Luồng transaction/cashback/debt/batch/chatbot.
 
-    Required investigation
-      Identify why multiple concurrent API requests are being triggered
-        Check useEffect dependency arrays
-        Check refetch or re-render loops (react-query, server actions, component remount)
-      Identify where PocketBase transaction lock with “steal” option is used
-      Identify why request payload is empty
-        Request fired before required state is available
-        Frontend data mapping does not match PocketBase schema
+2. Critical Guardrails
+- 10 rule quan trọng nhất nếu vi phạm sẽ gây mất dữ liệu/regression/CI fail.
 
-    Expected fix
-      Stop all duplicated and infinite API requests
-      Prevent PocketBase lock stealing between concurrent requests
-      Ensure API calls run only once per valid lifecycle
-      Add guard conditions, debounce, or readiness checks
-      Console must remain clean after fix
-      UI must handle failure gracefully (toast or safe empty state)
+3. Current Hotspots
+- Header account details: logic nào dễ vỡ.
+- Chatbot: đang ở đâu, thiếu gì để production-safe.
 
-  Account Details → Shared component issues
-    Cycle date picker dropdown (global component)
-      Current problems
-        Dropdown is too tall and breaks page layout
-        Too many cycles are displayed at once
-      Expected behavior
-        Set a max height for dropdown
-        Show around six items
-        Remaining items must be scrollable
-        Fix must be applied in the shared component, not locally duplicated
+4. Sprint-Ready Checklist
+- 10 việc ưu tiên cao có thể bắt đầu ngay ngày 1.
+- Mỗi việc ghi: mục tiêu, file chính, rủi ro, cách verify.
 
-    Edit Account slide → RELATIVE ownership mode
-      Bug description
-        Open Edit Account from batch flow or account details page
-        Switch ownership to RELATIVE
-        People list does not appear and shows “No person found” even though data exists
-      Required checks
-        Data source must not be incorrectly filtered by route or context
-        State must be reset correctly when the slide opens
-        Fetch logic must not depend on missing accountId or ownerId
-      Expected fix
-        RELATIVE mode always loads correct people list
-        Behavior must be identical regardless of entry page
-        Empty state only allowed when database is truly empty
-        Fetch errors must not fail silently
+5. Open Questions
+- Các câu hỏi cần hỏi Product/Owner trước khi code.
 
-  Output requirements
-    UI must match mockup exactly
-    Root cause and fix reasoning must be clearly explained
-    Avoid unrelated refactors
-    Fixes must be stable and reusable across global components
+## Acceptance
+- Không bỏ sót tài liệu bắt buộc.
+- Tóm tắt phải dùng được để bắt đầu sprint ngay.

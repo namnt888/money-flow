@@ -1,0 +1,105 @@
+# PROJECT CONTEXT
+- Name: Money Flow 3
+- Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI, Supabase.
+
+# CODING STANDARDS & RULES
+@.cursorrules @src/components/moneyflow/unified-transaction-table.tsx @src/app/transactions/page.tsx @src/types/moneyflow.types.ts
+
+
+
+## 1. General Principles
+- **Conciseness:** Write concise, technical responses. Avoid verbosity.
+- **Type Safety:** NO `any`. Always use defined types from `src/types` or `database.types.ts`.
+- **Functional:** Prefer functional programming patterns. Use `const` over `let`.
+- **Server Actions:** Use Server Actions for mutations. Ensure `revalidatePath` is called after updates.
+- **Error Handling:** Always wrap Server Actions in try-catch blocks. Return `{ success: boolean, error?: string, data?: T }`.
+
+## 2. Next.js 15 & React Guidelines
+- **RSC:** Default to React Server Components. Use `'use client'` only when interactivity (hooks, event listeners) is needed.
+- **Shadcn UI:** Use existing Shadcn components in `src/components/ui`. Do not reinvent the wheel.
+- **Forms:** Use `react-hook-form` with `zod` schema validation.
+- **Loading:** Use `Suspense` boundaries and `loading.tsx` for async operations.
+
+## 3. Supabase Best Practices
+- **Clients:**
+  - Use `createClient` from `src/lib/supabase/server.ts` for Server Components/Actions.
+  - Use `createClient` from `src/lib/supabase/client.ts` for Client Components.
+- **RLS:** Always assume RLS is enabled. Do not bypass RLS unless explicitly instructed (using service role).
+- **Queries:** Select specific columns, avoid `select('*')` when possible.
+
+## 4. Money Flow 3 Business Logic (CRITICAL)
+- **Single Source of Truth:** The `transactions` table is the ONLY source for financial data.
+- **Debt Logic:**
+  - Debt is tracked via `person_id` in `transactions`.
+  - **PROHIBITED:** Do NOT create or query generic "Debt Accounts" (Double Entry System Legacy).
+  - Calculate debt by aggregating `transactions` where `person_id` is present.
+- **Refunds & Integrity:**
+  - **Refund Trio:** Parent -> Void -> Refund.
+  - **Strict Rule:** NEVER allow editing/voiding a Parent transaction if it has linked children (Void/Refund). The children must be deleted first.
+- **Batches:** When processing batches, check for duplicates using `transaction_date`, `amount`, and `details`.
+- **Installments:** Installments are linked to `transaction_lines` (or flag `is_installment`). Do not double-count parent and installments in totals.
+
+## 5. UI/UX Design System (STRICT - PHASE 74)
+- **Images/Avatars (MANDATORY):**
+  - **Account/Item/Shop Thumbnails:** MUST use `rounded-sm` (rounded square). NEVER use `rounded-full`, `rounded-md`, or any border/crop effects.
+  - **Person/People Avatars:** MUST use `rounded-full` (circular only).
+  - Standard size: `w-8 h-8` or `w-10 h-10`.
+  - **PROHIBITED:** Do NOT add `border`, `ring`, `outline`, or `crop` effects to images.
+  - **PROHIBITED:** Do NOT use `object-cover` if it causes cropping; prefer `object-contain` or `object-fit: contain`.
+- **Typography (MANDATORY):**
+  - **PROHIBITED:** Do NOT use monospace fonts (`font-mono`, `font-code`, `Courier`, `Consolas`) for UI elements.
+  - Use `font-sans` (default Tailwind) for all text.
+  - Exception: Code blocks in documentation use monospace.
+  - **Number Formatting:** Use `tabular-nums` class to prevent variable-width number rendering.
+- **Transaction Table:**
+  - **Columns:** Merge "Account" and "People" into **"Accounts ➜ People"**.
+  - **Alignment:** Account (Left) -> Arrow (Center) -> People (Right).
+  - **Row Interaction:** Clicking a table row (`<TableRow>`) MUST NOT trigger any action. ONLY the "Actions" menu (`...`) or specific buttons can trigger Modals.
+- **Data Formatting:**
+  - **Cycle Tags:** Display distinct ranges (e.g., "25.10 - 24.11") instead of just raw tags (e.g., "NOV25").
+  - **Cashback:** Show "Need to Spend" badges in Yellow/Amber if Min Spend is not met.
+
+## 6. Cashback Engine (CRITICAL - v3.0)
+- **3-Tier Policy Resolution:**
+  1. **Category Rule (Priority 20):** Rules defined per category within a level (e.g., Education 15% Premium).
+  2. **Level Default (Priority 10):** Fallback within a level if no category rule matches.
+  3. **Program Default (Priority 0):** Universal fallback (0.3%) when no level matches or category rule not found.
+- **Min Spend Target Gate:** If `minSpendTarget` is set and NOT met, ALL levels are skipped; only program default applies.
+- **Policy Fallback Logic:**
+  - If **level matches** but **category rule NOT found** in that level → return **program_default** (NOT level_default).
+  - If **no level matches** → return **program_default**.
+- **Cycle Accuracy:** 
+  - When resolving policy for transactions in a historical cycle, use **`cycle.spent_amount`** (that cycle's total), NOT `currentSpend` (current cycle).
+  - This ensures historical transactions show rates based on their own cycle's spending, not current cycle.
+- **Cashback Metadata Storage:**
+  - Stored in `cashback_entries.metadata: {policySource, rate, ruleMaxReward, levelId, categoryId, levelName, reason}`.
+  - `policySource` values: "category_rule", "level_default", "program_default".
+- **Account Config Structure:**
+  - `account.cashback_config.program.levels[].minTotalSpend` MUST match the stated tier name (e.g., "≥15M" → 15000000).
+  - Each level can have multiple category rules AND a defaultRate.
+- **Cycle Grouping by Year:**
+  - For **statement cycles** (spanning months), use **fiscal year** (start year), not end year.
+  - Example: Cycle "2025-12" (Nov 20 - Dec 19, 2025) groups under year **2025**.
+  - Example: Cycle "2026-01" (Dec 20, 2025 - Jan 19, 2026) groups under year **2025** (not 2026).
+  - Detection: If `statementDay > 15` AND `month === 1`, subtract 1 from year.
+
+## 7. Edit Transaction Flow (CRITICAL)
+- **Auto-Category Assignment Guard:**
+  - The `BasicInfoSection` auto-assigns default categories (e.g., "Shopping" for debt type).
+  - **MUST** check if category is already set before assigning: `if (currentCategoryId) return;` inside useEffect.
+  - This prevents overwriting the loaded category during edit mode.
+- **Form Hook Rules:**
+  - **NO top-level early returns** before hooks. All guard logic must be inside useEffect/useMemo.
+  - Violating this causes "Rendered fewer hooks than expected" error.
+- **Category Preservation:**
+  - When editing a transaction, `category_id` is loaded from DB and should NOT be overridden by auto-assignment.
+  - Only auto-assign on NEW transactions (when `category_id` is empty).
+
+## 8. Testing & Validation
+- **Self-Correction:** Before outputting code, verify imports are correct and unused variables are removed.
+- **Linting:** Ensure code passes ESLint rules (no unused imports, no console.log in production code).
+
+## 📚 Documentation & References
+- **Cashback Guide (Vietnamese):** `.agent/CASHBACK_GUIDE_VI.md` - Comprehensive guide for cashback flow, rewards UI, edit transaction.
+- **Copilot Instructions:** `.github/copilot-instructions.md` - Stack, patterns, integrations.
+- **Schema:** `database/SCHEMA.md` or `supabase/migrations/`.

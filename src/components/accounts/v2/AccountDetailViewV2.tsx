@@ -11,6 +11,7 @@ import {
 } from '@/types/moneyflow.types'
 import { AccountSpendingStats } from '@/types/cashback.types'
 import { AccountDetailHeaderV2 } from './AccountDetailHeaderV2'
+import { AccountDetailHeaderRedesign } from './header-redesign/AccountDetailHeaderRedesign'
 import { AccountDetailTransactions } from './AccountDetailTransactions'
 import { getAccountCashbackStatsAction } from '@/actions/account-cashback-actions'
 import { AccountContentWrapper } from '@/components/moneyflow/account-content-wrapper'
@@ -452,26 +453,48 @@ export function AccountDetailViewV2({
         }
     }, [searchParams, isLoadingPending, pendingItems.length, pendingRefundCount, account.id])
 
+    const showRedesign = searchParams.get('redesign') === '1'
+
     return (
         <div className="flex flex-col h-full overflow-hidden bg-white relative">
-            {/* Header V2 */}
-            <AccountDetailHeaderV2
-                account={account}
-                allAccounts={allAccounts}
-                categories={categories}
-                cashbackStats={cashbackStats}
-                isCashbackLoading={isCashbackLoading}
-                initialTransactions={initialTransactions}
-                selectedYear={selectedYear}
-                availableYears={availableYears}
-                onYearChange={setSelectedYear}
-                selectedCycle={selectedCycle}
-                summary={summary}
-                isLoadingPending={isLoadingPending}
-                pendingBatchCount={pendingItems.length}
-                pendingRefundCount={pendingRefundCount}
-                pendingRefundAmount={pendingRefundAmount}
-            />
+            {/* Header Redesign / Legacy */}
+            {showRedesign ? (
+                <AccountDetailHeaderRedesign
+                    account={account}
+                    allAccounts={allAccounts}
+                    categories={categories}
+                    cashbackStats={cashbackStats}
+                    isCashbackLoading={isCashbackLoading}
+                    initialTransactions={initialTransactions}
+                    selectedYear={selectedYear}
+                    availableYears={availableYears}
+                    onYearChange={setSelectedYear}
+                    selectedCycle={selectedCycle}
+                    summary={summary}
+                    isLoadingPending={isLoadingPending}
+                    pendingBatchCount={pendingItems.length}
+                    pendingRefundCount={pendingRefundCount}
+                    pendingRefundAmount={pendingRefundAmount}
+                />
+            ) : (
+                <AccountDetailHeaderV2
+                    account={account}
+                    allAccounts={allAccounts}
+                    categories={categories}
+                    cashbackStats={cashbackStats}
+                    isCashbackLoading={isCashbackLoading}
+                    initialTransactions={initialTransactions}
+                    selectedYear={selectedYear}
+                    availableYears={availableYears}
+                    onYearChange={setSelectedYear}
+                    selectedCycle={selectedCycle}
+                    summary={summary}
+                    isLoadingPending={isLoadingPending}
+                    pendingBatchCount={pendingItems.length}
+                    pendingRefundCount={pendingRefundCount}
+                    pendingRefundAmount={pendingRefundAmount}
+                />
+            )}
 
             {/* Tabs Navigation */}
             <div className="flex items-center gap-1 border-b border-slate-100 bg-white px-6">
