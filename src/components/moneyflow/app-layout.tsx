@@ -27,7 +27,8 @@ import {
   Database,
   Undo2,
   Banknote,
-  Sparkles
+  Sparkles,
+  BotMessageSquare
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -63,6 +64,7 @@ const navItems: NavItem[] = [
   { title: "Batches", href: "/batch", icon: <Database className="h-5 w-5" /> },
   { title: "Services", href: "/services", icon: <Cloud className="h-5 w-5" /> },
   { title: "Refunds", href: "/refunds", icon: <Undo2 className="h-5 w-5" /> },
+  { title: "Flow Bot", href: "/flow-bot", icon: <BotMessageSquare className="h-5 w-5" /> },
   { title: "AI Management", href: "/settings/ai", icon: <Sparkles className="h-5 w-5" /> },
 ]
 

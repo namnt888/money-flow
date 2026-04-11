@@ -16,7 +16,7 @@ import {
   Settings,
   Undo2,
   Sparkles,
-  MessageSquare,
+  BotMessageSquare,
   type LucideIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -180,11 +180,11 @@ export const coloredNavItems: NavItemConfig[] = [
     description: 'Return management'
   },
   {
-    title: "Chatbot",
-    href: "/chatbot",
-    icon: MessageSquare,
+    title: "Flow Bot",
+    href: "/flow-bot",
+    icon: BotMessageSquare,
     color: 'indigo',
-    description: 'AI Financial Assistant'
+    description: 'Cashback assistant & token health'
   },
   {
     title: "AI Management",

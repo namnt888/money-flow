@@ -23,7 +23,8 @@ const ICONS: Record<string, string> = {
     batch: `<path d="M10 20 C10 10 90 10 90 20 V80 C90 90 10 90 10 80 Z" fill="currentColor" opacity="0.8"/><ellipse cx="50" cy="20" rx="40" ry="10" fill="currentColor"/><path d="M10 45 Q 50 55 90 45" stroke="white" stroke-width="4" fill="none"/>`,
     services: `<path d="M25 85 C5 85 0 70 0 55 C0 35 25 25 40 25 C50 5 75 5 85 20 C100 20 100 45 100 60 C100 85 80 90 75 90 Z" fill="currentColor"/>`,
     refunds: `<path d="M90 50 Q 90 95 50 95 Q 10 95 10 50 Q 10 5 50 5 L 50 30 L 95 0 L 50 -30 V 0 Q 0 0 0 50 Q 0 115 50 115 Q 100 115 100 50 Z" fill="currentColor" transform="scale(0.85) translate(10, 5)"/>`,
-    ai: `<path d="M50 0 L65 35 L100 50 L65 65 L50 100 L35 65 L0 50 L35 35 Z" fill="currentColor"/>`
+    ai: `<path d="M50 0 L65 35 L100 50 L65 65 L50 100 L35 65 L0 50 L35 35 Z" fill="currentColor"/>`,
+    flowbot: `<path d="M20 25 C20 14 28 6 38 6 H62 C72 6 80 14 80 25 V58 C80 68 72 76 62 76 H45 L30 92 V76 H38 C28 76 20 68 20 58 Z" fill="currentColor" opacity="0.95"/><circle cx="42" cy="40" r="5" fill="white"/><circle cx="58" cy="40" r="5" fill="white"/><path d="M42 54 C47 58 53 58 58 54" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>`
 }
 
 export function useAppFavicon(isLoading: boolean, customIcon?: string) {
@@ -64,6 +65,7 @@ export function useAppFavicon(isLoading: boolean, customIcon?: string) {
                 else if (pathname.includes('/services')) pageKey = 'services'
                 else if (pathname.includes('/refunds')) pageKey = 'refunds'
                 else if (pathname.includes('/settings/ai')) pageKey = 'ai'
+                else if (pathname.includes('/flow-bot')) pageKey = 'flowbot'
             }
 
             if (pageKey === 'accounts') {
