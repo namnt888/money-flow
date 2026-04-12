@@ -29,6 +29,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
+  Trophy,
 } from "lucide-react";
 import { cn, formatMoneyVND } from "@/lib/utils";
 import { Account, Category, Transaction } from "@/types/moneyflow.types";
@@ -856,7 +857,10 @@ export function AccountDetailHeaderV2({
         existingReceiverNames={Array.from(new Set(allAccounts.map((a) => a.receiver_name).filter(Boolean))) as string[]}
       />
       {isHeaderCollapsed ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-16 py-3 w-full flex items-center gap-4 relative transition-all duration-500 overflow-hidden shrink-0 mt-2">
+        <div 
+          onClick={() => setIsHeaderCollapsed(false)}
+          className="bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-16 py-3 w-full flex items-center gap-4 relative transition-all duration-500 overflow-hidden shrink-0 mt-2 cursor-pointer hover:border-indigo-300 hover:shadow-md group/collapsed-main"
+        >
           {/* Collapsed Section 1 */}
           <div className="flex items-center gap-3 w-[26%] truncate border-r border-slate-200 pr-4 shrink-0">
             {account.image_url ? (
@@ -988,7 +992,46 @@ export function AccountDetailHeaderV2({
               </div>
             </div>
             <div className="flex items-center gap-2 mt-4 flex-wrap min-h-[26px]">
-              <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-1 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm ring-1 ring-indigo-500/10"><User className="h-3.5 w-3.5" /> {familyRoleLabel}</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-1 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm ring-1 ring-indigo-500/10 hover:bg-indigo-100 transition-colors">
+                    <Users2 className="h-3.5 w-3.5" /> {familyRoleLabel}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-0 border-none shadow-2xl rounded-2xl overflow-hidden bg-white z-[120]">
+                  <div className="bg-slate-900 px-4 py-3 text-white flex flex-col">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Family Members</span>
+                    <span className="text-[13px] font-black uppercase">Account Network</span>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    {allAccounts.filter(a => familyMemberIds.has(a.id)).map((member) => (
+                      <a 
+                        key={member.id} 
+                        href={`/accounts/${member.id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-slate-50 border border-transparent hover:border-slate-100 group/member",
+                          member.id === account.id && "bg-indigo-50/50 border-indigo-100"
+                        )}
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
+                          {member.image_url ? (
+                            <img src={member.image_url} alt="" className="h-full w-full object-contain" />
+                          ) : (
+                            <span className="text-xs font-black text-slate-400">{member.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[11px] font-black text-slate-800 uppercase truncate leading-none mb-1">{member.name}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase truncate">{member.account_number || "••••"}</span>
+                        </div>
+                        <ArrowUpRight className="h-3 w-3 ml-auto text-slate-300 opacity-0 group-hover/member:opacity-100 transition-all" />
+                      </a>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               {shouldShowCycleBadge && (
                 <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2.5 py-1 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm ring-1 ring-emerald-500/10"><Calendar className="h-3.5 w-3.5" /> {cycleBadgeText}</span>
               )}
@@ -1026,27 +1069,38 @@ export function AccountDetailHeaderV2({
                   </div>
                   <div className="bg-slate-50 p-4 max-h-[440px] overflow-y-auto space-y-4">
                      {isTiered ? (() => {
-                        const catGroups: Record<string, any> = {};
-                        rawTiers.forEach((tier: any) => {
-                           tier.policies?.forEach((pol: any) => {
-                             pol.cat_ids?.forEach((cId: any) => {
-                               const mappedCat = categories.find(c => String(c.id) === String(cId));
-                               const finalId = mappedCat ? String(mappedCat.id) : "General";
-                               if (!catGroups[finalId]) catGroups[finalId] = [];
-                               catGroups[finalId].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend });
-                             });
+                         const catGroups: Record<string, any> = {};
+                         rawTiers.forEach((tier: any) => {
+                            tier.policies?.forEach((pol: any) => {
+                              pol.cat_ids?.forEach((cId: any) => {
+                                const mappedCat = categories.find(c => String(c.id) === String(cId));
+                                const catName = mappedCat ? mappedCat.name : "General";
+                                if (!catGroups[catName]) catGroups[catName] = [];
+                                
+                                const ruleKey = `${tier.name}-${pol.rate}-${pol.max}`;
+                                if (!catGroups[catName].some((r: any) => `${r.tierName}-${r.rate}-${r.max}` === ruleKey)) {
+                                  catGroups[catName].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend, categoryIds: pol.cat_ids });
+                                }
+                              });
                            });
                          });
-                        return Object.entries(catGroups).map(([cId, rulesList]: [string, any], idx: number) => {
-                           const catObj = categories.find(c => String(c.id) === String(cId)) || { name: 'General', image_url: null };
+                         return Object.entries(catGroups).map(([catName, rulesList]: [string, any], idx: number) => {
+                            const catObj = categories.find(c => (c.name === catName)) || { name: 'General', image_url: null };
+                           const isShopping = catObj.name.toLowerCase().includes('shopp') || catObj.name.toLowerCase().includes('mua sắm');
                            rulesList.sort((a: any, b: any) => (a.minSpend || 0) - (b.minSpend || 0));
                            return (
-                             <div key={idx} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group/rule">
-                                <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 opacity-0 group-hover/rule:opacity-100 transition-opacity" />
-                                <div className="flex items-center gap-2 mb-3 border-b border-slate-50 pb-2">
-                                   {catObj.image_url ? <img src={catObj.image_url} alt="" className="h-5 w-5 rounded object-cover shadow-sm bg-white" /> : <div className="h-5 w-5 rounded bg-slate-100 uppercase flex items-center justify-center text-[10px] font-black text-slate-400">{catObj.name.charAt(0)}</div>}
-                                   <span className="text-[12px] font-black text-slate-800 uppercase tracking-tight truncate">{catObj.name}</span>
-                                </div>
+                              <div key={idx} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3 relative overflow-hidden group hover:border-emerald-200 transition-all">
+                                 <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                 <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-6 w-6 rounded bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                                       {catObj.image_url ? (
+                                          <img src={catObj.image_url} alt="" className="h-full w-full object-contain" />
+                                       ) : (
+                                          isShopping ? <Briefcase className="h-3.5 w-3.5 text-slate-400" /> : <span className="text-[10px] font-black text-slate-400">{catObj.name.charAt(0)}</span>
+                                       )}
+                                    </div>
+                                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{catObj.name}</span>
+                                 </div>
                                 <div className="space-y-2">
                                   {rulesList.map((r: any, i: number) => (
                                     <div key={i} className="flex justify-between items-center bg-slate-50/80 p-2 rounded-lg border border-slate-100/50">
@@ -1129,8 +1183,13 @@ export function AccountDetailHeaderV2({
                 <div className="relative w-full h-9 bg-indigo-50 rounded-lg overflow-hidden border border-indigo-100 flex items-center px-3 z-0 group-hover:bg-indigo-100 transition-colors cursor-help">
                   <div className={cn("absolute top-0 left-0 h-full -z-10 rounded-r-lg shadow-[0_2px_10px_rgba(79,70,229,0.15)] transition-all duration-1000", (displayLimit && (displayOutstanding / displayLimit) > 0.8) ? "bg-rose-100" : "bg-indigo-100")} style={{ width: `${Math.max((displayLimit ? (displayOutstanding / displayLimit) * 100 : 0), 2)}%` }} />
                   <div className="flex justify-between items-center w-full min-w-0">
-                    <span className="text-[11px] font-black text-indigo-700 z-10 shrink-0">RATIO {(displayLimit ? (displayOutstanding / displayLimit) * 100 : 0).toFixed(1)}%</span>
-                    <span className="text-[9px] font-bold text-slate-500 z-10 uppercase text-right ml-2 truncate">PACE {formatMoneyVND(Math.ceil(summary?.yearPureExpenseTotal || 0))} / {formatMoneyVND(account.credit_limit || 0)}</span>
+                    <span 
+                      onClick={(e) => { e.stopPropagation(); toast.info("Your current credit card utilization ratio: Balance vs Limit"); }}
+                      className="text-[11px] font-black text-indigo-700 z-10 shrink-0 hover:scale-105 transition-transform"
+                    >
+                      RATIO {(displayLimit ? (displayOutstanding / displayLimit) * 100 : 0).toFixed(1)}%
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-500 z-10 uppercase text-right ml-2 truncate">SPENT {formatMoneyVND(Math.ceil(summary?.yearPureExpenseTotal || 0))} / {formatMoneyVND(account.credit_limit || 0)}</span>
                   </div>
                 </div>
               )}
@@ -1155,10 +1214,18 @@ export function AccountDetailHeaderV2({
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="w-[600px] max-w-[90vw] p-0 border-none shadow-[0_40px_100px_rgba(0,0,0,0.4)] rounded-[2rem] overflow-hidden bg-white z-[120]" sideOffset={15}>
                       <div className="bg-white text-left">
-                        <div className="bg-emerald-950 px-6 py-5 flex justify-between items-center text-white relative">
-                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/50 to-transparent pointer-events-none" />
-                          <div className="flex flex-col relative z-10"><span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 leading-none mb-1.5">INTUITION ENGINE V3</span><h3 className="font-black text-[16px] uppercase tracking-[0.1em] text-white flex items-center gap-3">PERFORMANCE ANALYTICS <div className="h-px w-8 bg-emerald-500" /></h3></div>
-                          <div className="relative z-10 p-2.5 bg-emerald-900/40 rounded-full border border-emerald-800/50 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"><Zap className="h-6 w-6 text-amber-300 fill-amber-300 drop-shadow-[0_0_15px_rgba(252,211,77,0.4)]" /></div>
+                        {/* THE INTUITION V3.2 HEADER */}
+                        <div className="bg-white px-5 py-4 flex flex-col gap-1.5 border-b border-slate-100 relative">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
+                              <span className="text-[9px] font-extrabold text-indigo-600 uppercase tracking-[0.1em]">INTUITION V3.2</span>
+                            </div>
+                            <div className="px-2.5 py-0.5 bg-slate-50 border border-slate-200 rounded-full text-[8px] font-black text-slate-400 uppercase tracking-tighter">
+                               {dynamicCashbackStats?.cycle?.start ? `${format(new Date(dynamicCashbackStats.cycle.start), "dd.MM")} — ${format(new Date(dynamicCashbackStats.cycle.end), "dd.MM")}` : "00.00 — 00.00"}
+                            </div>
+                          </div>
+                          <h3 className="text-[18px] font-black tracking-[-0.03em] text-slate-900 uppercase">PERFORMANCE</h3>
                         </div>
                         <div className="p-6 space-y-7 max-h-[85vh] overflow-y-auto no-scrollbar scroll-smooth">
                           {/* Cycle Scope Data */}
@@ -1166,38 +1233,60 @@ export function AccountDetailHeaderV2({
                             <div className="flex justify-between items-center mb-1"><span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Active Statistics Pipeline</span><span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100/80 uppercase">{dynamicCashbackStats?.cycle?.label || "CYCLE DATA"}</span></div>
                             <div className="grid grid-cols-2 gap-3 pb-2">
                               {[
-                                { label: "Eligible Spend", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}`, color: "text-indigo-600", icon: BarChart3 },
-                                { label: "Est. Earned", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}`, color: "text-emerald-600", icon: Zap },
-                                { label: "Actual Earn", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}`, color: "text-cyan-700", icon: Target },
-                                { label: "Shared Out", val: `-${formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount))}`, color: "text-rose-500", icon: Users2 },
-                                { label: "Net Profit", val: `${formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}`, color: "text-slate-900", icon: Briefcase },
+                                { label: "ELIGIBLE SPENDING", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.currentSpend))}`, color: "text-indigo-600", icon: Calculator },
+                                { label: "ESTIMATED EARNED", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}`, color: "text-emerald-600", icon: Zap },
+                                { label: "ACTUAL EARNINGS", val: `+${formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}`, color: "text-cyan-700", icon: Target },
+                                { label: "TOTAL SHARED OUT", val: `-${formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount))}`, color: "text-rose-500", icon: Users2 },
+                                { label: "NET CYCLE PROFIT", val: `${formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}`, color: "text-slate-900 border-t border-slate-100 pt-2", icon: Briefcase },
                               ].map((item: any, i: number) => (
-                                <div key={i} className="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/60 shadow-sm flex items-center justify-between hover:bg-slate-50 hover:shadow-md transition-all">
-                                  <div className="flex flex-col"><span className="text-[10px] font-black text-slate-400 uppercase tracking-tight leading-none mb-1">{item.label}</span><span className={cn("text-[16px] font-black tabular-nums tracking-tighter", item.color)}>{item.val}</span></div>
+                                <div key={i} className={cn("rounded-xl px-4 py-2 flex items-center justify-between transition-all", item.color.includes("slate-900") ? "bg-slate-50 mt-1" : "bg-white")}>
+                                  <div className="flex items-center gap-2.5">
+                                     <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400"><item.icon className="h-3.5 w-3.5" /></div>
+                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight leading-none">{item.label}</span>
+                                  </div>
+                                  <span className={cn("text-[14px] font-black tabular-nums tracking-tighter", item.color)}>{item.val}</span>
                                 </div>
                               ))}
                             </div>
                           </div>
 
-                          {/* Entire Year Scope Data */
-                          annualPerformanceReport.totalNetBenefit || summary?.yearTotalInflow ? (
+                          {/* Entire Year Scope Data */}
                           <div className="space-y-4 pt-6 border-t border-slate-100">
-                             <div className="flex justify-between items-center mb-1"><span className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Briefcase className="h-4 w-4" /> Master Footprint</span><span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100/80 uppercase">ENTIRE YEAR</span></div>
+                             <div className="flex justify-between items-center mb-1">
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">ANNUAL PERFORMANCE PIPELINE</span>
+                                <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 uppercase shadow-sm">Yearly {summary?.targetYear || new Date().getFullYear()}</span>
+                             </div>
                              <div className="grid grid-cols-2 gap-3">
-                                {[
-                                   { label: "Year Total Inflows", val: `+${formatMoneyVND(summary?.yearTotalInflow || 0)}`, color: "text-emerald-600" },
-                                   { label: "Year Total Outflows", val: `-${formatMoneyVND(summary?.yearTotalOutflow || 0)}`, color: "text-rose-600" },
-                                   { label: "Net Cashflow", val: `${(summary?.yearTotalInflow !== undefined && summary?.yearTotalOutflow !== undefined) ? formatMoneyVND((summary.yearTotalInflow || 0) - (summary.yearTotalOutflow || 0)) : "0"}`, color: "text-slate-900" },
-                                   { label: "Yearly Cashback Net Profit", val: `${formatMoneyVND(annualPerformanceReport.totalNetBenefit || 0)}`, color: "text-indigo-600" }
-                                ].map((item: any, i: number) => (
-                                   <div key={i} className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm flex flex-col gap-1 items-start w-full">
-                                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
-                                      <span className={cn("text-[14px] font-black tabular-nums", item.color)}>{item.val}</span>
+                                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-1 transition-all hover:shadow-md">
+                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><RefreshCw className="h-2.5 w-2.5" /> Total Profit</span>
+                                   <span className={cn("text-[20px] font-black tabular-nums tracking-tighter", annualPerformanceReport.profit >= 0 ? "text-emerald-600" : "text-rose-500")}>
+                                      {formatMoneyVND(Math.ceil(annualPerformanceReport.profit))}
+                                   </span>
+                                </div>
+                                <div className="bg-white rounded-2xl p-4 border border-indigo-100 shadow-[0_2px_10px_rgba(79,70,229,0.04)] flex flex-col gap-1 ring-1 ring-indigo-50/50 transition-all hover:shadow-md">
+                                   <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5"><Sparkles className="h-2.5 w-2.5" /> Rewards Potential</span>
+                                   <span className="text-[20px] font-black text-emerald-600 tabular-nums tracking-tighter">
+                                      {formatMoneyVND(Math.ceil(annualPerformanceReport.est))}
+                                   </span>
+                                </div>
+                             </div>
+
+                             <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-700 rounded-[1.75rem] p-6 shadow-xl shadow-indigo-200/50 relative overflow-hidden group">
+                                <div className="absolute -top-4 -right-4 p-8 opacity-10 rotate-12 transition-transform duration-700 group-hover:rotate-0 scale-150"><Trophy className="h-24 w-24 text-white" /></div>
+                                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+                                <div className="relative z-10 flex items-center justify-between">
+                                   <div className="flex flex-col scale-100 group-hover:scale-[1.02] transition-transform origin-left">
+                                      <span className="text-[10px] font-black text-indigo-100/70 uppercase tracking-[0.25em] mb-1.5">NET BENEFIT</span>
+                                      <span className="text-[28px] font-black text-white tabular-nums drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)] leading-none">
+                                         {formatMoneyVND(Math.ceil(annualPerformanceReport.totalNetBenefit))}
+                                      </span>
                                    </div>
-                                ))}
+                                   <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-md border border-white/20 shadow-inner group-hover:bg-white/20 transition-all">
+                                      <Trophy className="h-8 w-8 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+                                   </div>
+                                </div>
                              </div>
                           </div>
-                          ) : null}
                         </div>
                       </div>
                     </TooltipContent>
