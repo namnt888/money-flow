@@ -588,9 +588,8 @@ export async function revertBatchItem(transactionId: string) {
         if (item) {
             await pocketbaseUpdate('batch_items', item.id, {
                 status: 'pending',
-                transaction_id: null,
+                transaction_id: "",
                 is_confirmed: false,
-                updated_at: new Date().toISOString()
             })
         }
         return
@@ -602,7 +601,7 @@ export async function revertBatchItem(transactionId: string) {
     const { data: item, error: itemError } = await supabase
         .from('batch_items')
         .select('id')
-        .eq('transaction_id', transactionId)
+        .eq('transaction', transactionId)
         .single()
 
     if (itemError || !item) {
@@ -615,7 +614,7 @@ export async function revertBatchItem(transactionId: string) {
         .from('batch_items')
         .update({
             status: 'pending', // Reset to Pending/Funded
-            transaction_id: null,
+            transaction_id: "",
             is_confirmed: false
         })
         .eq('id', item.id)

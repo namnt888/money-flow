@@ -269,24 +269,20 @@ export function AccountDetailHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex flex-col min-w-0">
             <h1 className="text-base font-bold text-slate-900 truncate">{account.name}</h1>
+            <div className="text-[10px] text-slate-500 truncate">{account.account_number || 'No account number'}</div>
           </div>
 
           <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1">
+            <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 tabular-nums">
               <Wallet className="w-3 h-3 text-slate-500" />
-              Balance: <span className="text-slate-900">{formatPlain(primaryBalance)}</span>
+              {formatPlain(primaryBalance)}
             </span>
             {typeof account.credit_limit === 'number' && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+              <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 tabular-nums">
                 <CreditCard className="w-3 h-3 text-slate-500" />
-                Limit: <span className="text-slate-900">{formatPlain(account.credit_limit || 0)}</span>
-              </span>
-            )}
-            {account.type === 'credit_card' && typeof account.current_balance === 'number' && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-700">
-                Outstanding: <span className="text-amber-800">{formatPlain(Math.abs(account.current_balance))}</span>
+                {formatPlain(account.credit_limit || 0)}
               </span>
             )}
           </div>
