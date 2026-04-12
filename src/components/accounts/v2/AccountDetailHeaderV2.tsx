@@ -858,7 +858,7 @@ export function AccountDetailHeaderV2({
       {isHeaderCollapsed ? (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-16 py-3 w-full flex items-center gap-4 relative transition-all duration-500 overflow-hidden shrink-0 mt-2">
           {/* Collapsed Section 1 */}
-          <div className="flex items-center gap-3 w-[22%] truncate border-r border-slate-200 pr-4 shrink-0">
+          <div className="flex items-center gap-3 w-[26%] truncate border-r border-slate-200 pr-4 shrink-0">
             {account.image_url ? (
               <img src={account.image_url} alt="" className="h-8 w-8 object-contain rounded-sm border border-slate-100 shadow-sm shrink-0" />
             ) : (
@@ -984,10 +984,10 @@ export function AccountDetailHeaderV2({
               <div className="text-[13px] font-semibold text-slate-500 font-sans tracking-wide truncate flex items-center gap-2 group/edit-info">
                 <span className="tabular-nums drop-shadow-sm">{account.account_number || "•••••"}</span>
                 {account.receiver_name && <span className="opacity-60 truncate" title={account.receiver_name}>• {account.receiver_name}</span>}
-                <button onClick={() => setIsSlideOpen(true)} className="p-1 hover:bg-indigo-50 rounded text-slate-300 hover:text-indigo-600 transition-all"><Edit className="h-3 w-3" /></button>
+                <button onClick={() => setIsSlideOpen(true)} className="p-1 hover:bg-white rounded border border-slate-200 text-indigo-600 transition-all shadow-sm"><Edit className="h-3 w-3" /></button>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-3 flex-wrap min-h-[26px]">
+            <div className="flex items-center gap-2 mt-4 flex-wrap min-h-[26px]">
               <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-1 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm ring-1 ring-indigo-500/10"><User className="h-3.5 w-3.5" /> {familyRoleLabel}</span>
               {shouldShowCycleBadge && (
                 <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2.5 py-1 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-sm ring-1 ring-emerald-500/10"><Calendar className="h-3.5 w-3.5" /> {cycleBadgeText}</span>
@@ -1030,9 +1030,10 @@ export function AccountDetailHeaderV2({
                         rawTiers.forEach((tier: any) => {
                            tier.policies?.forEach((pol: any) => {
                              pol.cat_ids?.forEach((cId: any) => {
-                               const cleanId = (!cId || cId === "" || cId === "null" || cId === "General") ? "General" : cId;
-                               if (!catGroups[cleanId]) catGroups[cleanId] = [];
-                               catGroups[cleanId].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend });
+                               const mappedCat = categories.find(c => String(c.id) === String(cId));
+                               const finalId = mappedCat ? String(mappedCat.id) : "General";
+                               if (!catGroups[finalId]) catGroups[finalId] = [];
+                               catGroups[finalId].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend });
                              });
                            });
                          });
