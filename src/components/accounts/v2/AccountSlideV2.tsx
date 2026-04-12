@@ -58,6 +58,7 @@ interface AccountSlideV2Props {
     onBack?: () => void;
     isClone?: boolean;
     zIndex?: number;
+    highlightAccountInfo?: boolean;
 }
 
 import { Category, Person, Subscription } from "@/types/moneyflow.types";
@@ -491,6 +492,7 @@ export function AccountSlideV2({
     onBack,
     isClone = false,
     zIndex = 500,
+    highlightAccountInfo = false,
 }: AccountSlideV2Props & { categories?: Category[] }) {
     const router = useRouter();
     const isEdit = !!account && !isClone;
@@ -1408,7 +1410,10 @@ export function AccountSlideV2({
                                                 variant="outline"
                                                 role="combobox"
                                                 aria-expanded={openAccNumPopover}
-                                                className="w-full justify-between h-10 border-slate-200 bg-white px-3 font-normal"
+                                                className={cn(
+                                                    "w-full justify-between h-10 border-slate-200 bg-white px-3 font-normal",
+                                                    highlightAccountInfo && accountNumber && "bg-amber-50 border-amber-200 ring-2 ring-amber-400/20 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                                                )}
                                             >
                                                 {accountNumber ? (
                                                     <span className="text-[12px] font-bold text-slate-700">{accountNumber}</span>
@@ -1452,7 +1457,10 @@ export function AccountSlideV2({
                                                 variant="outline"
                                                 role="combobox"
                                                 aria-expanded={openRxPopover}
-                                                className="w-full justify-between h-10 border-slate-200 bg-white px-3 font-normal"
+                                                className={cn(
+                                                    "w-full justify-between h-10 border-slate-200 bg-white px-3 font-normal",
+                                                    highlightAccountInfo && receiverName && "bg-amber-50 border-amber-200 ring-2 ring-amber-400/20 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                                                )}
                                             >
                                                 {receiverName ? (
                                                     <span className="text-[12px] font-bold text-slate-700 uppercase">{receiverName}</span>

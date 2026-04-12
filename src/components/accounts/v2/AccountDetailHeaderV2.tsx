@@ -841,7 +841,6 @@ export function AccountDetailHeaderV2({
     };
   }, [summary]);
   const pendingCount = summary?.pendingCount || 0;
-  
   const isTiered = account.cb_type === 'tiered';
   const rawTiers = isTiered ? ((account.cb_rules_json as any)?.tiers || (account.cashback_config as any)?.program?.rules_json_v2?.tiers || []) : [];
 
@@ -855,6 +854,7 @@ export function AccountDetailHeaderV2({
         categories={categories}
         existingAccountNumbers={Array.from(new Set(allAccounts.map((a) => a.account_number).filter(Boolean))) as string[]}
         existingReceiverNames={Array.from(new Set(allAccounts.map((a) => a.receiver_name).filter(Boolean))) as string[]}
+        highlightAccountInfo={true}
       />
       {isHeaderCollapsed ? (
         <div 
@@ -998,7 +998,7 @@ export function AccountDetailHeaderV2({
                     <Users2 className="h-3.5 w-3.5" /> {familyRoleLabel}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-0 border-none shadow-2xl rounded-2xl overflow-hidden bg-white z-[120]">
+                <PopoverContent side="bottom" align="start" sideOffset={12} className="w-[300px] p-0 border-none shadow-[0_40px_100px_rgba(0,0,0,0.4)] rounded-2xl overflow-hidden bg-white z-[130]">
                   <div className="bg-slate-900 px-4 py-3 text-white flex flex-col">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Family Members</span>
                     <span className="text-[13px] font-black uppercase">Account Network</span>
@@ -1054,7 +1054,7 @@ export function AccountDetailHeaderV2({
                         const firstRule = filteredDisplayRules[0];
                         if (!firstRule) return "NO RULES ACTIVE";
                         const rateText = toDisplayPercent(firstRule.rate || 0);
-                        const name = String(firstRule.name || "Cashback").trim();
+                        const name = String(firstRule.name || "Cashback Online").trim();
                         const capValueArr = [(firstRule as any).max, firstRule.max_cashback, firstRule.cap].filter(v => v !== undefined && v !== null);
                         const cap = capValueArr.length > 0 ? ` MAX ${formatMoneyVND(capValueArr[0])}` : "";
                         return `${rateText}% ${name}${cap}${filteredDisplayRules.length > 1 ? ` +${filteredDisplayRules.length - 1} MORE` : ""}`;
@@ -1067,16 +1067,16 @@ export function AccountDetailHeaderV2({
                     <div className="flex flex-col"><span className="text-[10px] font-black text-white/70 uppercase tracking-[0.2em] mb-1">PROGRAM REWARDS</span><div className="flex items-center gap-2"><Zap className="h-4 w-4 fill-white/50" /><span className="text-[14px] font-black uppercase tracking-[0.1em]">Active Policies</span></div></div>
                     <span className="bg-white/20 px-3 py-1 rounded-lg text-[10px] font-black text-white uppercase border border-white/20 shadow-sm">{isTiered ? "Tiered" : "Verified"}</span>
                   </div>
-                  <div className="bg-slate-50 p-4 max-h-[440px] overflow-y-auto space-y-4">
+                  <div className="bg-slate-50 p-4 max-h-[440px] overflow-y-auto space-y-3">
                      {isTiered ? (() => {
                          const catGroups: Record<string, any> = {};
                          rawTiers.forEach((tier: any) => {
                             tier.policies?.forEach((pol: any) => {
-                              pol.cat_ids?.forEach((cId: any) => {
+                              const targetCatIds = (pol.cat_ids && pol.cat_ids.length > 0) ? pol.cat_ids : ["General"];
+                              targetCatIds.forEach((cId: any) => {
                                 const mappedCat = categories.find(c => String(c.id) === String(cId));
                                 const catName = mappedCat ? mappedCat.name : "General";
                                 if (!catGroups[catName]) catGroups[catName] = [];
-                                
                                 const ruleKey = `${tier.name}-${pol.rate}-${pol.max}`;
                                 if (!catGroups[catName].some((r: any) => `${r.tierName}-${r.rate}-${r.max}` === ruleKey)) {
                                   catGroups[catName].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend, categoryIds: pol.cat_ids });
@@ -1201,7 +1201,7 @@ export function AccountDetailHeaderV2({
             <div className="flex justify-between items-center mb-6 gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Performance</span>
-                <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 text-[8px] font-black uppercase shadow-sm">CB Perf</span>
+                <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 text-[8px] font-black uppercase shadow-sm whitespace-nowrap">CB PERFORMANCE</span>
               </div>
               <div className="flex items-center gap-2">
                 {/* Legacy V3 Engine Modal Triggered via Button */}
@@ -1306,23 +1306,23 @@ export function AccountDetailHeaderV2({
 
             <div className="grid grid-cols-5 gap-3 flex-1 items-start relative z-0">
               <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-500/80 truncate">Net Profit</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-500/80 truncate">NET PROFIT</span>
                 <span className={cn("text-[14px] 2xl:text-[17px] font-black tabular-nums drop-shadow-sm truncate", cycleMetricSnapshot.totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")} title={formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}>{formatMoneyVND(Math.ceil(cycleMetricSnapshot.totalProfit))}</span>
               </div>
               <div className="flex flex-col gap-1 min-w-0">
                 <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 flex items-center gap-1 group/tooltip truncate">
-                   Act. Claimed
+                   ACTUAL CLAIMED
                    <Info className="h-3 w-3 text-slate-300 group-hover/tooltip:text-slate-500 cursor-help transition-colors shrink-0 hidden xl:block" />
                 </span>
                 <span className="text-[14px] 2xl:text-[17px] font-black text-rose-500 tabular-nums drop-shadow-sm truncate" title={formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualClaimed))}>{formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualClaimed))}</span>
               </div>
               <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-500/80 truncate">Est. Earned</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-500/80 truncate">ESTIMATED EARNED</span>
                 <span className="text-[14px] 2xl:text-[17px] font-black text-amber-600 tabular-nums drop-shadow-sm truncate" title={formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}>{formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}</span>
               </div>
               <div className="flex flex-col gap-1 min-w-0">
                 <span className="text-[10px] font-black uppercase tracking-[0.1em] text-blue-500/80 flex items-center gap-1 group/tooltip truncate">
-                  Actual Earn
+                  ACTUAL EARNINGS
                   <Info className="h-3 w-3 text-blue-300 group-hover/tooltip:text-blue-500 cursor-help transition-colors shrink-0 hidden xl:block" />
                 </span>
                 <span className="text-[14px] 2xl:text-[17px] font-black text-blue-600 tabular-nums drop-shadow-sm truncate" title={formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}>{formatMoneyVND(Math.ceil(cycleMetricSnapshot.actualEarn))}</span>
