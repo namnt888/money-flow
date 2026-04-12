@@ -39,16 +39,18 @@ interface PendingBatchItem {
 interface AccountPendingItemsModalProps {
     accountId: string
     accountName?: string
-    pendingItems: PendingBatchItem[]
+    pendingItems?: PendingBatchItem[]
     onSuccess?: () => void
     open?: boolean
     onOpenChange?: (open: boolean) => void
 }
 
+const EMPTY_ARRAY: PendingBatchItem[] = []
+
 export function AccountPendingItemsModal({
     accountId,
     accountName,
-    pendingItems: initialPendingItems,
+    pendingItems: initialPendingItems = EMPTY_ARRAY,
     onSuccess,
     open,
     onOpenChange,
