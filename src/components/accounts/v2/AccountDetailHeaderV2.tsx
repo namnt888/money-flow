@@ -934,30 +934,30 @@ export function AccountDetailHeaderV2({
                     </span>
                   </div>
                 </div>
-                <div className="p-4 space-y-3 max-h-[300px] overflow-y-auto">
-                  {fallbackRules.map((rule: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-                      {/* Category Icon */}
-                      <div className="flex-shrink-0">
-                        {rule.category ? (() => {
-                          const IconComponent = getCategoryIcon(rule.category);
-                          return <IconComponent className="h-4 w-4 text-slate-500" />;
-                        })() : (
-                          <Hash className="h-4 w-4 text-slate-400" />
-                        )}
+                <div className="p-4 space-y-4 max-h-[300px] overflow-y-auto">
+                  {Object.entries(
+                    fallbackRules.reduce((acc: any, rule: any) => {
+                      const cat = (rule.category || "Other").toLowerCase();
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(rule);
+                      return acc;
+                    }, {})
+                  ).map(([category, rules]: [string, any], idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">
+                        {(() => {
+                          const IconComponent = getCategoryIcon(category);
+                          return <IconComponent className="h-3 w-3" />;
+                        })()}
+                        {category}
                       </div>
-                      {/* Rule Name and Rate */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[11px] font-medium text-slate-600 truncate mr-2">{rule.name}</span>
-                          <span className="text-[11px] font-black text-emerald-600 tabular-nums">{toDisplayPercent(rule.rate)}%</span>
-                        </div>
-                        {/* Tier Condition Display */}
-                        {rule.tiers && rule.tiers.length > 0 && (
-                          <div className="text-[9px] font-normal text-slate-500 mt-1">
-                            {rule.tiers.map((tier: any) => `${toDisplayPercent(tier.rate)}% - ${formatMoneyVND(tier.minSpend)}`).join(' | ')}
+                      <div className="space-y-2">
+                        {rules.map((rule: any, rIdx: number) => (
+                          <div key={rIdx} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                            <span className="text-[11px] font-medium text-slate-600 truncate mr-2">{rule.name}</span>
+                            <span className="text-[11px] font-black text-emerald-600 tabular-nums">{toDisplayPercent(rule.rate)}%</span>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -974,13 +974,11 @@ export function AccountDetailHeaderV2({
         {/* Section 2: Balance & Health (25%) */}
         <div className="flex flex-col w-full xl:w-[25%] xl:border-l border-dashed border-slate-300 xl:pl-6 h-full">
           <div className="flex justify-between items-center mb-4">
+            <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Balance</span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Balance</span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border-blue-200">
                 Health
               </span>
-            </div>
-            <div className="flex gap-2">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border-emerald-200">
                 <Clock className="h-3 w-3" />
                 {collapsedDueInfo}
@@ -1257,7 +1255,7 @@ export function AccountDetailHeaderV2({
               </div>
             </div>
           
-          <div className="grid grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-4 mb-4">
             <div className="flex flex-col">
               <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider mb-1 whitespace-nowrap flex items-center">
                 Net Profit
@@ -1331,13 +1329,13 @@ export function AccountDetailHeaderV2({
           </div>
           
           {isExpanded && (
-            <div className="flex flex-col mt-auto">
-              <div className="flex flex-row items-center gap-3">
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center gap-3 mb-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="relative flex h-8 flex-1 items-center justify-between overflow-hidden rounded-full border border-indigo-100 bg-white px-4 text-xs font-medium cursor-help">
-                      <div 
+                      <div
                         className="absolute left-0 top-0 h-full bg-indigo-50/80 -z-10"
                         style={{ width: `${Math.min(100, (cycleMetricSnapshot.currentSpend / (dynamicCashbackStats?.minSpend || 1)) * 100)}%` }}
                       />
@@ -1346,7 +1344,7 @@ export function AccountDetailHeaderV2({
                        </span>
                        <div className="flex gap-2 text-[10px] font-bold relative z-10">
                          <span className="text-slate-400">NEEDS</span> <span className="text-amber-600">{formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - cycleMetricSnapshot.currentSpend))}</span>
-                         <span className="text-slate-300">|</span> 
+                         <span className="text-slate-300">|</span>
                          <span className="text-slate-400">SPENT</span> <span className="text-slate-700">{formatMoneyVND(cycleMetricSnapshot.currentSpend)}</span>
                        </div>
                     </div>
