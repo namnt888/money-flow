@@ -1068,54 +1068,101 @@ export function AccountDetailHeaderV2({
                     <span className="bg-white/20 px-3 py-1 rounded-lg text-[10px] font-black text-white uppercase border border-white/20 shadow-sm">{isTiered ? "Tiered" : "Verified"}</span>
                   </div>
                   <div className="bg-slate-50 p-4 max-h-[440px] overflow-y-auto space-y-3">
-                     {isTiered ? (() => {
-                         const catGroups: Record<string, any> = {};
-                         rawTiers.forEach((tier: any) => {
+                      {isTiered ? (() => {
+                          // Priority categories that should appear first
+                          const priorityKeywords = ['health', 'insurance', 'bảo hiểm', 'y tế', 'khám', 'hospital', 'medical'];
+                          const isPriorityCategory = (name: string) => priorityKeywords.some(k => name.toLowerCase().includes(k));
+
+                          // Group by Tier first, then by Category within each tier
+                          const tierGroups: Record<string, any> = {};
+                          rawTiers.forEach((tier: any) => {
+                            if (!tierGroups[tier.name]) tierGroups[tier.name] = { minSpend: tier.min_spend, categories: {} };
                             tier.policies?.forEach((pol: any) => {
                               const targetCatIds = (pol.cat_ids && pol.cat_ids.length > 0) ? pol.cat_ids : ["General"];
                               targetCatIds.forEach((cId: any) => {
                                 const mappedCat = categories.find(c => String(c.id) === String(cId));
                                 const catName = mappedCat ? mappedCat.name : "General";
-                                if (!catGroups[catName]) catGroups[catName] = [];
-                                const ruleKey = `${tier.name}-${pol.rate}-${pol.max}`;
-                                if (!catGroups[catName].some((r: any) => `${r.tierName}-${r.rate}-${r.max}` === ruleKey)) {
-                                  catGroups[catName].push({ tierName: tier.name, max: pol.max, rate: pol.rate, minSpend: tier.min_spend, categoryIds: pol.cat_ids });
+                                if (!tierGroups[tier.name].categories[catName]) {
+                                  tierGroups[tier.name].categories[catName] = [];
+                                }
+                                const ruleKey = `${pol.rate}-${pol.max}`;
+                                if (!tierGroups[tier.name].categories[catName].some((r: any) => `${r.rate}-${r.max}` === ruleKey)) {
+                                  tierGroups[tier.name].categories[catName].push({ 
+                                    max: pol.max, 
+                                    rate: pol.rate, 
+                                    categoryIds: pol.cat_ids,
+                                    isPriority: isPriorityCategory(catName)
+                                  });
                                 }
                               });
-                           });
-                         });
-                         return Object.entries(catGroups).map(([catName, rulesList]: [string, any], idx: number) => {
-                            const catObj = categories.find(c => (c.name === catName)) || { name: 'General', image_url: null };
-                           const isShopping = catObj.name.toLowerCase().includes('shopp') || catObj.name.toLowerCase().includes('mua sắm');
-                           rulesList.sort((a: any, b: any) => (a.minSpend || 0) - (b.minSpend || 0));
-                           return (
-                              <div key={idx} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3 relative overflow-hidden group hover:border-emerald-200 transition-all">
-                                 <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-all" />
-                                 <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-6 w-6 rounded bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                                       {catObj.image_url ? (
-                                          <img src={catObj.image_url} alt="" className="h-full w-full object-contain" />
-                                       ) : (
-                                          isShopping ? <Briefcase className="h-3.5 w-3.5 text-slate-400" /> : <span className="text-[10px] font-black text-slate-400">{catObj.name.charAt(0)}</span>
-                                       )}
+                            });
+                          });
+
+                          // Sort tiers by minSpend
+                          const sortedTierNames = Object.keys(tierGroups).sort((a, b) => 
+                            (tierGroups[a]?.minSpend || 0) - (tierGroups[b]?.minSpend || 0)
+                          );
+
+                          return sortedTierNames.map((tierName, tierIdx) => {
+                            const tierData = tierGroups[tierName];
+                            const categoriesInTier = tierData.categories;
+                            
+                            // Sort categories: priority first, then alphabetically
+                            const sortedCatNames = Object.keys(categoriesInTier).sort((a, b) => {
+                              const aPriority = categoriesInTier[a]?.[0]?.isPriority || false;
+                              const bPriority = categoriesInTier[b]?.[0]?.isPriority || false;
+                              if (aPriority && !bPriority) return -1;
+                              if (!aPriority && bPriority) return 1;
+                              return a.localeCompare(b);
+                            });
+
+                            return (
+                              <div key={tierIdx} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3 relative overflow-hidden">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center shrink-0">
+                                      <span className="text-[10px] font-black text-indigo-600">{tierIdx + 1}</span>
                                     </div>
-                                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{catObj.name}</span>
-                                 </div>
-                                <div className="space-y-2">
-                                  {rulesList.map((r: any, i: number) => (
-                                    <div key={i} className="flex justify-between items-center bg-slate-50/80 p-2 rounded-lg border border-slate-100/50">
-                                       <div className="flex flex-col max-w-[65%]">
-                                          <span className="text-[11px] font-bold text-slate-600 uppercase truncate" title={r.tierName}>{r.tierName || "Base Tier"}</span>
-                                          {(r.max || r.max > 0) && <span className="text-[9px] font-black text-indigo-500 uppercase flex items-center gap-1 mt-0.5"><Info className="h-2.5 w-2.5" /> CAP: {formatMoneyVND(r.max)}</span>}
-                                       </div>
-                                       <span className="text-[13px] font-black text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded border border-emerald-200/50 tabular-nums shrink-0">{toDisplayPercent(r.rate || 0)}%</span>
-                                    </div>
-                                  ))}
+                                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{tierName || `Tier ${tierIdx + 1}`}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">≥{formatVNShort(tierData.minSpend || 0)}</span>
+                                  </div>
                                 </div>
-                             </div>
-                           );
-                        });
-                     })() : filteredDisplayRules.map((rule: any, idx: number) => (
+                                <div className="grid grid-cols-1 gap-2">
+                                  {sortedCatNames.map((catName, catIdx) => {
+                                    const catRules = categoriesInTier[catName];
+                                    const catObj = categories.find(c => (c.name === catName)) || { name: 'General', image_url: null };
+                                    const isPriority = catRules[0]?.isPriority;
+                                    return (
+                                      <div key={catIdx} className={cn("p-2 rounded-lg border transition-all", isPriority ? "bg-amber-50 border-amber-200" : "bg-slate-50/80 border-slate-100/50")}>
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                          <div className="h-5 w-5 rounded bg-white border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                                            {catObj.image_url ? (
+                                              <img src={catObj.image_url} alt="" className="h-full w-full object-contain" />
+                                            ) : (
+                                              <span className="text-[8px] font-black text-slate-400">{catObj.name.charAt(0)}</span>
+                                            )}
+                                          </div>
+                                          <span className={cn("text-[10px] font-bold uppercase tracking-wider truncate", isPriority ? "text-amber-700" : "text-slate-600")} title={catName}>{catName}</span>
+                                        </div>
+                                        <div className="space-y-1.5 pl-7">
+                                          {catRules.map((r: any, rIdx: number) => (
+                                            <div key={rIdx} className="flex justify-between items-center">
+                                              <span className="text-[9px] font-medium text-slate-500">Rate</span>
+                                              <div className="flex items-center gap-2">
+                                                {(r.max || r.max > 0) && <span className="text-[8px] font-black text-indigo-500 uppercase flex items-center gap-0.5"><Info className="h-2 w-2" /> {formatVNShort(r.max)}</span>}
+                                                <span className="text-[12px] font-black text-emerald-600 bg-emerald-100/50 px-1.5 py-0.5 rounded border border-emerald-200/50 tabular-nums">{toDisplayPercent(r.rate || 0)}%</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          });
+                      })() : filteredDisplayRules.map((rule: any, idx: number) => (
                         <div key={idx} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group/rule">
                           <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 opacity-0 group-hover/rule:opacity-100 transition-opacity" />
                           <div className="flex justify-between items-start mb-2">
