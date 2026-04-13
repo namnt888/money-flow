@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronDown,
+  ChevronUp,
   Settings,
   Edit,
   Check,
@@ -112,8 +113,6 @@ const formatVNShort = (amount: number) => {
   return amount.toString();
 };
 
-// Shared utility imported from @/lib/cycle-utils
-
 export function AccountDetailHeaderV2({
   account,
   allAccounts,
@@ -135,7 +134,6 @@ export function AccountDetailHeaderV2({
   const [isSlideOpen, setIsSlideOpen] = React.useState(false);
   const [dynamicCashbackStats, setDynamicCashbackStats] =
     React.useState<AccountSpendingStats | null>(cashbackStats);
-  // Use passed loading prop or fall back to false
   const effectiveIsCashbackLoading = isCashbackLoading ?? false;
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isAccountIdCopied, setIsAccountIdCopied] = React.useState(false);
@@ -268,7 +266,6 @@ export function AccountDetailHeaderV2({
   );
   const soloDebtAbs = Math.abs(ledgerBalance || 0);
 
-  // Available Limit: Shared for family if set
   const familyLimit = parentAccount?.credit_limit || account.credit_limit || 0;
   const familyAvailableBalance = isCreditCard 
     ? Math.max(0, familyLimit - familyDebtAbs) 
@@ -302,11 +299,9 @@ export function AccountDetailHeaderV2({
   const displayOutstanding = (isFamily && isCreditCard) ? familyDebtAbs : outstandingBalance;
   const displayLimit = (isFamily && isCreditCard) ? familyLimit : (account.credit_limit || 0);
 
-  // Individual card available capacity (Solo Limit)
   const soloAvailable = isCreditCard ? (displayLimit - soloDebtAbs) : ledgerBalance;
 
-
-  // Cleanup 'tab' param if present (fix for persistent url)
+  // Cleanup 'tab' param if present
   React.useEffect(() => {
     if (searchParams.has("tab")) {
       const params = new URLSearchParams(searchParams.toString());
@@ -315,7 +310,7 @@ export function AccountDetailHeaderV2({
     }
   }, [searchParams, router]);
 
-  // Sync dynamic stats when props update (e.g. after router.refresh())
+  // Sync dynamic stats when props update
   React.useEffect(() => {
     setDynamicCashbackStats(cashbackStats);
   }, [cashbackStats]);
@@ -370,7 +365,6 @@ export function AccountDetailHeaderV2({
       ["expense", "debt", "service"].includes(tx.type),
     );
 
-    // Estimate cashback from policy metadata first, fallback to cashback entries.
     const est = cycleSpendRows.reduce((sum: number, tx: any) => {
       const policy = tx?.metadata?.cashback_policy;
       const txAmount = Math.abs(Number(tx.amount || 0));
@@ -386,7 +380,6 @@ export function AccountDetailHeaderV2({
         ? tx.cashback_entries
         : [];
       const entryAmount = entries.reduce((s: number, e: any) => {
-        // Sum all virtual or real entries
         if (e.mode === "virtual" || e.mode === "real") {
           return s + Math.abs(Number(e.amount || 0));
         }
@@ -395,7 +388,6 @@ export function AccountDetailHeaderV2({
       return sum + entryAmount;
     }, 0);
 
-    // Calculate shared from share fields
     const shared = cycleSpendRows.reduce((sum: number, tx: any) => {
       const sharedFixed = Number(tx.cashback_share_fixed || 0);
       const rawSharePercent = Number(tx.cashback_share_percent || 0);
@@ -428,7 +420,6 @@ export function AccountDetailHeaderV2({
       actual,
     };
   }, [selectedCycle, initialTransactions, categories]);
-
 
   const [isEditPopoverOpen, setIsEditPopoverOpen] = React.useState(false);
   const [editValues, setEditValues] = React.useState({
@@ -463,59 +454,6 @@ export function AccountDetailHeaderV2({
     }
   };
 
-  // Helper Component for Sections
-  // Helper Component for Sections
-  const HeaderSection = React.forwardRef<
-    HTMLDivElement,
-    {
-      label: string;
-      children: React.ReactNode;
-      className?: string;
-      borderColor?: string;
-      badge?: React.ReactNode;
-      hint?: string;
-      hideHintInHeader?: boolean;
-    } & React.HTMLAttributes<HTMLDivElement>
-  >(
-    (
-      {
-        label,
-        children,
-        className,
-        borderColor = "border-slate-200",
-        badge,
-        hint,
-        hideHintInHeader,
-        ...props
-      },
-      ref,
-    ) => (
-      <div
-        ref={ref}
-        className={cn(
-          "relative border rounded-xl px-4 py-1.5 flex flex-col group/header",
-          borderColor,
-          className,
-        )}
-        {...props}
-      >
-        <div className="absolute -top-2 left-3 flex items-center gap-2 z-10">
-          <span className="bg-white px-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-            {label}
-          </span>
-          {hint && !hideHintInHeader && (
-            <span className="text-[7px] text-slate-300 font-black uppercase tracking-widest opacity-0 group-hover/header:opacity-100 transition-all transform translate-x-2 group-hover/header:translate-x-0 duration-300">
-              • {hint}
-            </span>
-          )}
-          {badge}
-        </div>
-        {children}
-      </div>
-    ),
-  );
-  HeaderSection.displayName = "HeaderSection";
-
   const dueDateBadge = React.useMemo(() => {
     const now = startOfDay(new Date());
     let label = "";
@@ -524,7 +462,7 @@ export function AccountDetailHeaderV2({
 
     if (account.stats?.due_date) {
       const d = startOfDay(new Date(account.stats.due_date));
-      dateLabel = format(d, "MMM d").toUpperCase();
+      dateLabel = format(d, "MMM d").toUpperCase()
       if (isToday(d)) {
         label = "Today Due";
         isUrgent = true;
@@ -667,7 +605,6 @@ export function AccountDetailHeaderV2({
       });
     });
 
-    // Only parse raw array rules for simple config to avoid duplicate with levelRules.
     const rawProgramRules = Array.isArray((program as any).rules_json_v2)
       ? (program as any).rules_json_v2.map((rule: any) => ({
           name: buildCategoryLabel((rule?.cat_ids || []).map((id: any) => String(id))),
@@ -844,6 +781,12 @@ export function AccountDetailHeaderV2({
   const isTiered = account.cb_type === 'tiered';
   const rawTiers = isTiered ? ((account.cb_rules_json as any)?.tiers || (account.cashback_config as any)?.program?.rules_json_v2?.tiers || []) : [];
 
+  // Expand handler - only trigger when clicking on the main container, not on interactive elements
+  const handleExpand = () => setIsHeaderCollapsed(false);
+  
+  // Collapse handler - only trigger when clicking on the dedicated collapse zone
+  const handleCollapse = () => setIsHeaderCollapsed(true);
+
   return (
     <div className="relative w-full">
       <AccountSlideV2
@@ -856,12 +799,14 @@ export function AccountDetailHeaderV2({
         existingReceiverNames={Array.from(new Set(allAccounts.map((a) => a.receiver_name).filter(Boolean))) as string[]}
         highlightAccountInfo={true}
       />
+      
       {isHeaderCollapsed ? (
+        // COLLAPSED VIEW
         <div 
-          onClick={() => setIsHeaderCollapsed(false)}
-          className="bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-16 py-3 w-full flex items-center gap-4 relative transition-all duration-500 overflow-hidden shrink-0 mt-2 cursor-pointer hover:border-indigo-300 hover:shadow-md group/collapsed-main"
+          onClick={handleExpand}
+          className="bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-4 py-3 w-full flex items-center gap-4 relative transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden shrink-0 mt-2 cursor-pointer hover:border-indigo-300 hover:shadow-md group/collapsed-main"
         >
-          {/* Collapsed Section 1 */}
+          {/* Section 1 */}
           <div className="flex items-center gap-3 w-[26%] truncate border-r border-slate-200 pr-4 shrink-0">
             {account.image_url ? (
               <img src={account.image_url} alt="" className="h-8 w-8 object-contain rounded-sm border border-slate-100 shadow-sm shrink-0" />
@@ -877,22 +822,19 @@ export function AccountDetailHeaderV2({
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(account.id);
-                    toast.success("Account ID copied to clipboard");
-                  }} 
+                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(account.id); toast.success("Account ID copied to clipboard"); }} 
                   className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full"
                   title="Copy Account ID"
                 >
                   <Copy className="h-4 w-4" />
                 </button>
-                <button onClick={handleOpenPocketBase} className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 hover:bg-amber-50 rounded-full" title="Open in Database"><Database className="h-4 w-4" /></button>
-                <button onClick={() => setIsSlideOpen(true)} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full" title="Settings"><Settings className="h-4 w-4" /></button>
+                <button onClick={(e) => { e.stopPropagation(); handleOpenPocketBase(); }} className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 hover:bg-amber-50 rounded-full" title="Open in Database"><Database className="h-4 w-4" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setIsSlideOpen(true); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full" title="Settings"><Settings className="h-4 w-4" /></button>
               </div>
             </div>
           </div>
           
-          {/* Collapsed Section 2 */}
+          {/* Section 2 */}
           <div className="flex items-center justify-between w-[30%] px-4 border-r border-slate-200 shrink-0">
             <div className="flex flex-col gap-0.5">
                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Available</span>
@@ -909,54 +851,61 @@ export function AccountDetailHeaderV2({
             </div>
           </div>
 
-          {/* Collapsed Section 3 */}
-            <div className="relative h-7 bg-slate-50 flex items-center px-3 rounded-full border border-slate-100 min-w-[280px] overflow-hidden group/goal-collapsed mr-12">
-               <div className="absolute top-0 left-0 h-full bg-emerald-100/40 transition-all duration-1000 z-0" style={{ width: `${Math.min(100, Math.round(((dynamicCashbackStats?.currentSpend || 0) / Math.max(1, dynamicCashbackStats?.minSpend || 1)) * 100))}%` }} />
-               <div className="relative z-10 flex items-center gap-4 w-full">
-                  <div className="flex items-center gap-3 text-[11px] font-black uppercase text-slate-600">
-                    {!dynamicCashbackStats?.is_min_spend_met ? (
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <span className="text-slate-400">NEEDS</span>
-                        <span className="text-rose-600 text-[12px] font-extrabold drop-shadow-[0_0_8px_rgba(225,29,72,0.2)]">{formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - (dynamicCashbackStats?.currentSpend || 0)))}</span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 whitespace-nowrap">
-                        <span className="text-emerald-600">QUALIFIED</span> 
-                        <span className="text-slate-400 font-bold mx-1">SPENT</span> 
-                        {formatMoneyVND(Math.ceil(dynamicCashbackStats?.currentSpend || 0))}
-                      </span>
-                    )}
+          {/* Section 3 - Rules & Cycle */}
+          <div className="relative h-7 bg-slate-50 flex items-center px-3 rounded-full border border-slate-100 min-w-[280px] overflow-hidden group/goal-collapsed mr-12">
+             <div className="absolute top-0 left-0 h-full bg-emerald-100/40 transition-all duration-1000 z-0" style={{ width: `${Math.min(100, Math.round(((dynamicCashbackStats?.currentSpend || 0) / Math.max(1, dynamicCashbackStats?.minSpend || 1)) * 100))}%` }} />
+             <div className="relative z-10 flex items-center gap-4 w-full">
+                <div className="flex items-center gap-3 text-[11px] font-black uppercase text-slate-600">
+                  {!dynamicCashbackStats?.is_min_spend_met ? (
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="text-slate-400">NEEDS</span>
+                      <span className="text-rose-600 text-[12px] font-extrabold drop-shadow-[0_0_8px_rgba(225,29,72,0.2)]">{formatMoneyVND(Math.max(0, (dynamicCashbackStats?.minSpend || 0) - (dynamicCashbackStats?.currentSpend || 0)))}</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <span className="text-emerald-600">QUALIFIED</span> 
+                      <span className="text-slate-400 font-bold mx-1">SPENT</span> 
+                      {formatMoneyVND(Math.ceil(dynamicCashbackStats?.currentSpend || 0))}
+                    </span>
+                  )}
+                </div>
+                <div className="h-3.5 w-px bg-slate-300/50" />
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex flex-col xl:flex-row xl:items-center gap-0.5 xl:gap-2">
+                    <span className="text-[10px] font-black text-rose-600 uppercase flex items-center gap-1 whitespace-nowrap transition-all group-hover/goal-collapsed:scale-105"><Users2 className="h-3 w-3" /> <span className="text-slate-400 font-bold mr-0.5">SHARED</span> {formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount))}</span>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1 whitespace-nowrap transition-all group-hover/goal-collapsed:scale-105"><Zap className="h-3 w-3" /> <span className="text-slate-400 font-bold mr-0.5">EST. EARNED</span> {formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}</span>
                   </div>
-                  <div className="h-3.5 w-px bg-slate-300/50" />
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="flex flex-col xl:flex-row xl:items-center gap-0.5 xl:gap-2">
-                      <span className="text-[10px] font-black text-rose-600 uppercase flex items-center gap-1 whitespace-nowrap transition-all group-hover/goal-collapsed:scale-105"><Users2 className="h-3 w-3" /> <span className="text-slate-400 font-bold mr-0.5">SHARED</span> {formatMoneyVND(Math.ceil(cycleMetricSnapshot.sharedAmount))}</span>
-                      <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1 whitespace-nowrap transition-all group-hover/goal-collapsed:scale-105"><Zap className="h-3 w-3" /> <span className="text-slate-400 font-bold mr-0.5">EST. EARNED</span> {formatMoneyVND(Math.ceil(cycleMetricSnapshot.estCashback))}</span>
-                    </div>
-                  </div>
-               </div>
-            </div>
-            
-            <div className="flex items-center gap-2 shrink-0 ml-auto pr-8">
-               <div className="flex items-center bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 shadow-sm">
-                  <Zap className="h-2.5 w-2.5 mr-1 fill-amber-500 text-amber-500" />
-                  <span className="text-[9px] font-black uppercase tracking-tight">{isTiered ? rawTiers.length : filteredDisplayRules.length} Rules</span>
-               </div>
-               <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2 py-0.5 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm whitespace-nowrap"><User className="h-2.5 w-2.5" /> {familyRoleLabel}</span>
-               <button className="flex items-center gap-1.5 px-3 py-1 bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
-                  <Calendar className="h-3 w-3 text-indigo-300" /> {dynamicCashbackStats?.cycle?.label || selectedCycle || "NOT SET"}
-               </button>
-            </div>
-
-          <button onClick={() => setIsHeaderCollapsed(false)} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-indigo-50 rounded-full text-slate-400 hover:text-indigo-600 transition-colors">
-            <ChevronDown className="h-5 w-5" />
-          </button>
+                </div>
+             </div>
+          </div>
+          
+          {/* Right side badges */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+             <div className="flex items-center bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 shadow-sm">
+                <Zap className="h-2.5 w-2.5 mr-1 fill-amber-500 text-amber-500" />
+                <span className="text-[9px] font-black uppercase tracking-tight">{isTiered ? rawTiers.length : filteredDisplayRules.length} Rules</span>
+             </div>
+             <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2 py-0.5 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm whitespace-nowrap"><User className="h-2.5 w-2.5" /> {familyRoleLabel}</span>
+             <button onClick={(e) => { e.stopPropagation(); handleYearChange(selectedYear === currentYear ? null : currentYear); }} className="flex items-center gap-1.5 px-3 py-1 bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
+                <Calendar className="h-3 w-3 text-indigo-300" /> {dynamicCashbackStats?.cycle?.label || selectedCycle || "NOT SET"}
+             </button>
+             <button onClick={(e) => { e.stopPropagation(); handleExpand(); }} className="ml-2 p-1.5 hover:bg-slate-100 rounded-full transition-colors"><ChevronDown className="h-4 w-4 text-slate-400" /></button>
+          </div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 w-full grid grid-cols-1 lg:grid-cols-[22%_28%_1fr] gap-6 xl:gap-8 mt-4 transition-all duration-500 overflow-hidden relative">
+        // EXPANDED VIEW
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 w-full grid grid-cols-1 lg:grid-cols-[22%_28%_1fr] gap-6 xl:gap-8 mt-4 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden relative group/expanded-header">
           
-          {/* SECTION 1: ACCOUNT INFO */}
-          <div className="flex flex-col min-w-0">
+          {/* Collapse button - Clear arrow, distinct border, no overlap */}
+          <button 
+            onClick={handleCollapse} 
+            className="absolute top-4 right-4 p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm transition-all z-30 group/collapse-btn active:scale-95 flex items-center justify-center"
+          >
+            <ChevronUp className="h-4 w-4 text-slate-400 group-hover/collapse-btn:text-indigo-600 transition-colors" />
+          </button>
+
+          {/* SECTION 1: ACCOUNT INFO - z-10 */}
+          <div className="flex flex-col min-w-0 relative z-10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-1 flex-nowrap min-w-0">
               <div className="h-10 shrink-0 flex items-center">
                 {account.image_url ? (
@@ -970,17 +919,14 @@ export function AccountDetailHeaderV2({
               <h1 className="text-[18px] font-extrabold text-slate-900 leading-tight uppercase truncate min-w-0" title={account.name}>{account.name}</h1>
               <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                 <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(account.id);
-                    toast.success("Account ID copied to clipboard");
-                  }} 
+                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(account.id); toast.success("Account ID copied to clipboard"); }} 
                   className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full"
                   title="Copy Account ID"
                 >
                   <Copy className="h-4 w-4" />
                 </button>
-                <button onClick={handleOpenPocketBase} className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 hover:bg-amber-50 rounded-full" title="Open in Database"><Database className="h-4 w-4" /></button>
-                <button onClick={() => setIsSlideOpen(true)} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full" title="Settings"><Settings className="h-4 w-4" /></button>
+                <button onClick={(e) => { e.stopPropagation(); handleOpenPocketBase(); }} className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 hover:bg-amber-50 rounded-full" title="Open in Database"><Database className="h-4 w-4" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setIsSlideOpen(true); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 hover:bg-indigo-50 rounded-full" title="Settings"><Settings className="h-4 w-4" /></button>
               </div>
             </div>
             
@@ -988,7 +934,7 @@ export function AccountDetailHeaderV2({
               <div className="text-[13px] font-semibold text-slate-500 font-sans tracking-wide truncate flex items-center gap-2 group/edit-info">
                 <span className="tabular-nums drop-shadow-sm">{account.account_number || "•••••"}</span>
                 {account.receiver_name && <span className="opacity-60 truncate" title={account.receiver_name}>• {account.receiver_name}</span>}
-                <button onClick={() => setIsSlideOpen(true)} className="p-1 hover:bg-white rounded border border-slate-200 text-indigo-600 transition-all shadow-sm"><Edit className="h-3 w-3" /></button>
+                <button onClick={(e) => { e.stopPropagation(); setIsSlideOpen(true); }} className="p-1 hover:bg-white rounded border border-slate-200 text-indigo-600 transition-all shadow-sm"><Edit className="h-3 w-3" /></button>
               </div>
             </div>
             <div className="flex items-center gap-2 mt-4 flex-wrap min-h-[26px]">
@@ -1039,7 +985,7 @@ export function AccountDetailHeaderV2({
             <div className="mt-auto pt-6 w-full">
               <Popover open={isRewardsPopoverOpen} onOpenChange={setIsRewardsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <button className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-full h-9 px-4 shadow-sm hover:bg-amber-100 hover:shadow-md transition-all active:scale-95 group">
+                  <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-full h-9 px-4 shadow-sm hover:bg-amber-100 hover:shadow-md transition-all active:scale-95 group">
                     <Zap className="h-4 w-4 fill-amber-500 text-amber-500 group-hover:scale-110 transition-transform drop-shadow" />
                     <span className="text-[11px] font-black uppercase tracking-wider">
                       {isTiered ? (() => {
@@ -1069,95 +1015,93 @@ export function AccountDetailHeaderV2({
                   </div>
                   <div className="bg-slate-50 p-4 max-h-[440px] overflow-y-auto space-y-3">
                       {isTiered ? (() => {
-                          // Priority categories that should appear first
                           const priorityKeywords = ['health', 'insurance', 'bảo hiểm', 'y tế', 'khám', 'hospital', 'medical'];
                           const isPriorityCategory = (name: string) => priorityKeywords.some(k => name.toLowerCase().includes(k));
 
-                          // Group by Tier first, then by Category within each tier
-                          const tierGroups: Record<string, any> = {};
+                          const catGroups: Record<string, any> = {};
+                          
                           rawTiers.forEach((tier: any) => {
-                            if (!tierGroups[tier.name]) tierGroups[tier.name] = { minSpend: tier.min_spend, categories: {} };
                             tier.policies?.forEach((pol: any) => {
-                              const targetCatIds = (pol.cat_ids && pol.cat_ids.length > 0) ? pol.cat_ids : ["General"];
-                              targetCatIds.forEach((cId: any) => {
-                                const mappedCat = categories.find(c => String(c.id) === String(cId));
-                                const catName = mappedCat ? mappedCat.name : "General";
-                                if (!tierGroups[tier.name].categories[catName]) {
-                                  tierGroups[tier.name].categories[catName] = [];
-                                }
-                                const ruleKey = `${pol.rate}-${pol.max}`;
-                                if (!tierGroups[tier.name].categories[catName].some((r: any) => `${r.rate}-${r.max}` === ruleKey)) {
-                                  tierGroups[tier.name].categories[catName].push({ 
-                                    max: pol.max, 
-                                    rate: pol.rate, 
-                                    categoryIds: pol.cat_ids,
-                                    isPriority: isPriorityCategory(catName)
+                              const hasCatIds = pol.cat_ids && pol.cat_ids.length > 0;
+                              const targetCatNames: string[] = hasCatIds 
+                                ? pol.cat_ids.map((id: any) => categories.find(c => String(c.id) === String(id))?.name || "General")
+                                : ["General"];
+
+                              const uniqueCatNames = Array.from(new Set(targetCatNames));
+
+                              uniqueCatNames.forEach((catName: string) => {
+                                if (!catGroups[catName]) catGroups[catName] = { 
+                                  isPriority: isPriorityCategory(catName),
+                                  tiers: [] 
+                                };
+                                
+                                if (!catGroups[catName].tiers.some((t: any) => t.tierName === tier.name && t.rate === pol.rate)) {
+                                  catGroups[catName].tiers.push({
+                                    tierName: tier.name,
+                                    rate: pol.rate,
+                                    max: pol.max,
+                                    minSpend: tier.min_spend
                                   });
                                 }
                               });
                             });
                           });
 
-                          // Sort tiers by minSpend
-                          const sortedTierNames = Object.keys(tierGroups).sort((a, b) => 
-                            (tierGroups[a]?.minSpend || 0) - (tierGroups[b]?.minSpend || 0)
-                          );
+                          const sortedCatNames = Object.keys(catGroups).sort((a, b) => {
+                            if (catGroups[a].isPriority && !catGroups[b].isPriority) return -1;
+                            if (!catGroups[a].isPriority && catGroups[b].isPriority) return 1;
+                            if (a === "General") return 1;
+                            if (b === "General") return -1;
+                            return a.localeCompare(b);
+                          });
 
-                          return sortedTierNames.map((tierName, tierIdx) => {
-                            const tierData = tierGroups[tierName];
-                            const categoriesInTier = tierData.categories;
+                          return sortedCatNames.map((catName, catIdx) => {
+                            const group = catGroups[catName];
+                            const catObj = categories.find(c => c.name === catName) || { name: catName, image_url: null };
                             
-                            // Sort categories: priority first, then alphabetically
-                            const sortedCatNames = Object.keys(categoriesInTier).sort((a, b) => {
-                              const aPriority = categoriesInTier[a]?.[0]?.isPriority || false;
-                              const bPriority = categoriesInTier[b]?.[0]?.isPriority || false;
-                              if (aPriority && !bPriority) return -1;
-                              if (!aPriority && bPriority) return 1;
-                              return a.localeCompare(b);
-                            });
+                            group.tiers.sort((a: any, b: any) => (a.minSpend || 0) - (b.minSpend || 0));
 
                             return (
-                              <div key={tierIdx} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3 relative overflow-hidden">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center shrink-0">
-                                      <span className="text-[10px] font-black text-indigo-600">{tierIdx + 1}</span>
-                                    </div>
-                                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{tierName || `Tier ${tierIdx + 1}`}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">≥{formatVNShort(tierData.minSpend || 0)}</span>
+                              <div key={catIdx} className={cn(
+                                "bg-white rounded-2xl p-4 border shadow-sm space-y-3 relative overflow-hidden group/cat-rule transition-all",
+                                group.isPriority ? "border-amber-200" : "border-slate-200 hover:border-indigo-200"
+                              )}>
+                                {group.isPriority && <div className="absolute top-0 left-0 w-1 h-full bg-amber-400" />}
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                                    {catObj.image_url ? (
+                                      <img src={catObj.image_url} alt="" className="h-full w-full object-contain" />
+                                    ) : (
+                                      <span className="text-xs font-black text-slate-400 uppercase">{catName.charAt(0)}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className={cn("text-[12px] font-black uppercase tracking-wider", group.isPriority ? "text-amber-700" : "text-slate-700")}>
+                                      {catName}
+                                    </span>
+                                    {group.isPriority && <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Priority Reward</span>}
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-1 gap-2">
-                                  {sortedCatNames.map((catName, catIdx) => {
-                                    const catRules = categoriesInTier[catName];
-                                    const catObj = categories.find(c => (c.name === catName)) || { name: 'General', image_url: null };
-                                    const isPriority = catRules[0]?.isPriority;
-                                    return (
-                                      <div key={catIdx} className={cn("p-2 rounded-lg border transition-all", isPriority ? "bg-amber-50 border-amber-200" : "bg-slate-50/80 border-slate-100/50")}>
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                          <div className="h-5 w-5 rounded bg-white border border-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                                            {catObj.image_url ? (
-                                              <img src={catObj.image_url} alt="" className="h-full w-full object-contain" />
-                                            ) : (
-                                              <span className="text-[8px] font-black text-slate-400">{catObj.name.charAt(0)}</span>
-                                            )}
-                                          </div>
-                                          <span className={cn("text-[10px] font-bold uppercase tracking-wider truncate", isPriority ? "text-amber-700" : "text-slate-600")} title={catName}>{catName}</span>
+
+                                <div className="space-y-1.5">
+                                  {group.tiers.map((t: any, tIdx: number) => (
+                                    <div key={tIdx} className="flex items-center justify-between bg-slate-50/80 px-3 py-2 rounded-xl border border-slate-100/50 hover:bg-white hover:border-indigo-100 transition-all group/tier-row">
+                                      <div className="flex flex-col">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{t.tierName || `Tier ${tIdx + 1}`}</span>
+                                          <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full border border-slate-200/50">≥{formatVNShort(t.minSpend || 0)}</span>
                                         </div>
-                                        <div className="space-y-1.5 pl-7">
-                                          {catRules.map((r: any, rIdx: number) => (
-                                            <div key={rIdx} className="flex justify-between items-center">
-                                              <span className="text-[9px] font-medium text-slate-500">Rate</span>
-                                              <div className="flex items-center gap-2">
-                                                {(r.max || r.max > 0) && <span className="text-[8px] font-black text-indigo-500 uppercase flex items-center gap-0.5"><Info className="h-2 w-2" /> {formatVNShort(r.max)}</span>}
-                                                <span className="text-[12px] font-black text-emerald-600 bg-emerald-100/50 px-1.5 py-0.5 rounded border border-emerald-200/50 tabular-nums">{toDisplayPercent(r.rate || 0)}%</span>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
+                                        {t.max > 0 && (
+                                          <span className="text-[9px] font-bold text-indigo-500 uppercase flex items-center gap-1 mt-0.5 opacity-80">
+                                            <Info className="h-2.5 w-2.5" /> Max {formatMoneyVND(t.max)}
+                                          </span>
+                                        )}
                                       </div>
-                                    );
-                                  })}
+                                      <div className="flex flex-col items-end">
+                                        <span className="text-[15px] font-black text-emerald-600 tabular-nums">{toDisplayPercent(t.rate || 0)}%</span>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
                             );
@@ -1179,14 +1123,14 @@ export function AccountDetailHeaderV2({
           </div>
 
           {/* SECTION 2: BALANCE & HEALTH */}
-          <div className="flex flex-col lg:border-l border-dashed border-slate-300 lg:pl-8 min-w-0">
+          <div className="flex flex-col lg:border-l border-dashed border-slate-300 lg:pl-8 min-w-0" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6 gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Balance</span>
                 <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 text-[8px] font-black uppercase shadow-sm">Health</span>
               </div>
               <div className="flex items-center gap-2">
-                {isCreditCard && dueDateBadge}
+                {isCreditCard && <div onClick={(e) => e.stopPropagation()}>{dueDateBadge}</div>}
                 <button
                   onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-pending-items-modal", { detail: { accountId: account.id } })); }}
                   className={cn("text-[9px] font-black px-2.5 py-1 rounded-full tracking-tight shadow-sm flex items-center gap-1.5 active:scale-95 transition-all border whitespace-nowrap", pendingCount > 0 ? "text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100" : "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100")}
@@ -1244,24 +1188,22 @@ export function AccountDetailHeaderV2({
           </div>
 
           {/* SECTION 3: PERFORMANCE */}
-          <div className="flex flex-col lg:border-l border-dashed border-slate-300 lg:pl-8 min-w-0 relative">
+          <div className="flex flex-col lg:border-l border-dashed border-slate-300 lg:pl-8 min-w-0 relative" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6 gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Performance</span>
                 <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 text-[8px] font-black uppercase shadow-sm whitespace-nowrap">CB PERFORMANCE</span>
               </div>
-              <div className="flex items-center gap-2">
-                {/* Legacy V3 Engine Modal Triggered via Button */}
+              <div className="flex items-center gap-2 pr-16">
                 <TooltipProvider>
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>
-                      <button className="flex items-center gap-2 text-[10px] font-black text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-all uppercase shadow-sm hover:shadow active:scale-95 whitespace-nowrap">
+                      <button onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 text-[10px] font-black text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-all uppercase shadow-sm hover:shadow active:scale-95 whitespace-nowrap">
                         <BarChart3 className="h-3.5 w-3.5 text-slate-400" /> Analytics
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="w-[600px] max-w-[90vw] p-0 border-none shadow-[0_40px_100px_rgba(0,0,0,0.4)] rounded-[2rem] overflow-hidden bg-white z-[120]" sideOffset={15}>
                       <div className="bg-white text-left">
-                        {/* THE INTUITION V3.2 HEADER */}
                         <div className="bg-white px-5 py-4 flex flex-col gap-1.5 border-b border-slate-100 relative">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1275,7 +1217,6 @@ export function AccountDetailHeaderV2({
                           <h3 className="text-[18px] font-black tracking-[-0.03em] text-slate-900 uppercase">PERFORMANCE</h3>
                         </div>
                         <div className="p-6 space-y-7 max-h-[85vh] overflow-y-auto no-scrollbar scroll-smooth">
-                          {/* Cycle Scope Data */}
                           <div className="space-y-4">
                             <div className="flex justify-between items-center mb-1"><span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Active Statistics Pipeline</span><span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100/80 uppercase">{dynamicCashbackStats?.cycle?.label || "CYCLE DATA"}</span></div>
                             <div className="grid grid-cols-2 gap-3 pb-2">
@@ -1297,7 +1238,6 @@ export function AccountDetailHeaderV2({
                             </div>
                           </div>
 
-                          {/* Entire Year Scope Data */}
                           <div className="space-y-4 pt-6 border-t border-slate-100">
                              <div className="flex justify-between items-center mb-1">
                                 <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">ANNUAL PERFORMANCE PIPELINE</span>
@@ -1339,15 +1279,6 @@ export function AccountDetailHeaderV2({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
-                {/* Switch to Collapse Mode */}
-                <button
-                  onClick={() => setIsHeaderCollapsed(true)}
-                  className="flex items-center gap-1.5 p-2 rounded-lg text-slate-400 border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm ml-auto"
-                  aria-label="Collapse header"
-                >
-                  <ChevronDown className="h-4 w-4 rotate-180" />
-                </button>
               </div>
             </div>
 
@@ -1384,7 +1315,7 @@ export function AccountDetailHeaderV2({
               <TooltipProvider>
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
-                    <div className="relative w-full h-9 bg-indigo-50 hover:bg-indigo-100 rounded-lg overflow-hidden border border-indigo-100 flex items-center z-0 cursor-help transition-colors">
+                    <div onClick={(e) => e.stopPropagation()} className="relative w-full h-9 bg-indigo-50 hover:bg-indigo-100 rounded-lg overflow-hidden border border-indigo-100 flex items-center z-0 cursor-help transition-colors">
                       <div className="absolute top-0 left-0 h-full bg-indigo-100 shadow-[0_2px_15px_rgba(79,70,229,0.1)] transition-all duration-1000 -z-10 rounded-r-lg" style={{ width: `${Math.min(100, Math.round(((dynamicCashbackStats?.currentSpend || 0) / Math.max(1, dynamicCashbackStats?.minSpend || 1)) * 100))}%` }} />
                       <div className="flex items-center px-4 gap-2 w-full min-w-0">
                          <TrendingUp className="h-4 w-4 text-indigo-500 shrink-0" />
@@ -1415,15 +1346,13 @@ export function AccountDetailHeaderV2({
                 </Tooltip>
               </TooltipProvider>
 
-              <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-indigo-600 rounded-full h-9 text-[11px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap shadow-sm hover:shadow hover:bg-slate-50 active:scale-95 transition-all outline-none">
+              <button onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-indigo-600 rounded-full h-9 text-[11px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap shadow-sm hover:shadow hover:bg-slate-50 active:scale-95 transition-all outline-none">
                  <Calendar className="h-4 w-4 text-indigo-400" /> {dynamicCashbackStats?.cycle?.label || selectedCycle || "NOT SET"}
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>
   );
-
 }
