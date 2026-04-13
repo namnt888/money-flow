@@ -584,7 +584,7 @@ export async function toggleBatchItemConfirmAction(params: {
 
                 // Also revert batch item status
                 const { revertBatchItem } = await import('@/services/batch.service')
-                await revertBatchItem(item.transaction_id || activeTxnIds[0] || item.id)
+                await revertBatchItem(item.id)
             } else {
                 await pocketbaseUpdate<any>('batch_items', batchItemId, { status: 'pending' })
             }
@@ -647,10 +647,9 @@ export async function bulkUnconfirmBatchItemsAction(batchId: string, itemIds: st
         for (const item of items || []) {
             if (item.transaction_id) {
                 await voidTransaction(item.transaction_id)
-                await revertBatchItem(item.transaction_id)
-            } else {
-                await pocketbaseUpdate<any>('batch_items', item.id, { status: 'pending' })
             }
+            // Always call revert with item.id to ensure status reset even if transaction_id was missing
+            await revertBatchItem(item.id)
             count++
         }
 
