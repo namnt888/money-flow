@@ -237,7 +237,7 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
   const repaymentList: RepaymentItem[] = [];
 
   const isPersonalDebt = (txn: any) => {
-    const rawTag = txn.tag || txn.debt_cycle_tag || '';
+    const rawTag = txn.debt_cycle_tag || '';
     const normalized = normalizeMonthTag(rawTag) || '';
     
     // Fallback: If no tag, use occurred_at date to check year
@@ -277,7 +277,7 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
         initialAmount: calculateFinalPrice(txn as any),
         date: txn.date || txn.occurred_at,
         metadata: txn.metadata,
-        tag: txn.tag
+        tag: txn.debt_cycle_tag
       });
     }
   })
@@ -438,12 +438,14 @@ export async function getDebtByTags(personId: string, options?: { ignoreSynced?:
   >();
 
   ;(data as unknown as (DebtTransactionRow & { id: string })[]).filter(isPersonalDebt).forEach(row => {
-    // Prioritize debt_cycle_tag for grouping, fall back to row.tag
-    const preferredTag = (row as any).debt_cycle_tag || row.tag;
+    const preferredTag = (row as any).debt_cycle_tag;
     const normalizedTag = normalizeMonthTag(preferredTag)
-    const tag = normalizedTag?.trim() ? normalizedTag.trim() : (preferredTag?.trim() ? preferredTag.trim() : 'UNTAGGED')
-    const baseType = resolveBaseType(row.type)
     const occurredAt = row.occurred_at ?? ''
+    const derivedTagFromDate = occurredAt ? toYYYYMMFromDate(new Date(occurredAt)) : ''
+    const tag = normalizedTag?.trim()
+      ? normalizedTag.trim()
+      : (preferredTag?.trim() ? preferredTag.trim() : (derivedTagFromDate || 'UNTAGGED'))
+    const baseType = resolveBaseType(row.type)
 
     if (!tagMap.has(tag)) {
       tagMap.set(tag, { lend: 0, lendOriginal: 0, repay: 0, cashback: 0, last_activity: occurredAt, remainingPrincipal: 0, links: [] })
