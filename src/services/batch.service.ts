@@ -567,22 +567,20 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
  * Revert a batch item when its transaction is voided.
  * This resets the item to 'funded' (Pending) so it can be processed again.
  */
-export async function revertBatchItem(transactionId: string) {
-    const isPB = transactionId && transactionId.length === 15 && !transactionId.includes('-');
+export async function revertBatchItem(id: string) {
+    const isPB = id && id.length === 15 && !id.includes('-');
     if (isPB) {
-        const itemsByTxnResult = await pocketbaseList<any>('batch_items', {
-            filter: `transaction_id = '${transactionId}'`,
-            page: 1,
-            perPage: 100,
-        })
-        let item = itemsByTxnResult.items[0]
-
+        // Try finding by batch_item_id first
+        let item = await pocketbaseGetById<any>('batch_items', id).catch(() => null);
+        
+        // If not found, try finding by transaction_id
         if (!item) {
-            try {
-                item = await pocketbaseGetById<any>('batch_items', transactionId)
-            } catch {
-                // ignore
-            }
+            const itemsByTxnResult = await pocketbaseList<any>('batch_items', {
+                filter: `transaction_id = '${id}'`,
+                page: 1,
+                perPage: 1,
+            })
+            item = itemsByTxnResult.items[0]
         }
 
         if (item) {
@@ -598,15 +596,14 @@ export async function revertBatchItem(transactionId: string) {
 
     const supabase: any = createClient()
 
-    // 1. Find the batch item linked to this transaction
+    // 1. Find the batch item by id or transaction_id
     const { data: item, error: itemError } = await supabase
         .from('batch_items')
         .select('id')
-        .eq('transaction_id', transactionId)
+        .or(`id.eq.${id},transaction_id.eq.${id}`)
         .single()
 
     if (itemError || !item) {
-        // It's possible this transaction isn't linked to a batch item. Just ignore.
         return false;
     }
 
@@ -614,7 +611,7 @@ export async function revertBatchItem(transactionId: string) {
     const { error: updateError } = await supabase
         .from('batch_items')
         .update({
-            status: 'pending', // Reset to Pending/Funded
+            status: 'pending', 
             transaction_id: null,
             is_confirmed: false
         })
