@@ -36,6 +36,7 @@ async function trySyncPeopleSheet(
     occurred_at?: string | null;
     note?: string | null;
     tag?: string | null;
+    debt_cycle_tag?: string | null;
     shop_id?: string | null;
     amount?: number | null;
     original_amount?: number | null;
@@ -689,6 +690,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
           occurred_at: normalized.occurred_at,
           note: normalized.note ?? null,
           tag: normalized.tag ?? normalized.debt_cycle_tag ?? null,
+          debt_cycle_tag: normalized.debt_cycle_tag ?? normalized.tag ?? null,
           shop_id: normalized.shop_id ?? null,
           amount: Math.abs(normalized.amount ?? 0),
           original_amount: Math.abs(normalized.amount ?? 0),
@@ -970,17 +972,21 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
 
     const oldPersonId = existing.person_id as string | null;
     const newPersonId = normalized.person_id as string | null;
-    const oldTag = (existing.tag || existing.debt_cycle_tag || existing.persisted_cycle_tag || null) as string | null;
-    const newTag = (normalized.tag || normalized.debt_cycle_tag || normalized.persisted_cycle_tag || null) as string | null;
+    const oldDebtCycleTag =
+      (normalizeMonthTag(existing.debt_cycle_tag || existing.tag || "") || existing.debt_cycle_tag || existing.tag || null) as string | null;
+    const newDebtCycleTag =
+      (normalizeMonthTag(normalized.debt_cycle_tag || normalized.tag || "") || normalized.debt_cycle_tag || normalized.tag || null) as string | null;
+    const movedPersonOrCycle = oldPersonId !== newPersonId || oldDebtCycleTag !== newDebtCycleTag;
 
     // If transaction moved person or cycle, remove stale row from old sheet first.
-    if (oldPersonId && (oldPersonId !== newPersonId || oldTag !== newTag)) {
+    if (oldPersonId && movedPersonOrCycle) {
       await trySyncPeopleSheet(
         oldPersonId,
         {
           id: pbId,
           occurred_at: existing.occurred_at || existing.date || null,
-          tag: oldTag,
+          tag: oldDebtCycleTag,
+          debt_cycle_tag: oldDebtCycleTag,
           amount: 0,
           status: "void",
         },
@@ -995,7 +1001,8 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
           id: pbId,
           occurred_at: normalized.occurred_at,
           note: normalized.note ?? null,
-          tag: newTag,
+          tag: newDebtCycleTag,
+          debt_cycle_tag: newDebtCycleTag,
           shop_id: normalized.shop_id ?? null,
           amount: Math.abs(normalized.amount ?? 0),
           original_amount: Math.abs(normalized.amount ?? 0),
@@ -1006,7 +1013,7 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
           target_account_id: normalized.target_account_id ?? normalized.to_account_id ?? null,
           status: "posted",
         },
-        "update",
+        movedPersonOrCycle ? "create" : "update",
       );
     }
 
@@ -1197,6 +1204,7 @@ export async function voidTransaction(
         id: pbId,
         occurred_at: existing.occurred_at || existing.date || null,
         tag: (existing.tag || existing.debt_cycle_tag || existing.persisted_cycle_tag || null) as string | null,
+        debt_cycle_tag: (existing.debt_cycle_tag || existing.tag || null) as string | null,
         amount: 0,
         status: "void",
       },
@@ -1252,6 +1260,7 @@ export async function deleteTransactionCascade(id: string): Promise<boolean> {
         id: pbId,
         occurred_at: existing.occurred_at || existing.date || null,
         tag: (existing.tag || existing.debt_cycle_tag || existing.persisted_cycle_tag || null) as string | null,
+        debt_cycle_tag: (existing.debt_cycle_tag || existing.tag || null) as string | null,
         amount: 0,
         status: "void",
       },

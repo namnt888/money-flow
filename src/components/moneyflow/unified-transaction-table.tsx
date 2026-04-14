@@ -4471,8 +4471,8 @@ export const UnifiedTransactionTable = React.forwardRef<
                                 }
                               >
                                 <div className="flex items-center gap-2 min-w-0 max-w-full">
-                                  {/* Icon Container (Square as per rules) */}
-                                  <div className="shrink-0 h-8 w-8 rounded-none border border-slate-100 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm">
+                                  {/* Icon Container (Image only: no border/bg/shadow) */}
+                                  <div className="shrink-0 h-8 w-8 rounded-none flex items-center justify-center overflow-hidden">
                                     {categoryImage ? (
                                       <img
                                         src={categoryImage}

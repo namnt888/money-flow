@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Menu,
 } from 'lucide-react'
@@ -18,11 +18,13 @@ import { GlobalAI } from '@/components/ai/global-ai'
 import { useAppFavicon } from '@/hooks/use-app-favicon'
 import { SidebarNavV2 } from '@/components/navigation/sidebar-nav-v2'
 import { coloredNavItems } from '@/components/navigation/nav-icon-system'
+import { subscribeTransactionSync } from '@/lib/transaction-realtime-sync'
 
 export function AppLayoutV2({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
 
   // Dynamic Favicon for Page Navigation
   useAppFavicon(false)
@@ -69,6 +71,18 @@ export function AppLayoutV2({ children }: { children: React.ReactNode }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [sidebarCollapsed])
+
+  useEffect(() => {
+    let lastRefreshAt = 0
+    const unsubscribe = subscribeTransactionSync(() => {
+      const now = Date.now()
+      if (now - lastRefreshAt < 700) return
+      lastRefreshAt = now
+      router.refresh()
+    })
+
+    return unsubscribe
+  }, [router])
 
   // Hide sidebar on login page
   if (pathname?.startsWith('/login')) {
