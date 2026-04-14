@@ -8,6 +8,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { DebtCycleList } from "@/components/moneyflow/debt-cycle-list";
 import { SplitBillManager } from "@/components/people/split-bill-manager";
 import { getPersonRouteId } from '@/lib/person-route';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SheetSyncControls } from "@/components/people/sheet-sync-controls";
 
 interface PersonDetailViewV2Props {
     person: Person;
@@ -63,6 +65,7 @@ export function PersonDetailViewV2({
     const [selectedYear, setSelectedYear] = useState<string | null>(new Date().getFullYear().toString());
     const [filterType, setFilterType] = useState<'all' | 'income' | 'expense' | 'lend' | 'repay' | 'transfer' | 'cashback'>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     return (
         <div className="flex flex-col h-full bg-slate-50/50">
@@ -74,6 +77,7 @@ export function PersonDetailViewV2({
                 showManageSheet={true}
                 activeCycleTag={activeCycleTag || undefined}
                 onCycleChange={setActiveCycleTag}
+                onOpenSettings={() => setIsSettingsOpen(true)}
             />
 
             <div className="flex-1 overflow-hidden relative bg-white">
@@ -125,6 +129,23 @@ export function PersonDetailViewV2({
                     </div>
                 )}
             </div>
+
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogContent className="sm:max-w-[640px]">
+                    <DialogHeader>
+                        <DialogTitle>Sheet Connection</DialogTitle>
+                        <DialogDescription>
+                            Configure sheet links and yearly master sync for this person.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <SheetSyncControls
+                        personId={person.id}
+                        sheetLink={person.sheet_link}
+                        googleSheetUrl={person.google_sheet_url}
+                        isMasterSheetEnabled={person.is_master_sheet_enabled}
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

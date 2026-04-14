@@ -24,6 +24,8 @@
     "pb:remigrate:people:apply": "node scripts/pocketbase/remigrate-people-cycle-sheets.mjs --apply",
     "pb:migrate:debt-cycle-backfill": "node scripts/pocketbase/migrate/backfill-debt-cycle-tag.mjs",
     "pb:migrate:debt-cycle-backfill:apply": "node scripts/pocketbase/migrate/backfill-debt-cycle-tag.mjs --apply",
+    "pb:migrate:repayment-parent-flag": "node scripts/pocketbase/migrate/backfill-repayment-parent-flag.mjs",
+    "pb:migrate:repayment-parent-flag:apply": "node scripts/pocketbase/migrate/backfill-repayment-parent-flag.mjs --apply",
     "pb:backfill:txn-person": "node scripts/pocketbase/backfill-transactions-person-fk.mjs",
     "pb:backfill:txn-person:apply": "node scripts/pocketbase/backfill-transactions-person-fk.mjs --apply"
   },

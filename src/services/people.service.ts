@@ -183,8 +183,14 @@ export async function getPeople(options?: {
       const amount = Math.abs(Number(txn.amount || 0));
       const type = String(txn.type || "").toLowerCase();
       const note = (txn.note || "").toLowerCase();
+      const rowMetadata = txn.metadata && typeof txn.metadata === 'object' ? txn.metadata : {};
+      const hasMultiCycleAllocations =
+        rowMetadata.multi_cycle_repay_allocations &&
+        typeof rowMetadata.multi_cycle_repay_allocations === 'object' &&
+        Object.keys(rowMetadata.multi_cycle_repay_allocations).length > 0;
+      const isRepaymentParent = rowMetadata.is_debt_repayment_parent === true || hasMultiCycleAllocations;
       const isRollover = note.includes("rollover");
-      const isRepayment = type === "repayment" || (type === "income" && !note.includes("cashback") && !note.includes("refund"));
+      const isRepayment = !isRepaymentParent && (type === "repayment" || (type === "income" && !note.includes("cashback") && !note.includes("refund")));
       const isCashback = type === "cashback" || (type === "income" && (note.includes("cashback") || note.includes("refund"))) || (type === "expense" && (note.includes("refund") || note.includes("cashback")));
       const isSpend = (type === "expense" || type === "debt") && !isRollover && !isCashback && !isRepayment;
 

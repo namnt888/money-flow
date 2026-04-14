@@ -3,12 +3,14 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { syncAllSheetDataAction, testSheetConnectionAction, updatePersonAction } from '@/actions/people-actions'
-import { Save, ExternalLink, Check } from 'lucide-react'
+import { Save, ExternalLink, Check, LayoutDashboard } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 
 type Props = {
   personId: string | null
   sheetLink?: string | null // Script Link
   googleSheetUrl?: string | null // View Link
+  isMasterSheetEnabled?: boolean | null
 }
 
 type ToastState = {
@@ -17,10 +19,11 @@ type ToastState = {
   tone?: 'success' | 'error' | 'info'
 }
 
-export function SheetSyncControls({ personId, sheetLink, googleSheetUrl }: Props) {
+export function SheetSyncControls({ personId, sheetLink, googleSheetUrl, isMasterSheetEnabled }: Props) {
   const router = useRouter()
   const [currentScriptLink, setCurrentScriptLink] = useState(sheetLink ?? '')
   const [currentSheetUrl, setCurrentSheetUrl] = useState(googleSheetUrl ?? '')
+  const [currentMasterSheetEnabled, setCurrentMasterSheetEnabled] = useState(Boolean(isMasterSheetEnabled))
   const [isEditing, setIsEditing] = useState(false)
 
   const hasScriptLink = useMemo(() => Boolean(currentScriptLink && currentScriptLink.trim()), [currentScriptLink])
@@ -101,7 +104,8 @@ export function SheetSyncControls({ personId, sheetLink, googleSheetUrl }: Props
       setToast({ title: 'Saving sheet links...', tone: 'info' })
       const result = await updatePersonAction(personId, {
         sheet_link: currentScriptLink.trim() || null,
-        google_sheet_url: currentSheetUrl.trim() || null
+        google_sheet_url: currentSheetUrl.trim() || null,
+        is_master_sheet_enabled: currentMasterSheetEnabled,
       })
       if (result) {
         setToast({ title: 'Sheet link saved!', tone: 'success' })
@@ -175,6 +179,20 @@ export function SheetSyncControls({ personId, sheetLink, googleSheetUrl }: Props
             </a>
           )}
         </div>
+      </div>
+
+      {/* Master Sheet Toggle */}
+      <div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50/40 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex h-8 w-8 items-center justify-center rounded-md ${currentMasterSheetEnabled ? 'bg-amber-100 text-amber-700' : 'bg-white text-slate-400 border border-slate-200'}`}>
+            <LayoutDashboard className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Master Year Sheet</p>
+            <p className="text-xs text-slate-500">Sync all transactions to one yearly sheet. In-app debt cycle history still stays split by cycle.</p>
+          </div>
+        </div>
+        <Switch checked={currentMasterSheetEnabled} onCheckedChange={(val) => { setCurrentMasterSheetEnabled(val); setIsEditing(true); }} />
       </div>
 
       {/* Sync Actions */}
