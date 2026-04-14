@@ -65,6 +65,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { generateTag } from "@/lib/tag";
 import { isYYYYMM } from "@/lib/month-tag";
+import { emitTransactionSync } from "@/lib/transaction-realtime-sync";
 
 // Dialogs
 import { AccountSlideV2 } from "@/components/accounts/v2/AccountSlideV2";
@@ -1154,6 +1155,7 @@ export function TransactionSlideV2({
           setHasChanges(false);
           onHasChanges?.(false);
         }
+        emitTransactionSync(effectiveEditingId ? "transaction-updated" : "transaction-created");
         onSuccess?.(finalTxnId ? { id: finalTxnId, ...payload } : undefined);
       }
     } catch (error) {

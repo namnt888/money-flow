@@ -22,6 +22,8 @@
     "clasp:refresh": "node scripts/refresh-clasp-token.mjs",
     "pb:remigrate:people": "node scripts/pocketbase/remigrate-people-cycle-sheets.mjs",
     "pb:remigrate:people:apply": "node scripts/pocketbase/remigrate-people-cycle-sheets.mjs --apply",
+    "pb:migrate:debt-cycle-backfill": "node scripts/pocketbase/migrate/backfill-debt-cycle-tag.mjs",
+    "pb:migrate:debt-cycle-backfill:apply": "node scripts/pocketbase/migrate/backfill-debt-cycle-tag.mjs --apply",
     "pb:backfill:txn-person": "node scripts/pocketbase/backfill-transactions-person-fk.mjs",
     "pb:backfill:txn-person:apply": "node scripts/pocketbase/backfill-transactions-person-fk.mjs --apply"
   },

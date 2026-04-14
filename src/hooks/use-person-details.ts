@@ -46,20 +46,9 @@ export function usePersonDetails({
   const getTxnCycleTag = (txn: TransactionWithDetails): string => {
     const metadata = (txn.metadata as any) || {};
     const metadataDebtCycle = metadata.debt_cycle_tag as string | undefined;
-    const metadataPersisted = metadata.persisted_cycle_tag as string | undefined;
-    const persisted = (txn as any).persisted_cycle_tag as string | undefined;
     const debtCycle = (txn as any).debt_cycle_tag as string | undefined;
-    const metadataTag = metadata.tag as string | undefined;
-    
-    // Prioritize Debt Cycle Tag first
-    const rawTag =
-      debtCycle ||
-      metadataDebtCycle ||
-      persisted ||
-      metadataPersisted ||
-      txn.tag ||
-      metadataTag ||
-      "";
+
+    const rawTag = debtCycle || metadataDebtCycle || "";
     
     const normalized = normalizeMonthTag(rawTag);
     if (normalized && normalized.trim()) {
@@ -87,9 +76,9 @@ export function usePersonDetails({
   const activeTransactions = useMemo(
     () => transactions.filter((txn) => {
         if (txn.status === "void") return false;
-        
-        // --- STRICT 2026 PERSONAL DEBT FILTER (Resilient Version) ---
-        const rawTag = (txn as any).tag || (txn as any).debt_cycle_tag || '';
+
+      // Debt scope must follow debt_cycle_tag only.
+      const rawTag = (txn as any).debt_cycle_tag || '';
         const normalized = normalizeMonthTag(rawTag) || '';
         
         let finalTag = normalized;

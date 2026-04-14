@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { emitTransactionSync } from "@/lib/transaction-realtime-sync"
 // import { AccountCard } from "./account-card" // Assuming we can simple row render
 import Image from "next/image"
 
@@ -80,6 +81,7 @@ export function ConfirmRefundDialogV2({
             if (result.success) {
                 toast.success("Refund confirmed successfully")
                 onOpenChange(false)
+                emitTransactionSync("transaction-refund-confirmed")
                 router.refresh()
             } else {
                 toast.error("Failed to confirm refund", {

@@ -25,6 +25,7 @@ type SheetSyncTransaction = {
   cashback_share_amount?: number | null
   type?: string | null
   img_url?: string | null
+  debt_cycle_tag?: string | null
 }
 
 function getCycleTag(date: Date): string {
@@ -306,7 +307,7 @@ async function postToSheet(sheetLink: string, payload: Record<string, unknown>):
 
 function buildPayload(txn: SheetSyncTransaction, action: 'create' | 'delete' | 'update') {
   const resolvedOccurredAt = txn.occurred_at ?? txn.date ?? null
-  const resolvedTag = resolveCycleTagForSheet(txn.tag, resolvedOccurredAt)
+  const resolvedTag = resolveCycleTagForSheet(txn.debt_cycle_tag, resolvedOccurredAt)
   const { originalAmount, percentRate, fixedBack, totalBack } = calculateTotals(txn)
 
   // If amount is negative, it's a credit to the debt account (Repayment) -> Type "In"
@@ -332,6 +333,7 @@ function buildPayload(txn: SheetSyncTransaction, action: 'create' | 'delete' | '
     fixed_back: fixedBack,
     total_back: totalBack,
     tag: resolvedTag,
+    debt_cycle_tag: txn.debt_cycle_tag ?? undefined,
     img: txn.img_url ?? undefined
   }
 }
@@ -417,7 +419,7 @@ export async function syncTransactionToSheet(
       }
     }
 
-    let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at ?? txn.date ?? null)
+    let cycleTag = resolveCycleTagForSheet(txn.debt_cycle_tag, txn.occurred_at ?? txn.date ?? null)
     if (personData.is_master_sheet_enabled && cycleTag && isYYYYMM(cycleTag)) {
       cycleTag = cycleTag.split('-')[0] // '2026-03' -> '2026'
     }
@@ -531,17 +533,18 @@ export async function syncAllTransactions(personId: string) {
         ? (txn as any).metadata
         : {}
       const occurredAt = (txn as any).occurred_at || (txn as any).date
-        const resolvedOriginalAmount = resolveOriginalAmountForSheet(txn as any, metadata)
+      const resolvedOriginalAmount = resolveOriginalAmountForSheet(txn as any, metadata)
 
-        return {
+      return {
         id: (txn as any).id,
         occurred_at: occurredAt,
         note: (txn as any).note || (txn as any).description,
         status: (txn as any).status,
-        tag: resolveCycleTagForSheet((txn as any).tag || (txn as any).debt_cycle_tag, occurredAt),
+        tag: resolveCycleTagForSheet((txn as any).debt_cycle_tag, occurredAt),
         type: (txn as any).type,
         amount: (txn as any).amount,
-          original_amount: resolvedOriginalAmount,
+        original_amount: resolvedOriginalAmount,
+        debt_cycle_tag: (txn as any).debt_cycle_tag,
         cashback_share_percent: numberOrDefault(
           firstNonZeroNumber([
             (txn as any).cashback_share_percent_input,
@@ -604,7 +607,7 @@ export async function syncAllTransactions(personId: string) {
     const cycleMap = new Map<string, typeof rows>()
 
     for (const txn of eligibleRows) {
-      let cycleTag = resolveCycleTagForSheet(txn.tag, txn.occurred_at)
+      let cycleTag = resolveCycleTagForSheet(txn.debt_cycle_tag, txn.occurred_at)
       if (personData?.is_master_sheet_enabled && cycleTag && isYYYYMM(cycleTag)) {
         cycleTag = cycleTag.split('-')[0]
       }
@@ -744,13 +747,34 @@ export async function syncCycleTransactions(
   try {
     const pbId = toPocketBaseId(personId, 'people')
     let tagFilter = ''
-    if (/^\d{4}$/.test(cycleTag)) {
-        tagFilter = `(tag >= "${cycleTag}-01" && tag <= "${cycleTag}-12") || (debt_cycle_tag >= "${cycleTag}-01" && debt_cycle_tag <= "${cycleTag}-12") || tag = "${cycleTag}" || debt_cycle_tag = "${cycleTag}"`
+
+    // Parse cycleTag to get filter
+    const yearMatch = cycleTag.match(/^(\d{4})$/)
+    const monthMatch = cycleTag.match(/^(\d{4})-(\d{2})$/)
+
+    if (yearMatch) {
+      // Full year like "2026"
+      const year = yearMatch[1]
+      const nextYear = String(Number(year) + 1)
+      tagFilter = `((debt_cycle_tag >= "${year}-01" && debt_cycle_tag <= "${year}-12") || debt_cycle_tag = "${year}") || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${year}-01-01 00:00:00.000Z" && occurred_at < "${nextYear}-01-01 00:00:00.000Z")`
+    } else if (monthMatch) {
+      // Specific month like "2026-03"
+      const monthStart = `${cycleTag}-01 00:00:00.000Z`
+      const year = Number(monthMatch[1])
+      const month = Number(monthMatch[2])
+      const nextDate = new Date(Date.UTC(year, month, 1))
+      const nextMonth = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, '0')}`
+      const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
+      const tags = legacyTag && legacyTag !== cycleTag ? [cycleTag, legacyTag] : [cycleTag]
+      const debtTagMatches = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
+      tagFilter = `(${debtTagMatches}) || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${monthStart}" && occurred_at < "${nextMonth}-01 00:00:00.000Z")`
     } else {
-        const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
-        const tags = legacyTag ? [cycleTag, legacyTag] : [cycleTag]
-        tagFilter = tags.map(t => `tag = "${t}" || debt_cycle_tag = "${t}"`).join(' || ')
+      // Legacy format
+      const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
+      const tags = legacyTag && legacyTag !== cycleTag ? [cycleTag, legacyTag] : [cycleTag]
+      tagFilter = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
     }
+
     const data = await pocketbaseList('pvl_txn_001', {
       filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
       expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
@@ -789,8 +813,9 @@ export async function syncCycleTransactions(
 
         return buildPayload({
           ...txn,
+          debt_cycle_tag: txn.debt_cycle_tag,
           occurred_at: occurredAt,
-          tag: resolveCycleTagForSheet(txn.tag || txn.debt_cycle_tag, occurredAt),
+          tag: resolveCycleTagForSheet(txn.debt_cycle_tag, occurredAt),
           original_amount: resolvedOriginalAmount,
           cashback_share_percent: numberOrDefault(
             firstNonZeroNumber([
@@ -850,13 +875,24 @@ export async function syncCycleTransactions(
       sample: rows.slice(0, 5).map((r: any) => ({
         id: r.id,
         date: r.date,
-        tag: r.tag,
+        debt_cycle_tag: r.debt_cycle_tag,
+        resolved_tag: r.tag,
         amount: r.amount,
         percent_back: r.percent_back,
         fixed_back: r.fixed_back,
         notes: r.notes,
       }))
     })
+    
+    // Log raw transactions for debugging
+    if (data.items && data.items.length > 0) {
+      console.log('[syncCycleTransactions] Raw PB rows sample:', data.items.slice(0, 3).map((t: any) => ({
+        id: t.id,
+        occurred_at: t.occurred_at,
+        debt_cycle_tag: t.debt_cycle_tag,
+        tag: t.tag,
+      })))
+    }
 
     console.log(`[Sheet Sync] Sending ${rows.length} mapped transactions to ${personId} for cycle ${cycleTag}`)
 

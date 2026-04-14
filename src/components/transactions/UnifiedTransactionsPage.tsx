@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation'
 import { TransactionHeader } from '@/components/transactions-v2/header/TransactionHeader'
 import { formatCycleTag } from '@/lib/cycle-utils'
 import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
+import { emitTransactionSync } from '@/lib/transaction-realtime-sync'
 
 import {
     AlertDialog,
@@ -160,7 +161,6 @@ export function UnifiedTransactionsPage({
 
     const handleSlideSubmissionEnd = () => {
         setIsGlobalLoading(false)
-        router.refresh()
     }
 
     // Clear loading IDs when transaction data updates
@@ -873,6 +873,7 @@ export function UnifiedTransactionsPage({
             console.log("🚀 Calling optimistic update for:", data)
             tableRef.current?.handleOptimisticUpdate(data as TransactionWithDetails)
         }
+        emitTransactionSync(data?.id ? 'transaction-updated-page' : 'transaction-mutated-page')
         router.refresh()
     }
 
@@ -894,6 +895,7 @@ export function UnifiedTransactionsPage({
             const success = await voidTransactionAction(voidTxn.id)
             if (success) {
                 toast.success("Transaction voided successfully")
+                emitTransactionSync('transaction-voided')
                 router.refresh()
             } else {
                 toast.error("Failed to void transaction")

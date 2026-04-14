@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Receipt,
@@ -45,6 +45,7 @@ import { RecentAccountsList } from "@/components/navigation/RecentAccountsList"
 import { Breadcrumbs } from "@/components/navigation/Breadcrumbs"
 import { GlobalAI } from "@/components/ai/global-ai"
 import { useAppFavicon } from "@/hooks/use-app-favicon"
+import { subscribeTransactionSync } from "@/lib/transaction-realtime-sync"
 
 interface NavItem {
   title: string
@@ -74,6 +75,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [expandedHrefs, setExpandedHrefs] = useState<string[]>([])
   const [recentHrefs, setRecentHrefs] = useState<string[]>([])
   const pathname = usePathname()
+  const router = useRouter()
 
   // Dynamic Favicon for Page Navigation
   useAppFavicon(false)
@@ -146,6 +148,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       prev.includes(href) ? prev.filter(h => h !== href) : [...prev, href]
     )
   }
+
+  useEffect(() => {
+    let lastRefreshAt = 0
+    const unsubscribe = subscribeTransactionSync(() => {
+      const now = Date.now()
+      if (now - lastRefreshAt < 700) return
+      lastRefreshAt = now
+      router.refresh()
+    })
+
+    return unsubscribe
+  }, [router])
 
   // Split nav items into Recent and Others
   const { recentItems, otherItems } = useMemo(() => {

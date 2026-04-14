@@ -202,7 +202,6 @@ function mapInstallment(record: PocketBaseRecord): Installment {
 
 function parseCycleTagFromTransaction(record: PocketBaseRecord): string | null {
   if (record.persisted_cycle_tag) return String(record.persisted_cycle_tag);
-  if (record.tag) return String(record.tag);
   if (
     record.metadata &&
     typeof record.metadata === "object" &&
@@ -317,14 +316,9 @@ function mapTransaction(
     persisted_cycle_tag: parseCycleTagFromTransaction(record),
     debt_cycle_tag:
       record.debt_cycle_tag ||
-      record.tag ||
       record.metadata?.debt_cycle_tag ||
       null,
-    tag:
-      record.debt_cycle_tag ||
-      record.tag ||
-      record.metadata?.debt_cycle_tag ||
-      null,
+    tag: record.debt_cycle_tag || record.metadata?.debt_cycle_tag || null,
     cashback_mode: record.cashback_mode || null,
     cashback_share_percent:
       record.cashback_share_percent ??
@@ -1294,15 +1288,15 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
     {
       // Primary attempt: filter by cycle tag directly in DB for high performance
       filter: resolvedCycleTag 
-        ? `account_id='${pocketBaseAccountId}' && (debt_cycle_tag='${resolvedCycleTag}' || persisted_cycle_tag='${resolvedCycleTag}' || tag='${resolvedCycleTag}')`
+        ? `account_id='${pocketBaseAccountId}' && persisted_cycle_tag='${resolvedCycleTag}'`
         : `account_id='${pocketBaseAccountId}'`,
       sort: "-date,id",
-      fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag",
+      fields: "id,amount,type,metadata,date,debt_cycle_tag,persisted_cycle_tag",
     },
     {
       // Fallback: search by date range if tag filter yields nothing or tag is missing
       filter: `account_id='${pocketBaseAccountId}'`,
-      fields: "id,amount,type,metadata,date,tag,debt_cycle_tag,persisted_cycle_tag",
+      fields: "id,amount,type,metadata,date,debt_cycle_tag,persisted_cycle_tag",
     },
   ];
 
@@ -1327,7 +1321,7 @@ export async function getPocketBaseAccountSpendingStatsSnapshot(
       // the fetch above might find it. We MUST exclude it here to keep the balance correct.
       rawTransactions = Array.from(uniqueMap.values()).filter((tx: any) => {
         const metadata = tx.metadata && typeof tx.metadata === 'object' ? tx.metadata : {};
-        const truthTag = normalizeMonthTag(tx.debt_cycle_tag || tx.tag || metadata.debt_cycle_tag || metadata.tag || "");
+        const truthTag = normalizeMonthTag(tx.persisted_cycle_tag || metadata.persisted_cycle_tag || "");
         return normalizeMonthTag(truthTag || "") === normalizeMonthTag(resolvedCycleTag || "");
       });
 
