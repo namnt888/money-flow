@@ -330,24 +330,6 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson, onOpen
                                     <Tag className="w-3 h-3" />
                                     Debt Tag Cycle
                                 </span>
-                                {(selectedType === "repayment" || operationMode === "edit") && !!selectedPersonId && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsMultiCycleOpen((prev) => !prev)}
-                                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50"
-                                    >
-                                        <Badge
-                                            variant="outline"
-                                            className={cn(
-                                                "h-4 px-1.5 border-none bg-transparent text-[9px] font-black uppercase tracking-wide",
-                                                isMultiCycleOpen ? "text-blue-600" : "text-slate-500"
-                                            )}
-                                        >
-                                            {isMultiCycleOpen ? "Hide" : "Show"}
-                                        </Badge>
-                                        <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", isMultiCycleOpen && "rotate-180")} />
-                                    </button>
-                                )}
                             </FormLabel>
                             <div className="relative flex gap-1">
                                 <div className="relative flex-1">
@@ -410,144 +392,154 @@ export function BasicInfoSection({ people, operationMode, onAddNewPerson, onOpen
                                 </div>
                             </div>
                             <FormMessage />
-                            {(selectedType === "repayment" || operationMode === "edit") && !!selectedPersonId && (
-                                <Collapsible open={isMultiCycleOpen} onOpenChange={setIsMultiCycleOpen}>
-                                    <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-2">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <Badge className={cn(
-                                                "h-5 px-2 rounded-full text-[10px] font-black uppercase tracking-wide border",
-                                                selectedType !== "repayment"
-                                                    ? "bg-slate-100 text-slate-600 border-slate-200"
-                                                    : hasRepayAmount
-                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                    : "bg-amber-50 text-amber-700 border-amber-200"
-                                            )}>
-                                                {selectedType !== "repayment"
-                                                    ? "Switch to Repayment"
-                                                    : hasRepayAmount
-                                                        ? "Ready for Multi-Cycle"
-                                                        : "Amount required"}
-                                            </Badge>
-                                            <Badge variant="outline" className="h-5 px-2 rounded-full border-slate-200 bg-white text-slate-500 text-[10px] font-black uppercase tracking-wide">
-                                                {hasRepayAmount ? new Intl.NumberFormat("en-US").format(Number(amountValue || 0)) : "Type amount"}
-                                            </Badge>
-                                        </div>
-                                        <CollapsibleContent className="pt-2 space-y-2">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={cn(
-                                                        "h-6 px-2 text-[11px] font-semibold rounded-full border transition-colors",
-                                                        hasRepayAmount
-                                                            ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 bg-white"
-                                                            : "text-slate-400 border-slate-200 bg-slate-100 hover:bg-slate-100"
-                                                    )}
-                                                    onClick={() => {
-                                                        if (selectedType !== "repayment") {
-                                                            toast.warning("Mark as Repay All first")
-                                                            return
-                                                        }
-                                                        if (!hasRepayAmount) {
-                                                            toast.warning("Enter amount first before opening Multi-Cycle Repay")
-                                                            return
-                                                        }
-                                                        if (selectedPersonId) onOpenMultiCycleRepay?.(selectedPersonId)
-                                                    }}
-                                                    aria-disabled={!hasRepayAmount}
-                                                >
-                                                    Open Multi-Cycle Repay
-                                                </Button>
-
-                                                {canMarkAsRepay && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="h-6 px-2 text-[11px] font-semibold rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
-                                                        onClick={() => {
-                                                            if (!hasRepayAmount) {
-                                                                toast.warning("Enter amount first before marking as repay all")
-                                                                return
-                                                            }
-
-                                                            if (remainingAfterRepay > 10000) {
-                                                                toast.warning(
-                                                                    `Remaining debt after repay is ${new Intl.NumberFormat("en-US").format(remainingAfterRepay)} (>10k)`,
-                                                                )
-                                                            } else {
-                                                                toast.success("Marked as repay all")
-                                                            }
-
-                                                            form.setValue("type", "repayment", { shouldDirty: true })
-                                                        }}
-                                                    >
-                                                        Mark as Repay All
-                                                    </Button>
-                                                )}
-
-                                                {canMarkAsRepay && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className={cn(
-                                                            "h-6 px-2 text-[11px] font-semibold rounded-full border",
-                                                            isVolunteerEnabled
-                                                                ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
-                                                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                                        )}
-                                                        onClick={() => {
-                                                            const currentNote = String(form.getValues("note") || "");
-                                                            const hasTag = /#Volunteer_Repay/i.test(currentNote);
-                                                            const nextNote = hasTag
-                                                                ? currentNote.replace(/\s*#Volunteer_Repay/gi, "").replace(/\s{2,}/g, " ").trim()
-                                                                : `${currentNote} #Volunteer_Repay`.trim();
-                                                            form.setValue("note", nextNote, { shouldDirty: true });
-                                                            toast.info(hasTag ? "Volunteer tag removed" : "Volunteer tag enabled");
-                                                        }}
-                                                    >
-                                                        Volunteer
-                                                    </Button>
-                                                )}
-                                            </div>
-
-                                            {remainingAfterRepay > 10000 && (
-                                                <div className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-800">
-                                                    Remaining debt after this repayment is {new Intl.NumberFormat("en-US").format(remainingAfterRepay)}. Consider opening multi-cycle repay allocation.
-                                                </div>
-                                            )}
-
-                                            {selectedType === "repayment" && repayAllocationPreview.length > 0 && (
-                                                <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-2">
-                                                    <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide mb-1">Applied Multi-Cycle Allocation</div>
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        {repayAllocationPreview.map((item) => (
-                                                            <Badge
-                                                                key={item.tag}
-                                                                variant="outline"
-                                                                className="h-5 rounded-full border-emerald-200 bg-white text-emerald-700 px-2 text-[10px] font-black"
-                                                            >
-                                                                {item.tag}: {new Intl.NumberFormat("en-US").format(item.amount)}
-                                                            </Badge>
-                                                        ))}
-                                                        {volunteerRepayEnabled && (
-                                                            <Badge className="h-5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 text-[10px] font-black uppercase tracking-wide">
-                                                                #Volunteer_Repay
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </CollapsibleContent>
-                                    </div>
-                                </Collapsible>
-                            )}
                         </FormItem>
                     )}
                 />
             </div>
+
+            {(selectedType === "repayment" || operationMode === "edit") && !!selectedPersonId && (
+                <div className="mt-2">
+                    <Collapsible open={isMultiCycleOpen} onOpenChange={setIsMultiCycleOpen}>
+                        <div className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 space-y-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsMultiCycleOpen((prev) => !prev)}
+                                className="flex w-full items-center justify-between gap-2 text-left"
+                            >
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge className={cn(
+                                        "h-5 px-2 rounded-full text-[10px] font-black uppercase tracking-wide border",
+                                        selectedType !== "repayment"
+                                            ? "bg-slate-100 text-slate-600 border-slate-200"
+                                            : hasRepayAmount
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : "bg-amber-50 text-amber-700 border-amber-200"
+                                    )}>
+                                        {selectedType !== "repayment"
+                                            ? "Switch to Repayment"
+                                            : hasRepayAmount
+                                                ? "Ready for Multi-Cycle"
+                                                : "Amount required"}
+                                    </Badge>
+                                    <Badge variant="outline" className="h-5 px-2 rounded-full border-slate-200 bg-white text-slate-500 text-[10px] font-black uppercase tracking-wide">
+                                        {hasRepayAmount ? new Intl.NumberFormat("en-US").format(Number(amountValue || 0)) : "Type amount"}
+                                    </Badge>
+                                </div>
+                                <ChevronDown className={cn("h-4 w-4 text-slate-500 transition-transform", isMultiCycleOpen && "rotate-180")} />
+                            </button>
+                            <CollapsibleContent className="space-y-3 pt-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={cn(
+                                        "h-6 px-2 text-[11px] font-semibold rounded-full border transition-colors",
+                                        hasRepayAmount
+                                            ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 bg-white"
+                                            : "text-slate-400 border-slate-200 bg-slate-100 hover:bg-slate-100"
+                                    )}
+                                    onClick={() => {
+                                        if (selectedType !== "repayment") {
+                                            toast.warning("Mark as Repay All first")
+                                            return
+                                        }
+                                        if (!hasRepayAmount) {
+                                            toast.warning("Enter amount first before opening Multi-Cycle Repay")
+                                            return
+                                        }
+                                        if (selectedPersonId) onOpenMultiCycleRepay?.(selectedPersonId)
+                                    }}
+                                    aria-disabled={!hasRepayAmount}
+                                >
+                                    Open Multi-Cycle Repay
+                                </Button>
+
+                                {canMarkAsRepay && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 px-2 text-[11px] font-semibold rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+                                        onClick={() => {
+                                            if (!hasRepayAmount) {
+                                                toast.warning("Enter amount first before marking as repay all")
+                                                return
+                                            }
+
+                                            if (remainingAfterRepay > 10000) {
+                                                toast.warning(
+                                                    `Remaining debt after repay is ${new Intl.NumberFormat("en-US").format(remainingAfterRepay)} (>10k)`,
+                                                )
+                                            } else {
+                                                toast.success("Marked as repay all")
+                                            }
+
+                                            form.setValue("type", "repayment", { shouldDirty: true })
+                                        }}
+                                    >
+                                        Mark as Repay All
+                                    </Button>
+                                )}
+
+                                {canMarkAsRepay && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className={cn(
+                                            "h-6 px-2 text-[11px] font-semibold rounded-full border",
+                                            isVolunteerEnabled
+                                                ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
+                                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                        )}
+                                        onClick={() => {
+                                            const currentNote = String(form.getValues("note") || "")
+                                            const hasTag = /#Volunteer_Repay/i.test(currentNote)
+                                            const nextNote = hasTag
+                                                ? currentNote.replace(/\s*#Volunteer_Repay/gi, "").replace(/\s{2,}/g, " ").trim()
+                                                : `${currentNote} #Volunteer_Repay`.trim()
+                                            form.setValue("note", nextNote, { shouldDirty: true })
+                                            toast.info(hasTag ? "Volunteer tag removed" : "Volunteer tag enabled")
+                                        }}
+                                    >
+                                        Volunteer
+                                    </Button>
+                                )}
+                            </div>
+
+                            {remainingAfterRepay > 10000 && (
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-800">
+                                    Remaining debt after this repayment is {new Intl.NumberFormat("en-US").format(remainingAfterRepay)}. Consider opening multi-cycle repay allocation.
+                                </div>
+                            )}
+
+                            {selectedType === "repayment" && repayAllocationPreview.length > 0 && (
+                                <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-2">
+                                    <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide mb-1">Applied Multi-Cycle Allocation</div>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {repayAllocationPreview.map((item) => (
+                                            <Badge
+                                                key={item.tag}
+                                                variant="outline"
+                                                className="h-5 rounded-full border-emerald-200 bg-white text-emerald-700 px-2 text-[10px] font-black"
+                                            >
+                                                {item.tag}: {new Intl.NumberFormat("en-US").format(item.amount)}
+                                            </Badge>
+                                        ))}
+                                        {volunteerRepayEnabled && (
+                                            <Badge className="h-5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 text-[10px] font-black uppercase tracking-wide">
+                                                #Volunteer_Repay
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            </CollapsibleContent>
+                        </div>
+                    </Collapsible>
+                </div>
+            )}
 
             {/* ROW 3: Note */}
             <FormField

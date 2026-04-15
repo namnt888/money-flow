@@ -17,8 +17,29 @@ const POCKETBASE_URL = (process.env.POCKETBASE_URL || 'https://api-db.reiwarden.
 const POCKETBASE_EMAIL = (process.env.POCKETBASE_DB_EMAIL || '').trim()
 const POCKETBASE_PASSWORD = (process.env.POCKETBASE_DB_PASSWORD || '').trim()
 
+const COLLECTION_ALIAS_MAP: Record<string, string> = {
+  pvl_txn_001: 'transactions',
+  pvl_acc_001: 'accounts',
+  pvl_cat_001: 'categories',
+  pvl_shop_001: 'shops',
+  pvl_people_001: 'people',
+}
+
 let cachedToken: string | null = null
 let cachedTokenExpiresAt = 0
+
+function normalizeCollectionName(collection: string): string {
+  return COLLECTION_ALIAS_MAP[collection] ?? collection
+}
+
+function normalizeRequestPath(path: string): string {
+  if (!path.includes('/api/collections/')) return path
+
+  return path.replace(/\/api\/collections\/([^/?#]+)/g, (_match, rawCollection: string) => {
+    const normalizedCollection = normalizeCollectionName(rawCollection)
+    return `/api/collections/${normalizedCollection}`
+  })
+}
 
 function decodeTokenExpiry(token: string): number {
   try {
@@ -113,7 +134,8 @@ export async function pocketbaseRequest<T>(
   const token = await getAuthToken()
   const query = buildQuery(options?.params)
   // Ensure we don't have double slashes if path starts with /
-  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  const normalizedPath = normalizeRequestPath(path)
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
   const url = `${POCKETBASE_URL}${cleanPath}${query}`
   const method = options?.method || 'GET'
   if (method !== 'GET') {
@@ -160,14 +182,16 @@ export async function pocketbaseList<T>(
   collection: string,
   params?: Record<string, string | number | boolean | undefined>,
 ): Promise<PocketBaseListResponse<T>> {
-  return pocketbaseRequest<PocketBaseListResponse<T>>(`/api/collections/${collection}/records`, {
+  const normalizedCollection = normalizeCollectionName(collection)
+  return pocketbaseRequest<PocketBaseListResponse<T>>(`/api/collections/${normalizedCollection}/records`, {
     method: 'GET',
     params,
   })
 }
 
 export async function pocketbaseGetById<T>(collection: string, id: string, expand?: string, fields?: string, silent?: boolean): Promise<T> {
-  return pocketbaseRequest<T>(`/api/collections/${collection}/records/${id}`, {
+  const normalizedCollection = normalizeCollectionName(collection)
+  return pocketbaseRequest<T>(`/api/collections/${normalizedCollection}/records/${id}`, {
     method: 'GET',
     params: {
       expand,
@@ -203,21 +227,24 @@ export function toPocketBaseId(sourceId: string, fallbackPrefix = 'mf3'): string
   return result
 }
 export async function pocketbaseCreate<T>(collection: string, body: unknown): Promise<T> {
-  return pocketbaseRequest<T>(`/api/collections/${collection}/records`, {
+  const normalizedCollection = normalizeCollectionName(collection)
+  return pocketbaseRequest<T>(`/api/collections/${normalizedCollection}/records`, {
     method: 'POST',
     body,
   })
 }
 
 export async function pocketbaseUpdate<T>(collection: string, id: string, body: unknown): Promise<T> {
-  return pocketbaseRequest<T>(`/api/collections/${collection}/records/${id}`, {
+  const normalizedCollection = normalizeCollectionName(collection)
+  return pocketbaseRequest<T>(`/api/collections/${normalizedCollection}/records/${id}`, {
     method: 'PATCH',
     body,
   })
 }
 
 export async function pocketbaseDelete(collection: string, id: string): Promise<void> {
-  return pocketbaseRequest<void>(`/api/collections/${collection}/records/${id}`, {
+  const normalizedCollection = normalizeCollectionName(collection)
+  return pocketbaseRequest<void>(`/api/collections/${normalizedCollection}/records/${id}`, {
     method: 'DELETE',
   })
 }

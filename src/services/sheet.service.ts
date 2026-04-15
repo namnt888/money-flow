@@ -10,6 +10,7 @@ type SheetSyncTransaction = {
   occurred_at?: string
   date?: string
   note?: string | null
+  description?: string | null
   tag?: string | null
   shop_name?: string | null
   shop_id?: string | null
@@ -26,6 +27,7 @@ type SheetSyncTransaction = {
   type?: string | null
   img_url?: string | null
   debt_cycle_tag?: string | null
+  metadata?: unknown
 }
 
 function getCycleTag(date: Date): string {
@@ -45,6 +47,14 @@ function resolveCycleTagForSheet(tag: unknown, occurredAt?: string | null): stri
   }
 
   return getCycleTag(parsedDate)
+}
+
+function toSheetCompatibleCycleTag(cycleTag: string): string {
+  const normalized = String(cycleTag || '').trim()
+  if (/^\d{4}$/.test(normalized)) {
+    return `${normalized}-01`
+  }
+  return normalized
 }
 
 function numberOrDefault(value: unknown, fallback = 0): number {
@@ -180,9 +190,85 @@ function calculateTotals(txn: SheetSyncTransaction) {
   }
 }
 
-function shouldExcludeFromSheet(note: string | null | undefined): boolean {
+function shouldExcludeFromSheet(note: string | null | undefined, metadata?: unknown): boolean {
   const normalized = String(note ?? '').toLowerCase()
   return normalized.includes('#nosync') || normalized.includes('#deprecated')
+}
+
+function extractServiceNameFromNote(note: unknown): string {
+  const raw = String(note ?? '').trim()
+  if (!raw) return ''
+
+  const primarySegment = raw
+    .split('|')[0]
+    ?.split('\n')[0]
+    ?.trim() || ''
+  if (!primarySegment) return ''
+
+  const cleaned = primarySegment
+    .replace(/^shop\s*[:\-]?\s*/i, '')
+    .replace(/#\S+/g, ' ')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[?.!]+$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+
+  if (!cleaned) return ''
+
+  const normalized = cleaned.toLowerCase()
+  if (
+    normalized.includes('allocated repayment') ||
+    normalized.includes('volunteer shortfall repayment') ||
+    normalized.includes('draft fund (pending source)')
+  ) {
+    return ''
+  }
+
+  const cyclePrefixed = cleaned.match(/^\d{4}-\d{2}\s+([A-Za-z][A-Za-z0-9+_.-]*)\b/)
+  if (cyclePrefixed?.[1]) {
+    return cyclePrefixed[1]
+  }
+
+  const servicePrefixed = cleaned.match(/^([A-Za-z][A-Za-z0-9+_.-]*)\s+\d{4}-\d{2}\b/)
+  if (servicePrefixed?.[1]) {
+    return servicePrefixed[1]
+  }
+
+  const slotPrefixed = cleaned.match(/^([A-Za-z][A-Za-z0-9+_.-]*)\s+slot\b/i)
+  if (slotPrefixed?.[1]) {
+    return slotPrefixed[1]
+  }
+
+  // Avoid leaking full numeric notes into Shop column (e.g. fee math, installment text).
+  if (/\d/.test(cleaned)) {
+    return ''
+  }
+
+  return cleaned
+}
+
+function getPersonRelatedAccountIds(personData: Person | null | undefined): string[] {
+  const ids = [
+    personData?.debt_account_id,
+    personData?.default_repayment_account_id,
+  ]
+    .map(id => (typeof id === 'string' ? id.trim() : ''))
+    .filter(Boolean)
+
+  return Array.from(new Set(ids))
+}
+
+function buildPersonTransactionsFilter(pbPersonId: string, relatedAccountIds: string[], extraClause?: string): string {
+  const accountClause = relatedAccountIds
+    .map(id => `(account_id = "${id}" || to_account_id = "${id}")`)
+    .join(' || ')
+
+  const personScope = accountClause
+    ? `(person_id = "${pbPersonId}" || ${accountClause})`
+    : `person_id = "${pbPersonId}"`
+
+  const base = `status != "void" && ${personScope}`
+  return extraClause ? `${base} && (${extraClause})` : base
 }
 
 function extractSheetId(sheetUrl: string | null | undefined): string | null {
@@ -345,7 +431,7 @@ export async function syncTransactionToSheet(
 ) {
   try {
     // Check for #nosync or #deprecated tags
-    if (shouldExcludeFromSheet(txn.note)) {
+    if (shouldExcludeFromSheet(txn.note, txn.metadata)) {
       // If tagged as nosync, we treat it as a deletion from the sheet
       action = 'delete'
     }
@@ -392,7 +478,10 @@ export async function syncTransactionToSheet(
       qrImageUrl: qrImageUrl ? '(URL set)' : '(not set)'
     })
 
-    let resolvedShopName = txn.shop_name ?? ''
+    const repaymentServiceName = txn.type === 'repayment'
+      ? extractServiceNameFromNote(txn.note ?? txn.description)
+      : ''
+    let resolvedShopName = repaymentServiceName || txn.shop_name || ''
     if (!resolvedShopName && txn.shop_id) {
       try {
         const shopRecord = await pocketbaseGetById<{ name?: string | null }>('shops', txn.shop_id)
@@ -400,6 +489,10 @@ export async function syncTransactionToSheet(
       } catch {
         resolvedShopName = ''
       }
+    }
+
+    if (!resolvedShopName) {
+      resolvedShopName = extractServiceNameFromNote(txn.note ?? txn.description)
     }
 
     // Repayment/Service rows: ensuring shop_name stays as is if provided.
@@ -491,14 +584,18 @@ export async function syncAllTransactions(personId: string) {
     }
 
     const pbPersonId = toPocketBaseId(personId, 'people')
-    const data = await pocketbaseList('pvl_txn_001', {
-      filter: `person_id = "${pbPersonId}" && status != "void"`,
-      expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
+
+    // Fetch person's sheet preferences and account relations once to keep filters consistent.
+    const personData = await pocketbaseGetById<Person>('people', pbPersonId)
+    const relatedAccountIds = getPersonRelatedAccountIds(personData)
+
+    const data = await pocketbaseList('transactions', {
+      filter: buildPersonTransactionsFilter(pbPersonId, relatedAccountIds),
+      expand: 'shop_id,account_id,to_account_id,category_id',
       sort: 'occurred_at'
     })
 
-    // Fetch person's sheet preferences for bank info & QR
-    const personData = await pocketbaseGetById<Person>('people', pbPersonId)
+    // Person sheet preferences for bank info & QR
 
     const showBankAccount = personData?.sheet_show_bank_account ?? false
     const manualBankInfo = personData?.sheet_bank_info ?? ''
@@ -539,12 +636,14 @@ export async function syncAllTransactions(personId: string) {
         id: (txn as any).id,
         occurred_at: occurredAt,
         note: (txn as any).note || (txn as any).description,
+        description: (txn as any).description || (txn as any).note,
         status: (txn as any).status,
         tag: resolveCycleTagForSheet((txn as any).debt_cycle_tag, occurredAt),
         type: (txn as any).type,
         amount: (txn as any).amount,
         original_amount: resolvedOriginalAmount,
         debt_cycle_tag: (txn as any).debt_cycle_tag,
+        metadata,
         cashback_share_percent: numberOrDefault(
           firstNonZeroNumber([
             (txn as any).cashback_share_percent_input,
@@ -599,7 +698,7 @@ export async function syncAllTransactions(personId: string) {
       }
     })
 
-    const eligibleRows = rows.filter(txn => !shouldExcludeFromSheet(txn.note))
+    const eligibleRows = rows.filter(txn => !shouldExcludeFromSheet(txn.note, txn.metadata))
 
     console.log(`[SheetSync] syncAllTransactions for personId: ${personId}. Found ${rows.length} transactions, eligible ${eligibleRows.length} after #nosync/#deprecated filtering.`)
 
@@ -623,7 +722,13 @@ export async function syncAllTransactions(personId: string) {
     for (const [cycleTag, cycleTxns] of cycleMap.entries()) {
       const rowsPayload = cycleTxns.map(txn => {
         const shopData = txn.shops as any
-        let shopName = Array.isArray(shopData) ? shopData[0]?.name : shopData?.name
+        const serviceFromNote = extractServiceNameFromNote(txn.note || txn.description)
+        
+        // For repayments: prioritize account name, then shop, never use note service name
+        // For normal txns: prioritize shop, then service from note
+        let shopName = txn.type === 'repayment'
+          ? ((Array.isArray(shopData) ? shopData[0]?.name : shopData?.name))
+          : ((Array.isArray(shopData) ? shopData[0]?.name : shopData?.name) || serviceFromNote)
 
         // Fallback for Repayment/Transfer if shop is empty -> Use Account Name
         if (!shopName) {
@@ -666,7 +771,10 @@ export async function syncAllTransactions(personId: string) {
     return { success: true, count: totalSynced }
   } catch (err) {
     console.error('Sync all transactions failed:', err)
-    return { success: false, message: 'Sync failed' }
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : 'Sync failed',
+    }
   }
 }
 
@@ -714,11 +822,22 @@ export async function createCycleSheet(personId: string, cycleTag: string): Prom
       return { success: false, message: 'No valid sheet link configured' }
     }
     const sheetInfo = await getProfileSheetInfo(personId)
+    const sheetCycleTag = toSheetCompatibleCycleTag(cycleTag)
+    const isMasterSheet = await (async () => {
+      try {
+        const pbId = toPocketBaseId(personId, 'people')
+        const personData = await pocketbaseGetById<Person>('people', pbId)
+        return personData?.is_master_sheet_enabled === true
+      } catch {
+        return false
+      }
+    })()
 
     const response = await postToSheet(sheetLink, {
       action: 'create_cycle_sheet',
       person_id: personId,
-      cycle_tag: cycleTag,
+      cycle_tag: sheetCycleTag,
+      master_sheet: isMasterSheet,
       sheet_id: sheetInfo.sheetId ?? undefined,
       sheet_url: sheetInfo.sheetUrl ?? undefined,
     })
@@ -746,6 +865,8 @@ export async function syncCycleTransactions(
 ) {
   try {
     const pbId = toPocketBaseId(personId, 'people')
+    const personData: any = await pocketbaseGetById('people', pbId)
+    const relatedAccountIds = getPersonRelatedAccountIds(personData)
     let tagFilter = ''
 
     // Parse cycleTag to get filter
@@ -775,9 +896,9 @@ export async function syncCycleTransactions(
       tagFilter = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
     }
 
-    const data = await pocketbaseList('pvl_txn_001', {
-      filter: `person_id = "${pbId}" && status != "void" && (${tagFilter})`,
-      expand: 'shop_id,account_id,target_account_id,to_account_id,category_id',
+    const data = await pocketbaseList('transactions', {
+      filter: buildPersonTransactionsFilter(pbId, relatedAccountIds, tagFilter),
+      expand: 'shop_id,account_id,to_account_id,category_id',
       sort: 'occurred_at'
     })
 
@@ -790,12 +911,18 @@ export async function syncCycleTransactions(
     if (!sheetLink) return { success: false, message: 'No valid sheet link' }
 
     const rows = (data.items as any[])
-      .filter(txn => !shouldExcludeFromSheet(txn.note || txn.description))
+      .filter(txn => !shouldExcludeFromSheet(txn.note || txn.description, txn.metadata))
       .map(txn => {
         const expanded = txn.expand || {}
         const metadata = txn.metadata && typeof txn.metadata === 'object' ? txn.metadata : {}
         const occurredAt = txn.occurred_at || txn.date
-        let shopName = expanded.shop_id?.name
+        const serviceFromNote = extractServiceNameFromNote(txn.note || txn.description)
+        
+        // For repayments: prioritize target account, then shop, never use note
+        // For normal txns: prioritize shop, then service from note
+        let shopName = txn.type === 'repayment'
+          ? (expanded.to_account_id?.name || expanded.shop_id?.name)
+          : (expanded.shop_id?.name || serviceFromNote)
 
         if (!shopName) {
           const categoryName = expanded.category_id?.name
@@ -803,7 +930,7 @@ export async function syncCycleTransactions(
             shopName = 'Rollover'
           } else {
             const sourceName = expanded.account_id?.name || ''
-            const targetName = expanded.target_account_id?.name || expanded.to_account_id?.name || ''
+            const targetName = expanded.to_account_id?.name || ''
             shopName = txn.type === 'repayment' ? (targetName || sourceName) : (sourceName || '')
           }
         }
@@ -894,10 +1021,9 @@ export async function syncCycleTransactions(
       })))
     }
 
-    console.log(`[Sheet Sync] Sending ${rows.length} mapped transactions to ${personId} for cycle ${cycleTag}`)
+    const sheetCycleTag = toSheetCompatibleCycleTag(cycleTag)
 
-    // Fetch person's sheet preferences
-    const personData: any = await pocketbaseGetById('people', pbId)
+    console.log(`[Sheet Sync] Sending ${rows.length} mapped transactions to ${personId} for cycle ${cycleTag} (sheet cycle ${sheetCycleTag})`)
 
     const showBankAccount = personData?.sheet_show_bank_account ?? false
     const manualBankInfo = personData?.sheet_bank_info ?? ''
@@ -937,7 +1063,8 @@ export async function syncCycleTransactions(
     const payload = {
       action: 'syncTransactions',
       person_id: personId,
-      cycle_tag: cycleTag,
+      cycle_tag: sheetCycleTag,
+      master_sheet: personData?.is_master_sheet_enabled === true,
       sheet_id: sheetId ?? undefined,
       rows: rows,
       bank_account: showBankAccount ? resolvedBankInfo : '',
@@ -961,7 +1088,10 @@ export async function syncCycleTransactions(
     }
   } catch (error) {
     console.error('Sync cycle transactions failed:', error)
-    return { success: false, message: 'Sync failed' }
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Sync failed',
+    }
   }
 }
 

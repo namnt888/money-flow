@@ -138,7 +138,7 @@ export async function createSplitBill(input: SplitBillInput) {
             is_installment: false
         };
 
-        return pocketbaseCreate('pvl_txn_001', pbChildPayload);
+        return pocketbaseCreate('transactions', pbChildPayload);
     });
 
     await Promise.all(childrenPromises);
@@ -147,7 +147,7 @@ export async function createSplitBill(input: SplitBillInput) {
 
 export async function updateSplitBill(parentId: string, input: SplitBillInput) {
     const { parent_transaction, shares } = input;
-    const pbParentId = toPocketBaseId(parentId, 'pvl_txn_001');
+    const pbParentId = toPocketBaseId(parentId, 'transactions');
 
     // 1. Update Parent
     const parentMetadata = {
@@ -165,12 +165,12 @@ export async function updateSplitBill(parentId: string, input: SplitBillInput) {
     });
 
     // 2. Delete existing children in PB
-    const existingChildren = await pocketbaseList<any>('pvl_txn_001', {
+    const existingChildren = await pocketbaseList<any>('transactions', {
         filter: `parent_transaction_id='${pbParentId}'`
     });
     
     for (const child of existingChildren.items) {
-        await pocketbaseDelete('pvl_txn_001', child.id);
+        await pocketbaseDelete('transactions', child.id);
     }
 
     // 3. Re-create children
@@ -213,7 +213,7 @@ export async function updateSplitBill(parentId: string, input: SplitBillInput) {
             is_installment: false
         };
 
-        return pocketbaseCreate('pvl_txn_001', pbChildPayload);
+        return pocketbaseCreate('transactions', pbChildPayload);
     });
 
     await Promise.all(childrenPromises);
@@ -221,15 +221,15 @@ export async function updateSplitBill(parentId: string, input: SplitBillInput) {
 }
 
 export async function deleteSplitBill(parentId: string) {
-    const pbParentId = toPocketBaseId(parentId, 'pvl_txn_001');
+    const pbParentId = toPocketBaseId(parentId, 'transactions');
     
     // Delete children first manually to be safe (no cascade in simple fetch setup)
-    const existingChildren = await pocketbaseList<any>('pvl_txn_001', {
+    const existingChildren = await pocketbaseList<any>('transactions', {
         filter: `parent_transaction_id='${pbParentId}'`
     });
     
     for (const child of existingChildren.items) {
-        await pocketbaseDelete('pvl_txn_001', child.id);
+        await pocketbaseDelete('transactions', child.id);
     }
     
     // Use transaction service to delete parent (handles side effects, revalidation)

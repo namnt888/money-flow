@@ -156,7 +156,7 @@ export async function getPeople(options?: {
         console.log(`[getPeople] Filter for ${targetPersonId}:`, txFilter);
     }
 
-    const txnsRes = await pocketbaseList<any>("pvl_txn_001", {
+    const txnsRes = await pocketbaseList<any>("transactions", {
       filter: txFilter,
       perPage: targetPersonId ? 5000 : 10000, 
       sort: "-date",
@@ -324,7 +324,7 @@ export async function updatePerson(id: string, data: any) {
 
 export async function getRecentPeopleByTransactions(limit: number = 5): Promise<Person[]> {
   try {
-    const res = await pocketbaseList<any>("pvl_txn_001", {
+    const res = await pocketbaseList<any>("transactions", {
       filter: "person_id != null && person_id != '' && account_id != null && account_id != '' && status != 'void'",
       sort: "-occurred_at",
       perPage: 50,

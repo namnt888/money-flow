@@ -216,7 +216,6 @@ export function ManageSheetButton({
   const icon = sheetUrl ? RefreshCcw : FileSpreadsheet
   const Icon = icon
   const isDisabled = disabled || !personId || isManaging || isSaving
-  const hasValidCycle = isYYYYMM(cycleTag)
   const hasValidScriptLink = scriptLink && scriptLink.trim().length > 0 && (scriptLink.startsWith('http') || scriptLink.startsWith('https'))
 
   // Get most recent year as default year
@@ -303,8 +302,30 @@ export function ManageSheetButton({
 
 
   const handleManageCycle = () => {
+    const selectedCycle = pendingCycleTag || cycleTag
+    const normalizedSelectedCycle = (() => {
+      const raw = String(selectedCycle || '').trim()
+      const lower = raw.toLowerCase()
+      if (!raw) return raw
+      if (lower === 'all history' || lower === 'all-time history' || lower === 'all time history') return 'all'
+      if (lower === 'this yr' || lower === 'year' || lower === 'entire year') return historyYear || raw
+      return raw
+    })()
+    const resolvedSyncCycleTag = (() => {
+      if (isYYYYMM(normalizedSelectedCycle)) return normalizedSelectedCycle
+      if (isMasterSheetEnabled && /^\d{4}$/.test(normalizedSelectedCycle)) return normalizedSelectedCycle
+      if (isMasterSheetEnabled && normalizedSelectedCycle === 'all' && /^\d{4}$/.test(historyYear)) return historyYear
+      return normalizedSelectedCycle
+    })()
+
+    const hasValidCycle =
+      isYYYYMM(resolvedSyncCycleTag) ||
+      Boolean(isMasterSheetEnabled && /^\d{4}$/.test(resolvedSyncCycleTag))
+
     if (!hasValidCycle) {
-      toast.error('Cycle tag must be YYYY-MM.')
+      toast.error('Sync cycle is invalid for current mode.', {
+        description: `raw=${selectedCycle || '(empty)'} | normalized=${normalizedSelectedCycle || '(empty)'} | resolved=${resolvedSyncCycleTag || '(empty)'} | masterSheet=${isMasterSheetEnabled ? 'on' : 'off'}`,
+      })
       return
     }
     if (!hasValidScriptLink) {
@@ -318,13 +339,13 @@ export function ManageSheetButton({
 
     startManageTransition(async () => {
       const toastId = toast.loading(sheetUrl ? 'Syncing sheet...' : 'Creating sheet...', {
-        description: `Processing cycle ${cycleTag}`,
+        description: `Processing cycle ${resolvedSyncCycleTag}`,
       })
       try {
         const res = await fetch('/api/sheets/manage', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ personId, cycleTag }),
+          body: JSON.stringify({ personId, cycleTag: resolvedSyncCycleTag }),
         })
 
         let data: ManageCycleSheetResponse | null = null
@@ -336,10 +357,18 @@ export function ManageSheetButton({
 
         if (!res.ok || data?.error) {
           toast.dismiss(toastId)
-          const errorMessage = data?.error ?? res.statusText
+          const upstreamMessage = data?.error ?? res.statusText
+          const errorMessage = upstreamMessage?.includes('Cycle tag must be YYYY-MM')
+            ? 'Sheet rejected sync cycle format (upstream validation).'
+            : upstreamMessage
           const debugParts = [
             data?.requestId ? `Req: ${data.requestId}` : null,
             data?.stage ? `Stage: ${data.stage}` : null,
+            `raw=${selectedCycle || '(empty)'}`,
+            `normalized=${normalizedSelectedCycle || '(empty)'}`,
+            `resolved=${resolvedSyncCycleTag || '(empty)'}`,
+            `masterSheet=${isMasterSheetEnabled ? 'on' : 'off'}`,
+            upstreamMessage?.includes('Cycle tag must be YYYY-MM') ? `Upstream: ${upstreamMessage}` : null,
           ].filter(Boolean)
 
           toast.error(errorMessage || 'Manage sheet failed', {
@@ -425,6 +454,7 @@ export function ManageSheetButton({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-emerald-600 shrink-0 border-r border-slate-100"
@@ -446,6 +476,7 @@ export function ManageSheetButton({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="rounded-none w-10 px-0 hover:bg-slate-100 h-full text-slate-500 shrink-0 border-r border-slate-100"
@@ -514,6 +545,7 @@ export function ManageSheetButton({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="rounded-none w-10 px-0 hover:bg-slate-50 h-full text-slate-400 hover:text-indigo-600 shrink-0 flex items-center justify-center border-l border-slate-100"
@@ -536,6 +568,7 @@ export function ManageSheetButton({
         ) : (
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               size={size === 'md' ? 'default' : size}
               className={cn("h-9 border-slate-200 rounded-xl", buttonClassName)}
@@ -563,6 +596,7 @@ export function ManageSheetButton({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
+                        type="button"
                         className={cn(
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase tracking-wider ml-0.5 group",
                           (pendingCycleTag === 'all' || pendingCycleTag === '3m' || pendingCycleTag === 'year') 
@@ -789,6 +823,7 @@ export function ManageSheetButton({
                
                <div className="flex items-center gap-3">
                  <button 
+                   type="button"
                    onClick={() => {
                      setPendingCycleTag(cycleTag)
                      setShowPopover(false)
@@ -800,6 +835,7 @@ export function ManageSheetButton({
 
                  {pendingCycleTag !== cycleTag && (
                    <Button
+                     type="button"
                      onClick={handleApply}
                      className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-6 font-black uppercase tracking-widest text-[9px] shadow-lg shadow-indigo-200 animate-in zoom-in-95"
                    >

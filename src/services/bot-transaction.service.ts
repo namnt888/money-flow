@@ -117,7 +117,7 @@ export async function createBotTransactions(
   }
 
   const addTransaction = async (row: any) => {
-    const data = await pocketbaseCreate<any>("pvl_txn_001", row);
+    const data = await pocketbaseCreate<any>("transactions", row);
     if (!data) {
       throw new Error("Failed to create transaction in PocketBase.");
     }

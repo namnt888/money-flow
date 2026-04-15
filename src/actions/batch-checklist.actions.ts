@@ -164,7 +164,7 @@ export async function getChecklistDataAction(bankType: 'MBB' | 'VIB', monthYear:
         if (explicitFundingIds.length > 0) {
             try {
                 // Use pvl_txn_001 directly for known explicit IDs
-                const explicitTxns = await pocketbaseList<any>('pvl_txn_001', {
+                const explicitTxns = await pocketbaseList<any>('transactions', {
                     filter: explicitFundingIds.map(id => `id='${id}'`).join(' || '),
                     page: 1,
                     expand: 'account_id,to_account_id'

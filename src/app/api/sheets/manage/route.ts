@@ -293,7 +293,12 @@ export async function POST(request: Request) {
 
     if (!normalizedCycle || (!isYYYYMM(normalizedCycle) && !/^\d{4}$/.test(normalizedCycle))) {
       console.warn('[ManageSheet API] validation failed: invalid cycleTag', { requestId, personId, rawCycle, normalizedCycle })
-      return errorResponse(requestId, 'validate_payload', 'Invalid cycleTag format', 400)
+      return errorResponse(
+        requestId,
+        'validate_payload',
+        `Sync cycle validation failed: raw=${rawCycle || '(empty)'} resolved=${normalizedCycle || '(empty)'} masterSheet=${isMasterSheet ? 'on' : 'off'}`,
+        400,
+      )
     }
 
     console.info('[ManageSheet API] request', { requestId, personId, cycleTag: normalizedCycle, isMasterSheet })
@@ -365,12 +370,16 @@ export async function POST(request: Request) {
       })
 
       if (!cycleResult.ok) {
+        const upstreamError = cycleResult.error ?? 'Sync failed'
+        const normalizedError = upstreamError.includes('Cycle tag must be YYYY-MM')
+          ? `Sheet upstream rejected cycle tag: raw=${rawCycle || '(empty)'} resolved=${targetCycle || '(empty)'} masterSheet=${isMasterSheet ? 'on' : 'off'}`
+          : upstreamError
         return errorResponse(
           requestId,
           'sync_transactions',
-          cycleResult.error ?? 'Sync failed',
+          normalizedError,
           400,
-          cycleResult.error ?? 'syncCycleTransactions returned success=false',
+          upstreamError,
         )
       }
 

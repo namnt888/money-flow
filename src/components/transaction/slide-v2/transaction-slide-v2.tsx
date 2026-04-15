@@ -181,6 +181,7 @@ function extractRepayNoteArtifacts(
   cleanedNote: string;
   allocations: Record<string, number>;
   volunteerRepay: boolean;
+  shortfall: number;
 } {
   const noteText = String(noteInput || "");
   const metadata =
@@ -212,12 +213,17 @@ function extractRepayNoteArtifacts(
   const cleanedNote = normalizeRepayBaseNote(noteText);
   const volunteerRepayFromNote = /#Volunteer_Repay/i.test(noteText);
   const volunteerRepayFromMetadata = metadata.multi_cycle_repay_volunteer === true;
+  const shortfallRaw = Number(metadata.multi_cycle_repay_shortfall ?? 0);
+  const shortfallFromMetadata = Number.isFinite(shortfallRaw)
+    ? Math.max(0, Math.round(shortfallRaw))
+    : 0;
 
   return {
     cleanedNote,
     allocations:
       Object.keys(allocFromMetadata).length > 0 ? allocFromMetadata : allocFromNote,
     volunteerRepay: volunteerRepayFromMetadata || volunteerRepayFromNote,
+    shortfall: shortfallFromMetadata,
   };
 }
 
@@ -653,11 +659,12 @@ export function TransactionSlideV2({
         );
         setRepayAllocationDraft(repayArtifacts.allocations);
         setRepayVolunteerEnabled(repayArtifacts.volunteerRepay);
+        setRepayShortfallDraft(repayArtifacts.shortfall);
       } else {
         setRepayAllocationDraft({});
         setRepayVolunteerEnabled(false);
+        setRepayShortfallDraft(0);
       }
-      setRepayShortfallDraft(0);
       setHasChanges(false);
       onHasChanges?.(false);
     }
@@ -1016,9 +1023,11 @@ export function TransactionSlideV2({
               if (formVal.type === "repayment") {
                 setRepayAllocationDraft(repayArtifacts.allocations);
                 setRepayVolunteerEnabled(repayArtifacts.volunteerRepay);
+                setRepayShortfallDraft(repayArtifacts.shortfall);
               } else {
                 setRepayAllocationDraft({});
                 setRepayVolunteerEnabled(false);
+                setRepayShortfallDraft(0);
               }
             } else {
               toast.error("Failed to load transaction details");
@@ -1173,6 +1182,14 @@ export function TransactionSlideV2({
 
     const effectiveVolunteerRepay =
       repayVolunteerEnabled || repayArtifactsFromInput.volunteerRepay;
+    const effectiveRepayShortfall =
+      data.type === "repayment"
+        ? Math.max(
+            0,
+            Number(repayShortfallDraft || 0),
+            Number(repayArtifactsFromInput.shortfall || 0),
+          )
+        : 0;
 
     const activeRepayAllocations =
       data.type === "repayment"
@@ -1198,7 +1215,7 @@ export function TransactionSlideV2({
           ? data.target_account_id
           : null,
       category_id: data.category_id || null,
-      shop_id: data.shop_id || null,
+      shop_id: data.type === "repayment" ? null : (data.shop_id || null),
       person_id: data.person_id || null,
       tag: data.tag || "",
       cashback_mode: data.cashback_mode,
@@ -1216,9 +1233,9 @@ export function TransactionSlideV2({
         multi_cycle_repay_allocations:
           activeRepayAllocations.length > 0 ? Object.fromEntries(activeRepayAllocations) : undefined,
         multi_cycle_repay_shortfall:
-          activeRepayAllocations.length > 0 ? repayShortfallDraft : undefined,
+          activeRepayAllocations.length > 0 ? effectiveRepayShortfall : undefined,
         multi_cycle_repay_volunteer:
-          activeRepayAllocations.length > 0 ? effectiveVolunteerRepay : undefined,
+          data.type === "repayment" ? effectiveVolunteerRepay : undefined,
         is_debt_repayment_parent:
           data.type === "repayment" && activeRepayAllocations.length > 0 ? true : undefined,
         split_bill:
@@ -1315,14 +1332,16 @@ export function TransactionSlideV2({
 
       console.log("🎉 Submit success:", success);
 
-      if (
-        success &&
-        !effectiveEditingId &&
-        data.type === "repayment" &&
-        finalTxnId &&
-        data.person_id &&
-        activeRepayAllocations.length > 0
-      ) {
+      if (success && data.type === "repayment" && finalTxnId && data.person_id) {
+        console.log('[TransactionSlideV2] REPAY_CHILD_CREATION - About to call createRepaymentAllocationChildrenAction:', {
+          parentTxnId: finalTxnId,
+          personId: data.person_id,
+          allocations: Object.fromEntries(activeRepayAllocations),
+          volunteerRepay: effectiveVolunteerRepay,
+          volunteerShortfallAmount: effectiveVolunteerRepay ? effectiveRepayShortfall : 0,
+          defaultCycleTag: payload?.debt_cycle_tag || payload?.tag || undefined,
+          replaceExisting: Boolean(effectiveEditingId),
+        });
         const childResult = await createRepaymentAllocationChildrenAction(
           finalTxnId,
           data.person_id,
@@ -1331,11 +1350,16 @@ export function TransactionSlideV2({
           {
             baseNote: mergedTxnNote || undefined,
             volunteerRepay: effectiveVolunteerRepay,
+            volunteerShortfallAmount: effectiveVolunteerRepay ? effectiveRepayShortfall : 0,
+            defaultCycleTag: payload?.debt_cycle_tag || payload?.tag || undefined,
+            replaceExisting: Boolean(effectiveEditingId),
           },
         );
 
         if (!childResult.success) {
           toast.error(`Parent saved but allocation children failed: ${childResult.error}`);
+        } else if (effectiveVolunteerRepay) {
+          toast.info("Volunteer flag saved in DB metadata");
         }
       }
 
@@ -1846,6 +1870,12 @@ export function TransactionSlideV2({
             }
           }}
           onApply={({ allocations, volunteerRepay, shortfall }) => {
+            console.log('[TransactionSlideV2] RepayDebtSheet.onApply received:', {
+              allocations,
+              volunteerRepay,
+              shortfall,
+              currentRepayVolunteerEnabled: repayVolunteerEnabled,
+            });
             setRepayAllocationDraft(allocations);
             setRepayVolunteerEnabled(volunteerRepay);
             setRepayShortfallDraft(shortfall);

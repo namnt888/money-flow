@@ -59,10 +59,10 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 }
 
 export async function updateTransaction(id: string, input: CreateTransactionInput): Promise<boolean> {
-  const pbId = toPocketBaseId(id, 'pvl_txn_001');
+  const pbId = toPocketBaseId(id, 'transactions');
   
   // Get existing for revalidation of old person if changed
-  const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+  const existing = await pocketbaseGetById<any>('transactions', pbId);
   
   // 1. PB-PRIMARY Write (+ sheet sync handled inside service)
   const success = await updatePBTransaction(pbId, input as any);
@@ -85,10 +85,10 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
 }
 
 export async function voidTransactionAction(id: string): Promise<boolean> {
-  const pbId = toPocketBaseId(id, 'pvl_txn_001');
+  const pbId = toPocketBaseId(id, 'transactions');
   
   // Need to get the person_id before voiding to revalidate their page
-  const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+  const existing = await pocketbaseGetById<any>('transactions', pbId);
   
   // Sheet sync is handled inside service layer.
   const success = await voidPBTransaction(pbId);
@@ -105,12 +105,12 @@ export async function voidTransactionAction(id: string): Promise<boolean> {
 }
 
 export async function restoreTransaction(id: string): Promise<boolean> {
-  const pbId = toPocketBaseId(id, 'pvl_txn_001');
+  const pbId = toPocketBaseId(id, 'transactions');
   
   try {
-    await pocketbaseUpdate('pvl_txn_001', pbId, { status: 'posted' });
+    await pocketbaseUpdate('transactions', pbId, { status: 'posted' });
     
-    const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+    const existing = await pocketbaseGetById<any>('transactions', pbId);
     const existingMeta =
       typeof existing?.metadata === 'object' && existing.metadata !== null
         ? existing.metadata
@@ -125,14 +125,14 @@ export async function restoreTransaction(id: string): Promise<boolean> {
 
     if (isRefundRequestTxn && originalTxnId) {
       try {
-        const originalTxn = await pocketbaseGetById<any>('pvl_txn_001', originalTxnId);
+        const originalTxn = await pocketbaseGetById<any>('transactions', originalTxnId);
         if (originalTxn) {
           const originalMeta =
             typeof originalTxn.metadata === 'object' && originalTxn.metadata !== null
               ? originalTxn.metadata
               : {};
 
-          await pocketbaseUpdate('pvl_txn_001', originalTxnId, {
+          await pocketbaseUpdate('transactions', originalTxnId, {
             status: originalTxn.status === 'posted' ? 'waiting_refund' : originalTxn.status,
             metadata: {
               ...(originalMeta as Record<string, unknown>),
@@ -190,15 +190,15 @@ export async function confirmRefundAction(
 
 export async function updateTransactionMetadata(id: string, metadata: any): Promise<boolean> {
   try {
-    const pbId = toPocketBaseId(id, 'pvl_txn_001');
-    const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+    const pbId = toPocketBaseId(id, 'transactions');
+    const existing = await pocketbaseGetById<any>('transactions', pbId);
     
     const newMetadata = {
       ...(typeof existing.metadata === 'object' ? existing.metadata : {}),
       ...metadata
     };
 
-    await pocketbaseUpdate('pvl_txn_001', pbId, { metadata: newMetadata });
+    await pocketbaseUpdate('transactions', pbId, { metadata: newMetadata });
     revalidatePath('/transactions');
     revalidatePath('/people');
     if (existing?.person_id) {
@@ -217,7 +217,7 @@ export async function deleteSplitBillAction(baseTransactionId: string): Promise<
     
     // 1. Find all child transactions
     // Note: PocketBase filter for JSON field might be tricky, usually metadata.split_parent_id
-    const children = await pocketbaseList<any>('pvl_txn_001', {
+    const children = await pocketbaseList<any>('transactions', {
       filter: `metadata.split_parent_id = "${pbBaseId}"`,
       perPage: 500
     });
@@ -226,12 +226,12 @@ export async function deleteSplitBillAction(baseTransactionId: string): Promise<
     
     // 2. Delete children
     for (const child of children.items) {
-      await pocketbaseUpdate('pvl_txn_001', child.id, { status: 'void' }); // Prefer voiding over hard delete for consistency
+      await pocketbaseUpdate('transactions', child.id, { status: 'void' }); // Prefer voiding over hard delete for consistency
       deletedCount++;
     }
 
     // 3. Void base transaction
-    await pocketbaseUpdate('pvl_txn_001', pbBaseId, { status: 'void' });
+    await pocketbaseUpdate('transactions', pbBaseId, { status: 'void' });
     deletedCount++;
 
     revalidatePath('/transactions');
@@ -248,8 +248,8 @@ export async function bulkMoveTransactionsToCategory(transactionIds: string[], c
     const pbCategoryId = toPocketBaseId(categoryId, 'categories');
 
     for (const id of transactionIds) {
-      const pbTxnId = toPocketBaseId(id, 'pvl_txn_001');
-      await pocketbaseUpdate('pvl_txn_001', pbTxnId, { category_id: pbCategoryId });
+      const pbTxnId = toPocketBaseId(id, 'transactions');
+      await pocketbaseUpdate('transactions', pbTxnId, { category_id: pbCategoryId });
     }
 
     revalidatePath('/transactions');
@@ -278,7 +278,7 @@ export async function updateSplitBillAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pbBaseId = toPocketBaseId(baseTransactionId, 'transactions');
-    const baseTxn = await pocketbaseGetById<any>('pvl_txn_001', pbBaseId);
+    const baseTxn = await pocketbaseGetById<any>('transactions', pbBaseId);
 
     // 1. Update base transaction
     const baseMetadata = {
@@ -287,13 +287,13 @@ export async function updateSplitBillAction(
       note: data.note,
       qr_image_url: data.qrImageUrl
     };
-    await pocketbaseUpdate('pvl_txn_001', pbBaseId, { metadata: baseMetadata, note: data.note });
+    await pocketbaseUpdate('transactions', pbBaseId, { metadata: baseMetadata, note: data.note });
 
     // 2. Process participants
     for (const p of data.participants) {
       if (p.isRemoved && p.transactionId) {
         const pbChildId = toPocketBaseId(p.transactionId, 'transactions');
-        await pocketbaseUpdate('pvl_txn_001', pbChildId, { status: 'void' });
+        await pocketbaseUpdate('transactions', pbChildId, { status: 'void' });
       } else if (p.isNew) {
         // Create new transaction for split
         const pbPersonId = toPocketBaseId(p.personId, 'people');
@@ -306,7 +306,7 @@ export async function updateSplitBillAction(
           continue;
         }
 
-        await pocketbaseCreate('pvl_txn_001', {
+        await pocketbaseCreate('transactions', {
           date: baseTxn.date,
           amount: p.amount,
           type: 'debt',
@@ -321,7 +321,7 @@ export async function updateSplitBillAction(
         });
       } else if (p.transactionId) {
         const pbChildId = toPocketBaseId(p.transactionId, 'transactions');
-        await pocketbaseUpdate('pvl_txn_001', pbChildId, {
+        await pocketbaseUpdate('transactions', pbChildId, {
           amount: p.amount,
           metadata: {
             split_parent_id: pbBaseId,
@@ -344,8 +344,8 @@ export async function bulkMoveToCategory(transactionIds: string[], categoryId: s
   try {
     const pbCatId = toPocketBaseId(categoryId, 'categories');
     for (const id of transactionIds) {
-      const pbId = toPocketBaseId(id, 'pvl_txn_001');
-      await pocketbaseUpdate('pvl_txn_001', pbId, { category_id: pbCatId });
+      const pbId = toPocketBaseId(id, 'transactions');
+      await pocketbaseUpdate('transactions', pbId, { category_id: pbCatId });
     }
     revalidatePath('/transactions');
     revalidatePath('/people');
@@ -359,7 +359,7 @@ export async function bulkMoveToCategory(transactionIds: string[], categoryId: s
 export async function getOriginalAccount(refundRequestId: string): Promise<any | null> {
   try {
     const pbId = toPocketBaseId(refundRequestId, 'transactions');
-    const record = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+    const record = await pocketbaseGetById<any>('transactions', pbId);
     if (!record) return null;
 
     const meta = parseMetadata(record.metadata);
@@ -392,7 +392,7 @@ export async function requestRefund(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
-    const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+    const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
 
     const existingMeta =
@@ -435,7 +435,7 @@ export async function requestRefund(
       ...(existingMeta && typeof existingMeta === 'object' ? existingMeta : {}),
     };
 
-    await pocketbaseCreate('pvl_txn_001', {
+    await pocketbaseCreate('transactions', {
       id: pendingRefundId,
       date: existing.date || existing.occurred_at || new Date().toISOString(),
       occurred_at: existing.occurred_at || existing.date || new Date().toISOString(),
@@ -478,7 +478,7 @@ export async function requestRefund(
       }
     };
 
-    await pocketbaseUpdate('pvl_txn_001', pbId, updateData);
+    await pocketbaseUpdate('transactions', pbId, updateData);
     try {
       revalidatePath('/transactions');
     } catch (revalidateError) {
@@ -497,7 +497,7 @@ export async function requestRefund(
 export async function cancelOrder(transactionId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
-    const existing = await pocketbaseGetById<any>('pvl_txn_001', pbId);
+    const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
 
     const amount = Math.abs(existing.amount);

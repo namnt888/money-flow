@@ -4,6 +4,30 @@ import { pocketbaseCreate, pocketbaseUpdate, pocketbaseDelete, toPocketBaseId } 
 import { revalidatePath } from 'next/cache'
 import { syncTransactionToSheet } from '@/services/sheet.service'
 import { getCategories } from '@/services/category.service'
+import { getTransactionsByPeople } from '@/services/transaction.service'
+
+async function deleteExistingRepaymentChildren(parentTransactionId: string, personId: string) {
+    const parentId = toPocketBaseId(parentTransactionId, 'transactions')
+    const existingChildren = await getTransactionsByPeople([personId], 1000, true)
+
+    const childTransactions = existingChildren.filter((txn) => {
+        const metadata = (txn.metadata as Record<string, unknown>) || {}
+        const parentIdFromField =
+            typeof txn.parent_transaction_id === 'string' && txn.parent_transaction_id
+                ? txn.parent_transaction_id
+                : typeof metadata.parent_transaction_id === 'string'
+                    ? String(metadata.parent_transaction_id)
+                    : ''
+
+        return parentIdFromField === parentId && metadata.is_debt_repayment_child === true
+    })
+
+    for (const child of childTransactions) {
+        await pocketbaseDelete('transactions', child.id)
+    }
+
+    return childTransactions.length
+}
 
 /**
  * Handles batch debt repayment.
@@ -70,6 +94,7 @@ export async function repayBatchDebt(
                 persisted_cycle_tag: tag,
                 category_id: repaymentCategoryId,
                 linked_transaction_id: parent.id,
+                parent_transaction_id: parent.id,
                 status: 'posted',
                 metadata: {
                     is_debt_repayment_child: true,
@@ -98,6 +123,7 @@ export async function repayBatchDebt(
                 persisted_cycle_tag: '',
                 category_id: repaymentCategoryId,
                 linked_transaction_id: parent.id,
+                parent_transaction_id: parent.id,
                 status: 'posted',
                 metadata: {
                     is_debt_repayment_child: true,
@@ -173,6 +199,9 @@ export async function createRepaymentAllocationChildrenAction(
     options?: {
         baseNote?: string
         volunteerRepay?: boolean
+        volunteerShortfallAmount?: number
+        defaultCycleTag?: string
+        replaceExisting?: boolean
     }
 ) {
     try {
@@ -189,12 +218,20 @@ export async function createRepaymentAllocationChildrenAction(
             .map(([tag, amount]) => [String(tag), Number(amount || 0)] as const)
             .filter(([, amount]) => amount > 0)
 
-        if (positiveAllocations.length === 0) {
+        if (options?.replaceExisting) {
+            await deleteExistingRepaymentChildren(pbParentId, pbPersonId)
+        }
+
+        const volunteerShortfallAmount = Math.max(0, Number(options?.volunteerShortfallAmount || 0))
+
+        if (positiveAllocations.length === 0 && !(options?.volunteerRepay && volunteerShortfallAmount > 0)) {
             return { success: true, createdCount: 0 }
         }
 
         const suffix = options?.volunteerRepay ? ' #Volunteer_Repay #nosync' : ' #nosync'
         const baseNote = options?.baseNote?.trim()
+
+        let createdCount = 0
 
         for (const [tag, amount] of positiveAllocations) {
             const note = baseNote
@@ -216,6 +253,7 @@ export async function createRepaymentAllocationChildrenAction(
                 persisted_cycle_tag: tag,
                 category_id: repaymentCategoryId,
                 linked_transaction_id: pbParentId,
+                parent_transaction_id: pbParentId,
                 status: 'posted',
                 metadata: {
                     is_debt_repayment_child: true,
@@ -226,13 +264,57 @@ export async function createRepaymentAllocationChildrenAction(
                     volunteer_repay: options?.volunteerRepay === true,
                 },
             })
+
+            createdCount += 1
+        }
+
+        if (options?.volunteerRepay && volunteerShortfallAmount > 0) {
+            console.log('[debt-actions] VOLUNTEER_CHILD_CREATE - Creating volunteer shortfall child txn:', {
+                volunteerRepay: options?.volunteerRepay,
+                volunteerShortfallAmount,
+                defaultCycleTag: options?.defaultCycleTag,
+            });
+            const volunteerTag = options?.defaultCycleTag?.trim() || positiveAllocations[0]?.[0] || ''
+            const volunteerNote = baseNote
+                ? `${baseNote} | Volunteer Shortfall: ${Math.round(volunteerShortfallAmount)} #Volunteer_Repay #nosync`
+                : `Volunteer Shortfall Repayment #Volunteer_Repay #nosync`
+
+            await pocketbaseCreate<any>('transactions', {
+                id: toPocketBaseId(crypto.randomUUID(), 'transactions'),
+                occurred_at: new Date().toISOString(),
+                date: new Date().toISOString(),
+                note: volunteerNote,
+                description: volunteerNote,
+                type: 'repayment',
+                account_id: pbSystemAccountId,
+                person_id: pbPersonId,
+                amount: Math.abs(volunteerShortfallAmount),
+                tag: volunteerTag,
+                debt_cycle_tag: volunteerTag || null,
+                persisted_cycle_tag: volunteerTag || null,
+                category_id: repaymentCategoryId,
+                linked_transaction_id: pbParentId,
+                parent_transaction_id: pbParentId,
+                status: 'posted',
+                metadata: {
+                    is_debt_repayment_child: true,
+                    is_volunteer_shortfall: true,
+                    parent_transaction_id: pbParentId,
+                    debt_cycle_tag: volunteerTag || null,
+                    allocation_source: 'transaction_slide',
+                    is_no_sync_allocation: true,
+                    volunteer_repay: true,
+                },
+            })
+
+            createdCount += 1
         }
 
         revalidatePath('/transactions')
         revalidatePath('/people')
         revalidatePath(`/people/${personId}`)
 
-        return { success: true, createdCount: positiveAllocations.length }
+        return { success: true, createdCount }
     } catch (error: any) {
         console.error('[DB:PB] createRepaymentAllocationChildrenAction failed:', error)
         return { success: false, error: error.message }

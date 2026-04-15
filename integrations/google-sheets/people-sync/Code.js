@@ -162,7 +162,7 @@ function handleEnsureSheet(payload) {
     var personId = payload.personId || payload.person_id || null;
     var cycleTag = payload.cycleTag || payload.cycle_tag || getCycleTagFromDate(new Date());
     var ss = getOrCreateSpreadsheet(personId, payload);
-    var sheet = getOrCreateCycleTab(ss, cycleTag);
+    var sheet = getOrCreateCycleTab(ss, resolveTabCycleTag(cycleTag, payload));
     setupNewSheet(sheet);
     return jsonResponse({ ok: true, sheetUrl: ss.getUrl(), sheetId: ss.getId(), tabName: sheet.getName() });
 }
@@ -177,14 +177,15 @@ function handleSyncTransactions(payload) {
     }
 
     var ss = getOrCreateSpreadsheet(personId, payload);
+    var tabCycleTag = resolveTabCycleTag(cycleTag, payload);
 
     // Safety: Default cycleTag if missing (e.g. empty rows)
     if (!cycleTag) {
         cycleTag = getCycleTagFromDate(new Date());
     }
 
-    var sheet = getOrCreateCycleTab(ss, cycleTag);
-    if (!sheet) throw new Error("Could not create or find sheet for tag: " + cycleTag);
+    var sheet = getOrCreateCycleTab(ss, tabCycleTag);
+    if (!sheet) throw new Error("Could not create or find sheet for tag: " + tabCycleTag);
 
     var syncOptions = buildSheetSyncOptions(payload);
 
@@ -276,7 +277,7 @@ function handleSyncTransactions(payload) {
     var validTxns = transactions.filter(function (txn) { return txn.status !== 'void'; });
     var payloadIds = validTxns.map(function (t) { return t.id; });
 
-    Logger.log('[handleSyncTransactions] Incoming rows: ' + transactions.length + ', valid rows: ' + validTxns.length);
+    Logger.log('[handleSyncTransactions] Incoming rows: ' + transactions.length + ', valid rows: ' + validTxns.length + ', cycleTag=' + cycleTag + ', tabCycleTag=' + tabCycleTag);
     if (validTxns.length > 0) {
         var sample = validTxns[0];
         Logger.log('[handleSyncTransactions] Sample row keys: ' + Object.keys(sample).join(','));
@@ -472,7 +473,7 @@ function handleSingleTransaction(payload, action) {
     var personId = payload.personId || payload.person_id || null;
     var cycleTag = payload.cycle_tag || payload.cycleTag || getCycleTagFromDate(new Date(payload.date));
     var ss = getOrCreateSpreadsheet(personId, payload);
-    var sheet = getOrCreateCycleTab(ss, cycleTag);
+    var sheet = getOrCreateCycleTab(ss, resolveTabCycleTag(cycleTag, payload));
     var syncOptions = buildSheetSyncOptions(payload);
     setupNewSheet(sheet, syncOptions.summaryOptions);
 
@@ -934,7 +935,8 @@ function ensureArrayFormulas(sheet) {
     // 2. If it is a URL (starts with http), show as IMAGE(..., 1)
     // 3. Otherwise show the mapping or original text
     var shopFormula = '=ARRAYFORMULA(IF(K2:K=""; ""; ' +
-        'LET(mapped; IFERROR(VLOOKUP(TRIM(K2:K); Shop!A:B; 2; FALSE); TRIM(K2:K)); ' +
+        'LET(mappedRaw; IFERROR(VLOOKUP(TRIM(K2:K); Shop!A:B; 2; FALSE); ""); ' +
+        'mapped; IF(mappedRaw=""; TRIM(K2:K); mappedRaw); ' +
         'IF(LEFT(mapped; 4)="http"; IMAGE(mapped; 1); mapped) ' +
         ')))';
     sheet.getRange("D2").setFormula(shopFormula);
@@ -973,9 +975,25 @@ function normalizeCycleTag(tag) {
     if (!tag) return null;
     var str = tag.toString().trim();
     if (/^\d{4}-\d{2}$/.test(str)) return str;
+    if (/^\d{4}$/.test(str)) return str;
     var match = str.match(/^([A-Z]{3})(\d{2})$/i);
     if (match) { var month = { 'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 'MAY': '05', 'JUN': '06', 'JUL': '07', 'AUG': '08', 'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12' }[match[1].toUpperCase()]; if (month) return '20' + match[2] + '-' + month; }
     return str;
+}
+
+function isMasterSheetPayload(payload) {
+    if (!payload) return false;
+    return payload.master_sheet === true || payload.is_master_sheet_enabled === true || payload.sheet_mode === 'master' || payload.sheet_cycle_mode === 'year';
+}
+
+function resolveTabCycleTag(cycleTag, payload) {
+    var normalized = normalizeCycleTag(cycleTag);
+    if (!normalized) return normalized;
+    if (isMasterSheetPayload(payload)) {
+        var yearMatch = normalized.toString().match(/^(\d{4})/);
+        if (yearMatch) return yearMatch[1];
+    }
+    return normalized;
 }
 
 function buildSheetSyncOptions(payload) {

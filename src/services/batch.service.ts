@@ -307,11 +307,11 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
         const existingTxId = String(item.transaction_id || '').trim()
 
         if (existingTxId) {
-            const existingTxn = await pocketbaseGetById<any>('pvl_txn_001', existingTxId).catch(() => null)
+            const existingTxn = await pocketbaseGetById<any>('transactions', existingTxId).catch(() => null)
             if (existingTxn?.id) {
                 txnId = existingTxn.id
                 if (String(existingTxn.status || '').toLowerCase() === 'void') {
-                    await pocketbaseUpdate('pvl_txn_001', existingTxn.id, {
+                    await pocketbaseUpdate('transactions', existingTxn.id, {
                         status: 'posted',
                         occurred_at: nowIso,
                         note: noteText,
@@ -336,7 +336,7 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
         }
 
         if (!txnId) {
-            const reusableActive = await pocketbaseList<any>('pvl_txn_001', {
+            const reusableActive = await pocketbaseList<any>('transactions', {
                 filter: `status != "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
                 sort: '-updated,-created',
                 page: 1,
@@ -346,7 +346,7 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
             const activeTxn = reusableActive?.items?.[0]
             if (activeTxn?.id) {
                 txnId = activeTxn.id
-                await pocketbaseUpdate('pvl_txn_001', activeTxn.id, {
+                await pocketbaseUpdate('transactions', activeTxn.id, {
                     occurred_at: nowIso,
                     note: noteText,
                     type: 'transfer',
@@ -368,7 +368,7 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
         }
 
         if (!txnId) {
-            const reusableVoided = await pocketbaseList<any>('pvl_txn_001', {
+            const reusableVoided = await pocketbaseList<any>('transactions', {
                 filter: `status = "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
                 sort: '-updated,-created',
                 page: 1,
@@ -378,7 +378,7 @@ export async function confirmBatchItem(itemId: string, targetAccountId?: string)
             const reusableTxn = reusableVoided?.items?.[0]
             if (reusableTxn?.id) {
                 txnId = reusableTxn.id
-                await pocketbaseUpdate('pvl_txn_001', reusableTxn.id, {
+                await pocketbaseUpdate('transactions', reusableTxn.id, {
                     status: 'posted',
                     occurred_at: nowIso,
                     note: noteText,
@@ -1432,7 +1432,7 @@ export async function confirmBatchSource(batchId: string, realAccountId: string)
         // 2. Calculate Total Amount (from funding transaction)
         if (!batch.funding_transaction_id) throw new Error('Batch not funded yet')
 
-        const fundingTxn = await pocketbaseGetById<any>('pvl_txn_001', batch.funding_transaction_id)
+        const fundingTxn = await pocketbaseGetById<any>('transactions', batch.funding_transaction_id)
         const amount = Math.abs(fundingTxn?.amount || 0)
         if (amount <= 0) throw new Error('No funded amount found')
 
