@@ -2,6 +2,7 @@
 import 'server-only'
 
 import { executeWithFallback, logSource } from '@/lib/pocketbase/fallback-helpers'
+import { createClient } from '@/lib/supabase/server'
 import { Person } from '@/types/moneyflow.types'
 import {
   pocketbaseCreate,
@@ -60,11 +61,41 @@ function mapPerson(record: PocketBaseRecord): Person {
   }
 }
 
+async function getOptionalSheetLink(name: string): Promise<string | null> {
+  const supabase = createClient()
+  const normalizedName = name.trim().toLowerCase()
+  const { data, error } = await supabase
+    .from('sheet_webhook_links')
+    .select('url, name, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    return null
+  }
+
+  const rows = (data ?? []) as Array<{ url?: string | null; name?: string | null }>
+  const byName = rows.find((row) => String(row.name || '').trim().toLowerCase() === normalizedName)
+  return String(byName?.url || rows[0]?.url || '') || null
+}
+
+async function getOptionalCycleSheetUrl(pbPersonId: string): Promise<string | null> {
+  try {
+    const cycleSheetRows = await pocketbaseList<PocketBaseRecord>('person_cycle_sheets', {
+      filter: `person_id='${pbPersonId}' && sheet_url != ''`,
+      sort: '-updated,-created',
+      perPage: 1,
+    }, true)
+    const latest = cycleSheetRows.items?.[0] || null
+    return latest?.sheet_url ? String(latest.sheet_url) : null
+  } catch {
+    return null
+  }
+}
+
 export async function resolvePocketBasePersonRecord(sourceOrPocketBaseId: string): Promise<PocketBaseRecord | null> {
   if (!sourceOrPocketBaseId) return null
 
   const isPbId = sourceOrPocketBaseId.length === 15 && !sourceOrPocketBaseId.includes('-')
-  const isUuidFormat = isUuid(sourceOrPocketBaseId)
 
   // 1. Direct fetch if it looks like a PB ID
   if (isPbId) {
@@ -110,6 +141,11 @@ export async function getPocketBasePeople(): Promise<Person[]> {
   )
 }
 
+export async function getPocketBasePersonSummary(sourceOrPocketBaseId: string): Promise<Person | null> {
+  const personRecord = await resolvePocketBasePersonRecord(sourceOrPocketBaseId)
+  return personRecord ? mapPerson(personRecord) : null
+}
+
 export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): Promise<Person | null> {
   return executeWithFallback(
     async () => {
@@ -129,68 +165,22 @@ export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): 
         return mapped
       }
 
-      // 1. Base hydration from people table (Wait! PB Schema now has these fields, rely on PB)
+      const [sheetLink, googleSheetUrl] = await Promise.all([
+        mapped.sheet_link ? Promise.resolve(mapped.sheet_link) : getOptionalSheetLink(mapped.name),
+        mapped.google_sheet_url ? Promise.resolve(mapped.google_sheet_url) : getOptionalCycleSheetUrl(String(personRecord.id || mapped.id)),
+      ])
+
       const hydrated = {
         ...mapped,
+        sheet_link: sheetLink || mapped.sheet_link,
+        google_sheet_url: googleSheetUrl || mapped.google_sheet_url,
       }
-
-      // 2. Fallbacks for missing configurations
-      // Fallback for sheet_link (webhook link)
-      if (!hydrated.sheet_link) {
-        try {
-          const escapedName = mapped.name.replace(/'/g, "\\'")
-          const webhookDataByName = await pocketbaseList<PocketBaseRecord>('sheet_webhook_links', {
-            filter: `name ~ '${escapedName}'`,
-            sort: '-created',
-            perPage: 1
-          })
-          
-          let webhookLink = webhookDataByName.items?.[0] || null
-
-          if (!webhookLink) {
-            const webhookDataLatest = await pocketbaseList<PocketBaseRecord>('sheet_webhook_links', {
-              sort: '-created',
-              perPage: 1
-            })
-            webhookLink = webhookDataLatest.items?.[0] || null
-          }
-
-          if (webhookLink?.url) {
-            hydrated.sheet_link = String(webhookLink.url)
-          }
-        } catch (err) {
-          console.warn('[PB: Fallback] Failed to fetch sheet_webhook_links from PocketBase', err)
-        }
-      }
-
-      // Fallback for google_sheet_url (from cycle sheets)
-      if (!hydrated.google_sheet_url && personRecord.id) {
-        try {
-          const cycleSheetRows = await pocketbaseList<PocketBaseRecord>('person_cycle_sheets', {
-            filter: `person_id='${personRecord.id}' && sheet_url != null && sheet_url != ''`,
-            sort: '-updated,-created',
-            perPage: 1
-          })
-
-          const latest = cycleSheetRows.items?.[0] || null
-          if (latest?.sheet_url) {
-            hydrated.google_sheet_url = String(latest.sheet_url)
-          }
-        } catch (err) {
-           console.warn('[PB: Fallback] Failed to fetch person_cycle_sheets from PocketBase', err)
-        }
-      }
-
-      console.log(`[people.service] Merge config for ${mapped.name}:`, {
-        sheet_link: !!hydrated.sheet_link,
-        google_sheet_url: !!hydrated.google_sheet_url,
-        sheet_linked_bank_id: !!hydrated.sheet_linked_bank_id
-      })
 
       return hydrated
     },
-    async () => null, // Supabase fallback removed
-    'people.get'
+    async () => null,
+    'people.get',
+    { quietRecoverable: true }
   )
 }
 
