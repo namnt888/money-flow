@@ -114,7 +114,7 @@ async function fundBatchPocketbase(batchId: string, sourceAccountId?: string) {
     let currentFundingTxn: any = null
     if (batch.funding_transaction_id) {
         try {
-            const fundingTxn = await pocketbaseGetById<any>('pvl_txn_001', batch.funding_transaction_id)
+            const fundingTxn = await pocketbaseGetById<any>('transactions', batch.funding_transaction_id)
             if (fundingTxn && fundingTxn.status !== 'void') {
                 currentFundedAmount = Math.abs(Number(fundingTxn.amount || 0))
                 currentFundingTxn = fundingTxn
@@ -130,7 +130,7 @@ async function fundBatchPocketbase(batchId: string, sourceAccountId?: string) {
         try {
             const escapedBatchId = String(batchId || '').replace(/"/g, '\\"')
             const fallbackFilter = `metadata ~ "\\\"batch_id\\\":\\\"${escapedBatchId}\\\"" && metadata ~ "\\\"batch_step\\\":\\\"step1\\\"" && status != "void"`
-            const fallbackTxns = await pocketbaseList<any>('pvl_txn_001', {
+            const fallbackTxns = await pocketbaseList<any>('transactions', {
                 filter: fallbackFilter,
                 perPage: 1,
                 sort: '-created',

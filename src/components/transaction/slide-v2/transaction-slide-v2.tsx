@@ -38,6 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 import { bulkCreateTransactions } from "@/actions/bulk-transaction-actions";
 import { logToServer, logErrorToServer } from "@/actions/log-actions";
+import { createRepaymentAllocationChildrenAction } from "@/actions/debt-actions";
 import {
   createTransaction,
   createSplitTransactions,
@@ -47,7 +48,7 @@ import { getCategories } from "@/services/category.service";
 import { getShops } from "@/services/shop.service";
 import { toast } from "sonner";
 import { Combobox } from "@/components/ui/combobox";
-import { Account } from "@/types/moneyflow.types";
+import { Account, Person } from "@/types/moneyflow.types";
 
 // Components
 import { TransactionTypeSelector } from "./single-mode/type-selector";
@@ -72,6 +73,7 @@ import { AccountSlideV2 } from "@/components/accounts/v2/AccountSlideV2";
 import { CategorySlide } from "@/components/accounts/v2/CategorySlide";
 import { QuickPeopleSettingsDialog } from "@/components/moneyflow/quick-people-settings-dialog";
 import { CreatePersonDialog } from "@/components/people/create-person-dialog";
+import { RepayDebtSheet } from "@/components/people/repay-debt-sheet";
 import { ShopSlide } from "@/components/shops/ShopSlide";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 
@@ -126,6 +128,103 @@ function resolveEditablePrincipalAmount(params: {
 
   if (originalAbs > 0) return Math.round(originalAbs);
   return Math.round(totalAbs);
+}
+
+function parseAllocSummaryText(summary: string): Record<string, number> {
+  const result: Record<string, number> = {};
+  const entries = String(summary || "")
+    .split("|")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  entries.forEach((entry) => {
+    const match = entry.match(/(\d{4}-\d{2})\s*:\s*([\d.,]+)/);
+    if (!match) return;
+    const tag = String(match[1] || "").trim();
+    const amount = Number(String(match[2] || "").replace(/[.,]/g, ""));
+    if (!tag || !Number.isFinite(amount) || amount <= 0) return;
+    result[tag] = Math.round(amount);
+  });
+
+  return result;
+}
+
+function normalizeRepayBaseNote(note: string): string {
+  let cleaned = String(note || "");
+  cleaned = cleaned.replace(/\|?\s*\[ALLOC\][^#\n\r]*/gi, " ");
+  cleaned = cleaned.replace(/#Volunteer_Repay/gi, " ");
+  cleaned = cleaned.replace(/\s*\|\s*/g, " | ");
+  cleaned = cleaned.replace(/\s{2,}/g, " ").trim();
+
+  const repeatedPrefix = cleaned.match(/^(.{2,120}?)\s+\1(?=\s*(\||$))/i);
+  if (repeatedPrefix?.[1]) {
+    cleaned = cleaned.replace(repeatedPrefix[0], repeatedPrefix[1]);
+  }
+
+  const segments = cleaned
+    .split("|")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  const deduped = segments.filter((segment, idx, arr) => {
+    if (idx === 0) return true;
+    return segment.toLowerCase() !== arr[idx - 1].toLowerCase();
+  });
+
+  return deduped.join(" | ").trim();
+}
+
+function extractRepayNoteArtifacts(
+  noteInput: string | null | undefined,
+  metadataInput: unknown,
+): {
+  cleanedNote: string;
+  allocations: Record<string, number>;
+  volunteerRepay: boolean;
+  shortfall: number;
+} {
+  const noteText = String(noteInput || "");
+  const metadata =
+    metadataInput && typeof metadataInput === "object"
+      ? (metadataInput as Record<string, unknown>)
+      : {};
+
+  const allocFromMetadataRaw =
+    metadata.multi_cycle_repay_allocations &&
+    typeof metadata.multi_cycle_repay_allocations === "object"
+      ? (metadata.multi_cycle_repay_allocations as Record<string, unknown>)
+      : null;
+
+  const allocFromMetadata: Record<string, number> = {};
+  if (allocFromMetadataRaw) {
+    Object.entries(allocFromMetadataRaw).forEach(([tag, amount]) => {
+      const parsed = Number(amount || 0);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        allocFromMetadata[String(tag)] = Math.round(parsed);
+      }
+    });
+  }
+
+  const allocMatch = noteText.match(/\[ALLOC\]\s*([^#\n\r]*)/i);
+  const allocFromNote = allocMatch?.[1]
+    ? parseAllocSummaryText(allocMatch[1])
+    : {};
+
+  const cleanedNote = normalizeRepayBaseNote(noteText);
+  const volunteerRepayFromNote = /#Volunteer_Repay/i.test(noteText);
+  const volunteerRepayFromMetadata = metadata.multi_cycle_repay_volunteer === true;
+  const shortfallRaw = Number(metadata.multi_cycle_repay_shortfall ?? 0);
+  const shortfallFromMetadata = Number.isFinite(shortfallRaw)
+    ? Math.max(0, Math.round(shortfallRaw))
+    : 0;
+
+  return {
+    cleanedNote,
+    allocations:
+      Object.keys(allocFromMetadata).length > 0 ? allocFromMetadata : allocFromNote,
+    volunteerRepay: volunteerRepayFromMetadata || volunteerRepayFromNote,
+    shortfall: shortfallFromMetadata,
+  };
 }
 
 const SPLIT_BILL_SYSTEM_ACCOUNT_ID = "88888888-9999-9999-9999-888888888888";
@@ -219,6 +318,14 @@ export function TransactionSlideV2({
   const [isCreatePersonDialogOpen, setIsCreatePersonDialogOpen] =
     useState(false);
   const [isShopDialogOpen, setIsShopDialogOpen] = useState(false);
+  const [isRepayDialogOpen, setIsRepayDialogOpen] = useState(false);
+  const [repayDialogPerson, setRepayDialogPerson] = useState<Person | null>(
+    null,
+  );
+  const [repayAllocationDraft, setRepayAllocationDraft] = useState<Record<string, number>>({});
+  const [repayVolunteerEnabled, setRepayVolunteerEnabled] = useState(false);
+  const [repayShortfallDraft, setRepayShortfallDraft] = useState(0);
+  const openingRepayDialogRef = useRef(false);
 
   // Category Auto-Refresh State
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -291,6 +398,8 @@ export function TransactionSlideV2({
 
       // Duplicate logic: set occurred_at to now (note stays clean - badge shown in table)
       let note = initialData.note ?? "";
+      const repayArtifacts = extractRepayNoteArtifacts(note, initialData.metadata);
+      note = repayArtifacts.cleanedNote;
       let occurredAt = initialData.occurred_at || new Date();
 
       if (operationMode === "duplicate") {
@@ -543,6 +652,19 @@ export function TransactionSlideV2({
       console.log("   - initialData present:", !!initialData);
       console.log("   - reset values:", defaultFormValues);
       singleForm.reset(defaultFormValues);
+      if (initialData?.type === "repayment") {
+        const repayArtifacts = extractRepayNoteArtifacts(
+          initialData.note || "",
+          initialData.metadata,
+        );
+        setRepayAllocationDraft(repayArtifacts.allocations);
+        setRepayVolunteerEnabled(repayArtifacts.volunteerRepay);
+        setRepayShortfallDraft(repayArtifacts.shortfall);
+      } else {
+        setRepayAllocationDraft({});
+        setRepayVolunteerEnabled(false);
+        setRepayShortfallDraft(0);
+      }
       setHasChanges(false);
       onHasChanges?.(false);
     }
@@ -677,6 +799,15 @@ export function TransactionSlideV2({
     control: singleForm.control,
     name: "person_id",
   });
+
+  const repayAllocationPreview = useMemo(
+    () =>
+      Object.entries(repayAllocationDraft)
+        .filter(([, amount]) => Number(amount || 0) > 0)
+        .map(([tag, amount]) => ({ tag, amount: Math.round(Number(amount || 0)) }))
+        .sort((a, b) => a.tag.localeCompare(b.tag)),
+    [repayAllocationDraft],
+  );
 
   // MF5.5: Reset Transfer/Pay when person selected
   useEffect(() => {
@@ -839,18 +970,22 @@ export function TransactionSlideV2({
             if (txn) {
               const isIncome =
                 txn.type === "income" || txn.type === "repayment";
+              const repayArtifacts = extractRepayNoteArtifacts(
+                txn.note || "",
+                txn.metadata,
+              );
               const formVal: SingleTransactionFormValues = {
                 type: (txn.type as any) || "expense",
                 amount: resolveEditablePrincipalAmount({
                   amount: txn.amount,
                   originalAmount: (txn as any).original_amount,
-                  note: txn.note || "",
+                  note: repayArtifacts.cleanedNote,
                   serviceFee: txn.metadata?.service_fee
                     ? Number(txn.metadata.service_fee)
                     : 0,
                 }),
                 occurred_at: new Date(txn.occurred_at),
-                note: txn.note || "",
+                note: repayArtifacts.cleanedNote,
                 source_account_id: isIncome ? null : txn.account_id,
                 target_account_id: isIncome
                   ? txn.account_id
@@ -885,6 +1020,15 @@ export function TransactionSlideV2({
                   : null,
               };
               singleForm.reset(formVal);
+              if (formVal.type === "repayment") {
+                setRepayAllocationDraft(repayArtifacts.allocations);
+                setRepayVolunteerEnabled(repayArtifacts.volunteerRepay);
+                setRepayShortfallDraft(repayArtifacts.shortfall);
+              } else {
+                setRepayAllocationDraft({});
+                setRepayVolunteerEnabled(false);
+                setRepayShortfallDraft(0);
+              }
             } else {
               toast.error("Failed to load transaction details");
             }
@@ -928,9 +1072,14 @@ export function TransactionSlideV2({
         ? 0
         : Number(data.service_fee) || 0;
 
+    const repayArtifactsFromInput = extractRepayNoteArtifacts(
+      data.note || "",
+      data.metadata,
+    );
+
     // Auto-Note for Fee: Append "(principal | Fee: fee)" if service_fee exists
     const finalNote = upsertFeeNote(
-      data.note || "",
+      repayArtifactsFromInput.cleanedNote || "",
       data.amount,
       effectiveServiceFee,
     );
@@ -1024,6 +1173,31 @@ export function TransactionSlideV2({
       };
     });
 
+    const effectiveRepayAllocationSource =
+      data.type === "repayment" &&
+      Object.keys(repayAllocationDraft).length === 0 &&
+      Object.keys(repayArtifactsFromInput.allocations).length > 0
+        ? repayArtifactsFromInput.allocations
+        : repayAllocationDraft;
+
+    const effectiveVolunteerRepay =
+      repayVolunteerEnabled || repayArtifactsFromInput.volunteerRepay;
+    const effectiveRepayShortfall =
+      data.type === "repayment"
+        ? Math.max(
+            0,
+            Number(repayShortfallDraft || 0),
+            Number(repayArtifactsFromInput.shortfall || 0),
+          )
+        : 0;
+
+    const activeRepayAllocations =
+      data.type === "repayment"
+        ? Object.entries(effectiveRepayAllocationSource)
+            .map(([tag, amount]) => [String(tag), Math.round(Number(amount || 0))] as const)
+            .filter(([, amount]) => amount > 0)
+        : [];
+
     const payload: any = {
       occurred_at: data.occurred_at.toISOString(),
       amount: data.amount + effectiveServiceFee,
@@ -1041,7 +1215,7 @@ export function TransactionSlideV2({
           ? data.target_account_id
           : null,
       category_id: data.category_id || null,
-      shop_id: data.shop_id || null,
+      shop_id: data.type === "repayment" ? null : (data.shop_id || null),
       person_id: data.person_id || null,
       tag: data.tag || "",
       cashback_mode: data.cashback_mode,
@@ -1056,6 +1230,14 @@ export function TransactionSlideV2({
         service_fee: effectiveServiceFee || undefined,
         quantity: data.ui_quantity || undefined,
         market_price: data.ui_market_price || undefined,
+        multi_cycle_repay_allocations:
+          activeRepayAllocations.length > 0 ? Object.fromEntries(activeRepayAllocations) : undefined,
+        multi_cycle_repay_shortfall:
+          activeRepayAllocations.length > 0 ? effectiveRepayShortfall : undefined,
+        multi_cycle_repay_volunteer:
+          data.type === "repayment" ? effectiveVolunteerRepay : undefined,
+        is_debt_repayment_parent:
+          data.type === "repayment" && activeRepayAllocations.length > 0 ? true : undefined,
         split_bill:
           splitParticipants.length > 0
             ? {
@@ -1150,11 +1332,45 @@ export function TransactionSlideV2({
 
       console.log("🎉 Submit success:", success);
 
+      if (success && data.type === "repayment" && finalTxnId && data.person_id) {
+        console.log('[TransactionSlideV2] REPAY_CHILD_CREATION - About to call createRepaymentAllocationChildrenAction:', {
+          parentTxnId: finalTxnId,
+          personId: data.person_id,
+          allocations: Object.fromEntries(activeRepayAllocations),
+          volunteerRepay: effectiveVolunteerRepay,
+          volunteerShortfallAmount: effectiveVolunteerRepay ? effectiveRepayShortfall : 0,
+          defaultCycleTag: payload?.debt_cycle_tag || payload?.tag || undefined,
+          replaceExisting: Boolean(effectiveEditingId),
+        });
+        const childResult = await createRepaymentAllocationChildrenAction(
+          finalTxnId,
+          data.person_id,
+          SPLIT_BILL_SYSTEM_ACCOUNT_ID,
+          Object.fromEntries(activeRepayAllocations),
+          {
+            baseNote: mergedTxnNote || undefined,
+            volunteerRepay: effectiveVolunteerRepay,
+            volunteerShortfallAmount: effectiveVolunteerRepay ? effectiveRepayShortfall : 0,
+            defaultCycleTag: payload?.debt_cycle_tag || payload?.tag || undefined,
+            replaceExisting: Boolean(effectiveEditingId),
+          },
+        );
+
+        if (!childResult.success) {
+          toast.error(`Parent saved but allocation children failed: ${childResult.error}`);
+        } else if (effectiveVolunteerRepay) {
+          toast.info("Volunteer flag saved in DB metadata");
+        }
+      }
+
       if (success) {
         if (!onSubmissionStart) {
           setHasChanges(false);
           onHasChanges?.(false);
         }
+        setRepayAllocationDraft({});
+        setRepayVolunteerEnabled(false);
+        setRepayShortfallDraft(0);
         emitTransactionSync(effectiveEditingId ? "transaction-updated" : "transaction-created");
         onSuccess?.(finalTxnId ? { id: finalTxnId, ...payload } : undefined);
       }
@@ -1212,6 +1428,10 @@ export function TransactionSlideV2({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && openingRepayDialogRef.current) {
+      return;
+    }
+
     if (!newOpen && hasChanges && !isSubmitting) {
       setPendingClose(true);
       setShowUnsavedDialog(true);
@@ -1220,6 +1440,9 @@ export function TransactionSlideV2({
     // Force reset changes state to allow closing
     if (!newOpen) {
       setHasChanges(false);
+      setRepayAllocationDraft({});
+      setRepayVolunteerEnabled(false);
+      setRepayShortfallDraft(0);
     }
     onOpenChange(newOpen);
   };
@@ -1259,7 +1482,9 @@ export function TransactionSlideV2({
             if (
               isAccountDialogOpen ||
               isCategoryDialogOpen ||
-              isPeopleDialogOpen
+              isPeopleDialogOpen ||
+              isRepayDialogOpen ||
+              openingRepayDialogRef.current
             ) {
               e.preventDefault();
             }
@@ -1438,6 +1663,30 @@ export function TransactionSlideV2({
                           people={people}
                           operationMode={operationMode}
                           onAddNewPerson={onAddNewPerson}
+                          repayAllocationPreview={repayAllocationPreview}
+                          volunteerRepayEnabled={repayVolunteerEnabled}
+                          onOpenMultiCycleRepay={(personId) => {
+                            const targetPerson = people.find((p) => p.id === personId);
+                            if (!targetPerson) {
+                              toast.error("Person not found");
+                              return;
+                            }
+
+                            const currentAmount = Number(singleForm.getValues("amount") || 0);
+                            if (currentAmount <= 0) {
+                              toast.error("Please enter amount in main transaction first");
+                              return;
+                            }
+
+                            openingRepayDialogRef.current = true;
+                            setRepayDialogPerson(targetPerson);
+                            setIsRepayDialogOpen(true);
+                            if (typeof window !== "undefined") {
+                              window.setTimeout(() => {
+                                openingRepayDialogRef.current = false;
+                              }, 180);
+                            }
+                          }}
                         />
 
                         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 space-y-6">
@@ -1606,6 +1855,34 @@ export function TransactionSlideV2({
         onConfirm={handleConfirmDiscard}
         onCancel={handleCancelDiscard}
       />
+
+      {repayDialogPerson && (
+        <RepayDebtSheet
+          person={repayDialogPerson}
+          amount={Math.max(0, Number(singleForm.getValues("amount") || 0))}
+          initialAllocations={repayAllocationDraft}
+          open={isRepayDialogOpen}
+          onOpenChange={(nextOpen) => {
+            openingRepayDialogRef.current = false;
+            setIsRepayDialogOpen(nextOpen);
+            if (!nextOpen) {
+              setRepayDialogPerson(null);
+            }
+          }}
+          onApply={({ allocations, volunteerRepay, shortfall }) => {
+            console.log('[TransactionSlideV2] RepayDebtSheet.onApply received:', {
+              allocations,
+              volunteerRepay,
+              shortfall,
+              currentRepayVolunteerEnabled: repayVolunteerEnabled,
+            });
+            setRepayAllocationDraft(allocations);
+            setRepayVolunteerEnabled(volunteerRepay);
+            setRepayShortfallDraft(shortfall);
+            toast.success("Allocation applied to parent transaction draft");
+          }}
+        />
+      )}
     </>
   );
 }

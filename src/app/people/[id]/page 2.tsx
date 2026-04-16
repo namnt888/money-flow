@@ -1,0 +1,184 @@
+import { notFound, redirect } from 'next/navigation'
+import {
+  getPocketBaseAccounts,
+  getPocketBaseCategories,
+  getPocketBaseShops,
+} from '@/services/pocketbase/account-details.service'
+import { getPocketBasePeople, getPocketBasePersonDetails, resolvePocketBasePersonRecord } from '@/services/pocketbase/people.service'
+import { getDebtByTags } from '@/services/debt.service'
+import { getUnifiedTransactions, getTransactionsByPeople } from '@/services/transaction.service'
+import { getPersonCycleSheets } from '@/services/person-cycle-sheet.service'
+import { getPersonWithSubs } from '@/services/people.service'
+import { getServices } from '@/services/service-manager'
+import { MemberDetailView } from '@/components/people/v2/MemberDetailView'
+import { TagFilterProvider } from '@/context/tag-filter-context'
+import { Metadata } from 'next'
+
+import { Suspense } from 'react'
+import Loading from './loading'
+
+export const dynamic = 'force-dynamic'
+
+const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+
+export async function generateMetadata({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ tab?: string; tag?: string; id?: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  if (id === 'details') return { title: 'Redirecting...' }
+  const { tab } = await searchParams
+  const person = await getPersonWithSubs(id)
+
+  if (!person) return { title: 'Person Not Found' }
+
+  let tabName = 'Transactions'
+  if (tab === 'history') tabName = 'History'
+  if (tab === 'split-bill') tabName = 'Split Bill'
+
+  const icons: Metadata['icons'] = person.image_url ? {
+    icon: person.image_url,
+    shortcut: person.image_url,
+    apple: person.image_url,
+  } : {
+    icon: '/favicon.svg?v=6',
+    apple: '/icon.svg?v=6',
+  }
+
+  return {
+    title: person.name,
+    icons,
+  }
+}
+
+export default async function PeopleDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ tab?: string; tag?: string; id?: string }>
+}) {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
+
+  if (resolvedParams.id === 'details') {
+    const legacyId = resolvedSearchParams.id
+    if (!legacyId) {
+      redirect('/people')
+    }
+
+    // Build redirect target
+    let target = `/people/${legacyId}`
+    const query = new URLSearchParams()
+    if (resolvedSearchParams.tag) query.set('tag', resolvedSearchParams.tag)
+    if (resolvedSearchParams.tab) query.set('tab', resolvedSearchParams.tab)
+
+    const queryString = query.toString()
+    if (queryString) target += `?${queryString}`
+
+    redirect(target)
+  }
+
+  if (!resolvedParams.id) {
+    notFound()
+  }
+
+  const key = resolvedParams.id
+
+  return (
+    <Suspense key={key} fallback={<Loading />}>
+      <PeopleDetailContent params={params} searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+async function PeopleDetailContent({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ tab?: string; tag?: string; id?: string }>
+}) {
+  const resolvedParams = await params
+  const personId = resolvedParams.id
+
+  const canonicalRecord = await resolvePocketBasePersonRecord(personId)
+  const canonicalPersonId = canonicalRecord?.id ? String(canonicalRecord.id) : null
+  const canonicalSourcePersonId = typeof canonicalRecord?.slug === 'string' ? canonicalRecord.slug : null
+  if (canonicalPersonId && canonicalPersonId !== personId) {
+    const resolvedSearchParams = await searchParams
+    const query = new URLSearchParams(resolvedSearchParams as Record<string, string>)
+    const qs = query.toString()
+    redirect(`/people/${canonicalPersonId}${qs ? `?${qs}` : ''}`)
+  }
+
+  // Fetch person details
+  const person = await getPersonWithSubs(personId)
+
+  if (!person) {
+    notFound()
+  }
+
+  const sourcePersonId = isUuid(person.id)
+    ? person.id
+    : (canonicalSourcePersonId && isUuid(canonicalSourcePersonId) ? canonicalSourcePersonId : person.id)
+  const sheetProfileId = sourcePersonId
+
+  // Fetch all required data in parallel
+  const [accounts, categories, people, shops, debtTags, cycleSheets, subscriptions] = await Promise.all([
+    getPocketBaseAccounts(),
+    getPocketBaseCategories(),
+    getPocketBasePeople(),
+    getPocketBaseShops(),
+    getDebtByTags(sourcePersonId),
+    getPersonCycleSheets(sheetProfileId),
+    getServices(),
+  ]) as any
+
+  // Handle group profiles
+  const profileRecord = people.find((item: any) => item.id === sheetProfileId)
+  const isGroupProfile = Boolean(profileRecord?.is_group)
+  const groupMemberIds = isGroupProfile
+    ? people
+      .filter((member: any) => member.group_parent_id === sheetProfileId)
+      .map((member: any) => member.id)
+    : []
+
+  const groupPersonIds = isGroupProfile
+    ? Array.from(new Set([sheetProfileId, ...groupMemberIds]))
+    : []
+
+  // Fetch transactions
+  const transactions = isGroupProfile
+    ? await getTransactionsByPeople(groupPersonIds, 2000, true)
+    : await getUnifiedTransactions({
+      personId: sourcePersonId,
+      limit: 2000,
+      context: 'person',
+      includeVoided: true,
+    })
+
+  const balance = person.balance ?? 0
+  const balanceLabel = balance > 0 ? 'They owe you' : balance < 0 ? 'You owe them' : 'Settled'
+
+  return (
+    <TagFilterProvider>
+      <MemberDetailView
+        person={person}
+        balance={balance}
+        balanceLabel={balanceLabel}
+        transactions={transactions}
+        debtTags={debtTags}
+        cycleSheets={cycleSheets}
+        accounts={accounts}
+        categories={categories}
+        people={people}
+        shops={shops}
+        subscriptions={subscriptions}
+      />
+    </TagFilterProvider>
+  )
+}

@@ -119,13 +119,13 @@ export async function getDashboardStats(
         perPage: 200,
       }),
       // 3. Monthly Spend & Category Stats
-      pocketbaseList<any>("pvl_txn_001", {
+      pocketbaseList<any>("transactions", {
         filter: `type = "expense" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
         expand: "category_id",
         perPage: 1000,
       }),
       // 4. Monthly Income
-      pocketbaseList<any>("pvl_txn_001", {
+      pocketbaseList<any>("transactions", {
         filter: `type = "income" && status != "void" && date >= "${startOfMonth}" && date <= "${endOfMonth}"`,
         perPage: 500,
       }),
@@ -141,7 +141,7 @@ export async function getDashboardStats(
         toPocketBaseId(SYSTEM_ACCOUNTS.PENDING_REFUNDS, "accounts")
       ).catch(() => null),
       // 7. Refund Transactions
-      pocketbaseList<any>("pvl_txn_001", {
+      pocketbaseList<any>("transactions", {
         filter: `to_account_id = "${toPocketBaseId(SYSTEM_ACCOUNTS.PENDING_REFUNDS, "accounts")}" && status != "void"`,
         sort: "-date",
         perPage: 3,
@@ -152,7 +152,7 @@ export async function getDashboardStats(
         perPage: 500,
       }).catch(() => ({ items: [], totalItems: 0 })),
       // 9. Recent Transactions
-      pocketbaseList<any>("pvl_txn_001", {
+      pocketbaseList<any>("transactions", {
         filter: 'status != "void"',
         sort: "-date",
         perPage: 5,

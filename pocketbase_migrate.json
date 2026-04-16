@@ -1,0 +1,17 @@
+[
+  {
+    "id": "4qh5pq0gr33xqvl",
+    "type": "debt",
+    "_comment": "1.6% của 35 - bank interest fee, NOT a debt repayment from My (Deposit To was incorrectly set)"
+  },
+  {
+    "id": "0c1yt25bgj51hxa",
+    "type": "debt",
+    "_comment": "Bank M 35tr T1 - shared bank transfer, NOT a repayment (no proper Deposit To)"
+  },
+  {
+    "id": "5sclr36zot8s6mz",
+    "type": "debt",
+    "_comment": "Phúc Long - purchase for someone, NOT a repayment (no proper Deposit To)"
+  }
+]

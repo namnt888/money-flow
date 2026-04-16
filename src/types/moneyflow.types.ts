@@ -153,6 +153,7 @@ export type MonthlyDebtSummary = {
   total_repaid?: number; // Total amount repaid
   total_cashback?: number; // Total cashback accumulated
   links?: { repaymentId: string; amount: number }[];
+  transaction_id?: string | null; // PocketBase transaction ID for opening in new tab or DB
 };
 
 export type PersonCycleSheet = {

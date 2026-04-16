@@ -995,7 +995,7 @@ export async function createPocketBaseAccount(
     let record: Record<string, unknown>;
     try {
       record = await pocketbaseRequest<Record<string, unknown>>(
-      "/api/collections/pvl_acc_001/records",
+      "/api/collections/accounts/records",
       {
         method: "POST",
         body: baseBody,
@@ -1007,7 +1007,7 @@ export async function createPocketBaseAccount(
         const retryBody = { ...baseBody };
         delete retryBody.is_favorite;
         record = await pocketbaseRequest<Record<string, unknown>>(
-          "/api/collections/pvl_acc_001/records",
+          "/api/collections/accounts/records",
           {
             method: "POST",
             body: retryBody,
@@ -1074,7 +1074,7 @@ export async function updatePocketBaseAccountInfo(
   }
   try {
     await pocketbaseRequest<Record<string, unknown>>(
-      `/api/collections/pvl_acc_001/records/${pbId}`,
+      `/api/collections/accounts/records/${pbId}`,
       {
         method: "PATCH",
         body,
@@ -1089,7 +1089,7 @@ export async function updatePocketBaseAccountInfo(
         const retryBody = { ...body };
         delete retryBody.is_favorite;
         await pocketbaseRequest<Record<string, unknown>>(
-          `/api/collections/pvl_acc_001/records/${pbId}`,
+          `/api/collections/accounts/records/${pbId}`,
           {
             method: "PATCH",
             body: retryBody,
@@ -1152,7 +1152,7 @@ export async function updatePocketBaseAccountConfig(
   }
   try {
     const result = await pocketbaseRequest<Record<string, unknown>>(
-      `/api/collections/pvl_acc_001/records/${pbId}`,
+      `/api/collections/accounts/records/${pbId}`,
       {
         method: "PATCH",
         body,
@@ -1175,7 +1175,7 @@ export async function updatePocketBaseAccountConfig(
 export async function getPocketBaseAccounts(): Promise<Account[]> {
   // Note: removed sort parameter - PocketBase has issues with sorting on this collection
   // Results are sorted client-side anyway
-  const records = await listAllRecords("pvl_acc_001");
+  const records = await listAllRecords("accounts");
   const mapped = records
     .map(mapAccount)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -2154,7 +2154,7 @@ export async function updatePocketBaseTransaction(
     data.tag !== undefined
   ) {
     const current = await pocketbaseGetById<PocketBaseRecord>(
-      "pvl_txn_001",
+      "transactions",
       pbId,
     );
     const currentMetadata =
@@ -2181,7 +2181,7 @@ export async function updatePocketBaseTransaction(
     };
   }
   if (Object.keys(payload).length === 0) return;
-  await pocketbaseRequest(`/api/collections/pvl_txn_001/records/${pbId}`, {
+  await pocketbaseRequest(`/api/collections/transactions/records/${pbId}`, {
     method: "PATCH",
     body: payload,
   });
@@ -2192,7 +2192,7 @@ export async function voidPocketBaseTransaction(
 ): Promise<void> {
   console.log("[DB:PB] transactions.void", { id: supabaseId });
   const pbId = toPocketBaseId(supabaseId);
-  await pocketbaseRequest(`/api/collections/pvl_txn_001/records/${pbId}`, {
+  await pocketbaseRequest(`/api/collections/transactions/records/${pbId}`, {
     method: "PATCH",
     body: { status: "void" },
   });
@@ -2233,7 +2233,7 @@ export async function getPocketBaseUnifiedTransactions(
     const remaining = limit - records.length;
     const perPage = Math.min(200, remaining);
     try {
-      const response = await pocketbaseList<PocketBaseRecord>("pvl_txn_001", {
+      const response = await pocketbaseList<PocketBaseRecord>("transactions", {
         page,
         perPage,
         ...baseParams,

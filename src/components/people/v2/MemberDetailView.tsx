@@ -29,6 +29,7 @@ import { getPocketBaseAccountSpendingStatsSnapshot } from '@/services/pocketbase
 import { AccountSpendingStats } from '@/types/cashback.types'
 import { syncPeopleDebtAction } from '@/actions/people-actions'
 import { ReAlignAuditDialog } from '@/components/people/v2/ReAlignAuditDialog'
+import { RepayDebtDialog } from '@/components/people/repay-debt-dialog'
 
 interface MemberDetailViewProps {
     person: Person
@@ -84,10 +85,12 @@ export function MemberDetailView({
     const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
     const [accountGlobalCashbackStatus, setAccountGlobalCashbackStatus] = useState<AccountSpendingStats | null>(null)
     const [isAuditOpen, setIsAuditOpen] = useState(false)
+    const [isRepayDialogOpen, setIsRepayDialogOpen] = useState(false)
     const [allAccountsCashbackStats, setAllAccountsCashbackStats] = useState<Record<string, AccountSpendingStats>>({})
 
     const [isPending, startTransition] = useTransition()
     const [isCycleTagVisible, setIsCycleTagVisible] = useState(false)
+    const repayIntent = searchParams.get('repay')
 
     // Helper function for tag extraction
     const getEffectiveTxnTag = useMemo(() => {
@@ -340,6 +343,19 @@ export function MemberDetailView({
             setDateMode('all')
         }
     }, [dateFrom, dateTo])
+
+    useEffect(() => {
+        if (repayIntent !== 'multi') return
+
+        setIsRepayDialogOpen(true)
+
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('repay')
+        startTransition(() => {
+            const nextQuery = params.toString()
+            router.replace(nextQuery ? `?${nextQuery}` : '?', { scroll: false })
+        })
+    }, [repayIntent, searchParams, router])
 
     const updateDateRangeParams = (nextFrom: string, nextTo: string) => {
         const params = new URLSearchParams(searchParams.toString())
@@ -1089,6 +1105,18 @@ export function MemberDetailView({
                 categories={categories}
                 people={people}
                 shops={shops}
+            />
+
+            <RepayDebtDialog
+                person={person}
+                accounts={accounts}
+                isOpen={isRepayDialogOpen}
+                onOpenChange={setIsRepayDialogOpen}
+                onSuccess={() => {
+                    startTransition(() => {
+                        router.refresh()
+                    })
+                }}
             />
 
             <PeopleSlideV2

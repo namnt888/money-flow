@@ -13,11 +13,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { pocketbaseRequest, toPocketBaseId } from '@/services/pocketbase/server'
 
-const PB_TRANSACTIONS_COLLECTION = 'pvl_txn_001'
-const PB_ACCOUNTS_COLLECTION = 'pvl_acc_001'
+const PB_TRANSACTIONS_COLLECTION = 'transactions'
+const PB_ACCOUNTS_COLLECTION = 'accounts'
 const PB_CATEGORIES_COLLECTION = 'categories'
-const PB_SHOPS_COLLECTION = 'pvl_shop_001'
-const PB_PEOPLE_COLLECTION = 'pvl_people_001'
+const PB_SHOPS_COLLECTION = 'shops'
+const PB_PEOPLE_COLLECTION = 'people'
 
 type BackfillResult = {
   created: number

@@ -62,7 +62,7 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
 
     // 1. Get all eligible transactions for this cycle
     // Note: We use 'status' != 'void' and 'type' in ['expense', 'debt']
-    const txnsResp = await pocketbaseList<PocketBaseRecord>('pvl_txn_001', {
+    const txnsResp = await pocketbaseList<PocketBaseRecord>('transactions', {
         filter: `account_id='${cycle.account_id}' && persisted_cycle_tag='${cycle.cycle_tag}' && status!='void' && (type='expense' || type='debt' || type='invest' || type='transfer')`,
         perPage: 2000, // Increased limit for heavy cycles
         expand: 'category_id'
@@ -110,7 +110,7 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
         const currentCbAmount = Number(txn.cashback_amount || 0);
         
         if (Math.abs(currentCbAmount - rewardAmount) > 0.01 || Math.abs((txn.final_price || 0) - newFinalPrice) > 0.01) {
-             await pocketbaseUpdate('pvl_txn_001', txn.id, {
+             await pocketbaseUpdate('transactions', txn.id, {
                  cashback_amount: rewardAmount,
                  final_price: newFinalPrice,
                  metadata: {
@@ -224,8 +224,8 @@ export async function recomputePocketBaseCashbackCycle(cycleId: string) {
  */
 export async function upsertPocketBaseTransactionCashback(transactionId: string) {
     // Use source ID mapping if necessary
-    const pbTxnId = toPocketBaseId(transactionId, 'pvl_txn_001');
-    const txn = await pocketbaseGetById<PocketBaseRecord>('pvl_txn_001', pbTxnId);
+    const pbTxnId = toPocketBaseId(transactionId, 'transactions');
+    const txn = await pocketbaseGetById<PocketBaseRecord>('transactions', pbTxnId);
     if (!txn) return;
 
     const account = await pocketbaseGetById<PocketBaseRecord>('accounts', txn.account_id);
@@ -241,7 +241,7 @@ export async function upsertPocketBaseTransactionCashback(transactionId: string)
 
     // Persist cycle tag to transaction if not already set
     if (txn.persisted_cycle_tag !== cycleTag) {
-        await pocketbaseUpdate('pvl_txn_001', txn.id, { persisted_cycle_tag: cycleTag });
+        await pocketbaseUpdate('transactions', txn.id, { persisted_cycle_tag: cycleTag });
     }
 
     // Trigger Recompute

@@ -1518,7 +1518,7 @@ export async function getCashbackCycleOptions(accountId: string, limit: number =
     const PB_API_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-db.reiwarden.io.vn';
     try {
       const response = await fetch(
-        `${PB_API_URL}/api/collections/pvl_acc_001/records/${accountId}`,
+        `${PB_API_URL}/api/collections/accounts/records/${accountId}`,
         { cache: 'no-store' }
       );
       if (response.ok) {

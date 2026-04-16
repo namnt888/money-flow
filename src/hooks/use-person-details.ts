@@ -43,6 +43,15 @@ export function usePersonDetails({
   cycleSheets,
   urlTag,
 }: UsePersonDetailsProps) {
+  const isDebtRepaymentParent = (txn: TransactionWithDetails): boolean => {
+    const metadata = (txn.metadata as any) || {};
+    const hasMultiCycleAllocations =
+      metadata.multi_cycle_repay_allocations &&
+      typeof metadata.multi_cycle_repay_allocations === "object" &&
+      Object.keys(metadata.multi_cycle_repay_allocations).length > 0;
+    return metadata.is_debt_repayment_parent === true || hasMultiCycleAllocations;
+  };
+
   const getTxnCycleTag = (txn: TransactionWithDetails): string => {
     const metadata = (txn.metadata as any) || {};
     const metadataDebtCycle = metadata.debt_cycle_tag as string | undefined;
@@ -120,8 +129,10 @@ export function usePersonDetails({
         const rawAmount = Number(txn.amount) || 0;
         
         // "trả" or "repay" - MUST BE POSITIVE to be a repayment
-        const isRepayment = (["repayment", "repay"].includes(type_lower) || 
-                           (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0;
+        const isRepayment = !isDebtRepaymentParent(txn) && (
+          ["repayment", "repay"].includes(type_lower) ||
+          (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))
+        ) && rawAmount > 0;
         
         const isSpend = ((type_lower === "expense" || type_lower === "debt") || (type_lower === "income" && rawAmount < 0)) && 
                         !isRollover && !isRepayment;
@@ -151,7 +162,10 @@ export function usePersonDetails({
           acc.receiveRollover += absAmount;
         }
 
-        if (type_lower === "repayment" || (type_lower === "income" && !!txn.person_id)) {
+        if (
+          !isDebtRepaymentParent(txn) &&
+          (type_lower === "repayment" || (type_lower === "income" && !!txn.person_id))
+        ) {
           acc.paidCount += 1;
         }
 
@@ -245,8 +259,10 @@ export function usePersonDetails({
             const rawAmount = Number(txn.amount) || 0;
 
             // "trả" or "repay" - MUST BE POSITIVE to be a repayment
-            const isRepayment = (["repayment", "repay"].includes(type_lower) || 
-                               (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))) && rawAmount > 0 && !isCashback;
+            const isRepayment = !isDebtRepaymentParent(txn) && (
+              ["repayment", "repay"].includes(type_lower) ||
+              (type_lower === "income" && (note.includes("tr\u1ea3") || note.includes("repay")))
+            ) && rawAmount > 0 && !isCashback;
             
             // IS SPEND if:
             // 1. Explicit expense/debt type

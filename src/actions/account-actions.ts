@@ -147,7 +147,7 @@ export async function updateAccountInfo(accountId: string, data: { account_numbe
 export async function getAccountsAction() {
   console.log('[DB:PB] accounts.getBatch')
   try {
-    const response = await pocketbaseList<any>('pvl_acc_001', {
+    const response = await pocketbaseList<any>('accounts', {
       perPage: 200,
       sort: 'name'
     })

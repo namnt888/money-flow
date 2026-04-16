@@ -22,6 +22,7 @@ interface PersonDetailHeaderV2Props {
     showManageSheet?: boolean;
     activeCycleTag?: string; // NEW: support dynamic cycle
     onCycleChange?: (tag: string) => void; // NEW: support cycle change
+    onOpenSettings?: () => void;
 }
 
 export function PersonDetailHeaderV2({
@@ -32,6 +33,7 @@ export function PersonDetailHeaderV2({
     showManageSheet = false,
     activeCycleTag,
     onCycleChange,
+    onOpenSettings,
 }: PersonDetailHeaderV2Props) {
     const totalDebt = React.useMemo(() => {
         const stats = person.cycle_stats || [];
@@ -92,7 +94,13 @@ export function PersonDetailHeaderV2({
                                 splitMode={true}
                             />
                         )}
-                        <Button variant="outline" size="sm" className="h-9 px-3 gap-2 text-slate-600 border-slate-200 rounded-lg">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 gap-2 text-slate-600 border-slate-200 rounded-lg"
+                            disabled={!onOpenSettings}
+                            onClick={() => onOpenSettings?.()}
+                        >
                             <Settings className="h-4 w-4" />
                             <span className="hidden sm:inline">Settings</span>
                         </Button>

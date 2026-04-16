@@ -563,7 +563,7 @@ export async function toggleBatchItemConfirmAction(params: {
             if (item?.id) {
                 const { voidTransaction } = await import('@/services/transaction.service')
                 const escapedBatchItemId = String(item.id).replace(/"/g, '\\"')
-                const relatedTxns = await pocketbaseList<any>('pvl_txn_001', {
+                const relatedTxns = await pocketbaseList<any>('transactions', {
                     filter: `status != "void" && metadata ~ "\\"batch_item_id\\":\\"${escapedBatchItemId}\\""`,
                     sort: '-updated,-created',
                     page: 1,
