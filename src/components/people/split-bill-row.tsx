@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { ArrowDownLeft, ChevronDown, ChevronUp, Copy, DollarSign, Trash2, Edit } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { updateTransactionMetadata, deleteSplitBillAction } from '@/actions/transaction-actions'
-import { AddTransactionDialog } from '@/components/moneyflow/add-transaction-dialog'
 import { EditSplitBillDialog, EditSplitBillParticipant } from './edit-split-bill-dialog'
 import { Account, Category, Person, Shop } from '@/types/moneyflow.types'
+import { TransactionSlideV2 } from '@/components/transaction/slide-v2/transaction-slide-v2'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 export type SplitBillParticipant = {
   personId: string
@@ -57,6 +58,8 @@ export function SplitBillRow({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showRepaySlide, setShowRepaySlide] = useState(false)
+  const [repayParticipant, setRepayParticipant] = useState<SplitBillParticipant | null>(null)
   const detailRef = useRef<HTMLDivElement>(null)
   const qrPreviewRef = useRef<HTMLImageElement | null>(null)
 
@@ -64,14 +67,26 @@ export function SplitBillRow({
     setQrInput(bill.qrImageUrl ?? '')
   }, [bill.qrImageUrl])
 
+  const repayInitialData = useMemo(() => {
+    if (!repayParticipant) return undefined
+
+    return {
+      type: 'repayment' as const,
+      occurred_at: new Date(bill.occurredAt),
+      amount: repayParticipant.amount,
+      note: `${bill.title}${repayParticipant.note ? ` - ${repayParticipant.note}` : ''}`,
+      person_id: repayParticipant.personId,
+      cashback_mode: 'none_back' as const,
+      target_account_id: undefined,
+    }
+  }, [bill.occurredAt, bill.title, repayParticipant])
+
   const numberFormatter = new Intl.NumberFormat('en-US')
   const totalAmount = bill.participants.reduce((sum, row) => sum + row.amount, 0)
   const perPerson = bill.participants.length > 0 ? totalAmount / bill.participants.length : 0
   const label = bill.prefix === 'SplitRepay' ? 'Split Repayment' : 'Split Bill'
   const noteToShow = bill.baseNote || bill.title
   const unsupportedColorRegex = /(lab\(|oklab\(|oklch\(|lch\(|color-mix\(|color\()/i
-  const dialogBaseProps = { accounts, categories, people, shops }
-
   const handleCapture = async (mode: 'table' | 'qr') => {
     if (!detailRef.current) return
     if (mode === 'qr' && !qrInput.trim()) {
@@ -698,20 +713,18 @@ export function SplitBillRow({
                               {numberFormatter.format(participant.amount)}
                             </span>
                             {showQuickRepay && (
-                              <AddTransactionDialog
-                                {...dialogBaseProps}
-                                defaultType="repayment"
-                                defaultPersonId={participant.personId}
-                                defaultAmount={participant.amount}
-                                cloneInitialValues={{ split_bill: true }}
-                                buttonClassName="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100"
-                                triggerContent={
-                                  <span className="inline-flex items-center gap-1">
-                                    <ArrowDownLeft className="h-3.5 w-3.5" />
-                                    Repay
-                                  </span>
-                                }
-                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setRepayParticipant(participant)
+                                  setShowRepaySlide(true)
+                                }}
+                                className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100"
+                              >
+                                <ArrowDownLeft className="h-3.5 w-3.5" />
+                                Repay
+                              </button>
                             )}
                           </div>
                         </div>
@@ -866,51 +879,71 @@ export function SplitBillRow({
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Delete Split Bill?</h3>
-            </div>
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-slate-700">
-                This will permanently delete:
+      <TransactionSlideV2
+        open={showRepaySlide}
+        onOpenChange={(open) => {
+          setShowRepaySlide(open)
+          if (!open) {
+            setRepayParticipant(null)
+          }
+        }}
+        initialData={repayInitialData}
+        accounts={accounts}
+        categories={categories}
+        people={people}
+        shops={shops}
+        mode="single"
+        operationMode="add"
+        onSuccess={() => {
+          setShowRepaySlide(false)
+          setRepayParticipant(null)
+          window.location.reload()
+        }}
+      />
+
+      {/* Delete Confirmation Sheet */}
+      <Sheet open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-md">
+          <SheetHeader className="border-b border-slate-200 px-4 py-4">
+            <SheetTitle className="text-lg font-semibold text-slate-900">Delete Split Bill?</SheetTitle>
+          </SheetHeader>
+          <div className="p-4 space-y-3">
+            <p className="text-sm text-slate-700">
+              This will permanently delete:
+            </p>
+            <ul className="text-sm text-slate-600 space-y-1 ml-4 list-disc">
+              <li>1 base transaction</li>
+              <li>{bill.participants.length} child transactions</li>
+            </ul>
+            <p className="text-sm font-semibold text-slate-900">
+              Total: {bill.participants.length + 1} transactions
+            </p>
+            <div className="rounded-md bg-red-50 border border-red-200 p-3">
+              <p className="text-xs text-red-800 font-semibold">
+                ⚠️ This action cannot be undone.
               </p>
-              <ul className="text-sm text-slate-600 space-y-1 ml-4 list-disc">
-                <li>1 base transaction</li>
-                <li>{bill.participants.length} child transactions</li>
-              </ul>
-              <p className="text-sm font-semibold text-slate-900">
-                Total: {bill.participants.length + 1} transactions
-              </p>
-              <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                <p className="text-xs text-red-800 font-semibold">
-                  ⚠️ This action cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="p-4 border-t border-slate-200 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteSplitBill}
-                disabled={isDeleting}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete All'}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+          <div className="p-4 border-t border-slate-200 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteSplitBill}
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete All'}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Split Bill Dialog */}
       <EditSplitBillDialog
