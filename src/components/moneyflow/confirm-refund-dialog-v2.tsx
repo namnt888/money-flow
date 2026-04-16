@@ -12,7 +12,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { TransactionWithDetails, Account } from "@/types/moneyflow.types"
+import { TransactionWithDetails, Account, Person } from "@/types/moneyflow.types"
 import { confirmRefundAction, getOriginalAccount } from "@/actions/transaction-actions"
 import { useRouter } from "next/navigation"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -27,6 +27,7 @@ interface ConfirmRefundDialogV2Props {
     onOpenChange: (open: boolean) => void
     transaction: TransactionWithDetails
     accounts: Account[]
+    people: Person[]
 }
 
 export function ConfirmRefundDialogV2({
@@ -34,6 +35,7 @@ export function ConfirmRefundDialogV2({
     onOpenChange,
     transaction,
     accounts,
+    people,
 }: ConfirmRefundDialogV2Props) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,6 +43,7 @@ export function ConfirmRefundDialogV2({
 
     // State for selection
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
+    const [selectedPersonId, setSelectedPersonId] = useState<string>("")
     const [recommendedAccount, setRecommendedAccount] = useState<{
         id: string;
         name: string;
@@ -49,6 +52,7 @@ export function ConfirmRefundDialogV2({
         current_balance: number
     } | null>(null)
     const [openCombobox, setOpenCombobox] = useState(false)
+    const [openPeopleCombobox, setOpenPeopleCombobox] = useState(false)
 
     // Load recommended account on open
     useEffect(() => {
@@ -56,6 +60,13 @@ export function ConfirmRefundDialogV2({
             setIsLoadingOriginal(true)
             setRecommendedAccount(null)
             setSelectedAccountId("")
+            const rawMeta =
+                transaction && typeof transaction.metadata === "object" && transaction.metadata !== null
+                    ? (transaction.metadata as Record<string, unknown>)
+                    : {}
+            const fallbackPersonId =
+                typeof rawMeta.original_person_id === "string" ? rawMeta.original_person_id : ""
+            setSelectedPersonId((transaction.person_id || fallbackPersonId || "") as string)
 
             getOriginalAccount(transaction.id)
                 .then(result => {
@@ -77,7 +88,11 @@ export function ConfirmRefundDialogV2({
 
         setIsSubmitting(true)
         try {
-            const result = await confirmRefundAction(transaction.id, selectedAccountId)
+            const result = await confirmRefundAction(
+                transaction.id,
+                selectedAccountId,
+                selectedPersonId || null,
+            )
             if (result.success) {
                 toast.success("Refund confirmed successfully")
                 onOpenChange(false)
@@ -103,6 +118,8 @@ export function ConfirmRefundDialogV2({
         : accounts.find(a => a.id === selectedAccountId)
 
     const validAccounts = accounts.filter(a => a.id !== '99999999-9999-9999-9999-999999999999')
+    const validPeople = people.filter((person) => !person.is_archived)
+    const selectedPersonObj = validPeople.find((person) => person.id === selectedPersonId)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -242,6 +259,65 @@ export function ConfirmRefundDialogV2({
                                                                 {account.current_balance?.toLocaleString()}
                                                             </span>
                                                         </div>
+                                                    </div>
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+
+                        <div className="relative mt-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-slate-100" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-white px-2 text-slate-400">Debt Person</span>
+                            </div>
+                        </div>
+
+                        <Popover open={openPeopleCombobox} onOpenChange={setOpenPeopleCombobox}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openPeopleCombobox}
+                                    className="w-full justify-between h-auto py-3"
+                                >
+                                    {selectedPersonObj ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-slate-900">{selectedPersonObj.name}</span>
+                                        </div>
+                                    ) : "Skip debt person (no debt adjustment)"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0 z-[1300]" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Search person..." className="h-9" />
+                                    <CommandList>
+                                        <CommandGroup>
+                                            <CommandItem
+                                                key="none"
+                                                value="no person"
+                                                onSelect={() => {
+                                                    setSelectedPersonId("")
+                                                    setOpenPeopleCombobox(false)
+                                                }}
+                                            >
+                                                <span className="text-slate-600">Skip debt person (no debt adjustment)</span>
+                                            </CommandItem>
+                                            {validPeople.map((person) => (
+                                                <CommandItem
+                                                    key={person.id}
+                                                    value={person.name}
+                                                    onSelect={() => {
+                                                        setSelectedPersonId(person.id)
+                                                        setOpenPeopleCombobox(false)
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2 w-full">
+                                                        <span className="font-medium">{person.name}</span>
                                                     </div>
                                                 </CommandItem>
                                             ))}

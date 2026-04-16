@@ -1603,10 +1603,8 @@ export const UnifiedTransactionTable = React.forwardRef<
 
       Promise.all([
         import("@/actions/transaction-actions"),
-        import("@/services/transaction.service"),
-      ]).then(async ([actions, service]) => {
+      ]).then(async ([actions]) => {
         const { requestRefund, confirmRefundAction } = actions;
-        const { confirmRefund } = service; // If we still want the service version, but let's use the one that works.
 
         const originalAmount =
           typeof confirmCancelTarget.original_amount === "number"
@@ -1629,17 +1627,22 @@ export const UnifiedTransactionTable = React.forwardRef<
           // 2. If Money Received, Confirm it immediately
           if (moneyReceived) {
             const targetAccountId = confirmCancelTarget.account_id;
+            const pendingRefundId = reqRes.pendingRefundId;
 
             if (!targetAccountId) {
               throw new Error(
                 "Cannot determine target account for immediate refund.",
               );
             }
+            if (!pendingRefundId) {
+              throw new Error("Cannot resolve pending refund transaction for confirmation.");
+            }
 
             // Use action version for consistency
             const confRes = await confirmRefundAction(
-              confirmCancelTarget.id,
+              pendingRefundId,
               targetAccountId,
+              confirmCancelTarget.person_id ?? null,
             );
             if (!confRes.success) {
               throw new Error(confRes.error || "Failed to confirm refund");
@@ -6301,6 +6304,7 @@ export const UnifiedTransactionTable = React.forwardRef<
               }}
               transaction={confirmRefundTxn}
               accounts={accounts}
+              people={people}
             />
           )}
           <ExcelStatusBar

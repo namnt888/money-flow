@@ -1345,7 +1345,8 @@ export async function getPendingRefunds(accountId?: string): Promise<PendingRefu
 
 export async function confirmRefund(
   pendingTransactionId: string,
-  targetAccountId: string
+  targetAccountId: string,
+  personId?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pbTxnId = toPocketBaseId(pendingTransactionId, 'transactions');
@@ -1363,6 +1364,64 @@ export async function confirmRefund(
       typeof existingMeta.original_transaction_id === 'string'
         ? existingMeta.original_transaction_id
         : null;
+    const refundAmount = Math.abs(
+      Number(
+        typeof existingMeta.refund_amount === 'number'
+          ? existingMeta.refund_amount
+          : existing.amount || 0,
+      ),
+    );
+    const isPartialRefundRequest = existingMeta.is_partial_refund === true;
+    const requestedPersonId =
+      typeof personId === 'string' && personId.trim()
+        ? toPocketBaseId(personId.trim(), 'people')
+        : null;
+    const originalPersonId =
+      typeof existingMeta.original_person_id === 'string'
+        ? existingMeta.original_person_id
+        : null;
+
+    let originalTxn: any = null;
+    if (originalTxnId) {
+      try {
+        originalTxn = await pocketbaseGetById<any>('transactions', originalTxnId);
+      } catch {
+        originalTxn = null;
+      }
+    }
+
+    const originalAmount = Math.abs(Number(originalTxn?.amount || 0));
+    const previousRefundedTotal =
+      Number(
+        originalTxn &&
+          typeof originalTxn.metadata === 'object' &&
+          originalTxn.metadata !== null &&
+          typeof (originalTxn.metadata as Record<string, unknown>).refunded_amount_total === 'number'
+          ? (originalTxn.metadata as Record<string, unknown>).refunded_amount_total
+          : 0,
+      ) || 0;
+    const refundedAmountTotal = previousRefundedTotal + refundAmount;
+    const isFullRefund =
+      !isPartialRefundRequest ||
+      (originalAmount > 0 && refundedAmountTotal >= originalAmount);
+
+    let personForConfirmation: string | null =
+      requestedPersonId ||
+      (typeof existing.person_id === 'string' && existing.person_id
+        ? existing.person_id
+        : originalPersonId);
+
+    if (!personForConfirmation && originalTxn) {
+      personForConfirmation =
+        typeof originalTxn.person_id === 'string' && originalTxn.person_id
+          ? originalTxn.person_id
+          : null;
+    }
+
+    // Full refund should not keep debt-person attachment on refund entries.
+    if (isFullRefund) {
+      personForConfirmation = null;
+    }
 
     const confirmationTxnId = toPocketBaseId(
       `${pbTxnId}:refund:confirm:${Date.now()}:${Math.random()}`,
@@ -1380,12 +1439,12 @@ export async function confirmRefund(
       description: `${gd3Tag} Refund received: ${existing.note || 'Refund'}`,
       type: existing.type || 'income',
       status: 'completed',
-      amount: Math.abs(Number(existing.amount || 0)),
-      final_price: Math.abs(Number(existing.amount || 0)),
+      amount: refundAmount,
+      final_price: refundAmount,
       account_id: pbAccId,
       to_account_id: existing.account_id || null,
       category_id: existing.category_id || null,
-      person_id: existing.person_id || null,
+      person_id: personForConfirmation,
       shop_id: existing.shop_id || null,
       tag: existing.tag || null,
       debt_cycle_tag: existing.debt_cycle_tag || existing.tag || null,
@@ -1417,25 +1476,52 @@ export async function confirmRefund(
     });
 
     // TXN1: original transaction keeps canonical chain status
-    if (originalTxnId) {
+    if (originalTxnId && originalTxn) {
       try {
-        const originalTxn = await pocketbaseGetById<any>('transactions', originalTxnId);
+        const originalPersonForSheet =
+          typeof originalTxn.person_id === 'string' && originalTxn.person_id
+            ? originalTxn.person_id
+            : originalPersonId;
         const originalMeta =
-          typeof originalTxn?.metadata === 'object' && originalTxn.metadata !== null
+          typeof originalTxn.metadata === 'object' && originalTxn.metadata !== null
             ? originalTxn.metadata
             : {};
 
         await pocketbaseUpdate('transactions', originalTxnId, {
-          status: 'refunded',
+          status: isFullRefund ? 'refunded' : 'posted',
+          person_id: isFullRefund ? null : originalTxn.person_id || originalPersonId || null,
           metadata: {
             ...(originalMeta as Record<string, unknown>),
-            has_refund_request: true,
-            refund_status: 'completed',
-            refund_request_id: pbTxnId,
+            has_refund_request: false,
+            refund_status: isFullRefund ? 'completed' : 'partial_completed',
+            refund_request_id: null,
             refund_confirmation_id: confirmationTxnId,
             refund_confirmed_at: new Date().toISOString(),
+            refunded_amount_total: refundedAmountTotal,
+            remaining_refund_amount:
+              originalAmount > 0
+                ? Math.max(0, originalAmount - refundedAmountTotal)
+                : 0,
+            last_refund_request_id: pbTxnId,
+            last_refund_completed_at: new Date().toISOString(),
+            is_partial_refund: !isFullRefund,
           },
         });
+
+        if (isFullRefund && originalPersonForSheet) {
+          await trySyncPeopleSheet(
+            originalPersonForSheet,
+            {
+              id: originalTxnId,
+              occurred_at: originalTxn.occurred_at || originalTxn.date || null,
+              tag: (originalTxn.tag || originalTxn.debt_cycle_tag || originalTxn.persisted_cycle_tag || null) as string | null,
+              debt_cycle_tag: (originalTxn.debt_cycle_tag || originalTxn.tag || null) as string | null,
+              amount: 0,
+              status: 'void',
+            },
+            'delete',
+          );
+        }
       } catch (originalUpdateError) {
         console.warn('[DB:PB] confirmRefund original update skipped:', originalUpdateError);
       }
@@ -1449,7 +1535,8 @@ export async function confirmRefund(
     try {
       revalidatePath("/transactions");
       revalidatePath("/people");
-      revalidatePersonPaths(existing.person_id);
+      revalidatePersonPaths(personForConfirmation || existing.person_id || originalPersonId || originalTxn?.person_id || null);
+      revalidatePersonPaths(originalTxn?.person_id || originalPersonId || null);
     } catch (revalidateError) {
       console.warn('[DB:PB] confirmRefund revalidate skipped:', revalidateError);
     }

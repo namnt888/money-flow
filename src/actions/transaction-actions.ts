@@ -177,10 +177,11 @@ export async function restoreTransaction(id: string): Promise<boolean> {
 
 export async function confirmRefundAction(
   pendingTransactionId: string,
-  targetAccountId: string
+  targetAccountId: string,
+  personId?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await confirmPBRefund(pendingTransactionId, targetAccountId);
+    const result = await confirmPBRefund(pendingTransactionId, targetAccountId, personId);
     return result;
   } catch (error: any) {
     console.error('Confirm Refund Action Error:', error);
@@ -389,7 +390,7 @@ export async function requestRefund(
   transactionId: string,
   amount: number,
   isPartial: boolean = false
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; pendingRefundId?: string; error?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
@@ -401,7 +402,7 @@ export async function requestRefund(
         : {};
 
     if (existingMeta.refund_request_id) {
-      return { success: true };
+      return { success: true, pendingRefundId: String(existingMeta.refund_request_id) };
     }
 
     const refundAmount = Math.max(0, Math.abs(Number(amount || 0)));
@@ -424,6 +425,7 @@ export async function requestRefund(
     const pendingMeta = {
       original_transaction_id: pbId,
       original_account_id: existing.account_id || null,
+      original_person_id: existing.person_id || null,
       original_transaction_type: existing.type || null,
       has_refund_request: true,
       is_refund_confirmation: false,
@@ -448,7 +450,7 @@ export async function requestRefund(
       account_id: pendingRefundAccountId,
       to_account_id: existing.account_id || null,
       category_id: existing.category_id || null,
-      person_id: existing.person_id || null,
+      person_id: null,
       shop_id: existing.shop_id || null,
       tag: existing.tag || null,
       debt_cycle_tag: existing.debt_cycle_tag || existing.tag || null,
@@ -484,7 +486,7 @@ export async function requestRefund(
     } catch (revalidateError) {
       console.warn('[DB:PB] requestRefund revalidate skipped:', revalidateError);
     }
-    return { success: true };
+    return { success: true, pendingRefundId };
   } catch (error: any) {
     console.error('[DB:PB] requestRefund failed:', error);
     return { success: false, error: error.message };
@@ -494,7 +496,7 @@ export async function requestRefund(
 /**
  * Cancels an order and requests a full refund.
  */
-export async function cancelOrder(transactionId: string): Promise<{ success: boolean; error?: string }> {
+export async function cancelOrder(transactionId: string): Promise<{ success: boolean; pendingRefundId?: string; error?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
