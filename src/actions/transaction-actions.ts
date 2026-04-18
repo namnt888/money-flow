@@ -6,6 +6,19 @@ import { normalizeMonthTag } from '@/lib/month-tag';
 import { revalidatePath } from 'next/cache';
 import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds';
 import { CashbackMode } from '@/types/moneyflow.types';
+import {
+  createTransaction as createPBTransaction,
+  updateTransaction as updatePBTransaction,
+  voidTransaction as voidPBTransaction,
+  confirmRefund as confirmPBRefund,
+} from '@/services/transaction.service';
+import {
+  pocketbaseCreate,
+  pocketbaseGetById,
+  pocketbaseList,
+  pocketbaseUpdate,
+  toPocketBaseId,
+} from '@/services/pocketbase/server';
 
 export type CreateTransactionInput = {
   occurred_at: string;
@@ -70,14 +83,19 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
   return true;
 }
 
-export async function voidTransactionAction(id: string): Promise<boolean> {
+export async function voidTransactionAction(
+  id: string,
+  options?: { voidedAt?: string },
+): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'transactions');
   
   // Need to get the person_id before voiding to revalidate their page
   const existing = await pocketbaseGetById<any>('transactions', pbId);
   
   // Sheet sync is handled inside service layer.
-  const success = await voidPBTransaction(pbId);
+  const success = await voidPBTransaction(pbId, {
+    voidedAt: options?.voidedAt,
+  });
   if (success) {
     revalidatePath('/');
     revalidatePath('/people');
@@ -214,9 +232,15 @@ export async function confirmRefundAction(
   pendingTransactionId: string,
   targetAccountId: string,
   personId?: string | null,
+  confirmedAt?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await confirmPBRefund(pendingTransactionId, targetAccountId, personId);
+    const result = await confirmPBRefund(
+      pendingTransactionId,
+      targetAccountId,
+      personId,
+      confirmedAt,
+    );
     return result;
   } catch (error: any) {
     console.error('Confirm Refund Action Error:', error);
@@ -424,7 +448,8 @@ export async function getOriginalAccount(refundRequestId: string): Promise<any |
 export async function requestRefund(
   transactionId: string,
   amount: number,
-  isPartial: boolean = false
+  isPartial: boolean = false,
+  refundOccurredAt?: string,
 ): Promise<{ success: boolean; pendingRefundId?: string; error?: string; originalTxnId?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
@@ -449,6 +474,10 @@ export async function requestRefund(
       `${pbId}:refund:${Date.now()}:${Math.random()}`,
       'transactions',
     );
+    const parsedOccurredAt = refundOccurredAt ? new Date(refundOccurredAt) : new Date()
+    const refundTimestamp = Number.isNaN(parsedOccurredAt.getTime())
+      ? new Date().toISOString()
+      : parsedOccurredAt.toISOString()
     const shortId = (value: string | null | undefined) => String(value || '').slice(0, 6)
     const gd1Tag = `[GD1|${shortId(pbId)}→${shortId(pendingRefundId)}]`
     const gd2Tag = `[GD2|${shortId(pbId)}]`
@@ -466,7 +495,7 @@ export async function requestRefund(
       is_refund_confirmation: false,
       refund_amount: refundAmount,
       is_partial_refund: isPartial,
-      refund_requested_at: new Date().toISOString(),
+      refund_requested_at: refundTimestamp,
       refund_stage_tag: 'GD2',
       refund_sequence: 2,
       ...(existingMeta && typeof existingMeta === 'object' ? existingMeta : {}),
@@ -474,8 +503,8 @@ export async function requestRefund(
 
     await pocketbaseCreate('transactions', {
       id: pendingRefundId,
-      date: existing.date || existing.occurred_at || new Date().toISOString(),
-      occurred_at: existing.occurred_at || existing.date || new Date().toISOString(),
+      date: refundTimestamp,
+      occurred_at: refundTimestamp,
       note: `${gd2Tag} Refund for: ${existing.note || existing.description || 'Order'}`,
       description: `${gd2Tag} Refund for: ${existing.note || existing.description || 'Order'}`,
       type: existing.type || 'expense',
@@ -510,7 +539,7 @@ export async function requestRefund(
         has_refund_request: true,
         refund_amount: refundAmount,
         is_partial_refund: isPartial,
-        refund_requested_at: new Date().toISOString(),
+        refund_requested_at: refundTimestamp,
         refund_request_id: pendingRefundId,
         refund_status: 'requested',
         refund_stage_tag: 'GD1',
@@ -565,7 +594,10 @@ export async function requestRefund(
 /**
  * Cancels an order and requests a full refund.
  */
-export async function cancelOrder(transactionId: string): Promise<{ success: boolean; pendingRefundId?: string; error?: string; originalTxnId?: string }> {
+export async function cancelOrder(
+  transactionId: string,
+  refundOccurredAt?: string,
+): Promise<{ success: boolean; pendingRefundId?: string; error?: string; originalTxnId?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
@@ -585,7 +617,7 @@ export async function cancelOrder(transactionId: string): Promise<{ success: boo
     }
 
     const amount = Math.abs(existing.amount);
-    return await requestRefund(transactionId, amount, false);
+    return await requestRefund(transactionId, amount, false, refundOccurredAt);
   } catch (error: any) {
     console.error('[DB:PB] cancelOrder failed:', error);
     return { success: false, error: error.message };
@@ -598,7 +630,8 @@ export async function cancelOrder(transactionId: string): Promise<{ success: boo
 export async function instantRefund(
   transactionId: string,
   amount: number,
-  targetAccountId: string
+  targetAccountId: string,
+  refundOccurredAt?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
@@ -615,10 +648,15 @@ export async function instantRefund(
       'transactions'
     );
 
+    const parsedOccurredAt = refundOccurredAt ? new Date(refundOccurredAt) : new Date()
+    const refundTimestamp = Number.isNaN(parsedOccurredAt.getTime())
+      ? new Date().toISOString()
+      : parsedOccurredAt.toISOString()
+
     await pocketbaseCreate('transactions', {
       id: refundTxnId,
-      date: new Date().toISOString(),
-      occurred_at: new Date().toISOString(),
+      date: refundTimestamp,
+      occurred_at: refundTimestamp,
       note: `Instant Refund for: ${existing.note || existing.description || 'Order'}`,
       description: `Instant Refund for: ${existing.note || existing.description || 'Order'}`,
       type: 'income', // Refund is money coming back

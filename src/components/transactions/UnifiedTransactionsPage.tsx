@@ -1,22 +1,23 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react'
 import { TransactionWithDetails, Account, Category, Person, Shop } from '@/types/moneyflow.types'
 import { UnifiedTransactionTable, UnifiedTransactionTableRef } from '../moneyflow/unified-transaction-table'
-import { FilterType, StatusFilter } from './TransactionToolbar'
+import { FilterType } from './TransactionToolbar'
 import { DateRange } from 'react-day-picker'
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isSameDay, isSameMonth } from 'date-fns'
 import { TransactionSlideV2 } from '@/components/transaction/slide-v2/transaction-slide-v2'
 import { UnsavedChangesWarning } from '@/components/transaction/unsaved-changes-warning'
 import { ConfirmRefundDialogV2 } from '@/components/moneyflow/confirm-refund-dialog-v2'
-import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds'
 import { voidTransactionAction } from '@/actions/transaction-actions'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
 import { TransactionHeader } from '@/components/transactions-v2/header/TransactionHeader'
 import { formatCycleTag } from '@/lib/cycle-utils'
 import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
 import { emitTransactionSync } from '@/lib/transaction-realtime-sync'
+import { AccountPendingItemsModal } from '@/components/accounts/v2/AccountPendingItemsModal'
 
 import {
     AlertDialog,
@@ -28,6 +29,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { ChevronDown, ChevronUp, Loader2, RotateCcw } from 'lucide-react'
+import { CustomTooltip } from '@/components/ui/custom-tooltip'
 
 interface UnifiedTransactionsPageProps {
     transactions: TransactionWithDetails[]
@@ -35,6 +38,46 @@ interface UnifiedTransactionsPageProps {
     categories: Category[]
     people: Person[]
     shops: Shop[]
+}
+
+type StatusToggles = {
+    active: boolean
+    void: boolean
+}
+
+type PendingBatchSummary = {
+    accountId: string
+    accountName: string | null
+    count: number
+    totalAmount: number
+}
+
+type QueueCardItem = {
+    id: string
+    title: string
+    subtitle: string
+    amount: number
+    badge: string
+    imageUrl?: string | null
+    onClick: () => void
+}
+
+type PendingBatchItem = {
+    id: string
+    amount: number
+    batch_id: string
+    month_year?: string | null
+    period?: string | null
+    phase_id?: string | null
+    bank_type?: string | null
+    batch?: {
+        id?: string | null
+        name?: string | null
+        month_year?: string | null
+        period?: string | null
+        phase_id?: string | null
+        bank_type?: string | null
+    } | null
 }
 
 function resolveCycleTagByStatementDay(date: Date, statementDay?: number | null): string {
@@ -119,7 +162,10 @@ export function UnifiedTransactionsPage({
     // Toolbar State
     const [search, setSearch] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+    const [statusFilter, setStatusFilter] = useState<StatusToggles>({
+        active: true,
+        void: false,
+    })
 
     const [date, setDate] = useState<Date>(new Date())
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
@@ -130,6 +176,20 @@ export function UnifiedTransactionsPage({
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>()
     const [selectedCycle, setSelectedCycle] = useState<string | undefined>()
     const [disabledRange, setDisabledRange] = useState<{ start: Date; end: Date } | undefined>(undefined)
+
+    const [expandedQueues, setExpandedQueues] = useState({
+        refund: false,
+        batch: false,
+    })
+    const [queuesCollapsed, setQueuesCollapsed] = useState(false)
+    const [pendingBatchSummary, setPendingBatchSummary] = useState<PendingBatchSummary[]>([])
+    const [highlightedRefundTxnIds, setHighlightedRefundTxnIds] = useState<Set<string>>(new Set())
+    const [pendingBatchModalOpen, setPendingBatchModalOpen] = useState(false)
+    const [pendingBatchModalAccountId, setPendingBatchModalAccountId] = useState<string>('')
+    const [pendingBatchModalAccountName, setPendingBatchModalAccountName] = useState<string>('')
+    const [pendingBatchModalItems, setPendingBatchModalItems] = useState<PendingBatchItem[]>([])
+    const [statusSwitchLoading, setStatusSwitchLoading] = useState(false)
+    const [statusSwitchTarget, setStatusSwitchTarget] = useState<'active' | 'void'>('active')
     const [fetchedCycles, setFetchedCycles] = useState<Array<{ label: string; value: string; count?: number; highlight?: boolean }>>([])
     const [isCyclesLoading, setIsCyclesLoading] = useState(false)
 
@@ -392,9 +452,10 @@ export function UnifiedTransactionsPage({
 
     const handleReset = () => {
         startTransition(() => {
+            setHighlightedRefundTxnIds(new Set())
             setSearch('')
             setFilterType('all')
-            setStatusFilter('active')
+            setStatusFilter({ active: true, void: false })
             setSelectedAccountId(undefined)
             setSelectedPersonId(undefined)
             setSelectedCategoryId(undefined)
@@ -469,6 +530,7 @@ export function UnifiedTransactionsPage({
         // but the filtering useMemo will respond to the pending state if we want.
         // For search, usually it's better to stay responsive, but the user wants a spinner.
         startTransition(() => {
+            setHighlightedRefundTxnIds(new Set())
             setSearch(val)
         })
     }
@@ -479,11 +541,21 @@ export function UnifiedTransactionsPage({
         })
     }
 
-    const handleSetStatusFilter = (val: StatusFilter) => {
+    const handleSetStatusFilter = (val: StatusToggles) => {
+        const target: 'active' | 'void' = val.void && !val.active ? 'void' : 'active'
+        setStatusSwitchTarget(target)
+        setStatusSwitchLoading(true)
         startTransition(() => {
             setStatusFilter(val)
         })
     }
+
+    useEffect(() => {
+        if (isPending) return
+        if (!statusSwitchLoading) return
+        const timer = setTimeout(() => setStatusSwitchLoading(false), 220)
+        return () => clearTimeout(timer)
+    }, [isPending, statusSwitchLoading])
 
     const handleSetAccountId = (val?: string) => {
         startTransition(() => {
@@ -506,7 +578,6 @@ export function UnifiedTransactionsPage({
     const hasActiveFilters =
         search !== '' ||
         filterType !== 'all' ||
-        statusFilter !== 'active' ||
         !!selectedAccountId ||
         !!selectedPersonId ||
         !!selectedCategoryId ||
@@ -550,7 +621,7 @@ export function UnifiedTransactionsPage({
     const handleClearFilters = () => {
         startTransition(() => {
             setFilterType('all')
-            setStatusFilter('active')
+            setStatusFilter({ active: true, void: false })
             setSelectedAccountId(undefined)
             setSelectedPersonId(undefined)
             setSelectedCategoryId(undefined)
@@ -571,22 +642,55 @@ export function UnifiedTransactionsPage({
     }, [hasActiveFilters, availableDateRange, dateMode, dateRange, selectedCycle])
 
     // Filter Logic
+    const alwaysVisibleRefundTxnIds = useMemo(() => {
+        const ids = new Set<string>()
+
+        transactions.forEach((txn) => {
+            const metadata =
+                typeof txn.metadata === 'string'
+                    ? (() => {
+                        try {
+                            return JSON.parse(txn.metadata)
+                        } catch {
+                            return {}
+                        }
+                    })()
+                    : (txn.metadata || {})
+
+            const stageTag = String((metadata as any)?.refund_stage_tag || '').toUpperCase()
+            const refundStatus = String((metadata as any)?.refund_status || '').toLowerCase()
+            const isGD2Pending =
+                stageTag === 'GD2' &&
+                !Boolean((metadata as any)?.is_refund_confirmation) &&
+                !['confirmed', 'completed', 'refunded', 'request_voided', 'void'].includes(refundStatus) &&
+                txn.status !== 'void'
+
+            if (!isGD2Pending) return
+
+            ids.add(txn.id)
+            const originalId = String((metadata as any)?.original_transaction_id || '').trim()
+            if (originalId) ids.add(originalId)
+        })
+
+        return ids
+    }, [transactions])
+
     const filteredTransactions = useMemo(() => {
         const lowerSearch = search.toLowerCase()
         const matchedAccountIds = search ? accounts.filter(a => a.name.toLowerCase().includes(lowerSearch)).map(a => a.id) : []
         const matchedPersonIds = search ? people.filter(p => p.name.toLowerCase().includes(lowerSearch)).map(p => p.id) : []
 
         return transactions.filter(t => {
+            const forceVisibleRefundPair = alwaysVisibleRefundTxnIds.has(t.id)
             // 0. Status Filter
-            if (statusFilter === 'active' && t.status === 'void') return false
-            if (statusFilter === 'void' && t.status !== 'void') return false
-            if (statusFilter === 'pending') {
-                const isPendingRefund = t.account_id === REFUND_PENDING_ACCOUNT_ID;
-                const isPendingRefundByName =
-                    String(t.account_name || '').toLowerCase() === 'pending refunds (system)'.toLowerCase();
-                const isSystemPending = t.status === 'pending';
-                if (!isPendingRefund && !isPendingRefundByName && !isSystemPending) return false;
+            const hasStatusSelection = statusFilter.active || statusFilter.void
+            if (hasStatusSelection) {
+                const isVoidTxn = t.status === 'void'
+                if (isVoidTxn && !statusFilter.void) return false
+                if (!isVoidTxn && !statusFilter.active) return false
             }
+
+            if (forceVisibleRefundPair) return true
 
             // 1. Date Filter
             const tDate = parseISO(t.occurred_at)
@@ -688,8 +792,280 @@ export function UnifiedTransactionsPage({
     }, [
         transactions, search, filterType, statusFilter,
         date, dateRange, dateMode,
-        selectedAccountId, selectedPersonId, selectedCategoryId, selectedCycle
+        selectedAccountId, selectedPersonId, selectedCategoryId, selectedCycle,
+        alwaysVisibleRefundTxnIds
     ])
+
+    const refundQueueTransactions = useMemo(() => {
+        return transactions.filter((txn) => {
+            if (txn.status === 'void') return false
+            const metadata =
+                typeof txn.metadata === 'string'
+                    ? (() => {
+                        try {
+                            return JSON.parse(txn.metadata)
+                        } catch {
+                            return {}
+                        }
+                    })()
+                    : (txn.metadata || {})
+
+            const stageTag = String((metadata as any)?.refund_stage_tag || '')
+            const note = String(txn.note || '')
+            const refundStatus = String((metadata as any)?.refund_status || '').toLowerCase()
+            const isConfirmed =
+                Boolean((metadata as any)?.is_refund_confirmation) ||
+                ['confirmed', 'completed', 'refunded'].includes(refundStatus) ||
+                txn.status === 'refunded'
+            if (isConfirmed) return false
+
+            return stageTag.toUpperCase() === 'GD2' || note.toUpperCase().startsWith('[GD2|')
+        })
+    }, [transactions])
+
+    const loadPendingBatchSummary = async () => {
+        try {
+            const response = await fetch('/api/batch/pending-summary', { cache: 'no-store' })
+            if (!response.ok) {
+                setPendingBatchSummary([])
+                return
+            }
+            const data = await response.json()
+            if (!Array.isArray(data)) {
+                setPendingBatchSummary([])
+                return
+            }
+
+            const normalized = data
+                .map((item) => ({
+                    accountId: String(item?.accountId || ''),
+                    accountName: typeof item?.accountName === 'string' ? item.accountName : null,
+                    count: Number(item?.count || 0),
+                    totalAmount: Number(item?.totalAmount || 0),
+                }))
+                .filter((item) => item.accountId && item.count > 0)
+
+            setPendingBatchSummary(normalized)
+        } catch {
+            setPendingBatchSummary([])
+        }
+    }
+
+    useEffect(() => {
+        void loadPendingBatchSummary()
+    }, [transactions])
+
+    const getTxnAccounts = (txn: TransactionWithDetails) => {
+        const candidates = [
+            txn.source_account_id,
+            txn.target_account_id,
+            txn.account_id,
+            (txn as any).to_account_id,
+        ].filter((value): value is string => Boolean(value))
+
+        const found = candidates
+            .map((id) => accounts.find((account) => account.id === id))
+            .find((account): account is Account => Boolean(account))
+
+        return found ?? null
+    }
+
+    const getTxnShop = (txn: TransactionWithDetails) => {
+        if (!txn.shop_id) return null
+        return shops.find((shop) => shop.id === txn.shop_id) ?? null
+    }
+
+    const refundQueueItems = useMemo<QueueCardItem[]>(() => {
+        return refundQueueTransactions.map((txn) => {
+            const shop = getTxnShop(txn)
+            const account = getTxnAccounts(txn)
+            return {
+                id: txn.id,
+                title: txn.note || 'Pending refund',
+                subtitle: account?.name || 'Waiting refund confirmation',
+                amount: Math.abs(Number(txn.amount || 0)),
+                badge: 'GD2',
+                imageUrl: shop?.image_url || null,
+                onClick: () => {
+                    const nextHighlights = new Set<string>([txn.id])
+
+                    setHighlightedRefundTxnIds(nextHighlights)
+                    setSearch(txn.id)
+                    setStatusFilter({ active: true, void: false })
+                },
+            }
+        })
+    }, [refundQueueTransactions, accounts, shops])
+
+    const batchQueueItems = useMemo<QueueCardItem[]>(() => {
+        return pendingBatchSummary.map((item) => {
+            const account = accounts.find((row) => row.id === item.accountId)
+            return {
+                id: item.accountId,
+                title: item.accountName || account?.name || 'Batch pending confirmation',
+                subtitle: `${item.count} item(s) waiting confirm`,
+                amount: Math.abs(item.totalAmount),
+                badge: 'PENDING',
+                imageUrl: account?.image_url || null,
+                onClick: () => {
+                    void (async () => {
+                        try {
+                            const response = await fetch(`/api/batch/pending-items?accountId=${encodeURIComponent(item.accountId)}`, { cache: 'no-store' })
+                            if (!response.ok) {
+                                throw new Error('Failed to load pending items')
+                            }
+
+                            const data = await response.json()
+                            if (!Array.isArray(data) || data.length === 0) {
+                                toast.info('No pending batch items left for this account')
+                                await loadPendingBatchSummary()
+                                return
+                            }
+
+                            const normalizedItems: PendingBatchItem[] = data
+                                .map((row) => ({
+                                    id: String(row?.id || ''),
+                                    amount: Number(row?.amount || 0),
+                                    batch_id: String(row?.batch_id || ''),
+                                    month_year: row?.month_year || null,
+                                    period: row?.period || null,
+                                    phase_id: row?.phase_id || null,
+                                    bank_type: row?.bank_type || null,
+                                    batch: row?.batch || null,
+                                }))
+                                .filter((row) => row.id && row.batch_id)
+
+                            if (normalizedItems.length === 0) {
+                                toast.info('No valid pending items available')
+                                await loadPendingBatchSummary()
+                                return
+                            }
+
+                            setPendingBatchModalAccountId(item.accountId)
+                            setPendingBatchModalAccountName(item.accountName || account?.name || 'Batch pending confirmation')
+                            setPendingBatchModalItems(normalizedItems)
+                            setPendingBatchModalOpen(true)
+                        } catch (error) {
+                            console.error('Failed to open pending items modal:', error)
+                            toast.error('Cannot open Pending Items right now')
+                        }
+                    })()
+                },
+            }
+        })
+    }, [pendingBatchSummary, accounts])
+
+    const renderQueueRow = (item: QueueCardItem, kind: 'refund' | 'batch', expanded: boolean) => {
+        return (
+            <CustomTooltip
+                key={item.id}
+                content={
+                    <div className="max-w-[280px] text-xs">
+                        <div className="font-semibold text-slate-200">{item.title}</div>
+                        <div className="text-slate-400">{item.subtitle}</div>
+                    </div>
+                }
+            >
+                <button
+                    type="button"
+                    onClick={item.onClick}
+                    className={cn(
+                        "inline-flex min-w-0 items-center gap-2 rounded-full border bg-white px-2 py-1 text-left shadow-sm transition",
+                        expanded ? "w-full border-slate-300 hover:bg-slate-50" : "w-[260px] max-w-full border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    )}
+                >
+                    <div className="shrink-0">
+                        {item.imageUrl ? (
+                            <img src={item.imageUrl} alt="" className="h-7 w-7 rounded-none border-none object-contain" />
+                        ) : (
+                            <div className={`flex h-7 w-7 items-center justify-center rounded-full border border-white text-[9px] font-black ${kind === 'refund' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                {kind === 'refund' ? 'S' : 'B'}
+                            </div>
+                        )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className={cn("truncate text-xs font-semibold text-slate-900", !expanded && "whitespace-nowrap")}>{item.title}</div>
+                        {expanded ? (
+                            <div className="truncate text-[10px] text-slate-500 whitespace-nowrap">{item.subtitle}</div>
+                        ) : null}
+                    </div>
+                    <div className="shrink-0 text-right">
+                        <div className="text-[10px] font-bold text-slate-700">{item.amount.toLocaleString('vi-VN')}</div>
+                        <div className="text-[9px] uppercase tracking-wide text-slate-400">{item.badge}</div>
+                    </div>
+                </button>
+            </CustomTooltip>
+        )
+    }
+
+    const renderQueueSection = (
+        title: string,
+        icon: ReactNode,
+        items: QueueCardItem[],
+        expanded: boolean,
+        onToggle: () => void,
+        kind: 'refund' | 'batch',
+        accentClass: string,
+        emptyHint: string,
+    ) => {
+        const showInline = expanded ? items.slice(0, 12) : items.slice(0, 4)
+        const hasItems = items.length > 0
+
+        return (
+            <div className={cn(
+                "mb-3 rounded-2xl border px-3 py-2 shadow-sm transition-colors",
+                hasItems ? `bg-white/90 ${accentClass}` : "bg-slate-50 border-slate-200 opacity-80"
+            )}>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        {icon}
+                        {title}
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                            {items.length}
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        disabled={!hasItems}
+                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+                    >
+                        {!hasItems ? (
+                            <span>No items</span>
+                        ) : expanded ? (
+                            <>
+                                <ChevronUp className="h-3 w-3" />
+                                Collapse
+                            </>
+                        ) : (
+                            <>
+                                <ChevronDown className="h-3 w-3" />
+                                Expand
+                            </>
+                        )}
+                    </button>
+                </div>
+                {!hasItems ? (
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+                        {emptyHint}
+                    </div>
+                ) : (
+                    <div className={expanded ? 'flex flex-wrap gap-2' : 'flex flex-nowrap gap-2 overflow-hidden'}>
+                        {showInline.map((item) => renderQueueRow(item, kind, expanded))}
+                        {!expanded && items.length > showInline.length && (
+                            <button
+                                type="button"
+                                onClick={onToggle}
+                                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-dashed border-slate-300 bg-slate-50 px-2 text-[10px] font-bold text-slate-500"
+                            >
+                                +{items.length - showInline.length}
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     // Calculate available filter options based on current filtered view
     const { availableAccountIds, availablePersonIds, availableCategoryIds } = useMemo(() => {
@@ -1023,11 +1399,48 @@ export function UnifiedTransactionsPage({
                     availableDateRange={availableDateRange}
                     categories={categories}
                     isPending={isPending}
+                    queuesCollapsed={queuesCollapsed}
+                    onToggleQueuesCollapsed={() => setQueuesCollapsed((prev) => !prev)}
+                    statusSwitchLoading={statusSwitchLoading}
+                    statusSwitchTarget={statusSwitchTarget}
                 />
             </div>
 
             {/* Content Section */}
             <div className="flex-1 overflow-hidden p-0 sm:p-4 relative">
+                <div className={cn(
+                    "transition-all duration-300 ease-out",
+                    queuesCollapsed ? 'max-h-0 opacity-0 -translate-y-1 overflow-hidden mb-0' : 'max-h-[520px] opacity-100 translate-y-0 mb-2'
+                )}>
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    {renderQueueSection(
+                        'Pending Ref',
+                        <RotateCcw className="h-3.5 w-3.5 text-amber-600" />,
+                        refundQueueItems,
+                        expandedQueues.refund,
+                        () => setExpandedQueues((prev) => ({ ...prev, refund: !prev.refund })),
+                        'refund',
+                        'border-amber-200 bg-amber-50',
+                        'No pending refund wait right now. New GD2 requests will appear here.',
+                    )}
+                    {renderQueueSection(
+                        'Pending Confirm',
+                        <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-100 text-[9px] font-black text-indigo-700">B</span>,
+                        batchQueueItems,
+                        expandedQueues.batch,
+                        () => setExpandedQueues((prev) => ({ ...prev, batch: !prev.batch })),
+                        'batch',
+                        'border-indigo-200 bg-indigo-50',
+                        'No batch items waiting confirmation. Use /batch when new pending items arrive.',
+                    )}
+                    </div>
+                </div>
+                {statusSwitchLoading && (
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {statusSwitchTarget === 'void' ? 'Switching to Void...' : 'Switching to Active...'}
+                    </div>
+                )}
                 {isGlobalLoading && (
                     <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[550] pointer-events-none">
                         <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 rounded-full shadow-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
@@ -1039,7 +1452,7 @@ export function UnifiedTransactionsPage({
                 <UnifiedTransactionTable
                     ref={tableRef}
                     transactions={filteredTransactions}
-                    activeTab={statusFilter}
+                    activeTab={statusFilter.void && !statusFilter.active ? 'void' : 'active'}
                     accounts={accounts}
                     categories={categories}
                     people={people}
@@ -1053,6 +1466,7 @@ export function UnifiedTransactionsPage({
                     setLoadingMessage={setLoadingMessage}
                     context="general"
                     loadingIds={loadingIds}
+                    highlightedTransactionIds={highlightedRefundTxnIds}
                 />
             </div>
 
@@ -1108,6 +1522,26 @@ export function UnifiedTransactionsPage({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {pendingBatchModalAccountId && (
+                <AccountPendingItemsModal
+                    accountId={pendingBatchModalAccountId}
+                    accountName={pendingBatchModalAccountName}
+                    pendingItems={pendingBatchModalItems}
+                    open={pendingBatchModalOpen}
+                    onOpenChange={(open) => {
+                        setPendingBatchModalOpen(open)
+                        if (!open) {
+                            setPendingBatchModalItems([])
+                            setPendingBatchModalAccountId('')
+                            setPendingBatchModalAccountName('')
+                        }
+                    }}
+                    onSuccess={async () => {
+                        await loadPendingBatchSummary()
+                    }}
+                />
+            )}
 
         </div>
     )

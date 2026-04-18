@@ -1,17 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Loader2, ArrowRight } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { TransactionWithDetails, Account, Person } from "@/types/moneyflow.types"
 import { confirmRefundAction, getOriginalAccount } from "@/actions/transaction-actions"
 import { useRouter } from "next/navigation"
@@ -21,6 +22,11 @@ import { cn } from "@/lib/utils"
 import { emitTransactionSync } from "@/lib/transaction-realtime-sync"
 // import { AccountCard } from "./account-card" // Assuming we can simple row render
 import Image from "next/image"
+
+const toDateTimeLocalString = (value: Date) => {
+    const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 16)
+}
 
 interface ConfirmRefundDialogV2Props {
     open: boolean
@@ -53,6 +59,7 @@ export function ConfirmRefundDialogV2({
     } | null>(null)
     const [openCombobox, setOpenCombobox] = useState(false)
     const [openPeopleCombobox, setOpenPeopleCombobox] = useState(false)
+    const [confirmedAt, setConfirmedAt] = useState(toDateTimeLocalString(new Date()))
 
     // Load recommended account on open
     useEffect(() => {
@@ -60,6 +67,7 @@ export function ConfirmRefundDialogV2({
             setIsLoadingOriginal(true)
             setRecommendedAccount(null)
             setSelectedAccountId("")
+            setConfirmedAt(toDateTimeLocalString(new Date()))
             const rawMeta =
                 transaction && typeof transaction.metadata === "object" && transaction.metadata !== null
                     ? (transaction.metadata as Record<string, unknown>)
@@ -88,10 +96,17 @@ export function ConfirmRefundDialogV2({
 
         setIsSubmitting(true)
         try {
+            const parsedConfirmDate = confirmedAt ? new Date(confirmedAt) : null
+            const confirmedAtIso =
+                parsedConfirmDate && !Number.isNaN(parsedConfirmDate.getTime())
+                    ? parsedConfirmDate.toISOString()
+                    : null
+
             const result = await confirmRefundAction(
                 transaction.id,
                 selectedAccountId,
                 selectedPersonId || null,
+                confirmedAtIso,
             )
             if (result.success) {
                 toast.success("Refund confirmed successfully")
@@ -122,18 +137,18 @@ export function ConfirmRefundDialogV2({
     const selectedPersonObj = validPeople.find((person) => person.id === selectedPersonId)
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle className="text-green-700 flex items-center gap-2">
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent side="right" className="w-full sm:max-w-[560px] p-0 flex flex-col">
+                <SheetHeader className="px-6 py-4 border-b border-slate-200 text-left">
+                    <SheetTitle className="text-green-700 flex items-center gap-2">
                         Confirm Refund Received
-                    </DialogTitle>
-                    <DialogDescription>
+                    </SheetTitle>
+                    <SheetDescription>
                         Confirm that the money has returned to your account.
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
 
-                <div className="py-4 space-y-6">
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
                     {/* Summary Card */}
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <div className="text-sm text-slate-500 mb-1">Refund Amount:</div>
@@ -143,6 +158,18 @@ export function ConfirmRefundDialogV2({
                         <div className="text-slate-500 text-sm mt-1 italic">
                             {transaction.note || "Refund Transaction"}
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700 block">
+                            Confirmed Date & Time
+                        </label>
+                        <Input
+                            type="datetime-local"
+                            value={confirmedAt}
+                            onChange={(event) => setConfirmedAt(event.target.value)}
+                            className="h-10"
+                        />
                     </div>
 
                     <div className="space-y-3">
@@ -330,7 +357,7 @@ export function ConfirmRefundDialogV2({
                     </div>
                 </div>
 
-                <DialogFooter>
+                <SheetFooter className="px-6 py-4 border-t border-slate-200 bg-white shrink-0 sm:justify-end">
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
                     <Button
                         className="bg-green-600 hover:bg-green-700 text-white"
@@ -340,8 +367,8 @@ export function ConfirmRefundDialogV2({
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Confirm Received
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     )
 }
