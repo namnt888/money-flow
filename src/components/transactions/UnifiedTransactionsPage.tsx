@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { TransactionWithDetails, Account, Category, Person, Shop } from '@/types/moneyflow.types'
 import { UnifiedTransactionTable, UnifiedTransactionTableRef } from '../moneyflow/unified-transaction-table'
-import { FilterType, StatusFilter } from './TransactionToolbar'
+import { FilterType } from './TransactionToolbar'
 import { DateRange } from 'react-day-picker'
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isSameDay, isSameMonth } from 'date-fns'
 import { TransactionSlideV2 } from '@/components/transaction/slide-v2/transaction-slide-v2'
 import { UnsavedChangesWarning } from '@/components/transaction/unsaved-changes-warning'
 import { ConfirmRefundDialogV2 } from '@/components/moneyflow/confirm-refund-dialog-v2'
-import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds'
 import { voidTransactionAction } from '@/actions/transaction-actions'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -35,6 +34,12 @@ interface UnifiedTransactionsPageProps {
     categories: Category[]
     people: Person[]
     shops: Shop[]
+}
+
+type StatusToggles = {
+    active: boolean
+    void: boolean
+    refund: boolean
 }
 
 function resolveCycleTagByStatementDay(date: Date, statementDay?: number | null): string {
@@ -119,7 +124,11 @@ export function UnifiedTransactionsPage({
     // Toolbar State
     const [search, setSearch] = useState('')
     const [filterType, setFilterType] = useState<FilterType>('all')
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+    const [statusFilter, setStatusFilter] = useState<StatusToggles>({
+        active: true,
+        void: false,
+        refund: false,
+    })
 
     const [date, setDate] = useState<Date>(new Date())
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
@@ -394,7 +403,7 @@ export function UnifiedTransactionsPage({
         startTransition(() => {
             setSearch('')
             setFilterType('all')
-            setStatusFilter('active')
+            setStatusFilter({ active: true, void: false, refund: false })
             setSelectedAccountId(undefined)
             setSelectedPersonId(undefined)
             setSelectedCategoryId(undefined)
@@ -479,7 +488,7 @@ export function UnifiedTransactionsPage({
         })
     }
 
-    const handleSetStatusFilter = (val: StatusFilter) => {
+    const handleSetStatusFilter = (val: StatusToggles) => {
         startTransition(() => {
             setStatusFilter(val)
         })
@@ -506,7 +515,9 @@ export function UnifiedTransactionsPage({
     const hasActiveFilters =
         search !== '' ||
         filterType !== 'all' ||
-        statusFilter !== 'active' ||
+        !statusFilter.active ||
+        statusFilter.void ||
+        statusFilter.refund ||
         !!selectedAccountId ||
         !!selectedPersonId ||
         !!selectedCategoryId ||
@@ -550,7 +561,7 @@ export function UnifiedTransactionsPage({
     const handleClearFilters = () => {
         startTransition(() => {
             setFilterType('all')
-            setStatusFilter('active')
+            setStatusFilter({ active: true, void: false, refund: false })
             setSelectedAccountId(undefined)
             setSelectedPersonId(undefined)
             setSelectedCategoryId(undefined)
@@ -578,14 +589,26 @@ export function UnifiedTransactionsPage({
 
         return transactions.filter(t => {
             // 0. Status Filter
-            if (statusFilter === 'active' && t.status === 'void') return false
-            if (statusFilter === 'void' && t.status !== 'void') return false
-            if (statusFilter === 'pending') {
-                const isPendingRefund = t.account_id === REFUND_PENDING_ACCOUNT_ID;
-                const isPendingRefundByName =
-                    String(t.account_name || '').toLowerCase() === 'pending refunds (system)'.toLowerCase();
-                const isSystemPending = t.status === 'pending';
-                if (!isPendingRefund && !isPendingRefundByName && !isSystemPending) return false;
+            const hasStatusSelection = statusFilter.active || statusFilter.void
+            if (hasStatusSelection) {
+                const isVoidTxn = t.status === 'void'
+                if (isVoidTxn && !statusFilter.void) return false
+                if (!isVoidTxn && !statusFilter.active) return false
+            }
+
+            if (statusFilter.refund) {
+                const metadata =
+                    typeof t.metadata === 'string'
+                        ? (() => {
+                            try {
+                                return JSON.parse(t.metadata)
+                            } catch {
+                                return {}
+                            }
+                        })()
+                        : (t.metadata || {})
+                const refundStatus = (metadata as any)?.refund_status
+                if (refundStatus === null || refundStatus === undefined) return false
             }
 
             // 1. Date Filter
@@ -1039,7 +1062,7 @@ export function UnifiedTransactionsPage({
                 <UnifiedTransactionTable
                     ref={tableRef}
                     transactions={filteredTransactions}
-                    activeTab={statusFilter}
+                    activeTab={statusFilter.void && !statusFilter.active ? 'void' : 'active'}
                     accounts={accounts}
                     categories={categories}
                     people={people}

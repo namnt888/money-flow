@@ -6,6 +6,19 @@ import { normalizeMonthTag } from '@/lib/month-tag';
 import { revalidatePath } from 'next/cache';
 import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds';
 import { CashbackMode } from '@/types/moneyflow.types';
+import {
+  createTransaction as createPBTransaction,
+  updateTransaction as updatePBTransaction,
+  voidTransaction as voidPBTransaction,
+  confirmRefund as confirmPBRefund,
+} from '@/services/transaction.service';
+import {
+  pocketbaseCreate,
+  pocketbaseGetById,
+  pocketbaseList,
+  pocketbaseUpdate,
+  toPocketBaseId,
+} from '@/services/pocketbase/server';
 
 export type CreateTransactionInput = {
   occurred_at: string;
@@ -70,14 +83,19 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
   return true;
 }
 
-export async function voidTransactionAction(id: string): Promise<boolean> {
+export async function voidTransactionAction(
+  id: string,
+  options?: { voidedAt?: string },
+): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'transactions');
   
   // Need to get the person_id before voiding to revalidate their page
   const existing = await pocketbaseGetById<any>('transactions', pbId);
   
   // Sheet sync is handled inside service layer.
-  const success = await voidPBTransaction(pbId);
+  const success = await voidPBTransaction(pbId, {
+    voidedAt: options?.voidedAt,
+  });
   if (success) {
     revalidatePath('/');
     revalidatePath('/people');

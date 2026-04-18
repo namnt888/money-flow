@@ -1030,7 +1030,7 @@ export async function updateTransaction(id: string, input: CreateTransactionInpu
 
 export async function voidTransaction(
   id: string,
-  options?: { cascadeLinkedRollover?: boolean },
+  options?: { cascadeLinkedRollover?: boolean; voidedAt?: string },
 ): Promise<boolean> {
   const pbId = toPocketBaseId(id, 'transactions');
   console.log('[DB:PB] transactions.void', { id: pbId });
@@ -1095,12 +1095,16 @@ export async function voidTransaction(
       Boolean(originalTxnId) && (existingMeta as Record<string, unknown>).is_refund_confirmation !== true;
 
     await logHistory(pbId, "void", existing);
+    const effectiveVoidedAt =
+      typeof options?.voidedAt === 'string' && options.voidedAt.length > 0
+        ? options.voidedAt
+        : new Date().toISOString();
     await pocketbaseUpdate('transactions', pbId, {
       status: 'void',
       metadata: {
         ...(existingMeta as Record<string, unknown>),
         refund_status: 'void',
-        voided_at: new Date().toISOString(),
+        voided_at: effectiveVoidedAt,
       },
     });
 

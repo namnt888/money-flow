@@ -47,6 +47,7 @@ import {
   ChevronLeft,
   Edit,
   Clock,
+  Calendar as CalendarIcon,
   Undo2,
   ArrowRightLeft,
   ArrowUpRight,
@@ -111,6 +112,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { TransactionForm, TransactionFormValues } from "./transaction-form";
 import {
   deleteTransaction,
@@ -172,6 +174,21 @@ const formatSignedAmount = (value: number) => {
 const normalizeNearZero = (value: number, epsilon = 0.5) => {
   if (!Number.isFinite(value)) return 0;
   return Math.abs(value) < epsilon ? 0 : value;
+};
+
+const formatDateTimeForInput = (value: Date) => {
+  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+};
+
+const mergeDateAndTime = (date: Date, timeValue: string) => {
+  const [hoursRaw, minutesRaw] = timeValue.split(":");
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  const next = new Date(date);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return next;
+  next.setHours(hours, minutes, 0, 0);
+  return next;
 };
 
 import { Badge } from "@/components/ui/badge";
@@ -1254,6 +1271,8 @@ export const UnifiedTransactionTable = React.forwardRef<
     const [successTxnIds, setSuccessTxnIds] = useState<Set<string>>(new Set()); // For green flash effect if needed
     const [confirmVoidTarget, setConfirmVoidTarget] =
       useState<TransactionWithDetails | null>(null);
+    const [voidedAtDateTime, setVoidedAtDateTime] = useState<Date>(new Date());
+    const [isRefundSubmitLoading, setIsRefundSubmitLoading] = useState(false);
     const [confirmCancelTarget, setConfirmCancelTarget] =
       useState<TransactionWithDetails | null>(null);
     const [isVoiding, setIsVoiding] = useState(false);
@@ -1382,9 +1401,20 @@ export const UnifiedTransactionTable = React.forwardRef<
     // --- Actions ---
     const closeVoidDialog = () => {
       setConfirmVoidTarget(null);
+      setVoidedAtDateTime(new Date());
       setVoidError(null);
       setIsVoiding(false);
     };
+
+    const confirmVoidTargetStatus = confirmVoidTarget
+      ? statusOverrides[confirmVoidTarget.id] ?? confirmVoidTarget.status
+      : null;
+    const confirmVoidMetadata = parseMetadata(confirmVoidTarget?.metadata);
+    const isRefundPendingVoidTarget =
+      !!confirmVoidTarget &&
+      confirmVoidTargetStatus === "pending" &&
+      (typeof confirmVoidMetadata?.refund_stage_tag === "string" ||
+        confirmVoidMetadata?.refund_status === "requested");
 
     const getLinkedRolloverId = useCallback(
       (txn: TransactionWithDetails | null | undefined): string | null => {
@@ -1522,6 +1552,15 @@ export const UnifiedTransactionTable = React.forwardRef<
       if (!confirmVoidTarget) return;
       setVoidError(null);
 
+      const selectedVoidedAt = isRefundPendingVoidTarget
+        ? voidedAtDateTime
+        : new Date();
+
+      if (!(selectedVoidedAt instanceof Date) || Number.isNaN(selectedVoidedAt.getTime())) {
+        setVoidError("Please choose a valid void date and time.");
+        return;
+      }
+
       const orderWarning = validateRefundVoidOrder(confirmVoidTarget);
       if (orderWarning) {
         toast.error(orderWarning.title, {
@@ -1538,7 +1577,9 @@ export const UnifiedTransactionTable = React.forwardRef<
       setUpdatingTxnIds((prev) => new Set(prev).add(targetId));
 
       try {
-        const ok = await voidTransactionAction(targetId);
+        const ok = await voidTransactionAction(targetId, {
+          voidedAt: selectedVoidedAt.toISOString(),
+        });
         if (!ok) {
           setVoidError("Unable to void transaction. Please try again.");
           return;
@@ -1596,6 +1637,21 @@ export const UnifiedTransactionTable = React.forwardRef<
         });
       }
     };
+
+    const handleRefundSubmitStart = useCallback(() => {
+      setIsRefundOpen(false);
+      setIsRefundSubmitLoading(true);
+      if (setLoadingMessage) setLoadingMessage("Creating transaction...");
+    }, [setLoadingMessage]);
+
+    const handleRefundSubmitEnd = useCallback(async () => {
+      if (onSuccess) {
+        await onSuccess();
+      }
+      setIsRefundSubmitLoading(false);
+      setRefundTarget(null);
+      router.refresh();
+    }, [onSuccess, router]);
 
     const handleCancelOrderConfirm = (moneyReceived: boolean) => {
       if (!confirmCancelTarget) return;
@@ -2781,6 +2837,16 @@ export const UnifiedTransactionTable = React.forwardRef<
                         Processing Database
                       </span>
                     </div>
+                  </div>
+                </div>
+              )}
+              {isRefundSubmitLoading && (
+                <div className="absolute inset-0 z-[95] flex items-center justify-center pointer-events-none">
+                  <div className="inline-flex items-center gap-3 rounded-full bg-white/95 px-5 py-3 shadow-lg border border-slate-200">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <span className="text-sm font-semibold text-slate-800">
+                      Creating transaction...
+                    </span>
                   </div>
                 </div>
               )}
@@ -5994,6 +6060,56 @@ export const UnifiedTransactionTable = React.forwardRef<
                   {voidError && (
                     <p className="mt-2 text-sm text-red-600">{voidError}</p>
                   )}
+                  {isRefundPendingVoidTarget && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                        Refund void timestamp
+                      </p>
+                      <div className="mt-2 grid grid-cols-1 gap-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                            >
+                              <span>{format(voidedAtDateTime, "dd/MM/yyyy")}</span>
+                              <CalendarIcon className="h-4 w-4 text-slate-500" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarPicker
+                              mode="single"
+                              selected={voidedAtDateTime}
+                              onSelect={(nextDate) => {
+                                if (!nextDate) return;
+                                setVoidedAtDateTime((prev) => {
+                                  const merged = new Date(nextDate);
+                                  merged.setHours(
+                                    prev.getHours(),
+                                    prev.getMinutes(),
+                                    0,
+                                    0,
+                                  );
+                                  return merged;
+                                });
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <input
+                          type="time"
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                          value={formatDateTimeForInput(voidedAtDateTime).slice(11, 16)}
+                          onChange={(event) => {
+                            setVoidedAtDateTime((prev) =>
+                              mergeDateAndTime(prev, event.target.value),
+                            );
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-4 flex justify-end gap-2">
                     <button
                       className="rounded-md px-3 py-1 text-sm text-slate-600 transition hover:bg-slate-100"
@@ -6301,6 +6417,8 @@ export const UnifiedTransactionTable = React.forwardRef<
               transactionId={refundTarget.id}
               transactionAmount={Math.abs(refundTarget.amount)}
               originalAccountId={refundTarget.account_id}
+              onSubmitStart={handleRefundSubmitStart}
+              onSubmitEnd={handleRefundSubmitEnd}
             />
           )}
 

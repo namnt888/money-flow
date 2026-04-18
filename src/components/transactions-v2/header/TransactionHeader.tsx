@@ -5,9 +5,8 @@ import { Account, Person } from '@/types/moneyflow.types'
 import { UnifiedSmartDatePicker } from '@/components/transactions-v2/header/UnifiedSmartDatePicker'
 import { QuickFilterDropdown } from '@/components/transactions-v2/header/QuickFilterDropdown'
 import { TypeFilterDropdown } from '@/components/transactions-v2/header/TypeFilterDropdown'
-import { StatusDropdown } from '@/components/transactions-v2/header/StatusDropdown'
 import { AddTransactionDropdown } from '@/components/transactions-v2/header/AddTransactionDropdown'
-import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, Clipboard, RefreshCw, Loader2 } from 'lucide-react'
+import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, Clipboard, RefreshCw, Loader2, CheckCircle2, Ban, RotateCcw, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DateRange } from 'react-day-picker'
@@ -35,7 +34,11 @@ import {
 import { toast } from 'sonner'
 
 export type FilterType = 'all' | 'income' | 'expense' | 'lend' | 'repay' | 'transfer' | 'cashback'
-export type StatusFilter = 'active' | 'void' | 'pending'
+export type StatusFilter = {
+  active: boolean
+  void: boolean
+  refund: boolean
+}
 
 interface TransactionHeaderProps {
   // Data
@@ -259,6 +262,41 @@ export function TransactionHeader({
 
   const selectedYear = useMemo(() => localDate.getFullYear().toString(), [localDate])
 
+  const hasFilterSelections = useMemo(() => {
+    const hasDateFilter =
+      localDateMode === 'range' ||
+      localDateMode === 'month' ||
+      localDateMode === 'date' ||
+      localDateMode === 'cycle' ||
+      (localDateMode === 'year' && localDate.getFullYear() !== new Date().getFullYear())
+
+    const hasStatusFilterChanges =
+      !localStatusFilter.active ||
+      localStatusFilter.void ||
+      localStatusFilter.refund
+
+    return (
+      hasDateFilter ||
+      localFilterType !== 'all' ||
+      hasStatusFilterChanges ||
+      !!localAccountId ||
+      !!localPersonId ||
+      !!localCategoryId ||
+      !!localCycle
+    )
+  }, [
+    localDateMode,
+    localDate,
+    localFilterType,
+    localStatusFilter,
+    localAccountId,
+    localPersonId,
+    localCategoryId,
+    localCycle,
+  ])
+
+  const hasResetSelections = hasFilterSelections || localSearchTerm.trim().length > 0
+
   // Account-first cycle UX: when an account is selected, switch to Cycle tab immediately
   // and auto-select current cycle if available, else default to All.
   useEffect(() => {
@@ -376,7 +414,7 @@ export function TransactionHeader({
   }
 
   const renderDesktopFilters = () => (
-    <div className="hidden md:flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-2 shrink-0">
       {onRefresh && (
         <Button
           variant="ghost"
@@ -395,11 +433,56 @@ export function TransactionHeader({
         fullWidth
       />
 
-      <StatusDropdown
-        value={localStatusFilter}
-        onChange={handleFilterChange(setLocalStatusFilter, onStatusChange)}
-        fullWidth
-      />
+      <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white p-1">
+        <button
+          type="button"
+          onClick={() => {
+            const next = { ...localStatusFilter, active: !localStatusFilter.active }
+            setLocalStatusFilter(next)
+            if (hasActiveFilters) onStatusChange(next)
+          }}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
+            localStatusFilter.active
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'text-slate-500 hover:bg-slate-100'
+          }`}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Active
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const next = { ...localStatusFilter, void: !localStatusFilter.void }
+            setLocalStatusFilter(next)
+            if (hasActiveFilters) onStatusChange(next)
+          }}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
+            localStatusFilter.void
+              ? 'bg-slate-200 text-slate-800'
+              : 'text-slate-500 hover:bg-slate-100'
+          }`}
+        >
+          <Ban className="h-3.5 w-3.5" />
+          Void
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const next = { ...localStatusFilter, refund: !localStatusFilter.refund }
+            setLocalStatusFilter(next)
+            if (hasActiveFilters) onStatusChange(next)
+          }}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
+            localStatusFilter.refund
+              ? 'bg-amber-100 text-amber-700'
+              : 'text-slate-500 hover:bg-slate-100'
+          }`}
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Refund
+        </button>
+      </div>
 
       <QuickFilterDropdown
         items={filteredPeople.map(p => ({
@@ -485,7 +568,37 @@ export function TransactionHeader({
       />
 
       {/* Filter Action Button */}
-      {!hasActiveFilters ? (
+      <Button
+        variant={hasFilterSelections ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => {
+          if (hasFilterSelections) {
+            onClearFilters?.()
+            return
+          }
+          setMobileFilterOpen(true)
+        }}
+        className="h-9 px-3 gap-1.5 font-medium"
+      >
+        <Filter className="w-4 h-4" />
+        <span className="hidden sm:inline text-xs">Filter</span>
+      </Button>
+
+      <Button
+        variant={hasResetSelections ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => {
+          if (!hasResetSelections) return
+          onReset?.()
+        }}
+        className="h-9 px-3 gap-1.5 font-medium"
+      >
+        <RefreshCcw className="w-4 h-4" />
+        <span className="hidden sm:inline text-xs">Reset</span>
+      </Button>
+
+      {/* Legacy clear menu kept for mobile only */}
+      {false && !hasActiveFilters ? (
         <Button
           variant="default"
           size="sm"
@@ -552,8 +665,7 @@ export function TransactionHeader({
       <div className="hidden md:flex items-center gap-2 px-4 py-3">
         {renderDesktopFilters()}
 
-        <div className="flex items-center gap-2 flex-1 ml-2 relative">
-          <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 min-w-[240px]">
             <Clipboard
               className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors"
               onClick={async () => {
@@ -597,7 +709,8 @@ export function TransactionHeader({
                 <Search className="w-4 h-4 opacity-50" />
               </button>
             </div>
-          </div>
+        </div>
+        <div className="shrink-0 ml-auto">
           <AddTransactionDropdown onSelect={onAdd} />
         </div>
       </div>
@@ -635,7 +748,35 @@ export function TransactionHeader({
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Status</label>
-              <StatusDropdown value={localStatusFilter} onChange={setLocalStatusFilter} fullWidth />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={localStatusFilter.active ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLocalStatusFilter((prev) => ({ ...prev, active: !prev.active }))}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                  Active
+                </Button>
+                <Button
+                  type="button"
+                  variant={localStatusFilter.void ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLocalStatusFilter((prev) => ({ ...prev, void: !prev.void }))}
+                >
+                  <Ban className="h-3.5 w-3.5 mr-1" />
+                  Void
+                </Button>
+                <Button
+                  type="button"
+                  variant={localStatusFilter.refund ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLocalStatusFilter((prev) => ({ ...prev, refund: !prev.refund }))}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  Refund
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">

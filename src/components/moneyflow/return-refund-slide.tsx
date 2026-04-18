@@ -18,6 +18,8 @@ interface ReturnRefundSlideProps {
     originalAccountId: string
     open: boolean
     onOpenChange: (open: boolean) => void
+    onSubmitStart?: () => void
+    onSubmitEnd?: () => void | Promise<void>
 }
 
 interface Account {
@@ -32,6 +34,8 @@ export function ReturnRefundSlide({
     originalAccountId,
     open,
     onOpenChange,
+    onSubmitStart,
+    onSubmitEnd,
 }: ReturnRefundSlideProps) {
     const [activeTab, setActiveTab] = useState('cancel-100')
     const [amount, setAmount] = useState(transactionAmount)
@@ -58,15 +62,20 @@ export function ReturnRefundSlide({
     }, [open, transactionAmount, originalAccountId])
 
     const handleCancel100 = async () => {
+        onSubmitStart?.()
+        onOpenChange(false)
         setIsLoading(true)
-        const result = await cancelOrder(transactionId)
-        setIsLoading(false)
+        try {
+            const result = await cancelOrder(transactionId)
 
-        if (result.success) {
-            toast.success('Hủy đơn 100% thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể hủy đơn')
+            if (result.success) {
+                toast.success('Hủy đơn 100% thành công')
+            } else {
+                toast.error(result.error || 'Không thể hủy đơn')
+            }
+        } finally {
+            setIsLoading(false)
+            await onSubmitEnd?.()
         }
     }
 
@@ -76,15 +85,20 @@ export function ReturnRefundSlide({
             return
         }
 
+        onSubmitStart?.()
+        onOpenChange(false)
         setIsLoading(true)
-        const result = await requestRefund(transactionId, amount, true)
-        setIsLoading(false)
+        try {
+            const result = await requestRefund(transactionId, amount, true)
 
-        if (result.success) {
-            toast.success('Yêu cầu hoàn tiền một phần thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể yêu cầu hoàn tiền')
+            if (result.success) {
+                toast.success('Yêu cầu hoàn tiền một phần thành công')
+            } else {
+                toast.error(result.error || 'Không thể yêu cầu hoàn tiền')
+            }
+        } finally {
+            setIsLoading(false)
+            await onSubmitEnd?.()
         }
     }
 
@@ -100,15 +114,20 @@ export function ReturnRefundSlide({
             return
         }
 
+        onSubmitStart?.()
+        onOpenChange(false)
         setIsLoading(true)
-        const result = await instantRefund(transactionId, amount, targetAccountId)
-        setIsLoading(false)
+        try {
+            const result = await instantRefund(transactionId, amount, targetAccountId)
 
-        if (result.success) {
-            toast.success('Hoàn tiền ngay thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể hoàn tiền ngay')
+            if (result.success) {
+                toast.success('Hoàn tiền ngay thành công')
+            } else {
+                toast.error(result.error || 'Không thể hoàn tiền ngay')
+            }
+        } finally {
+            setIsLoading(false)
+            await onSubmitEnd?.()
         }
     }
 
