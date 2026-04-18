@@ -1450,6 +1450,7 @@ export async function confirmRefund(
   pendingTransactionId: string,
   targetAccountId: string,
   personId?: string | null,
+  confirmedAt?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pbTxnId = toPocketBaseId(pendingTransactionId, 'transactions');
@@ -1462,6 +1463,10 @@ export async function confirmRefund(
       typeof existing.metadata === 'object' && existing.metadata !== null
         ? existing.metadata
         : {};
+    const resolvedConfirmedAt =
+      typeof confirmedAt === 'string' && confirmedAt.trim()
+        ? new Date(confirmedAt).toISOString()
+        : new Date().toISOString();
 
     const originalTxnId =
       typeof existingMeta.original_transaction_id === 'string'
@@ -1536,8 +1541,8 @@ export async function confirmRefund(
     // TXN3: explicit refund confirmation transaction
     await pocketbaseCreate('transactions', {
       id: confirmationTxnId,
-      date: existing.date || existing.occurred_at || new Date().toISOString(),
-      occurred_at: existing.occurred_at || existing.date || new Date().toISOString(),
+      date: resolvedConfirmedAt,
+      occurred_at: resolvedConfirmedAt,
       note: `${gd3Tag} Refund received: ${existing.note || 'Refund'}`,
       description: `${gd3Tag} Refund received: ${existing.note || 'Refund'}`,
       type: existing.type || 'income',
@@ -1560,7 +1565,7 @@ export async function confirmRefund(
         original_transaction_id: originalTxnId,
         refund_request_id: pbTxnId,
         is_refund_confirmation: true,
-        refund_confirmed_at: new Date().toISOString(),
+        refund_confirmed_at: resolvedConfirmedAt,
         refund_stage_tag: 'GD3',
         refund_sequence: 3,
       },
@@ -1574,7 +1579,7 @@ export async function confirmRefund(
         ...(existingMeta as Record<string, unknown>),
         is_refund_confirmation: false,
         refund_status: 'completed',
-        refund_confirmed_at: new Date().toISOString(),
+        refund_confirmed_at: resolvedConfirmedAt,
         confirmation_transaction_id: confirmationTxnId,
       }
     });
@@ -1600,14 +1605,14 @@ export async function confirmRefund(
             refund_status: isFullRefund ? 'completed' : 'partial_completed',
             refund_request_id: null,
             refund_confirmation_id: confirmationTxnId,
-            refund_confirmed_at: new Date().toISOString(),
+            refund_confirmed_at: resolvedConfirmedAt,
             refunded_amount_total: refundedAmountTotal,
             remaining_refund_amount:
               originalAmount > 0
                 ? Math.max(0, originalAmount - refundedAmountTotal)
                 : 0,
             last_refund_request_id: pbTxnId,
-            last_refund_completed_at: new Date().toISOString(),
+            last_refund_completed_at: resolvedConfirmedAt,
             is_partial_refund: !isFullRefund,
           },
         });

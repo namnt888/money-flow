@@ -240,6 +240,7 @@ interface UnifiedTransactionTableProps {
   searchQuery?: string;
   hideFilters?: boolean;
   compact?: boolean;
+  highlightedTransactionIds?: Set<string>;
 }
 
 export type UnifiedTransactionTableRef = {
@@ -290,6 +291,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       searchQuery,
       hideFilters = false,
       compact = false,
+      highlightedTransactionIds,
     },
     ref,
   ) => {
@@ -307,7 +309,6 @@ export const UnifiedTransactionTable = React.forwardRef<
     const [refundType, setRefundType] = useState<"refund" | "cancel">("refund");
 
     // Confirm Refund Dialog State
-    const [confirmRefundOpen, setConfirmRefundOpen] = useState(false);
     const [confirmRefundTxn, setConfirmRefundTxn] =
       useState<TransactionWithDetails | null>(null);
 
@@ -468,9 +469,9 @@ export const UnifiedTransactionTable = React.forwardRef<
     );
 
     const defaultColumns: ColumnConfig[] = [
-      { key: "date", label: "Date", defaultWidth: 138, minWidth: 124 },
-      { key: "shop", label: "Notes Flow", defaultWidth: 300, minWidth: 220 },
-      { key: "account", label: "Money Flow", defaultWidth: 380, minWidth: 280 },
+      { key: "date", label: "Date", defaultWidth: 108, minWidth: 94 },
+      { key: "shop", label: "Notes Flow", defaultWidth: 380, minWidth: 280 },
+      { key: "account", label: "Money Flow", defaultWidth: 360, minWidth: 260 },
       { key: "amount", label: "BASE", defaultWidth: 100, minWidth: 90 },
       {
         key: "est_share",
@@ -500,15 +501,14 @@ export const UnifiedTransactionTable = React.forwardRef<
         minWidth: 90,
       },
       { key: "net_profit", label: "Profit Cum", defaultWidth: 110, minWidth: 90 },
-      { key: "category", label: "Categ", defaultWidth: 140, minWidth: 110 },
-      { key: "actions", label: "Action", defaultWidth: 100, minWidth: 60 },
+      { key: "category", label: "Category Flow", defaultWidth: 180, minWidth: 140 },
     ];
 
     const normalizeColumnOrder = (order: ColumnKey[]) => {
       const validKeys = new Set(defaultColumns.map((c) => c.key));
       const deduped = Array.from(new Set(order)).filter((k) => validKeys.has(k));
-      const content = deduped.filter((k) => k !== "date" && k !== "actions");
-      return ["date", ...content, "actions"] as ColumnKey[];
+      const content = deduped.filter((k) => k !== "date");
+      return ["date", ...content] as ColumnKey[];
     };
 
     const [isColumnCustomizerOpen, setIsColumnCustomizerOpen] = useState(false);
@@ -2483,25 +2483,6 @@ export const UnifiedTransactionTable = React.forwardRef<
       variant: "popover" | "sheet",
     ) => {
       const isSheet = variant === "sheet";
-      const isPendingRefund = txn.account_id === REFUND_PENDING_ACCOUNT_ID;
-      const hasRefundRequest =
-        (txn.metadata as any)?.has_refund_request ||
-        (txn.metadata as any)?.refund_request_id;
-      const resolvedCategory = txn.category_id
-        ? categories.find((category) => category.id === txn.category_id)
-        : null;
-      const categoryName = String(
-        txn.category_name || resolvedCategory?.name || "",
-      ).toLowerCase();
-      const hasShoppingSignal =
-        Boolean(txn.shop_id) ||
-        categoryName.includes("shopping") ||
-        categoryName.includes("mua s") ||
-        categoryName.includes("shop");
-      const canShowCancelActions =
-        !isPendingRefund &&
-        (txn.type === "expense" || txn.type === "debt") &&
-        hasShoppingSignal;
       const baseItemClass = isSheet
         ? "flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700"
         : "flex w-full items-center gap-2 rounded px-3 py-1 text-left hover:bg-slate-50";
@@ -2575,23 +2556,51 @@ export const UnifiedTransactionTable = React.forwardRef<
             <span>Void</span>
           </button>
 
-          {/* Refund & Cancel Actions - Restored */}
-          {canShowCancelActions && (
-            <button
-              className={`${neutralItemClass} ${hasRefundRequest ? "opacity-50 cursor-not-allowed" : ""}`}
-              disabled={!!hasRefundRequest}
-              onClick={(event) => {
-                event.stopPropagation();
-                setRefundTarget(txn);
-                setActionMenuOpen(null);
-              }}
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>
-                {hasRefundRequest ? "Refund Requested" : "Hoàn / Hủy đơn"}
-              </span>
-            </button>
-          )}
+          {(() => {
+            const metadata =
+              typeof txn.metadata === "string"
+                ? parseMetadata(txn.metadata)
+                : (txn.metadata as any);
+            const stageTag = String(metadata?.refund_stage_tag || "").toUpperCase();
+            const refundStatus = String(metadata?.refund_status || "").toLowerCase();
+            const isRefundConfirmation = Boolean(metadata?.is_refund_confirmation);
+            const hasRefundRequest = Boolean(metadata?.has_refund_request || metadata?.refund_request_id);
+            const isRefundChainChild = Boolean(metadata?.original_transaction_id);
+            const hasBlockedRefundStatus = [
+              "requested",
+              "confirmed",
+              "completed",
+              "refunded",
+              "request_voided",
+            ].includes(refundStatus);
+            const isBlockedByTxnStatus = ["pending", "waiting_refund", "refunded"].includes(String(txn.status || "").toLowerCase());
+            const canOpenRefundFlow =
+              (txn.type === "expense" || txn.type === "debt") &&
+              stageTag !== "GD2" &&
+              !isRefundConfirmation &&
+              !hasRefundRequest &&
+              !isRefundChainChild &&
+              !hasBlockedRefundStatus &&
+              !isBlockedByTxnStatus;
+
+            if (!canOpenRefundFlow) return null;
+
+            return (
+              <button
+                className={neutralItemClass}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setRefundTarget(txn);
+                  setIsRefundOpen(true);
+                  setActionMenuOpen(null);
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span>Refund Flow</span>
+              </button>
+            );
+          })()}
+
           {divider}
 
           <button
@@ -2882,6 +2891,24 @@ export const UnifiedTransactionTable = React.forwardRef<
                           style={stickyStyle}
                         >
                           {col.key === "category" ? (
+                            <div className="flex items-center justify-between w-full relative group">
+                              <span>{columnLabel}</span>
+                              <CustomTooltip
+                                content="Customize Columns"
+                                side="top"
+                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsColumnCustomizerOpen(true);
+                                  }}
+                                  className="p-1.5 hover:bg-slate-300 rounded-md transition-colors text-slate-600"
+                                >
+                                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                                </button>
+                              </CustomTooltip>
+                            </div>
+                          ) : col.key === "shop" ? (
                             <span>{columnLabel}</span>
                           ) : col.key === "date" || isMobileCategoryDate ? (
                             <div className="flex items-center gap-2">
@@ -2987,24 +3014,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                             </CustomTooltip>
                           ) : col.key === "final_price" ? (
                             <span>{columnLabel}</span>
-                          ) : col.key === "actions" ? (
-                            <div className="flex items-center justify-center w-full relative group">
-                              <span>{columnLabel}</span>
-                              <CustomTooltip
-                                content="Customize Columns"
-                                side="top"
-                              >
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsColumnCustomizerOpen(true);
-                                  }}
-                                  className="absolute right-0 p-1.5 hover:bg-slate-300 rounded-md transition-colors text-slate-600"
-                                >
-                                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                                </button>
-                              </CustomTooltip>
-                            </div>
                           ) : (
                             columnLabel
                           )}
@@ -3052,6 +3061,14 @@ export const UnifiedTransactionTable = React.forwardRef<
                         statusOverrides[txn.id] ?? txn.status;
                       const isVoided = effectiveStatus === "void";
                       const isMenuOpen = actionMenuOpen === txn.id;
+                      const highlightMeta = parseMetadata(txn.metadata);
+                      const isPendingConfirmRow =
+                        Boolean(highlightMeta?.original_transaction_id) &&
+                        !Boolean(highlightMeta?.is_refund_confirmation) &&
+                        txn.status !== "completed";
+                      const isQueueHighlighted =
+                        Boolean(highlightedTransactionIds?.has(txn.id)) &&
+                        isPendingConfirmRow;
                       const sequenceNumber =
                         sequenceByTxnId.get(txn.id) ??
                         (currentPage - 1) * pageSize + rowIndex + 1;
@@ -3933,7 +3950,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setConfirmRefundTxn(txn);
-                                    setConfirmRefundOpen(true);
                                   }}
                                   className="flex items-center justify-center rounded-full bg-emerald-500 text-white px-2.5 h-[22px] shrink-0 transition-all hover:bg-emerald-600 hover:shadow-md cursor-pointer ml-1 shadow-sm text-[10px] font-bold"
                                 >
@@ -4259,10 +4275,9 @@ export const UnifiedTransactionTable = React.forwardRef<
                                               e.stopPropagation();
                                               setHistoryTarget(txn);
                                             }}
-                                            className="inline-flex items-center gap-1.5 px-2 h-[22px] min-w-[70px] justify-center rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 text-[10px] font-bold whitespace-nowrap transition-all duration-200 shadow-sm hover:bg-cyan-100"
+                                            className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 transition-all duration-200 shadow-sm hover:bg-cyan-100"
                                           >
                                             <Pencil className="h-3 w-3" />
-                                            EDITED
                                           </button>
                                         </CustomTooltip>
                                       );
@@ -4284,13 +4299,13 @@ export const UnifiedTransactionTable = React.forwardRef<
                                     return (
                                       <div className="flex items-center gap-1 ml-auto">
                                         {currentInstallmentBadge}
+                                        {editedBadge}
                                         {refundBadge}
                                         {confirmRefundBadge}
                                         {splitBadge}
                                         {duplicationBadge}
                                         {batchBadge}
                                         {confirmedBadge}
-                                        {editedBadge}
                                         {hasBulkDebts &&
                                           (() => {
                                             const bulkAllocation =
@@ -4517,39 +4532,45 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   </div>
                                 }
                               >
-                                <div className="flex items-center gap-2 min-w-0 max-w-full">
+                                <div className="flex items-center justify-between gap-2 min-w-0 max-w-full w-full">
                                   {/* Icon Container (Image only: no border/bg/shadow) */}
-                                  <div className="shrink-0 h-8 w-8 rounded-none flex items-center justify-center overflow-hidden">
-                                    {categoryImage ? (
-                                      <img
-                                        src={categoryImage}
-                                        alt={displayCategory}
-                                        className="h-full w-full object-contain"
-                                      />
-                                    ) : categoryIcon ? (
-                                      <span className="text-sm">
-                                        {categoryIcon}
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="shrink-0 h-8 w-8 rounded-none flex items-center justify-center overflow-hidden">
+                                      {categoryImage ? (
+                                        <img
+                                          src={categoryImage}
+                                          alt={displayCategory}
+                                          className="h-full w-full object-contain"
+                                        />
+                                      ) : categoryIcon ? (
+                                        <span className="text-sm">
+                                          {categoryIcon}
+                                        </span>
+                                      ) : (
+                                        <Book className="h-4 w-4 text-slate-400" />
+                                      )}
+                                    </div>
+
+                                    <div className="flex flex-col min-w-0 max-w-[150px]">
+                                      <span className="text-sm font-bold text-slate-900 truncate leading-tight">
+                                        {displayCategory}
                                       </span>
-                                    ) : (
-                                      <Book className="h-4 w-4 text-slate-400" />
-                                    )}
+                                      <div
+                                        className={cn(
+                                          "flex items-center gap-1 text-[10px] font-black uppercase tracking-widest leading-none mt-0.5",
+                                          isInternal
+                                            ? "text-indigo-600"
+                                            : "text-slate-500",
+                                        )}
+                                      >
+                                        <KindIcon className="h-2.5 w-2.5" />
+                                        <span>{kindLabel}</span>
+                                      </div>
+                                    </div>
                                   </div>
 
-                                  <div className="flex flex-col min-w-0 max-w-[110px]">
-                                    <span className="text-sm font-bold text-slate-900 truncate leading-tight">
-                                      {displayCategory}
-                                    </span>
-                                    <div
-                                      className={cn(
-                                        "flex items-center gap-1 text-[10px] font-black uppercase tracking-widest leading-none mt-0.5",
-                                        isInternal
-                                          ? "text-indigo-600"
-                                          : "text-slate-500",
-                                      )}
-                                    >
-                                      <KindIcon className="h-2.5 w-2.5" />
-                                      <span>{kindLabel}</span>
-                                    </div>
+                                  <div className="ml-2 shrink-0 border-l border-slate-200 pl-2">
+                                    {renderRowActions(txn, isVoided)}
                                   </div>
                                 </div>
                               </CustomTooltip>
@@ -5698,7 +5719,11 @@ export const UnifiedTransactionTable = React.forwardRef<
                           key={txn.id}
                           className={cn(
                             "border-b border-slate-200 transition-colors text-base relative",
-                            isMenuOpen ? "bg-blue-50" : rowBgColor,
+                            isMenuOpen
+                              ? "bg-blue-50"
+                              : isQueueHighlighted
+                                ? "bg-yellow-100 ring-1 ring-yellow-300"
+                                : rowBgColor,
                             !isExcelMode && "hover:bg-slate-50/50",
                             (updatingTxnIds.has(txn.id) ||
                               loadingIds?.has(txn.id)) &&
@@ -5733,7 +5758,6 @@ export const UnifiedTransactionTable = React.forwardRef<
                                   (col.key === "amount" ||
                                     col.key === "final_price") && "text-right",
                                   col.key === "account" && "pr-1",
-                                  col.key === "actions" && "px-1",
                                   col.key === "date" && "p-1",
                                   col.key === "date" &&
                                     "relative overflow-visible",
