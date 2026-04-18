@@ -131,11 +131,9 @@ import { resolveCashbackPolicy } from "@/services/cashback/policy-resolver";
 
 import { ConfirmRefundDialogV2 } from "./confirm-refund-dialog-v2";
 
-import { RequestRefundDialog } from "./request-refund-dialog";
 import { ReturnRefundSlide } from "./return-refund-slide";
 import { TransactionHistoryModal } from "./transaction-history-modal";
 
-import { cancelOrder } from "@/actions/transaction-actions";
 import { TransactionSlideV2 } from "@/components/transaction/slide-v2/transaction-slide-v2";
 import { ExcelStatusBar } from "@/components/ui/excel-status-bar";
 import { ColumnKey } from "@/components/app/table/transactionColumns";
@@ -287,7 +285,6 @@ export const UnifiedTransactionTable = React.forwardRef<
     const [isRefundOpen, setIsRefundOpen] = useState(false);
     const [refundTarget, setRefundTarget] =
       useState<TransactionWithDetails | null>(null);
-    const [refundType, setRefundType] = useState<"refund" | "cancel">("refund");
 
     // Confirm Refund Dialog State
     const [confirmRefundOpen, setConfirmRefundOpen] = useState(false);
@@ -2427,25 +2424,14 @@ export const UnifiedTransactionTable = React.forwardRef<
       variant: "popover" | "sheet",
     ) => {
       const isSheet = variant === "sheet";
-      const isPendingRefund = txn.account_id === REFUND_PENDING_ACCOUNT_ID;
-      const hasRefundRequest =
-        (txn.metadata as any)?.has_refund_request ||
-        (txn.metadata as any)?.refund_request_id;
-      const resolvedCategory = txn.category_id
-        ? categories.find((category) => category.id === txn.category_id)
-        : null;
-      const categoryName = String(
-        txn.category_name || resolvedCategory?.name || "",
-      ).toLowerCase();
-      const hasShoppingSignal =
-        Boolean(txn.shop_id) ||
-        categoryName.includes("shopping") ||
-        categoryName.includes("mua s") ||
-        categoryName.includes("shop");
-      const canShowCancelActions =
-        !isPendingRefund &&
-        (txn.type === "expense" || txn.type === "debt") &&
-        hasShoppingSignal;
+      const metadata =
+        txn.metadata && typeof txn.metadata === "object" ? txn.metadata : null;
+      const canShowRefundFlow =
+        txn.status !== "void" &&
+        txn.status !== "voided" &&
+        (metadata as Record<string, unknown> | null)?.refund_stage_tag !== "GD2" &&
+        (metadata as Record<string, unknown> | null)?.is_refund_confirmation !== true &&
+        (txn.type === "expense" || txn.type === "debt");
       const baseItemClass = isSheet
         ? "flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700"
         : "flex w-full items-center gap-2 rounded px-3 py-1 text-left hover:bg-slate-50";
@@ -2519,21 +2505,18 @@ export const UnifiedTransactionTable = React.forwardRef<
             <span>Void</span>
           </button>
 
-          {/* Refund & Cancel Actions - Restored */}
-          {canShowCancelActions && (
+          {canShowRefundFlow && (
             <button
-              className={`${neutralItemClass} ${hasRefundRequest ? "opacity-50 cursor-not-allowed" : ""}`}
-              disabled={!!hasRefundRequest}
+              className={neutralItemClass}
               onClick={(event) => {
                 event.stopPropagation();
                 setRefundTarget(txn);
+                setIsRefundOpen(true);
                 setActionMenuOpen(null);
               }}
             >
               <RotateCcw className="h-4 w-4" />
-              <span>
-                {hasRefundRequest ? "Refund Requested" : "Hoàn / Hủy đơn"}
-              </span>
+              <span>Refund Flow</span>
             </button>
           )}
           {divider}
@@ -6298,9 +6281,8 @@ export const UnifiedTransactionTable = React.forwardRef<
             <ReturnRefundSlide
               open={isRefundOpen}
               onOpenChange={setIsRefundOpen}
-              transactionId={refundTarget.id}
-              transactionAmount={Math.abs(refundTarget.amount)}
-              originalAccountId={refundTarget.account_id}
+              transaction={refundTarget}
+              accounts={accounts}
             />
           )}
 

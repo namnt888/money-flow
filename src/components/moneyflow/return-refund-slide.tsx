@@ -1,275 +1,286 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AmountInput } from '@/components/ui/amount-input'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Combobox, ComboboxItem } from '@/components/ui/combobox'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select-shadcn'
-import { cancelOrder, requestRefund, instantRefund } from '@/actions/transaction-actions'
+import {
+    cancelOrder,
+    instantRefund,
+    requestRefund,
+    updateTransactionMetadata,
+} from '@/actions/transaction-actions'
 import { toast } from 'sonner'
-import { useQuery } from '@tanstack/react-query'
+import { Account, TransactionWithDetails } from '@/types/moneyflow.types'
 
 interface ReturnRefundSlideProps {
-    transactionId: string
-    transactionAmount: number
-    originalAccountId: string
+    transaction: TransactionWithDetails
+    accounts: Account[]
     open: boolean
     onOpenChange: (open: boolean) => void
 }
 
-interface Account {
-    id: string
-    name: string
-    type: string
-}
-
 export function ReturnRefundSlide({
-    transactionId,
-    transactionAmount,
-    originalAccountId,
+    transaction,
+    accounts,
     open,
     onOpenChange,
 }: ReturnRefundSlideProps) {
-    const [activeTab, setActiveTab] = useState('cancel-100')
+    const transactionAmount = Math.abs(Number(transaction.amount || 0))
+    const originalAccountId = transaction.account_id || ''
+    const transactionMeta =
+        transaction.metadata && typeof transaction.metadata === 'object'
+            ? (transaction.metadata as Record<string, unknown>)
+            : null
+    const refundStatus = String(transactionMeta?.refund_status || '')
+    const isWaitingRefundLocked =
+        refundStatus === 'requested' || refundStatus === 'request_voided'
+
+    const [activeTab, setActiveTab] = useState('waiting-refund')
     const [amount, setAmount] = useState(transactionAmount)
     const [selectedAccountId, setSelectedAccountId] = useState(originalAccountId)
-    const [refundDestination, setRefundDestination] = useState<'original' | 'other'>('original')
     const [isLoading, setIsLoading] = useState(false)
 
-    // Fetch accounts for the "other account" picker
-    const { data: accounts = [] } = useQuery<Account[]>({
-        queryKey: ['accounts'],
-        queryFn: async () => {
-            const { getAccountsAction } = await import('@/actions/transaction-actions')
-            return await getAccountsAction()
-        },
-    })
+    const accountItems = useMemo<ComboboxItem[]>(() => {
+        return accounts.map((account) => ({
+            value: account.id,
+            label: account.name,
+            description: account.type,
+            searchValue: `${account.name} ${account.type}`,
+            icon: account.image_url ? (
+                <div className="relative h-5 w-5 overflow-hidden rounded-sm bg-slate-100">
+                    <Image src={account.image_url} alt={account.name} fill className="object-cover" />
+                </div>
+            ) : (
+                <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-slate-100 text-[10px] font-bold text-slate-500">
+                    {account.name.slice(0, 1).toUpperCase()}
+                </div>
+            ),
+        }))
+    }, [accounts])
 
     useEffect(() => {
-        if (open) {
-            setAmount(transactionAmount)
-            setSelectedAccountId(originalAccountId)
-            setRefundDestination('original')
-            setActiveTab('cancel-100')
-        }
+        if (!open) return
+        setActiveTab('waiting-refund')
+        setAmount(transactionAmount)
+        setSelectedAccountId(originalAccountId)
     }, [open, transactionAmount, originalAccountId])
 
-    const handleCancel100 = async () => {
-        setIsLoading(true)
-        const result = await cancelOrder(transactionId)
-        setIsLoading(false)
-
-        if (result.success) {
-            toast.success('Hủy đơn 100% thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể hủy đơn')
+    useEffect(() => {
+        if (activeTab === 'waiting-refund') {
+            setAmount(transactionAmount)
         }
-    }
-
-    const handlePartialRefund = async () => {
-        if (amount <= 0 || amount > transactionAmount) {
-            toast.error('Số tiền phải lớn hơn 0 và không vượt quá số tiền gốc')
-            return
-        }
-
-        setIsLoading(true)
-        const result = await requestRefund(transactionId, amount, true)
-        setIsLoading(false)
-
-        if (result.success) {
-            toast.success('Yêu cầu hoàn tiền một phần thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể yêu cầu hoàn tiền')
-        }
-    }
-
-    const handleInstantRefund = async () => {
-        if (amount <= 0 || amount > transactionAmount) {
-            toast.error('Số tiền phải lớn hơn 0 và không vượt quá số tiền gốc')
-            return
-        }
-
-        const targetAccountId = refundDestination === 'original' ? originalAccountId : selectedAccountId
-        if (!targetAccountId) {
-            toast.error('Vui lòng chọn tài khoản hoàn tiền')
-            return
-        }
-
-        setIsLoading(true)
-        const result = await instantRefund(transactionId, amount, targetAccountId)
-        setIsLoading(false)
-
-        if (result.success) {
-            toast.success('Hoàn tiền ngay thành công')
-            onOpenChange(false)
-        } else {
-            toast.error(result.error || 'Không thể hoàn tiền ngay')
-        }
-    }
+    }, [activeTab, transactionAmount])
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(value)
+    }
+
+    const persistTargetAccountMetadata = async () => {
+        if (!originalAccountId || !selectedAccountId || selectedAccountId === originalAccountId) {
+            return
+        }
+
+        await updateTransactionMetadata(transaction.id, {
+            target_account_id: selectedAccountId,
+            target_account_changed_from: originalAccountId,
+        })
+    }
+
+    const handleWaitingRefund = async () => {
+        if (isWaitingRefundLocked) return
+
+        setIsLoading(true)
+        try {
+            await persistTargetAccountMetadata()
+            const result = await cancelOrder(transaction.id)
+
+            if (result.success) {
+                toast.success('Waiting refund request created')
+                onOpenChange(false)
+            } else {
+                toast.error(result.error || 'Unable to request waiting refund')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleRefunded = async () => {
+        if (amount <= 0 || amount > transactionAmount) {
+            toast.error('Amount must be greater than 0 and not exceed the original amount')
+            return
+        }
+
+        const targetAccountId = selectedAccountId || originalAccountId
+        if (!targetAccountId) {
+            toast.error('Please select a target account')
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            await persistTargetAccountMetadata()
+            const result = await instantRefund(transaction.id, amount, targetAccountId)
+
+            if (result.success) {
+                toast.success('Immediate refund completed')
+                onOpenChange(false)
+            } else {
+                toast.error(result.error || 'Unable to process immediate refund')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleRefundPart = async () => {
+        if (amount <= 0 || amount > transactionAmount) {
+            toast.error('Amount must be greater than 0 and not exceed the original amount')
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            await persistTargetAccountMetadata()
+            const result = await requestRefund(transaction.id, amount, true)
+
+            if (result.success) {
+                toast.success('Partial refund request created')
+                onOpenChange(false)
+            } else {
+                toast.error(result.error || 'Unable to request partial refund')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const renderTargetAccountPicker = () => {
+        return (
+            <div className="space-y-2">
+                <Label className="text-sm font-medium">Target Account</Label>
+                <Combobox
+                    items={accountItems}
+                    value={selectedAccountId || undefined}
+                    onValueChange={(value) => setSelectedAccountId(value || '')}
+                    placeholder="Select target account"
+                    inputPlaceholder="Search account..."
+                    emptyState="No account found"
+                    onAddNew={() => window.open('/accounts/new', '_blank', 'noopener,noreferrer')}
+                    addLabel="Account"
+                    className="h-11"
+                    hideClearButton
+                />
+                <p className="text-xs text-slate-500">
+                    Default target account is the original account.
+                </p>
+            </div>
+        )
     }
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent side="bottom" className="h-[85vh] max-h-[85vh] overflow-y-auto">
                 <SheetHeader className="mb-4">
-                    <SheetTitle className="text-lg">Hoàn / Hủy đơn</SheetTitle>
+                    <SheetTitle className="text-lg">Refund Flow</SheetTitle>
                 </SheetHeader>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid grid-cols-3 mb-6">
-                        <TabsTrigger value="cancel-100">Hủy đơn 100%</TabsTrigger>
-                        <TabsTrigger value="partial">Hủy một phần</TabsTrigger>
-                        <TabsTrigger value="instant">Hoàn ngay</TabsTrigger>
+                    <TabsList className="mb-6 grid grid-cols-3">
+                        <TabsTrigger value="waiting-refund">Waiting Refund</TabsTrigger>
+                        <TabsTrigger value="refunded">Refunded</TabsTrigger>
+                        <TabsTrigger value="refund-part">Refund a Part</TabsTrigger>
                     </TabsList>
 
-                    {/* Tab 1: Hủy đơn 100% */}
-                    <TabsContent value="cancel-100" className="space-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <Label className="text-sm font-medium">Số tiền</Label>
-                                <AmountInput
-                                    value={amount}
-                                    onChange={setAmount}
-                                    disabled={true}
-                                    hint="Để hủy một phần, chuyển sang tab 'Hủy một phần' bên dưới."
-                                    max={transactionAmount}
-                                />
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Số tiền gốc: <span className="font-semibold">{formatCurrency(transactionAmount)}</span>
-                                </p>
-                            </div>
-
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                <p className="text-sm text-amber-800">
-                                    <strong>Lưu ý:</strong> Hủy đơn 100% sẽ tạo giao dịch hoàn tiền chờ xác nhận (GD2). Bạn cần xác nhận hoàn tiền sau đó.
-                                </p>
-                            </div>
-
-                            <Button
-                                onClick={handleCancel100}
-                                disabled={isLoading}
-                                className="w-full"
-                            >
-                                {isLoading ? 'Đang xử lý...' : 'Xác nhận hủy đơn 100%'}
-                            </Button>
+                    <TabsContent value="waiting-refund" className="space-y-5">
+                        <div>
+                            <Label className="text-sm font-medium">Amount</Label>
+                            <AmountInput
+                                value={transactionAmount}
+                                onChange={setAmount}
+                                disabled
+                                max={transactionAmount}
+                            />
+                            <p className="mt-2 text-xs text-amber-700">
+                                To refund a partial amount, go to Refund a Part tab
+                            </p>
                         </div>
+
+                        {renderTargetAccountPicker()}
+
+                        {isWaitingRefundLocked && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                Waiting Refund is currently locked for this transaction (status: {refundStatus}).
+                            </div>
+                        )}
+
+                        <Button
+                            onClick={handleWaitingRefund}
+                            disabled={isLoading || isWaitingRefundLocked}
+                            className="w-full"
+                        >
+                            {isLoading ? 'Processing...' : 'Request Waiting Refund'}
+                        </Button>
                     </TabsContent>
 
-                    {/* Tab 2: Hủy một phần */}
-                    <TabsContent value="partial" className="space-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <Label className="text-sm font-medium">Số tiền hoàn</Label>
-                                <AmountInput
-                                    value={amount}
-                                    onChange={setAmount}
-                                    min={1}
-                                    max={transactionAmount}
-                                    step={1000}
-                                />
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Số tiền tối đa: <span className="font-semibold">{formatCurrency(transactionAmount)}</span>
-                                </p>
-                            </div>
-
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <p className="text-sm text-blue-800">
-                                    <strong>Thông tin:</strong> Hủy một phần sẽ tạo giao dịch hoàn tiền chờ xác nhận (GD2) với số tiền bạn chọn.
-                                </p>
-                            </div>
-
-                            <Button
-                                onClick={handlePartialRefund}
-                                disabled={isLoading || amount <= 0 || amount > transactionAmount}
-                                className="w-full"
-                            >
-                                {isLoading ? 'Đang xử lý...' : 'Yêu cầu hoàn tiền một phần'}
-                            </Button>
+                    <TabsContent value="refunded" className="space-y-5">
+                        <div>
+                            <Label className="text-sm font-medium">Amount</Label>
+                            <AmountInput
+                                value={amount}
+                                onChange={setAmount}
+                                min={1}
+                                max={transactionAmount}
+                                step={1000}
+                            />
+                            <p className="mt-2 text-xs text-slate-500">
+                                Maximum: <span className="font-semibold">{formatCurrency(transactionAmount)}</span>
+                            </p>
                         </div>
+
+                        {renderTargetAccountPicker()}
+
+                        <Button
+                            onClick={handleRefunded}
+                            disabled={isLoading || amount <= 0 || amount > transactionAmount}
+                            className="w-full"
+                        >
+                            {isLoading ? 'Processing...' : 'Confirm Refunded'}
+                        </Button>
                     </TabsContent>
 
-                    {/* Tab 3: Hoàn ngay */}
-                    <TabsContent value="instant" className="space-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <Label className="text-sm font-medium">Số tiền hoàn</Label>
-                                <AmountInput
-                                    value={amount}
-                                    onChange={setAmount}
-                                    min={1}
-                                    max={transactionAmount}
-                                    step={1000}
-                                />
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Số tiền tối đa: <span className="font-semibold">{formatCurrency(transactionAmount)}</span>
-                                </p>
-                            </div>
-
-                            <div>
-                                <Label className="text-sm font-medium mb-3 block">Đích đến hoàn tiền</Label>
-                                <RadioGroup
-                                    value={refundDestination}
-                                    onValueChange={(value: string) => setRefundDestination(value as 'original' | 'other')}
-                                    className="space-y-3"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="original" id="original" />
-                                        <Label htmlFor="original" className="text-sm">
-                                            Hoàn về tài khoản gốc
-                                        </Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="other" id="other" />
-                                        <Label htmlFor="other" className="text-sm">
-                                            Hoàn về tài khoản khác
-                                        </Label>
-                                    </div>
-                                </RadioGroup>
-                            </div>
-
-                            {refundDestination === 'other' && (
-                                <div>
-                                    <Label className="text-sm font-medium">Chọn tài khoản</Label>
-                                    <Select
-                                        value={selectedAccountId}
-                                        onValueChange={(val) => val !== undefined && setSelectedAccountId(val)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Chọn tài khoản..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {accounts.map((account: Account) => (
-                                                <SelectItem key={account.id} value={account.id}>
-                                                    {account.name} ({account.type})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <p className="text-sm text-green-800">
-                                    <strong>Hoàn ngay:</strong> Giao dịch hoàn tiền sẽ được hoàn tất ngay lập tức, không tạo GD2 chờ xác nhận.
-                                </p>
-                            </div>
-
-                            <Button
-                                onClick={handleInstantRefund}
-                                disabled={isLoading || amount <= 0 || amount > transactionAmount}
-                                className="w-full"
-                            >
-                                {isLoading ? 'Đang xử lý...' : 'Hoàn tiền ngay'}
-                            </Button>
+                    <TabsContent value="refund-part" className="space-y-5">
+                        <div>
+                            <Label className="text-sm font-medium">Amount</Label>
+                            <AmountInput
+                                value={amount}
+                                onChange={setAmount}
+                                min={1}
+                                max={transactionAmount}
+                                step={1000}
+                            />
+                            <p className="mt-2 text-xs text-slate-500">
+                                Maximum: <span className="font-semibold">{formatCurrency(transactionAmount)}</span>
+                            </p>
                         </div>
+
+                        {renderTargetAccountPicker()}
+
+                        <Button
+                            onClick={handleRefundPart}
+                            disabled={isLoading || amount <= 0 || amount > transactionAmount}
+                            className="w-full"
+                        >
+                            {isLoading ? 'Processing...' : 'Request Partial Refund'}
+                        </Button>
                     </TabsContent>
                 </Tabs>
             </SheetContent>
