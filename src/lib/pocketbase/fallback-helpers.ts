@@ -34,23 +34,45 @@ export function isPocketBaseAuthError(error: unknown): boolean {
  */
 export async function executeWithFallback<T>(
   pbQuery: () => Promise<T>,
-  _sbQuery: () => Promise<T>,
-  context: string
+  fallbackQuery: () => Promise<T>,
+  context: string,
+  options?: {
+    quietRecoverable?: boolean
+    expectedStatuses?: number[]
+  }
 ): Promise<T> {
   try {
-    const result = await pbQuery()
-    return result
+    return await pbQuery()
   } catch (error) {
-    if (isPocketBase400Or404(error)) {
-      const status = (error as any)?.status || '?';
-      console.warn(`[source:PB] ${context} failed (${status}): ${(error as any)?.message || String(error)}`)
-      // Supabase fallback disabled - Project migrated to PocketBase
-      // console.log(`[source:SB] ${context} - fallback skipped`)
-      throw error
+    const status = (error as any)?.status
+    const expectedStatusSet = new Set(options?.expectedStatuses ?? [400, 404])
+    const isRecoverable = isPocketBase400Or404(error) || (typeof status === 'number' && expectedStatusSet.has(status))
+
+    if (isRecoverable) {
+      if (!options?.quietRecoverable) {
+        console.debug(`[source:PB] ${context} recoverable (${status || '?'})`)
+      }
+      return await fallbackQuery()
     }
-    // Rethrow auth errors and other non-recoverable errors
-    console.error(`[source:PB] ${context} - error`, error)
-    throw error
+
+    console.error(`[source:PB] ${context} - error`, {
+      status,
+      message: (error as any)?.message || String(error),
+      error,
+    })
+    return await fallbackQuery()
+  }
+}
+
+export async function executeSafely<T>(
+  query: () => Promise<T>,
+  fallbackValue: T,
+  _context: string,
+): Promise<T> {
+  try {
+    return await query()
+  } catch {
+    return fallbackValue
   }
 }
 

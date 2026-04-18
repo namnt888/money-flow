@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { X, Plus, Trash2, Loader2 } from 'lucide-react'
 import { updateSplitBillAction } from '@/actions/transaction-actions'
 import { Person } from '@/types/moneyflow.types'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 export type EditSplitBillParticipant = {
     personId: string
@@ -140,14 +141,15 @@ export function EditSplitBillDialog({
         }
     }
 
-    if (!isOpen) return null
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-900">Edit Split Bill</h3>
+        <Sheet open={isOpen} onOpenChange={(open) => {
+            if (!open) onClose()
+        }}>
+            <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-2xl">
+                <SheetHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-200 px-4 py-4">
+                    <div className="min-w-0">
+                        <SheetTitle className="text-lg font-semibold text-slate-900">Edit Split Bill</SheetTitle>
+                    </div>
                     <button
                         type="button"
                         onClick={onClose}
@@ -155,11 +157,9 @@ export function EditSplitBillDialog({
                     >
                         <X className="h-5 w-5" />
                     </button>
-                </div>
+                </SheetHeader>
 
-                {/* Content */}
                 <div className="p-4 space-y-4 overflow-y-auto flex-1">
-                    {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                             Title
@@ -173,7 +173,6 @@ export function EditSplitBillDialog({
                         />
                     </div>
 
-                    {/* Note */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                             Note (Optional)
@@ -187,7 +186,6 @@ export function EditSplitBillDialog({
                         />
                     </div>
 
-                    {/* QR Image URL */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                             QR Image URL (Optional)
@@ -201,7 +199,6 @@ export function EditSplitBillDialog({
                         />
                     </div>
 
-                    {/* Participants */}
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="block text-sm font-medium text-slate-700">
@@ -271,7 +268,6 @@ export function EditSplitBillDialog({
                         </div>
                     </div>
 
-                    {/* Summary */}
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-md space-y-1">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-slate-600">Total:</span>
@@ -302,7 +298,6 @@ export function EditSplitBillDialog({
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="p-4 border-t border-slate-200 flex items-center justify-end gap-2">
                     <button
                         type="button"
@@ -322,7 +317,7 @@ export function EditSplitBillDialog({
                         {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
-            </div>
-        </div>
+            </SheetContent>
+        </Sheet>
     )
 }

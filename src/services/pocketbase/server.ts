@@ -13,6 +13,26 @@ type PocketBaseListResponse<T> = {
   items: T[]
 }
 
+type PocketBaseRequestOptions = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  params?: Record<string, string | number | boolean | undefined>
+  body?: unknown
+  silent?: boolean
+}
+
+type PocketBaseErrorDetails = {
+  status?: number
+  message?: string
+  data?: unknown
+  method: string
+  path: string
+  url: string
+  collection?: string
+  query?: string
+}
+
+type JsonRecord = Record<string, unknown>
+
 const POCKETBASE_URL = (process.env.POCKETBASE_URL || 'https://api-db.reiwarden.io.vn').replace(/\/+$/, '')
 const POCKETBASE_EMAIL = (process.env.POCKETBASE_DB_EMAIL || '').trim()
 const POCKETBASE_PASSWORD = (process.env.POCKETBASE_DB_PASSWORD || '').trim()
@@ -100,7 +120,7 @@ async function getAuthToken(): Promise<string> {
           throw new Error(lastError as string)
         }
       } catch (err) {
-        if ((err as any)?.name === 'AbortError') throw err
+        if (err instanceof Error && err.name === 'AbortError') throw err
         lastError = err
       }
     }
@@ -122,22 +142,32 @@ function buildQuery(params?: Record<string, string | number | boolean | undefine
   return query ? `?${query}` : ''
 }
 
-export async function pocketbaseRequest<T>(
-  path: string,
-  options?: {
-    method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
-    params?: Record<string, string | number | boolean | undefined>
-    body?: unknown
-    silent?: boolean
-  },
-): Promise<T> {
+function getCollectionFromPath(path: string): string | null {
+  const match = path.match(/\/api\/collections\/([^/?#]+)/)
+  return match?.[1] ?? null
+}
+
+function safeParseJson(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function isJsonRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null
+}
+
+export async function pocketbaseRequest<T>(path: string, options?: PocketBaseRequestOptions): Promise<T> {
   const token = await getAuthToken()
   const query = buildQuery(options?.params)
-  // Ensure we don't have double slashes if path starts with /
   const normalizedPath = normalizeRequestPath(path)
   const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
   const url = `${POCKETBASE_URL}${cleanPath}${query}`
   const method = options?.method || 'GET'
+  const collection = getCollectionFromPath(cleanPath)
+
   if (method !== 'GET') {
     console.log(`[DB:PB] ${method} ${url}`)
     if (options?.body) {
@@ -150,22 +180,37 @@ export async function pocketbaseRequest<T>(
 
   try {
     const response = await fetch(url, {
-      method: options?.method || 'GET',
+      method,
       headers: {
         Authorization: token,
         'Content-Type': 'application/json',
       },
-      body: typeof options?.body === 'undefined' ? undefined : JSON.stringify(options.body),
+      body: method === 'GET' || typeof options?.body === 'undefined' ? undefined : JSON.stringify(options.body),
       cache: 'no-store',
       signal: controller.signal,
     })
 
     if (!response.ok) {
       const text = await response.text()
-      if (!options?.silent) {
-        console.error(`[DB:PB] Request FAILED [${response.status}] ${path}:`, text)
+      const parsedError = safeParseJson(text)
+      const errorDetails: PocketBaseErrorDetails = {
+        status: response.status,
+        message: isJsonRecord(parsedError) && typeof parsedError.message !== 'undefined'
+          ? String(parsedError.message)
+          : text,
+        data: parsedError ?? text,
+        method,
+        path: cleanPath,
+        url,
+        collection: collection ?? undefined,
+        query: query || undefined,
       }
-      throw new Error(`PocketBase request failed [${response.status}] ${path}: ${text}`)
+
+      if (!options?.silent) {
+        console.error('[DB:PB] Request failed', errorDetails)
+      }
+
+      throw new Error(`PocketBase request failed [${response.status}] ${cleanPath}`)
     }
 
     if (response.status === 204) {
@@ -181,11 +226,13 @@ export async function pocketbaseRequest<T>(
 export async function pocketbaseList<T>(
   collection: string,
   params?: Record<string, string | number | boolean | undefined>,
+  silent?: boolean,
 ): Promise<PocketBaseListResponse<T>> {
   const normalizedCollection = normalizeCollectionName(collection)
   return pocketbaseRequest<PocketBaseListResponse<T>>(`/api/collections/${normalizedCollection}/records`, {
     method: 'GET',
     params,
+    silent,
   })
 }
 

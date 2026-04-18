@@ -23,6 +23,7 @@ interface SmartAmountInputProps {
     hideClearButton?: boolean
     /** Allow decimal values (e.g. for % rates like 1.5%). Skips Math.round on change & blur. */
     allowDecimal?: boolean
+    onFocus?: () => void
 }
 
 export function SmartAmountInput({
@@ -40,6 +41,7 @@ export function SmartAmountInput({
     compact,
     hideClearButton,
     allowDecimal = false,
+    onFocus,
 }: SmartAmountInputProps) {
     const [inputValue, setInputValue] = React.useState('')
     const [isFocused, setIsFocused] = React.useState(false)
@@ -262,7 +264,10 @@ export function SmartAmountInput({
                     onChange={handleChange}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    onFocus={() => setIsFocused(true)}
+                    onFocus={() => {
+                        setIsFocused(true);
+                        onFocus?.();
+                    }}
                     disabled={disabled}
                     placeholder={placeholder}
                     className={cn(

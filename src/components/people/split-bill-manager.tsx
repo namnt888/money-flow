@@ -22,96 +22,110 @@ export function SplitBillManager({ transactions, personId, people, accounts, cat
         const personNameById = new Map(people.map(person => [person.id, person.name]))
         const ownerPersonId = people.find(person => person.is_owner)?.id ?? null
 
-        const baseTransactions = new Map<string, Transaction>()
-        transactions.forEach((transaction) => {
-            const meta = transaction.metadata as any
-            if (meta?.is_split_bill_base) {
-                baseTransactions.set(transaction.id, transaction)
-            }
-        })
-
-        const parseSplitHeader = (note: string) => {
-            const headerMatch = note.match(/^\[(SplitBill|SplitRepay)(?:\sBase)?\]\s*(.+?)(?:\s\|\s|$)/)
-            if (!headerMatch) return null
-            const prefix = headerMatch[1] as 'SplitBill' | 'SplitRepay'
-            const parsedGroupName = headerMatch[2]?.trim() || 'Group'
-            const noteParts = note.split(' | ')
-            const title = noteParts[1]?.trim() || 'Split Bill'
-            const remainder = noteParts.slice(2).join(' | ').trim()
-            return { prefix, groupName: parsedGroupName, title, remainder }
-        }
-
         const grouped = new Map<string, SplitBillGroup>()
 
+        const buildParticipants = (transaction: Transaction) => {
+            const meta = transaction.metadata as any
+            const splitBill = meta?.split_bill
+            const rawParticipants = Array.isArray(splitBill?.participants) ? splitBill.participants : []
+
+            if (rawParticipants.length > 0) {
+                return rawParticipants.map((participant: any) => ({
+                    personId: participant.person_id,
+                    name: personNameById.get(participant.person_id) ?? participant.note ?? 'Unknown',
+                    amount: Math.abs(Number(participant.final_amount ?? participant.base_amount ?? 0)),
+                    note: participant.note || undefined,
+                    cashbackFixed: Number(participant.cashback_back_amount || 0) || undefined,
+                    cashbackPercent: undefined,
+                }))
+            }
+
+            if (transaction.person_id) {
+                return [{
+                    personId: transaction.person_id,
+                    name: personNameById.get(transaction.person_id) ?? 'Unknown',
+                    amount: Math.abs(Number(transaction.amount ?? 0)),
+                    note: transaction.note || undefined,
+                }]
+            }
+
+            return []
+        }
+
         transactions.forEach((transaction) => {
             const meta = transaction.metadata as any
-            if (meta?.is_split_bill_base) return
-            const note = transaction.note ?? ''
-            const header = parseSplitHeader(note)
-            if (!header) return
+            const splitBill = meta?.split_bill
+            const isSplitTransaction = Boolean(
+                splitBill ||
+                meta?.is_split_bill_base ||
+                meta?.is_split_share ||
+                meta?.split_group_id ||
+                meta?.split_parent_id ||
+                transaction.parent_transaction_id
+            )
 
-            const baseTransactionId = meta?.split_parent_id ?? null
-            const baseTransaction = baseTransactionId ? baseTransactions.get(baseTransactionId) : null
-            const baseMeta = (baseTransaction?.metadata as any) ?? null
-            const baseHeader = baseTransaction?.note
-                ? parseSplitHeader(baseTransaction.note ?? '')
-                : null
+            if (!isSplitTransaction) return
+
+            const groupKey = String(
+                meta?.split_group_id ||
+                meta?.split_parent_id ||
+                transaction.parent_transaction_id ||
+                transaction.id
+            )
+
+            const resolvedPrefix = transaction.type === 'repayment' || meta?.is_debt_repayment_parent
+                ? 'SplitRepay'
+                : 'SplitBill'
+
+            const resolvedTitle =
+                splitBill?.note_summary ||
+                splitBill?.me_note ||
+                transaction.note ||
+                transaction.description ||
+                'Split Bill'
 
             const resolvedGroupName =
-                (meta?.split_group_name as string | undefined) ??
-                (baseMeta?.split_group_name as string | undefined) ??
-                baseHeader?.groupName ??
-                header.groupName ??
-                'Group'
+                splitBill?.group_name ||
+                splitBill?.note_summary ||
+                groupName ||
+                'Split'
             if (isGroupProfile && groupName && resolvedGroupName !== groupName) {
                 return
             }
 
-            const title = baseHeader?.title ?? header.title
-            const baseNote = baseHeader?.title ?? header.title
-            const key = baseTransactionId ?? `${header.prefix}:${resolvedGroupName}:${title}`
+            const participants = buildParticipants(transaction)
+            const existing = grouped.get(groupKey)
+            const baseTransactionId = meta?.split_parent_id || transaction.parent_transaction_id || transaction.id
+            const baseNote = splitBill?.me_note || transaction.note || transaction.description || resolvedTitle
+            const qrImageUrl = meta?.split_qr_image_url || splitBill?.qr_image_url || null
 
-            const personId = transaction.person_id ?? ''
-            if (!personId) return
-
-            const participantName = personNameById.get(personId) ?? 'Unknown'
-            const participant = {
-                personId,
-                name: participantName,
-                amount: Math.abs(Number(transaction.amount ?? 0)),
-                note: header.remainder || undefined,
-                cashbackFixed: transaction.cashback_share_fixed ?? undefined,
-                cashbackPercent: transaction.cashback_share_percent ?? undefined,
-            }
-
-            const existing = grouped.get(key)
             if (existing) {
-                existing.participants.push(participant)
-                if (baseTransaction?.occurred_at) {
-                    existing.occurredAt = baseTransaction.occurred_at
-                } else if (transaction.occurred_at > existing.occurredAt) {
-                    existing.occurredAt = transaction.occurred_at
-                }
+                const seenParticipants = new Set(existing.participants.map((participant) => participant.personId))
+                participants.forEach((participant) => {
+                    if (!seenParticipants.has(participant.personId)) {
+                        existing.participants.push(participant)
+                    }
+                })
                 if (!existing.baseTransactionId && baseTransactionId) {
                     existing.baseTransactionId = baseTransactionId
                 }
                 if (!existing.baseNote && baseNote) {
                     existing.baseNote = baseNote
                 }
-                if (!existing.qrImageUrl && baseMeta?.split_qr_image_url) {
-                    existing.qrImageUrl = baseMeta.split_qr_image_url
+                if (!existing.qrImageUrl && qrImageUrl) {
+                    existing.qrImageUrl = qrImageUrl
                 }
             } else {
-                grouped.set(key, {
-                    id: key,
-                    prefix: header.prefix,
+                grouped.set(groupKey, {
+                    id: groupKey,
+                    prefix: resolvedPrefix,
                     groupName: resolvedGroupName,
-                    title,
-                    occurredAt: baseTransaction?.occurred_at ?? transaction.occurred_at,
-                    participants: [participant],
+                    title: resolvedTitle,
+                    occurredAt: transaction.occurred_at,
+                    participants,
                     baseTransactionId,
                     baseNote,
-                    qrImageUrl: baseMeta?.split_qr_image_url ?? null,
+                    qrImageUrl,
                 })
             }
         })
@@ -128,8 +142,8 @@ export function SplitBillManager({ transactions, personId, people, accounts, cat
         return (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
                 <FileText className="h-10 w-10 mb-3 opacity-50" />
-                <p className="text-sm font-medium">No split bills found</p>
-                <p className="text-xs">Create a split bill or split repayment to see it here.</p>
+                <p className="text-sm font-medium">No split bill transactions found</p>
+                <p className="text-xs">Split-created transactions will appear here automatically.</p>
             </div>
         )
     }

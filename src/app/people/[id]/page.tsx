@@ -4,7 +4,7 @@ import {
   getPocketBaseCategories,
   getPocketBaseShops,
 } from '@/services/pocketbase/account-details.service'
-import { getPocketBasePeople, getPocketBasePersonDetails, resolvePocketBasePersonRecord } from '@/services/pocketbase/people.service'
+import { getPocketBasePeople, getPocketBasePersonSummary, resolvePocketBasePersonRecord, getPersonForMetadata } from '@/services/pocketbase/people.service'
 import { getDebtByTags } from '@/services/debt.service'
 import { getUnifiedTransactions, getTransactionsByPeople } from '@/services/transaction.service'
 import { getPersonCycleSheets } from '@/services/person-cycle-sheet.service'
@@ -16,6 +16,7 @@ import { Metadata } from 'next'
 
 import { Suspense } from 'react'
 import Loading from './loading'
+import { AutoRefresh } from './AutoRefresh'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,13 +32,9 @@ export async function generateMetadata({
   const { id } = await params
   if (id === 'details') return { title: 'Redirecting...' }
   const { tab } = await searchParams
-  const person = await getPersonWithSubs(id)
+  const person = await getPersonForMetadata(id)
 
   if (!person) return { title: 'Person Not Found' }
-
-  let tabName = 'Transactions'
-  if (tab === 'history') tabName = 'History'
-  if (tab === 'split-bill') tabName = 'Split Bill'
 
   const icons: Metadata['icons'] = person.image_url ? {
     icon: person.image_url,
@@ -48,8 +45,14 @@ export async function generateMetadata({
     apple: '/icon.svg?v=6',
   }
 
+  const titleSuffix = tab === 'history'
+    ? 'History'
+    : tab === 'split-bill'
+      ? 'Split Bill'
+      : 'Transactions'
+
   return {
-    title: person.name,
+    title: `${person.name} · ${titleSuffix}`,
     icons,
   }
 }
@@ -90,6 +93,7 @@ export default async function PeopleDetailPage({
 
   return (
     <Suspense key={key} fallback={<Loading />}>
+      <AutoRefresh />
       <PeopleDetailContent params={params} searchParams={searchParams} />
     </Suspense>
   )
@@ -195,6 +199,7 @@ async function PeopleDetailContent({
 
   return (
     <TagFilterProvider>
+      <AutoRefresh />
       <MemberDetailView
         person={person}
         balance={balance}

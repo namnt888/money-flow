@@ -55,9 +55,12 @@ export function usePersonDetails({
   const getTxnCycleTag = (txn: TransactionWithDetails): string => {
     const metadata = (txn.metadata as any) || {};
     const metadataDebtCycle = metadata.debt_cycle_tag as string | undefined;
+    const metadataPersistedCycle = metadata.persisted_cycle_tag as string | undefined;
     const debtCycle = (txn as any).debt_cycle_tag as string | undefined;
+    const txnTag = txn.tag as string | undefined;
+    const persistedCycle = (txn as any).persisted_cycle_tag as string | undefined;
 
-    const rawTag = debtCycle || metadataDebtCycle || "";
+    const rawTag = debtCycle || metadataDebtCycle || txnTag || persistedCycle || metadataPersistedCycle || "";
     
     const normalized = normalizeMonthTag(rawTag);
     if (normalized && normalized.trim()) {

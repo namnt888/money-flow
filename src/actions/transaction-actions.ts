@@ -1,25 +1,11 @@
 'use server';
 
 import { Json } from '@/types/database.types';
-import { syncTransactionToSheet } from '@/services/sheet.service';
 import { parseMetadata } from '@/lib/transaction-mapper';
 import { normalizeMonthTag } from '@/lib/month-tag';
 import { revalidatePath } from 'next/cache';
 import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds';
 import { CashbackMode } from '@/types/moneyflow.types';
-import {
-  createTransaction as createPBTransaction,
-  updateTransaction as updatePBTransaction,
-  voidTransaction as voidPBTransaction,
-  confirmRefund as confirmPBRefund,
-} from '@/services/transaction.service';
-import {
-  pocketbaseCreate,
-  pocketbaseGetById,
-  pocketbaseList,
-  pocketbaseUpdate,
-  toPocketBaseId,
-} from '@/services/pocketbase/server';
 
 export type CreateTransactionInput = {
   occurred_at: string;
@@ -132,16 +118,65 @@ export async function restoreTransaction(id: string): Promise<boolean> {
               ? originalTxn.metadata
               : {};
 
-          await pocketbaseUpdate('transactions', originalTxnId, {
-            status: originalTxn.status === 'posted' ? 'waiting_refund' : originalTxn.status,
+          // Part 5: Restore GD1 note prefix for idempotent unvoid
+          const voidedPrefix = typeof (originalMeta as Record<string, unknown>)._voided_refund_prefix === 'string'
+            ? (originalMeta as Record<string, unknown>)._voided_refund_prefix
+            : null;
+          
+          const currentNote = String(originalTxn.note || '');
+          const restoredNote = voidedPrefix
+            ? `${voidedPrefix}${currentNote}`
+            : currentNote;
+
+          // Check if this was a full refund (person_id was cleared on GD1)
+          const originalPersonId = (originalMeta as any)?.original_person_id || originalTxn.person_id;
+          const wasFullRefund = !originalTxn.person_id && originalPersonId;
+
+          const updateData: any = {
+            status: 'waiting_refund',
+            note: restoredNote,
             metadata: {
               ...(originalMeta as Record<string, unknown>),
               has_refund_request: true,
               refund_status: 'requested',
               refund_request_id: pbId,
               refund_restored_at: new Date().toISOString(),
+              // Clear the stored prefix
+              _voided_refund_prefix: null,
             },
-          });
+          };
+
+          // Restore person_id if it was cleared (full refund scenario)
+          if (wasFullRefund) {
+            updateData.person_id = originalPersonId;
+          }
+
+          await pocketbaseUpdate('transactions', originalTxnId, updateData);
+
+          // Trigger sheet sync to restore the debt row if person_id was restored
+          if (wasFullRefund && originalPersonId) {
+            try {
+              const { syncTransactionToSheet } = await import('@/services/sheet.service');
+              await syncTransactionToSheet(originalPersonId, {
+                id: originalTxnId,
+                occurred_at: originalTxn.occurred_at || originalTxn.date || null,
+                note: restoredNote,
+                tag: originalTxn.tag || null,
+                debt_cycle_tag: originalTxn.debt_cycle_tag || originalTxn.tag || null,
+                shop_id: originalTxn.shop_id || null,
+                amount: originalTxn.amount || null,
+                original_amount: originalTxn.amount || null,
+                cashback_share_percent: (originalMeta as any)?.cashback_share_percent || null,
+                cashback_share_fixed: (originalMeta as any)?.cashback_share_fixed || null,
+                type: originalTxn.type || null,
+                account_id: originalTxn.account_id || null,
+                target_account_id: originalTxn.to_account_id || null,
+                shop_name: (originalMeta as any)?.shop_name || null,
+              }, 'create');
+            } catch (syncError) {
+              console.warn('[Sheet Sync] restoreTransaction rollback sync failed:', syncError);
+            }
+          }
         }
       } catch (restoreRefundChainError) {
         console.warn('[DB:PB] restoreTransaction refund chain restore skipped:', restoreRefundChainError);
@@ -177,10 +212,11 @@ export async function restoreTransaction(id: string): Promise<boolean> {
 
 export async function confirmRefundAction(
   pendingTransactionId: string,
-  targetAccountId: string
+  targetAccountId: string,
+  personId?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await confirmPBRefund(pendingTransactionId, targetAccountId);
+    const result = await confirmPBRefund(pendingTransactionId, targetAccountId, personId);
     return result;
   } catch (error: any) {
     console.error('Confirm Refund Action Error:', error);
@@ -389,7 +425,7 @@ export async function requestRefund(
   transactionId: string,
   amount: number,
   isPartial: boolean = false
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; pendingRefundId?: string; error?: string; originalTxnId?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
@@ -401,7 +437,7 @@ export async function requestRefund(
         : {};
 
     if (existingMeta.refund_request_id) {
-      return { success: true };
+      return { success: true, pendingRefundId: String(existingMeta.refund_request_id), originalTxnId: pbId };
     }
 
     const refundAmount = Math.max(0, Math.abs(Number(amount || 0)));
@@ -424,6 +460,7 @@ export async function requestRefund(
     const pendingMeta = {
       original_transaction_id: pbId,
       original_account_id: existing.account_id || null,
+      original_person_id: existing.person_id || null,
       original_transaction_type: existing.type || null,
       has_refund_request: true,
       is_refund_confirmation: false,
@@ -448,7 +485,7 @@ export async function requestRefund(
       account_id: pendingRefundAccountId,
       to_account_id: existing.account_id || null,
       category_id: existing.category_id || null,
-      person_id: existing.person_id || null,
+      person_id: null,
       shop_id: existing.shop_id || null,
       tag: existing.tag || null,
       debt_cycle_tag: existing.debt_cycle_tag || existing.tag || null,
@@ -459,12 +496,15 @@ export async function requestRefund(
       metadata: pendingMeta,
     });
 
+    // For full refund, clear person_id from GD1 so it no longer appears in people sheet
+    const isFullRefund = !isPartial && Math.abs(existing.amount) === refundAmount;
+    
+    // Store original person_id in metadata before clearing it (for full refund)
     const updateData: any = {
       status: 'waiting_refund',
-      note:
-        typeof existing.note === 'string' && existing.note.startsWith('[GD1|')
-          ? existing.note
-          : `${gd1Tag} ${existing.note || existing.description || 'Order'}`,
+      note: `${gd1Tag} ${String(existing.note || existing.description || 'Order').replace(/^\[GD\d+\|[^\]]+\]\s*/, '')}`,
+      // Clear person_id for full refund
+      person_id: isFullRefund ? null : existing.person_id,
       metadata: {
         ...(existingMeta as Record<string, unknown>),
         has_refund_request: true,
@@ -475,16 +515,47 @@ export async function requestRefund(
         refund_status: 'requested',
         refund_stage_tag: 'GD1',
         refund_sequence: 1,
+        refund_request_voided_at: null,
+        // Store original person_id so we can restore it if voided
+        original_person_id: isFullRefund ? existing.person_id : (existingMeta as any)?.original_person_id,
       }
     };
 
     await pocketbaseUpdate('transactions', pbId, updateData);
+
+    // Trigger sheet sync for full refund to remove transaction from person's sheet
+    if (isFullRefund && existing.person_id) {
+      try {
+        const { syncTransactionToSheet } = await import('@/services/sheet.service');
+        // Use 'delete' action to remove this transaction from the person's sheet
+        // since we're clearing the person_id association
+        await syncTransactionToSheet(existing.person_id, {
+          id: pbId,
+          occurred_at: existing.occurred_at || existing.date || null,
+          note: existing.note || null,
+          tag: existing.tag || null,
+          debt_cycle_tag: existing.debt_cycle_tag || existing.tag || null,
+          shop_id: existing.shop_id || null,
+          amount: existing.amount || null,
+          original_amount: existing.amount || null,
+          cashback_share_percent: (existingMeta as any)?.cashback_share_percent || null,
+          cashback_share_fixed: (existingMeta as any)?.cashback_share_fixed || null,
+          type: existing.type || null,
+          account_id: existing.account_id || null,
+          target_account_id: existing.to_account_id || null,
+          shop_name: (existingMeta as any)?.shop_name || null,
+        }, 'delete');
+      } catch (syncError) {
+        console.warn('[Sheet Sync] requestRefund full refund sync failed:', syncError);
+      }
+    }
+
     try {
       revalidatePath('/transactions');
     } catch (revalidateError) {
       console.warn('[DB:PB] requestRefund revalidate skipped:', revalidateError);
     }
-    return { success: true };
+    return { success: true, pendingRefundId, originalTxnId: pbId };
   } catch (error: any) {
     console.error('[DB:PB] requestRefund failed:', error);
     return { success: false, error: error.message };
@@ -494,16 +565,101 @@ export async function requestRefund(
 /**
  * Cancels an order and requests a full refund.
  */
-export async function cancelOrder(transactionId: string): Promise<{ success: boolean; error?: string }> {
+export async function cancelOrder(transactionId: string): Promise<{ success: boolean; pendingRefundId?: string; error?: string; originalTxnId?: string }> {
   try {
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
 
+    // A1: GD2 Guard - Block Cancel 100% when GD2 already exists
+    const gd2Children = await pocketbaseList<any>('transactions', {
+      filter: `metadata.refund_stage_tag = "GD2" && metadata.original_transaction_id = "${pbId}" && status != "voided" && status != "void"`,
+      perPage: 1,
+    });
+
+    if (gd2Children.items.length > 0) {
+      return {
+        success: false,
+        error: 'Cannot cancel: a pending refund (GD2) is already awaiting confirmation. Void GD2 first.'
+      };
+    }
+
     const amount = Math.abs(existing.amount);
     return await requestRefund(transactionId, amount, false);
   } catch (error: any) {
     console.error('[DB:PB] cancelOrder failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Performs an instant refund without creating a pending GD2 transaction.
+ */
+export async function instantRefund(
+  transactionId: string,
+  amount: number,
+  targetAccountId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const pbId = toPocketBaseId(transactionId, 'transactions');
+    const existing = await pocketbaseGetById<any>('transactions', pbId);
+    if (!existing) throw new Error('Transaction not found');
+
+    const existingMeta = typeof existing.metadata === 'object' && existing.metadata !== null
+      ? existing.metadata
+      : {};
+
+    // 1. Create the completed refund transaction
+    const refundTxnId = toPocketBaseId(
+      `${pbId}:instant-refund:${Date.now()}`,
+      'transactions'
+    );
+
+    await pocketbaseCreate('transactions', {
+      id: refundTxnId,
+      date: new Date().toISOString(),
+      occurred_at: new Date().toISOString(),
+      note: `Instant Refund for: ${existing.note || existing.description || 'Order'}`,
+      description: `Instant Refund for: ${existing.note || existing.description || 'Order'}`,
+      type: 'income', // Refund is money coming back
+      status: 'completed',
+      amount: amount,
+      final_price: amount,
+      account_id: targetAccountId,
+      to_account_id: existing.account_id || null,
+      category_id: existing.category_id || null,
+      metadata: {
+        original_transaction_id: pbId,
+        refund_status: 'completed',
+        refund_stage_tag: null,
+        has_refund_request: false,
+        instant_refund: true,
+      },
+    });
+
+    // 2. Update the original transaction (GD1)
+    const cleanNote = String(existing.note || existing.description || 'Order').replace(/^\[GD\d+\|[^\]]+\]\s*/, '');
+    
+    await pocketbaseUpdate('transactions', pbId, {
+      status: 'refunded',
+      note: cleanNote,
+      metadata: {
+        ...existingMeta,
+        refund_status: 'completed',
+        refund_stage_tag: null,
+        has_refund_request: false,
+      },
+    });
+
+    try {
+      revalidatePath('/transactions');
+    } catch (e) {
+      console.warn('[DB:PB] instantRefund revalidate skipped:', e);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('[DB:PB] instantRefund failed:', error);
     return { success: false, error: error.message };
   }
 }
