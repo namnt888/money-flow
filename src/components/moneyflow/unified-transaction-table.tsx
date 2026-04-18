@@ -132,6 +132,7 @@ import { resolveCashbackPolicy } from "@/services/cashback/policy-resolver";
 import { ConfirmRefundDialogV2 } from "./confirm-refund-dialog-v2";
 
 import { RequestRefundDialog } from "./request-refund-dialog";
+import { ReturnRefundSlide } from "./return-refund-slide";
 import { TransactionHistoryModal } from "./transaction-history-modal";
 
 import { cancelOrder } from "@/actions/transaction-actions";
@@ -2346,6 +2347,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       tableData.forEach((txn) => {
         const accountId = getSpendAccountId(txn);
         const acc = accounts.find((a) => a.id === accountId);
+        if (!acc) return;
         if (!isAccountCashbackEnabled(acc)) return;
         const cycleTag = getCycleTag(txn);
         if (!cycleTag) return;
@@ -2519,44 +2521,20 @@ export const UnifiedTransactionTable = React.forwardRef<
 
           {/* Refund & Cancel Actions - Restored */}
           {canShowCancelActions && (
-            <>
-              <button
-                className={`${neutralItemClass} ${hasRefundRequest ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={!!hasRefundRequest}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setRefundTarget(txn);
-                  setRefundType("refund");
-                  setIsRefundOpen(true);
-                  setActionMenuOpen(null);
-                }}
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>
-                  {hasRefundRequest ? "Refund Requested" : "Request Refund"}
-                </span>
-              </button>
-              <button
-                className={`${dangerItemClass} ${hasRefundRequest ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={!!hasRefundRequest}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  // For Cancel Order, we can reuse the dialog or call specialized handler
-                  // If RequestRefundDialog doesn't support 'type', we might need to adjust it
-                  // But for now, let's open it as refund but maybe pre-set
-                  // Actually, let's use the same dialog but with a title change if possible
-                  setRefundTarget(txn);
-                  setRefundType("cancel");
-                  setIsRefundOpen(true);
-                  setActionMenuOpen(null);
-                }}
-              >
-                <Ban className="h-4 w-4" />
-                <span>
-                  {hasRefundRequest ? "Order Cancelled" : "Cancel Order (100%)"}
-                </span>
-              </button>
-            </>
+            <button
+              className={`${neutralItemClass} ${hasRefundRequest ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={!!hasRefundRequest}
+              onClick={(event) => {
+                event.stopPropagation();
+                setRefundTarget(txn);
+                setActionMenuOpen(null);
+              }}
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>
+                {hasRefundRequest ? "Refund Requested" : "Hoàn / Hủy đơn"}
+              </span>
+            </button>
           )}
           {divider}
 
@@ -6315,13 +6293,14 @@ export const UnifiedTransactionTable = React.forwardRef<
             isVisible={!!isExcelMode && selectedCells.size > 0}
           />
 
-          {/* Request Refund Dialog */}
+          {/* Return/Refund Slide */}
           {refundTarget && (
-            <RequestRefundDialog
+            <ReturnRefundSlide
               open={isRefundOpen}
               onOpenChange={setIsRefundOpen}
-              transaction={refundTarget}
-              type={refundType}
+              transactionId={refundTarget.id}
+              transactionAmount={Math.abs(refundTarget.amount)}
+              originalAccountId={refundTarget.account_id}
             />
           )}
 
@@ -6540,9 +6519,10 @@ export const UnifiedTransactionTable = React.forwardRef<
                 id: false,
                 actions: true,
                 actual_cashback: false,
-                est_share: false,
-                net_profit: false,
-                back_info: false,
+                                est_share: false,
+                                net_profit: false,
+                                net_profit_raw: false,
+                                back_info: false,
                 people: true,
                 cycle: false,
               };

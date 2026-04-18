@@ -94,7 +94,11 @@ export function RequestRefundDialog({
                     description: isCancel ? "Order cancelled." : "Transaction marked as pending refund."
                 })
                 onOpenChange(false)
-                router.refresh()
+                if (result.originalTxnId) {
+                    router.push(`/transactions?highlight=${result.originalTxnId}`)
+                } else {
+                    router.refresh()
+                }
             } else {
                 toast.error(`Failed to ${title.toLowerCase()}`, {
                     description: result.error

@@ -1,135 +1,123 @@
-You are continuing the implementation for add-txn v2 and Multi-Cycle Repay.
+# Fix Task: transaction-actions.ts — Missing Imports + server-only Leakage
 
-The previous implementation is incomplete. Fix the remaining UI + data behavior issues below.
+## Context từ summary
+Agent đã xác nhận 2 root cause chính:
+1. `src/actions/transaction-actions.ts` gọi các hàm không được import/không tồn tại.
+2. `unified-transaction-table.tsx` (Client Component) import trực tiếp từ `transaction.service.ts` → kéo `server-only` vào client bundle.
 
-## Context
-We already have:
-- a parent repayment transaction
-- child allocation transactions already created for each cycle
-- a Multi-Cycle Repay slide
-- add-txn v2 edit flow
+---
 
-You must inspect the current implementation and existing saved data before making assumptions.
+## Fix 1 — transaction-actions.ts: Resolve tất cả undefined functions
 
-## Reference problems
+### Bước 1: Audit imports hiện tại
+Mở `src/actions/transaction-actions.ts`.
+Liệt kê tất cả functions đang được gọi nhưng chưa có import:
+- `pocketbaseGetById`, `pocketbaseCreate`, `pocketbaseUpdate`, `pocketbaseList`, `pocketbaseDelete`
+- `toPocketBaseId`
+- `createPBTransaction`, `updatePBTransaction`, `voidPBTransaction`, `confirmPBRefund`
+- `syncTransactionToSheet`
+- `getAccountsAction`
 
-### A. Add-txn v2 layout bug
-In the Edit Transaction slide, when "Ready for Multi-Cycle" is shown/expanded, the block is still rendered below the Debt Tag Cycle column only.
+### Bước 2: Phân loại từng function
+Với mỗi function trên, tìm trong codebase xem nó đang tồn tại ở đâu:
+- Search `src/services/pocketbase/server.ts` — tìm: `pocketbaseGetById`, `pocketbaseCreate`, `pocketbaseUpdate`, `pocketbaseList`, `toPocketBaseId`.
+- Search `src/services/pocketbase/people.service.ts`, `transaction.service.ts` — tìm: `createPBTransaction`, `updatePBTransaction`, `voidPBTransaction`, `confirmPBRefund`.
+- Search `src/actions/` — tìm: `getAccountsAction`, `syncTransactionToSheet`.
 
-Expected:
-- This block must span across the full form width, similar to the Note field row.
-- It should visually flow across both Person and Debt Cycle area, not stay trapped under Debt Cycle.
-- Rework the layout/grid structure if needed. Do not fake it with fragile CSS hacks only.
+### Bước 3: Fix theo từng trường hợp
 
-Please investigate why it still renders inside the Debt Cycle column and fix the parent layout structure properly.
+**Trường hợp A — Function tồn tại, chỉ thiếu import:**
+Thêm import đúng đường dẫn vào đầu file.
+Ví dụ:
+```ts
+import {
+  pocketbaseGetById,
+  pocketbaseCreate,
+  pocketbaseUpdate,
+  pocketbaseList,
+  toPocketBaseId,
+} from '@/services/pocketbase/server'
+```
+Lưu ý: `transaction-actions.ts` là Server Action (`'use server'`), nên import từ `server.ts` là hợp lệ.
 
-### B. Multi-Cycle Repay slide incomplete
-For each cycle row, after "New Balance", there should be working actions:
-- Open TXN in new tab
-- Open DB in new tab
+**Trường hợp B — Function không tồn tại (createPBTransaction, updatePBTransaction, voidPBTransaction, confirmPBRefund):**
+Đây là wrapper function chưa được tạo. Refactor các call này để gọi trực tiếp `pocketbaseCreate`, `pocketbaseUpdate` với đúng params thay vì qua wrapper không tồn tại.
+Không tạo thêm file mới — inline logic vào action function hiện tại.
 
-Current issue:
-- There is an Action area/column conceptually, but it is not clickable or not properly wired.
-- Research whether the web app can map from the parent repayment txn to each allocated child txn.
-- Determine whether the link currently exists via:
-  - top-level `parent_transaction_id`
-  - `metadata.parent_transaction_id`
-  - another relation/helper
-- If current mapping is incomplete or fragile, propose and implement the safest fix.
+**Trường hợp C — getAccountsAction không tồn tại trong transaction-actions.ts:**
+Search toàn repo tìm `getAccountsAction`. Nếu tồn tại ở file khác: import từ đó.
+Nếu không tồn tại: tạo một Server Action đơn giản trong `src/actions/account-actions.ts`:
+```ts
+'use server'
+export async function getAccountsAction() {
+  // fetch accounts from PocketBase
+}
+```
+Sau đó update import trong file đang dùng nó.
 
-## Sample data to inspect
-Parent txn example:
-- id = `3biw3oicnl2tnln`
-- metadata.is_debt_repayment_parent = true
-- metadata.multi_cycle_repay_allocations exists
-- metadata.multi_cycle_repay_volunteer = false
+**Trường hợp D — syncTransactionToSheet:**
+Search repo tìm function này. Nếu tồn tại: import đúng path.
+Nếu không tồn tại: stub nó với `async function syncTransactionToSheet() { /* TODO */ }` và log warning.
 
-Child txn example:
-- id = `su14lcrc09azdm7`
-- metadata.is_debt_repayment_child = true
-- metadata.parent_transaction_id = `3biw3oicnl2tnln`
-- metadata.debt_cycle_tag = `2025-12`
-- top-level `parent_transaction_id` is currently empty
+### Bước 4: Fix `Parameter 'err' implicitly has 'any' type`
+Tìm tất cả `catch (err)` trong file và thêm type:
+```ts
+catch (err: unknown) {
+  const message = err instanceof Error ? err.message : String(err)
+}
+```
 
-You must confirm how the app should query and map child txns for each cycle row.
+---
 
-## Required fixes
+## Fix 2 — unified-transaction-table.tsx: Loại bỏ server-only leakage
 
-### 1) Fix add-txn v2 expanded layout
-- Move the "Ready for Multi-Cycle" section out of the narrow Debt Cycle column flow.
-- Render it as a full-width row in the form layout, like Note.
-- Preserve current spacing and design consistency.
+### Root cause đã xác nhận
+`unified-transaction-table.tsx` (Client Component) import:
+```ts
+import { deleteTransaction, getTransactionById } from "@/services/transaction.service"
+```
+`transaction.service.ts` import từ `server.ts` (có `import 'server-only'`) → compile fail.
 
-### 2) Wire cycle row actions in Multi-Cycle Repay
-For each cycle row that already has a created child txn:
-- show working "Open TXN" action
-- show working "Open DB" action
-- disable/hide actions if no child txn exists yet
-- make the row clearly indicate whether a child txn already exists
+### Fix
+1. Mở `unified-transaction-table.tsx`, tìm tất cả import từ `transaction.service.ts`.
+2. Với mỗi function được import, tìm xem đã có Server Action wrapper trong `src/actions/transaction-actions.ts` chưa.
+   - Nếu có: thay import từ service → import từ actions file.
+   - Nếu chưa có: tạo Server Action wrapper trong `transaction-actions.ts`:
+     ```ts
+     export async function getTransactionByIdAction(id: string) {
+       const { pocketbaseGetById } = await import('@/services/pocketbase/server')
+       return pocketbaseGetById('transactions', id)
+     }
+     ```
+3. Đảm bảo `unified-transaction-table.tsx` KHÔNG import bất cứ thứ gì từ:
+   - `src/services/pocketbase/server.ts`
+   - `src/services/transaction.service.ts`
+   - `src/services/pocketbase/*.service.ts`
+   Chỉ được import từ `src/actions/`.
 
-### 3) Research and fix parent-child mapping
-- Inspect current query logic for repayment parent/child transactions
-- Confirm whether child txns are linked through metadata only
-- If needed, normalize mapping logic so edit/reopen flow can reliably find existing child txns by:
-  - parent transaction id
-  - person id
-  - debt cycle tag
-  - repayment-child markers
+---
 
-### 4) Volunteer repay behavior
-If notes are marked `#Volunteer_Repay`, then do NOT simply attach that note to the parent txn.
+## Fix 3 — amount-input.tsx: onFocus missing prop
 
-Expected behavior:
-- Do not put `#Volunteer_Repay` note onto the parent transaction note
-- Create a separate draft txn from the System account
-- That draft txn must:
-  - use category = Repayment
-  - use the matching people/person
-  - carry `#Volunteer_Repay`
-  - represent the amount needed to bring remaining debt to 0
+Mở `src/components/ui/amount-input.tsx`.
+Tìm interface `SmartAmountInputProps`.
+Thêm: `onFocus?: () => void`
+Pass nó xuống underlying `<input>`: `<input ... onFocus={onFocus} />`
 
-Also:
-- Link this volunteer txn correctly with the related allocation/repayment context
-- Reuse existing link conventions if available
-- If relation support is missing, identify whether we need a PocketBase migration or schema update
+---
 
-### 5) Prevent duplicate submit on edit
-When editing a transaction that already has submitted child repayment txns:
-- reopening the Multi-Cycle Repay slide must show those submitted allocations
-- user must NOT be able to press Allocate again in a way that creates duplicated submitted child txns
-- guard against duplicate generation/submission
-- show a clear read-only / already-created / update-only state where appropriate
+## Yêu cầu sau khi fix
 
-### 6) Migration / schema fallback
-If existing collection schema is insufficient to safely support parent-child linking:
-- identify exactly what field is missing
-- propose the minimal PocketBase migration needed
-- only implement it if truly necessary
-- explain why current metadata-only approach is not enough
+1. Chạy `npx tsc --noEmit` — phải về 0 errors.
+2. Test compile 2 routes:
+   - `GET /transactions` — không còn 500, không còn `server-only` error.
+   - `GET /people/[id]` — không còn 500, không còn `server-only` error.
+3. Không thay đổi bất kỳ business logic nào — chỉ fix imports, types, và boundary violations.
 
-## Rules
-- Do not guess business logic. Inspect current implementation first.
-- Reuse existing helper/components/query patterns where possible.
-- Prefer a robust mapping strategy over a UI-only patch.
-- Avoid breaking existing parent repayment flow.
-- Keep changes minimal but correct.
+---
 
-## Expected report after coding
-Return:
-1. files changed
-2. root cause of the layout bug
-3. root cause of missing/non-clickable action icons
-4. exact mapping logic used to find child txns
-5. whether migration/schema update was required
-6. how duplicate child txn creation is prevented
-7. manual QA checklist for:
-   - edit existing parent repayment
-   - reopen Multi-Cycle Repay
-   - view child txn actions per cycle
-   - volunteer repay flow
-   - duplicate submit prevention
-
-Before coding:
-- first print the current component tree / layout structure involved in add-txn v2
-- first print the current query path used to locate repayment child txns
-- do not start editing until you identify both root causes   
+## Thứ tự fix
+1. `src/actions/transaction-actions.ts` — fix tất cả undefined functions (Fix 1).
+2. `src/components/moneyflow/unified-transaction-table.tsx` — loại bỏ server-only leakage (Fix 2).
+3. `src/components/ui/amount-input.tsx` — fix onFocus prop (Fix 3).
+4. Chạy `tsc --noEmit` và confirm 0 errors.

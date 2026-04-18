@@ -37,13 +37,20 @@ type PocketBasePersonWrite = {
   default_repayment_account_id?: string | null
 }
 
+function getPocketBaseFileUrl(collection: string, recordId: string, filename: string | null | undefined): string | null {
+  if (!filename) return null
+  const baseUrl = (process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://api-db.reiwarden.io.vn').replace(/\/+$/, '')
+  return `${baseUrl}/api/files/${collection}/${recordId}/${filename}`
+}
+
 function mapPerson(record: PocketBaseRecord): Person {
+  const recordId = String(record.id || '')
   return {
-    id: String(record.id || ''),
+    id: recordId,
     pocketbase_id: typeof record.id === 'string' ? record.id : null,
     created_at: typeof record.created === 'string' ? record.created : undefined,
     name: String(record.name || ''),
-    image_url: (record.image_url as string | null | undefined) ?? null,
+    image_url: getPocketBaseFileUrl(PB_COLLECTIONS.PEOPLE, recordId, record.image_url as string),
     sheet_link: (record.sheet_link as string | null | undefined) ?? null,
     google_sheet_url: (record.google_sheet_url as string | null | undefined) ?? null,
     sheet_full_img: (record.sheet_full_img as string | null | undefined) ?? null,
@@ -144,6 +151,25 @@ export async function getPocketBasePeople(): Promise<Person[]> {
 export async function getPocketBasePersonSummary(sourceOrPocketBaseId: string): Promise<Person | null> {
   const personRecord = await resolvePocketBasePersonRecord(sourceOrPocketBaseId)
   return personRecord ? mapPerson(personRecord) : null
+}
+
+/**
+ * Lightweight fetch for metadata (avoids secondary collection 400 errors)
+ */
+export async function getPersonForMetadata(id: string): Promise<{ name: string; image_url: string | null } | null> {
+  try {
+    const record = await resolvePocketBasePersonRecord(id)
+    if (!record) return null
+    
+    const recordId = String(record.id || '')
+    return {
+      name: String(record.name || 'Person'),
+      image_url: getPocketBaseFileUrl(PB_COLLECTIONS.PEOPLE, recordId, record.image_url as string)
+    }
+  } catch (error) {
+    console.error('[getPocketBase] getPersonForMetadata failed:', error)
+    return null
+  }
 }
 
 export async function getPocketBasePersonDetails(sourceOrPocketBaseId: string): Promise<Person | null> {
