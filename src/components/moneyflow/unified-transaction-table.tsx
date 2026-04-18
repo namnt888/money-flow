@@ -2442,7 +2442,10 @@ export const UnifiedTransactionTable = React.forwardRef<
         categoryName.includes("shop");
       const canShowCancelActions =
         !isPendingRefund &&
-        (txn.type === "expense" || txn.type === "debt") &&
+        txn.status !== "pending" &&
+        (txn.metadata as any)?.refund_stage_tag !== "GD2" &&
+        (txn.metadata as any)?.is_refund_confirmation !== true &&
+        !["transfer", "repayment", "credit_pay", "income"].includes(txn.type) &&
         hasShoppingSignal;
       const baseItemClass = isSheet
         ? "flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700"
