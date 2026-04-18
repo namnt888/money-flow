@@ -113,12 +113,10 @@ import {
 } from "@/components/ui/popover";
 import { TransactionForm, TransactionFormValues } from "./transaction-form";
 import {
-  deleteTransaction,
-  getTransactionById,
-} from "@/services/transaction.service";
-import {
   voidTransactionAction,
   restoreTransaction,
+  getTransactionByIdAction,
+  deleteTransactionAction,
 } from "@/actions/transaction-actions";
 import { REFUND_PENDING_ACCOUNT_ID } from "@/constants/refunds";
 import { generateTag } from "@/lib/tag";
@@ -1744,7 +1742,7 @@ export const UnifiedTransactionTable = React.forwardRef<
       setLoadingMessage?.("Deleting transaction...");
       setIsGlobalLoading?.(true);
       try {
-        const ok = await deleteTransaction(confirmDeletingTarget.id);
+        const ok = await deleteTransactionAction(confirmDeletingTarget.id);
         if (ok) {
           setConfirmDeletingTarget(null);
           if (onSuccess) await onSuccess();
@@ -1764,7 +1762,7 @@ export const UnifiedTransactionTable = React.forwardRef<
     const handleOpenLinkedDebt = async (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
       try {
-        const txn = await getTransactionById(id);
+        const txn = await getTransactionByIdAction(id);
         if (txn) {
           setEditingTxn(txn);
         } else {
@@ -1857,7 +1855,7 @@ export const UnifiedTransactionTable = React.forwardRef<
             toast.info(`Process stopped. ${processedCount} items processed.`);
             break;
           }
-          const ok = await deleteTransaction(id);
+          const ok = await deleteTransactionAction(id);
           if (!ok) {
             errorCount++;
           }
@@ -2444,8 +2442,10 @@ export const UnifiedTransactionTable = React.forwardRef<
         categoryName.includes("shop");
       const canShowCancelActions =
         !isPendingRefund &&
-        (txn.type === "expense" || txn.type === "debt") &&
+        txn.type === "expense" &&
+        (txn.status !== "pending" || !txn.status) &&
         hasShoppingSignal;
+      const canVoid = txn.type !== "debt" && txn.status !== "pending";
       const baseItemClass = isSheet
         ? "flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700"
         : "flex w-full items-center gap-2 rounded px-3 py-1 text-left hover:bg-slate-50";
@@ -2508,7 +2508,8 @@ export const UnifiedTransactionTable = React.forwardRef<
             <span>Duplicate</span>
           </button>
           <button
-            className={dangerItemClass}
+            className={`${dangerItemClass} ${!canVoid ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={!canVoid}
             onClick={(event) => {
               event.stopPropagation();
               setConfirmVoidTarget(txn);
@@ -2532,7 +2533,7 @@ export const UnifiedTransactionTable = React.forwardRef<
             >
               <RotateCcw className="h-4 w-4" />
               <span>
-                {hasRefundRequest ? "Refund Requested" : "Hoàn / Hủy đơn"}
+                {hasRefundRequest ? "Refund Requested" : "Refund / Cancel"}
               </span>
             </button>
           )}

@@ -43,7 +43,7 @@ export function ReturnRefundSlide({
     const { data: accounts = [] } = useQuery<Account[]>({
         queryKey: ['accounts'],
         queryFn: async () => {
-            const { getAccountsAction } = await import('@/actions/transaction-actions')
+            const { getAccountsAction } = await import('@/actions/account-actions')
             return await getAccountsAction()
         },
     })

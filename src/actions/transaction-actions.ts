@@ -1,9 +1,20 @@
 'use server';
 
-import { Json } from '@/types/database.types';
-import { parseMetadata } from '@/lib/transaction-mapper';
-import { normalizeMonthTag } from '@/lib/month-tag';
 import { revalidatePath } from 'next/cache';
+import {
+  pocketbaseGetById,
+  pocketbaseCreate,
+  pocketbaseUpdate,
+  pocketbaseList,
+  toPocketBaseId,
+} from '@/services/pocketbase/server';
+import {
+  createTransaction as createPBTransaction,
+  updateTransaction as updatePBTransaction,
+  voidTransaction as voidPBTransaction,
+  confirmRefund as confirmPBRefund,
+} from '@/services/transaction.service';
+import { parseMetadata } from '@/lib/transaction-mapper';
 import { REFUND_PENDING_ACCOUNT_ID } from '@/constants/refunds';
 import { CashbackMode } from '@/types/moneyflow.types';
 
@@ -178,25 +189,29 @@ export async function restoreTransaction(id: string): Promise<boolean> {
             }
           }
         }
-      } catch (restoreRefundChainError) {
+        } catch (restoreRefundChainError) {
         console.warn('[DB:PB] restoreTransaction refund chain restore skipped:', restoreRefundChainError);
-      }
-    }
-
-    // Sync restore to sheet
-    if (existing?.person_id) {
-       void syncTransactionToSheet(existing.person_id, {
-         id: pbId,
-         occurred_at: existing.occurred_at,
-         note: existing.note,
-         tag: existing.tag,
-         amount: existing.amount,
-         original_amount: existing.amount,
-         type: existing.type,
-         account_id: existing.account_id ?? null,
-         target_account_id: existing.target_account_id ?? existing.to_account_id ?? null,
-       } as any, 'create').catch(err => console.error('Sheet Sync Error (Restore):', err));
-    }
+        }
+        }
+        
+        // Sync restore to sheet
+        if (existing?.person_id) {
+           const { syncTransactionToSheet } = await import('@/services/sheet.service');
+           void syncTransactionToSheet(existing.person_id, {
+             id: pbId,
+             occurred_at: existing.occurred_at,
+             note: existing.note,
+             tag: existing.tag,
+             amount: existing.amount,
+             original_amount: existing.amount,
+             type: existing.type,
+             account_id: existing.account_id ?? null,
+             target_account_id: existing.target_account_id ?? existing.to_account_id ?? null,
+           } as any, 'create').catch((err: unknown) => {
+             const message = err instanceof Error ? err.message : String(err);
+             console.error('Sheet Sync Error (Restore):', message);
+           });
+        }
 
     revalidatePath('/transactions');
     revalidatePath('/people');
@@ -218,9 +233,10 @@ export async function confirmRefundAction(
   try {
     const result = await confirmPBRefund(pendingTransactionId, targetAccountId, personId);
     return result;
-  } catch (error: any) {
-    console.error('Confirm Refund Action Error:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Confirm Refund Action Error:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -273,9 +289,10 @@ export async function deleteSplitBillAction(baseTransactionId: string): Promise<
     revalidatePath('/transactions');
     revalidatePath('/people');
     return { success: true, deletedCount };
-  } catch (error: any) {
-    console.error('[DB:PB] deleteSplitBillAction failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] deleteSplitBillAction failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -291,9 +308,10 @@ export async function bulkMoveTransactionsToCategory(transactionIds: string[], c
     revalidatePath('/transactions');
     revalidatePath('/people');
     return { success: true };
-  } catch (error: any) {
-    console.error('[DB:PB] bulkMoveTransactionsToCategory failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] bulkMoveTransactionsToCategory failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -370,9 +388,10 @@ export async function updateSplitBillAction(
     revalidatePath('/transactions');
     revalidatePath('/people');
     return { success: true };
-  } catch (error: any) {
-    console.error('[DB:PB] updateSplitBillAction failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] updateSplitBillAction failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -386,9 +405,10 @@ export async function bulkMoveToCategory(transactionIds: string[], categoryId: s
     revalidatePath('/transactions');
     revalidatePath('/people');
     return { success: true };
-  } catch (error: any) {
-    console.error('[DB:PB] bulkMoveToCategory failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] bulkMoveToCategory failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -556,9 +576,10 @@ export async function requestRefund(
       console.warn('[DB:PB] requestRefund revalidate skipped:', revalidateError);
     }
     return { success: true, pendingRefundId, originalTxnId: pbId };
-  } catch (error: any) {
-    console.error('[DB:PB] requestRefund failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] requestRefund failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -586,9 +607,10 @@ export async function cancelOrder(transactionId: string): Promise<{ success: boo
 
     const amount = Math.abs(existing.amount);
     return await requestRefund(transactionId, amount, false);
-  } catch (error: any) {
-    console.error('[DB:PB] cancelOrder failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] cancelOrder failed:', message);
+    return { success: false, error: message };
   }
 }
 
@@ -658,8 +680,40 @@ export async function instantRefund(
     }
 
     return { success: true };
-  } catch (error: any) {
-    console.error('[DB:PB] instantRefund failed:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] instantRefund failed:', message);
+    return { success: false, error: message };
+  }
+}
+
+export async function getTransactionByIdAction(id: string) {
+  try {
+    const { pocketbaseGetById } = await import('@/services/pocketbase/server');
+    const pbId = toPocketBaseId(id, 'transactions');
+    const record = await pocketbaseGetById<any>('transactions', pbId,
+      'category_id,account_id,to_account_id,person_id,shop_id,transaction_history,cashback_entries'
+    );
+    if (!record) return null;
+    return record as any;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[DB:PB] getTransactionByIdAction failed for ${id}:`, message);
+    return null;
+  }
+}
+
+export async function deleteTransactionAction(id: string): Promise<boolean> {
+  try {
+    const { pocketbaseDelete } = await import('@/services/pocketbase/server');
+    const pbId = toPocketBaseId(id, 'transactions');
+    await pocketbaseDelete('transactions', pbId);
+    revalidatePath('/transactions');
+    revalidatePath('/people');
+    return true;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[DB:PB] deleteTransactionAction failed:', message);
+    return false;
   }
 }
