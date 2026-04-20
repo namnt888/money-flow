@@ -880,7 +880,6 @@ export async function syncCycleTransactions(
       tagFilter = `((debt_cycle_tag >= "${year}-01" && debt_cycle_tag <= "${year}-12") || debt_cycle_tag = "${year}") || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${year}-01-01 00:00:00.000Z" && occurred_at < "${nextYear}-01-01 00:00:00.000Z")`
     } else if (monthMatch) {
       // Specific month like "2026-03"
-      const monthStart = `${cycleTag}-01 00:00:00.000Z`
       const year = Number(monthMatch[1])
       const month = Number(monthMatch[2])
       const nextDate = new Date(Date.UTC(year, month, 1))
@@ -888,7 +887,15 @@ export async function syncCycleTransactions(
       const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
       const tags = legacyTag && legacyTag !== cycleTag ? [cycleTag, legacyTag] : [cycleTag]
       const debtTagMatches = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
-      tagFilter = `(${debtTagMatches}) || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${monthStart}" && occurred_at < "${nextMonth}-01 00:00:00.000Z")`
+      
+      // FIX: For cycle-specific sync, ONLY include transactions where debt_cycle_tag
+      // explicitly matches the requested cycle (or its legacy alias).
+      // Do NOT include transactions with empty/null debt_cycle_tag via occurred_at fallback,
+      // because those are ambiguous and may belong to different cycles.
+      // The occurred_at fallback is intentionally removed here to prevent pollution
+      // from adjacent cycles (e.g., 2026-04 transactions appearing in 2026-03 sync).
+      // See: Bug A — Sync sai cycleTag (cascade sang 2026-04)
+      tagFilter = debtTagMatches
     } else {
       // Legacy format
       const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
