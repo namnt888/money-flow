@@ -1,9 +1,9 @@
 'use server'
 
 import { toPocketBaseId, pocketbaseGetById, pocketbaseList, pocketbaseCreate, pocketbaseUpdate } from './pocketbase/server'
-import { yyyyMMToLegacyMMMYY } from '@/lib/month-tag'
-import { isYYYYMM } from '@/lib/month-tag'
+import { isYYYYMM, normalizeMonthTag } from '@/lib/month-tag'
 import { Account, Person } from '@/types/moneyflow.types'
+import { buildCycleSyncTagFilter } from '@/services/cycle-sync-filter'
 
 type SheetSyncTransaction = {
   id: string
@@ -269,6 +269,190 @@ function buildPersonTransactionsFilter(pbPersonId: string, relatedAccountIds: st
 
   const base = `status != "void" && ${personScope}`
   return extraClause ? `${base} && (${extraClause})` : base
+}
+
+/**
+ * Strict filter for cycle-specific syncs: ONLY include transactions where person_id matches.
+ * Do NOT include transactions from other people on shared accounts.
+ * This prevents data bleed when multiple people use the same accounts.
+ */
+function buildStrictPersonTransactionsFilter(pbPersonId: string, extraClause?: string): string {
+  const base = `status != "void" && person_id = "${pbPersonId}"`
+  return extraClause ? `${base} && (${extraClause})` : base
+}
+
+function normalizeCycleForCascade(tag: string): string {
+  const normalized = normalizeMonthTag(tag)
+  return typeof normalized === 'string' && normalized.trim() ? normalized.trim() : tag
+}
+
+function extractCycleTagsFromText(value: unknown): string[] {
+  const text = String(value || '')
+  if (!text) return []
+  const matches = Array.from(text.matchAll(/\b\d{4}-\d{2}\b/g)).map((m) => normalizeCycleForCascade(m[0]))
+  return Array.from(new Set(matches.filter(Boolean)))
+}
+
+async function ensureCascadeCycleSheet(personId: string, cycleTag: string): Promise<{ sheetId?: string | null; created?: boolean }> {
+  const pbPersonId = toPocketBaseId(personId, 'people')
+  const normalizedCycle = normalizeCycleForCascade(cycleTag)
+
+  try {
+    const existingList = await pocketbaseList<any>('person_cycle_sheets', {
+      filter: `person_id = "${pbPersonId}" && cycle_tag = "${normalizedCycle}"`,
+      perPage: 1,
+    })
+
+    const existing = existingList.items?.[0] as any
+    const existingRowId = typeof existing?.id === 'string' ? existing.id : null
+    const existingSheetId = typeof existing?.sheet_id === 'string' ? existing.sheet_id : null
+    const existingSheetUrl = typeof existing?.sheet_url === 'string' ? existing.sheet_url : null
+    const hasSheetInfo = Boolean(existingSheetId || existingSheetUrl)
+
+    if (hasSheetInfo) {
+      return { sheetId: existingSheetId ?? null, created: false }
+    }
+
+    const createResult = await createCycleSheet(personId, normalizedCycle)
+    if (!createResult.success) {
+      console.warn('[syncCycleTransactions][cascade][ensure-sheet-create-failed]', {
+        personId,
+        cycleTag: normalizedCycle,
+        message: createResult.message,
+      })
+      return { sheetId: null, created: false }
+    }
+
+    const payload = {
+      person_id: pbPersonId,
+      cycle_tag: normalizedCycle,
+      sheet_id: createResult.sheetId ?? null,
+      sheet_url: createResult.sheetUrl ?? null,
+    }
+
+    try {
+      if (existingRowId) {
+        await pocketbaseUpdate('person_cycle_sheets', existingRowId, payload)
+      } else {
+        await pocketbaseCreate('person_cycle_sheets', payload)
+      }
+    } catch (persistError) {
+      console.warn('[syncCycleTransactions][cascade][ensure-sheet-persist-failed]', {
+        personId,
+        cycleTag: normalizedCycle,
+        persistError,
+      })
+    }
+
+    return { sheetId: createResult.sheetId ?? null, created: true }
+  } catch (error) {
+    console.warn('[syncCycleTransactions][cascade][ensure-sheet-exception]', {
+      personId,
+      cycleTag: normalizedCycle,
+      error,
+    })
+    return { sheetId: null, created: false }
+  }
+}
+
+async function resolveRolloverCascadeCycles(
+  pbPersonId: string,
+  cycleTag: string,
+  currentItems: any[],
+): Promise<string[]> {
+  const normalizedCurrent = normalizeCycleForCascade(cycleTag)
+  const linkedIds = Array.from(
+    new Set(
+      currentItems
+        .filter((txn) => {
+          const noteText = String(txn?.note || txn?.description || '').toLowerCase()
+          return noteText.includes('rollover')
+        })
+        .map((txn) => String(txn?.linked_transaction_id || '').trim())
+        .filter(Boolean),
+    ),
+  )
+
+  const relatedCycles = new Set<string>()
+
+  // Primary path: use explicit linked transaction IDs from rows in the current sync set.
+  if (linkedIds.length > 0) {
+    const filter = [
+      `status != "void"`,
+      `person_id = "${pbPersonId}"`,
+      `(${linkedIds.map((id) => `id = "${id}"`).join(' || ')})`,
+    ].join(' && ')
+
+    const linked = await pocketbaseList<any>('transactions', {
+      filter,
+      perPage: Math.max(50, linkedIds.length * 2),
+      sort: 'occurred_at',
+    })
+
+    for (const txn of linked.items || []) {
+      const cycleCandidates = [
+        txn?.debt_cycle_tag,
+        txn?.tag,
+        txn?.persisted_cycle_tag,
+        txn?.statement_cycle_tag,
+        ...extractCycleTagsFromText(txn?.note),
+        ...extractCycleTagsFromText(txn?.description),
+      ]
+      for (const candidate of cycleCandidates) {
+        const normalized = normalizeCycleForCascade(String(candidate || '').trim())
+        if (normalized && normalized !== normalizedCurrent) {
+          relatedCycles.add(normalized)
+        }
+      }
+    }
+  }
+
+  // Fallback path: if current sync rows do not include rollover txns (common after edits/voids),
+  // scan person's active rollover rows referencing this cycle in fields or note text.
+  if (relatedCycles.size === 0) {
+    const fallbackFilter = [
+      `status != "void"`,
+      `person_id = "${pbPersonId}"`,
+      `(note ~ "rollover" || description ~ "rollover")`,
+      `(` +
+        [
+          `debt_cycle_tag = "${normalizedCurrent}"`,
+          `tag = "${normalizedCurrent}"`,
+          `persisted_cycle_tag = "${normalizedCurrent}"`,
+          `statement_cycle_tag = "${normalizedCurrent}"`,
+          `note ~ "${normalizedCurrent}"`,
+          `description ~ "${normalizedCurrent}"`,
+        ].join(' || ') +
+      `)`,
+    ].join(' && ')
+
+    const fallbackRows = await pocketbaseList<any>('transactions', {
+      filter: fallbackFilter,
+      perPage: 200,
+      sort: 'occurred_at',
+    })
+
+    for (const txn of fallbackRows.items || []) {
+      const cycleCandidates = [
+        txn?.debt_cycle_tag,
+        txn?.tag,
+        txn?.persisted_cycle_tag,
+        txn?.statement_cycle_tag,
+        ...extractCycleTagsFromText(txn?.note),
+        ...extractCycleTagsFromText(txn?.description),
+      ]
+      for (const candidate of cycleCandidates) {
+        const normalized = normalizeCycleForCascade(String(candidate || '').trim())
+        if (normalized && normalized !== normalizedCurrent) {
+          relatedCycles.add(normalized)
+        }
+      }
+    }
+  }
+
+  const cycles = Array.from(relatedCycles)
+
+  return cycles
 }
 
 function extractSheetId(sheetUrl: string | null | undefined): string | null {
@@ -706,6 +890,8 @@ export async function syncAllTransactions(personId: string) {
     const cycleMap = new Map<string, typeof rows>()
 
     for (const txn of eligibleRows) {
+      // Full sync intentionally resolves a cycle from occurred_at when debt_cycle_tag is missing,
+      // because this path rebuilds the entire sheet and must place legacy/untagged rows somewhere.
       let cycleTag = resolveCycleTagForSheet(txn.debt_cycle_tag, txn.occurred_at)
       if (personData?.is_master_sheet_enabled && cycleTag && isYYYYMM(cycleTag)) {
         cycleTag = cycleTag.split('-')[0]
@@ -857,47 +1043,54 @@ export async function createCycleSheet(personId: string, cycleTag: string): Prom
   }
 }
 
-
 export async function syncCycleTransactions(
   personId: string,
   cycleTag: string,
-  sheetId?: string | null
+  sheetId?: string | null,
+  options?: {
+    visitedCycles?: Set<string>
+    enableRolloverCascade?: boolean
+    syncRunId?: string
+    cascadeDepth?: number
+  }
 ) {
   try {
     const pbId = toPocketBaseId(personId, 'people')
-    const personData: any = await pocketbaseGetById('people', pbId)
-    const relatedAccountIds = getPersonRelatedAccountIds(personData)
-    let tagFilter = ''
+    const normalizedCycle = normalizeCycleForCascade(cycleTag)
+    const visitedCycles = options?.visitedCycles ?? new Set<string>()
+    const syncRunId = options?.syncRunId ?? `sync-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const cascadeDepth = options?.cascadeDepth ?? 0
 
-    // Parse cycleTag to get filter
-    const yearMatch = cycleTag.match(/^(\d{4})$/)
-    const monthMatch = cycleTag.match(/^(\d{4})-(\d{2})$/)
+    console.log('[syncCycleTransactions][cascade][start]', {
+      syncRunId,
+      personId,
+      cycleTag,
+      normalizedCycle,
+      cascadeDepth,
+      visitedCycles: Array.from(visitedCycles),
+    })
 
-    if (yearMatch) {
-      // Full year like "2026"
-      const year = yearMatch[1]
-      const nextYear = String(Number(year) + 1)
-      tagFilter = `((debt_cycle_tag >= "${year}-01" && debt_cycle_tag <= "${year}-12") || debt_cycle_tag = "${year}") || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${year}-01-01 00:00:00.000Z" && occurred_at < "${nextYear}-01-01 00:00:00.000Z")`
-    } else if (monthMatch) {
-      // Specific month like "2026-03"
-      const monthStart = `${cycleTag}-01 00:00:00.000Z`
-      const year = Number(monthMatch[1])
-      const month = Number(monthMatch[2])
-      const nextDate = new Date(Date.UTC(year, month, 1))
-      const nextMonth = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, '0')}`
-      const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
-      const tags = legacyTag && legacyTag !== cycleTag ? [cycleTag, legacyTag] : [cycleTag]
-      const debtTagMatches = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
-      tagFilter = `(${debtTagMatches}) || ((debt_cycle_tag = "" || debt_cycle_tag = null) && occurred_at >= "${monthStart}" && occurred_at < "${nextMonth}-01 00:00:00.000Z")`
-    } else {
-      // Legacy format
-      const legacyTag = yyyyMMToLegacyMMMYY(cycleTag)
-      const tags = legacyTag && legacyTag !== cycleTag ? [cycleTag, legacyTag] : [cycleTag]
-      tagFilter = tags.map(t => `debt_cycle_tag = "${t}"`).join(' || ')
+    if (visitedCycles.has(normalizedCycle)) {
+      console.log('[syncCycleTransactions][cascade][skip-visited]', {
+        syncRunId,
+        personId,
+        cycleTag,
+        normalizedCycle,
+        cascadeDepth,
+      })
+      return {
+        success: true,
+        count: 0,
+        skippedCycle: normalizedCycle,
+      }
     }
+    visitedCycles.add(normalizedCycle)
+
+    const personData: any = await pocketbaseGetById('people', pbId)
+    const tagFilter = buildCycleSyncTagFilter(cycleTag)
 
     const data = await pocketbaseList('transactions', {
-      filter: buildPersonTransactionsFilter(pbId, relatedAccountIds, tagFilter),
+      filter: buildStrictPersonTransactionsFilter(pbId, tagFilter),
       expand: 'shop_id,account_id,to_account_id,category_id',
       sort: 'occurred_at'
     })
@@ -1076,18 +1269,156 @@ export async function syncCycleTransactions(
     const result = await postToSheet(sheetLink, payload)
 
     if (!result.success) {
+      console.error('[syncCycleTransactions][cascade][base-sync-failed]', {
+        syncRunId,
+        personId,
+        cycleTag,
+        normalizedCycle,
+        cascadeDepth,
+        message: result.message,
+      })
       return { success: false, message: result.message ?? 'Sheet sync failed' }
     }
+
+    console.log('[syncCycleTransactions][cascade][base-sync-success]', {
+      syncRunId,
+      personId,
+      cycleTag,
+      normalizedCycle,
+      cascadeDepth,
+      rowCount: rows.length,
+    })
+
+    const enableCascade = options?.enableRolloverCascade !== false
+    const cascadeSynced: string[] = []
+    const cascadeFailed: Array<{ cycleTag: string; message: string }> = []
+
+    if (enableCascade) {
+      const cascadeCycles = await resolveRolloverCascadeCycles(pbId, cycleTag, (data.items || []) as any[])
+      if (cascadeCycles.length > 0) {
+        console.log('[syncCycleTransactions][cascade][detected]', {
+          syncRunId,
+          personId,
+          cycleTag,
+          normalizedCycle,
+          cascadeDepth,
+          cascadeCycles,
+        })
+      } else {
+        console.log('[syncCycleTransactions][cascade][none]', {
+          syncRunId,
+          personId,
+          cycleTag,
+          normalizedCycle,
+          cascadeDepth,
+        })
+      }
+
+      for (const linkedCycle of cascadeCycles) {
+        console.log('[syncCycleTransactions][cascade][sync-linked-start]', {
+          syncRunId,
+          personId,
+          sourceCycle: normalizedCycle,
+          linkedCycle,
+          cascadeDepth,
+        })
+
+        const ensureLinkedSheet = await ensureCascadeCycleSheet(personId, linkedCycle)
+        console.log('[syncCycleTransactions][cascade][ensure-linked-sheet]', {
+          syncRunId,
+          personId,
+          linkedCycle,
+          cascadeDepth,
+          created: ensureLinkedSheet.created === true,
+          sheetId: ensureLinkedSheet.sheetId ?? null,
+        })
+
+        const linkedResult = await syncCycleTransactions(personId, linkedCycle, ensureLinkedSheet.sheetId ?? undefined, {
+          visitedCycles,
+          enableRolloverCascade: true,
+          syncRunId,
+          cascadeDepth: cascadeDepth + 1,
+        })
+        if (linkedResult.success) {
+          cascadeSynced.push(linkedCycle)
+          console.log('[syncCycleTransactions][cascade][sync-linked-success]', {
+            syncRunId,
+            personId,
+            sourceCycle: normalizedCycle,
+            linkedCycle,
+            cascadeDepth,
+          })
+        } else {
+          cascadeFailed.push({
+            cycleTag: linkedCycle,
+            message: linkedResult.message ?? 'Cascade sync failed',
+          })
+          console.error('[syncCycleTransactions][cascade][sync-linked-failed]', {
+            syncRunId,
+            personId,
+            sourceCycle: normalizedCycle,
+            linkedCycle,
+            cascadeDepth,
+            message: linkedResult.message ?? 'Cascade sync failed',
+          })
+        }
+      }
+    } else {
+      console.log('[syncCycleTransactions][cascade][disabled]', {
+        syncRunId,
+        personId,
+        cycleTag,
+        normalizedCycle,
+        cascadeDepth,
+      })
+    }
+
+    if (cascadeFailed.length > 0) {
+      console.error('[syncCycleTransactions][cascade][done-with-failures]', {
+        syncRunId,
+        personId,
+        cycleTag,
+        normalizedCycle,
+        cascadeDepth,
+        cascadeSynced,
+        cascadeFailed,
+      })
+      return {
+        success: false,
+        count: rows.length,
+        syncedCount: result.json?.syncedCount,
+        manualPreserved: result.json?.manualPreserved,
+        totalRows: result.json?.totalRows,
+        cascadeSynced,
+        cascadeFailed,
+        message: `Cascade sync failed for cycles: ${cascadeFailed.map((c) => c.cycleTag).join(', ')}`,
+      }
+    }
+
+    console.log('[syncCycleTransactions][cascade][done-success]', {
+      syncRunId,
+      personId,
+      cycleTag,
+      normalizedCycle,
+      cascadeDepth,
+      cascadeSynced,
+      rowCount: rows.length,
+    })
 
     return {
       success: true,
       count: rows.length,
       syncedCount: result.json?.syncedCount,
       manualPreserved: result.json?.manualPreserved,
-      totalRows: result.json?.totalRows
+      totalRows: result.json?.totalRows,
+      cascadeSynced,
     }
   } catch (error) {
-    console.error('Sync cycle transactions failed:', error)
+    console.error('[syncCycleTransactions][cascade][exception]', {
+      personId,
+      cycleTag,
+      error,
+    })
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Sync failed',

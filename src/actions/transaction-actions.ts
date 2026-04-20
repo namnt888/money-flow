@@ -20,6 +20,20 @@ import {
   toPocketBaseId,
 } from '@/services/pocketbase/server';
 
+function isRolloverTransactionLike(txn: any): boolean {
+  const note = String(txn?.note || txn?.description || '').toLowerCase();
+  if (note.includes('rollover')) return true;
+
+  const meta = typeof txn?.metadata === 'object' && txn.metadata !== null
+    ? (txn.metadata as Record<string, unknown>)
+    : {};
+
+  const linkedId = typeof txn?.linked_transaction_id === 'string' ? txn.linked_transaction_id : '';
+  const metaLinkedId = typeof meta.linked_transaction_id === 'string' ? String(meta.linked_transaction_id) : '';
+
+  return Boolean(linkedId || metaLinkedId);
+}
+
 export type CreateTransactionInput = {
   occurred_at: string;
   note: string;
@@ -203,17 +217,21 @@ export async function restoreTransaction(id: string): Promise<boolean> {
 
     // Sync restore to sheet
     if (existing?.person_id) {
-       void syncTransactionToSheet(existing.person_id, {
-         id: pbId,
-         occurred_at: existing.occurred_at,
-         note: existing.note,
-         tag: existing.tag,
-         amount: existing.amount,
-         original_amount: existing.amount,
-         type: existing.type,
-         account_id: existing.account_id ?? null,
-         target_account_id: existing.target_account_id ?? existing.to_account_id ?? null,
-       } as any, 'create').catch(err => console.error('Sheet Sync Error (Restore):', err));
+      void import('@/services/sheet.service')
+        .then(({ syncTransactionToSheet }) =>
+          syncTransactionToSheet(existing.person_id, {
+            id: pbId,
+            occurred_at: existing.occurred_at,
+            note: existing.note,
+            tag: existing.tag,
+            amount: existing.amount,
+            original_amount: existing.amount,
+            type: existing.type,
+            account_id: existing.account_id ?? null,
+            target_account_id: existing.target_account_id ?? existing.to_account_id ?? null,
+          } as any, 'create')
+        )
+        .catch((err: unknown) => console.error('Sheet Sync Error (Restore):', err));
     }
 
     revalidatePath('/transactions');
@@ -235,6 +253,31 @@ export async function confirmRefundAction(
   confirmedAt?: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const pbPendingId = toPocketBaseId(pendingTransactionId, 'transactions');
+    const pendingTxn = await pocketbaseGetById<any>('transactions', pbPendingId);
+    if (!pendingTxn) {
+      return { success: false, error: 'Pending refund transaction not found' };
+    }
+
+    if (isRolloverTransactionLike(pendingTxn)) {
+      return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+    }
+
+    const pendingMeta =
+      typeof pendingTxn.metadata === 'object' && pendingTxn.metadata !== null
+        ? (pendingTxn.metadata as Record<string, unknown>)
+        : {};
+    const originalTxnId =
+      typeof pendingMeta.original_transaction_id === 'string'
+        ? String(pendingMeta.original_transaction_id)
+        : null;
+    if (originalTxnId) {
+      const originalTxn = await pocketbaseGetById<any>('transactions', originalTxnId);
+      if (originalTxn && isRolloverTransactionLike(originalTxn)) {
+        return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+      }
+    }
+
     const result = await confirmPBRefund(
       pendingTransactionId,
       targetAccountId,
@@ -456,6 +499,10 @@ export async function requestRefund(
     const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
 
+    if (isRolloverTransactionLike(existing)) {
+      return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+    }
+
     const existingMeta =
       typeof existing.metadata === 'object' && existing.metadata !== null
         ? existing.metadata
@@ -603,6 +650,10 @@ export async function cancelOrder(
     const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
 
+    if (isRolloverTransactionLike(existing)) {
+      return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+    }
+
     // A1: GD2 Guard - Block Cancel 100% when GD2 already exists
     const gd2Children = await pocketbaseList<any>('transactions', {
       filter: `metadata.refund_stage_tag = "GD2" && metadata.original_transaction_id = "${pbId}" && status != "voided" && status != "void"`,
@@ -637,6 +688,10 @@ export async function instantRefund(
     const pbId = toPocketBaseId(transactionId, 'transactions');
     const existing = await pocketbaseGetById<any>('transactions', pbId);
     if (!existing) throw new Error('Transaction not found');
+
+    if (isRolloverTransactionLike(existing)) {
+      return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+    }
 
     const existingMeta = typeof existing.metadata === 'object' && existing.metadata !== null
       ? existing.metadata

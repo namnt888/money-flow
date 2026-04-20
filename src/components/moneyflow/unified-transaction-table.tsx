@@ -1573,7 +1573,6 @@ export const UnifiedTransactionTable = React.forwardRef<
       if (setIsGlobalLoading) setIsGlobalLoading(true);
       if (setLoadingMessage) setLoadingMessage("Voiding transaction...");
       const targetId = confirmVoidTarget.id;
-      setConfirmVoidTarget(null);
       setUpdatingTxnIds((prev) => new Set(prev).add(targetId));
 
       try {
@@ -1582,8 +1581,12 @@ export const UnifiedTransactionTable = React.forwardRef<
         });
         if (!ok) {
           setVoidError("Unable to void transaction. Please try again.");
+          toast.error("Unable to void transaction", {
+            description: "The transaction could not be voided. Please try again.",
+          });
           return;
         }
+        setConfirmVoidTarget(null);
         setStatusOverrides((prev) => ({ ...prev, [targetId]: "void" }));
         if (confirmVoidLinkedRolloverId) {
           toast.success("Rollover pair voided", {

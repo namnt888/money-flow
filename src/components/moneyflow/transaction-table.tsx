@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Ban, Loader2, MoreHorizontal, Pencil, RotateCcw, SlidersHorizontal, ArrowLeftRight, ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createPortal } from "react-dom"
+import { toast } from "sonner"
 import { CustomTooltip } from "@/components/ui/custom-tooltip"
 import { Account, Category, Person, Shop, TransactionWithDetails, TransactionWithLineRelations } from "@/types/moneyflow.types"
 import {
@@ -426,6 +427,9 @@ export function TransactionTable({
       .then((ok: any) => {
         if (!ok) {
           setVoidError('Unable to void transaction. Please try again.')
+          toast.error('Unable to void transaction', {
+            description: 'The transaction could not be voided. Please try again.',
+          })
           return
         }
         setStatusOverrides(prev => ({ ...prev, [confirmVoidTarget.id]: 'void' }))
