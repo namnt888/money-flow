@@ -113,7 +113,7 @@ inactive -> archived
 
 ## 8) Tích hợp Google Sheets (Accounts master tab)
 
-## 8.1 Mục tiêu
+### 8.1 Mục tiêu
 
 `Accounts` tab là bảng master để:
 - Quản lý metadata account

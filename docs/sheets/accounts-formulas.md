@@ -6,7 +6,7 @@ Tài liệu này cung cấp công thức **copy-paste sẵn** cho mô hình n8n 
 
 ## 1.1 Tab `Accounts`
 
-| Cột | Tên cột | Gợi ý dữ liệu |
+| Cột | Tên cột | Ví dụ dữ liệu |
 |---|---|---|
 | A | `id` | ACC_TCB_001, ACC_VCB_001, ACC_MOMO_001... |
 | B | `name` | Techcombank, VCB, MoMo, ZaloPay, Tiền mặt |
@@ -37,7 +37,7 @@ Tài liệu này cung cấp công thức **copy-paste sẵn** cho mô hình n8n 
 | H | `debt_role` | lent / borrowed (chỉ dùng cho debt/repayment) |
 | I | `note` | Ghi chú |
 
-> Quy ước khuyến nghị: mỗi chiều của transfer ghi thành một dòng riêng (`transfer_out` cho nguồn, `transfer_in` cho đích) để SUMIFS đơn giản và minh bạch.
+> Quy ước khuyến nghị: mỗi chiều của transfer ghi thành một dòng riêng (`transfer_out` cho nguồn, `transfer_in` cho đích) để SUMIFS đơn giản và minh bạch. Hai dòng này phải được tạo/cập nhật **atomically** trong cùng transaction boundary để luôn giữ nhất quán số dư.
 
 ---
 
