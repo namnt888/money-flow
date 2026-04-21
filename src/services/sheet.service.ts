@@ -309,9 +309,14 @@ async function ensureCascadeCycleSheet(personId: string, cycleTag: string): Prom
     const existingSheetUrl = typeof existing?.sheet_url === 'string' ? existing.sheet_url : null
     const hasSheetInfo = Boolean(existingSheetId || existingSheetUrl)
 
-    if (hasSheetInfo) {
-      return { sheetId: existingSheetId ?? null, created: false }
-    }
+    // Always ensure cycle sheet exists in Google Sheet itself.
+    // person_cycle_sheets can be stale when users manually delete a tab.
+    console.log('[syncCycleTransactions][cascade][ensure-sheet-attempt]', {
+      personId,
+      cycleTag: normalizedCycle,
+      hasSheetInfo,
+      existingSheetId,
+    })
 
     const createResult = await createCycleSheet(personId, normalizedCycle)
     if (!createResult.success) {
@@ -320,6 +325,12 @@ async function ensureCascadeCycleSheet(personId: string, cycleTag: string): Prom
         cycleTag: normalizedCycle,
         message: createResult.message,
       })
+
+      // Fallback to existing row data if create endpoint fails but metadata already exists.
+      if (hasSheetInfo) {
+        return { sheetId: existingSheetId ?? null, created: false }
+      }
+
       return { sheetId: null, created: false }
     }
 
@@ -344,7 +355,7 @@ async function ensureCascadeCycleSheet(personId: string, cycleTag: string): Prom
       })
     }
 
-    return { sheetId: createResult.sheetId ?? null, created: true }
+    return { sheetId: createResult.sheetId ?? existingSheetId ?? null, created: true }
   } catch (error) {
     console.warn('[syncCycleTransactions][cascade][ensure-sheet-exception]', {
       personId,
