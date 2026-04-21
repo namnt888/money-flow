@@ -446,12 +446,12 @@ export function TransactionHeader({
             if (!localStatusFilter.active) {
               const next = { active: true, void: false, refund: false }
               setLocalStatusFilter(next)
-              if (hasActiveFilters) onStatusChange(next)
+              onStatusChange(next)
             }
           }}
           className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
             localStatusFilter.active && !localStatusFilter.void
-              ? 'bg-emerald-100 text-emerald-700'
+              ? 'bg-blue-600 text-white'
               : 'text-slate-500 hover:bg-slate-100'
           }`}
         >
@@ -464,12 +464,12 @@ export function TransactionHeader({
             if (!localStatusFilter.void) {
               const next = { active: false, void: true, refund: false }
               setLocalStatusFilter(next)
-              if (hasActiveFilters) onStatusChange(next)
+              onStatusChange(next)
             }
           }}
           className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
             localStatusFilter.void
-              ? 'bg-slate-200 text-slate-800'
+              ? 'bg-blue-600 text-white'
               : 'text-slate-500 hover:bg-slate-100'
           }`}
         >
@@ -591,26 +591,6 @@ export function TransactionHeader({
         <span className="hidden sm:inline text-xs">Reset</span>
       </Button>
 
-      {/* Collapse All / Expand All Button */}
-      {onToggleQueuesCollapsed && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleQueuesCollapsed}
-          className="h-9 px-2 gap-1.5 font-medium"
-          title={queuesCollapsed ? 'Expand All' : 'Collapse All'}
-        >
-          {queuesCollapsed ? (
-            <LayoutList className="w-4 h-4" />
-          ) : (
-            <ChevronsUp className="w-4 h-4" />
-          )}
-          <span className="hidden sm:inline text-xs">
-            {queuesCollapsed ? 'Expand All' : 'Collapse All'}
-          </span>
-        </Button>
-      )}
-
       {/* Legacy clear menu kept for mobile only */}
       {false && !hasActiveFilters ? (
         <Button
@@ -722,6 +702,25 @@ export function TransactionHeader({
         <div className="shrink-0 ml-auto">
           <AddTransactionDropdown onSelect={onAdd} />
         </div>
+
+        {onToggleQueuesCollapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleQueuesCollapsed}
+            className="h-9 px-2 gap-1.5 font-medium shrink-0"
+            title={queuesCollapsed ? 'Expand All' : 'Collapse All'}
+          >
+            {queuesCollapsed ? (
+              <LayoutList className="w-4 h-4" />
+            ) : (
+              <ChevronsUp className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline text-xs">
+              {queuesCollapsed ? 'Expand All' : 'Collapse All'}
+            </span>
+          </Button>
+        )}
       </div>
 
       {/* Confirmation Dialog */}
