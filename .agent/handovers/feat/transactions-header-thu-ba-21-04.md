@@ -81,3 +81,9 @@
 - Behavior parity checklist fully passed.
 - Build/test/lint pass.
 - Update this handover with any new caveats before merge.
+
+## 11) Current Build Notes (2026-04-21)
+- Build and tests pass on this branch.
+- Non-blocking warning seen during build: baseline-browser-mapping package data is outdated.
+- Non-blocking warning seen for /batch/settings dynamic server usage during page data collection.
+- These warnings are informational for this docs PR and are not part of the transactions header refactor scope.
