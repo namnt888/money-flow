@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { format } from 'date-fns'
+import { format, startOfMonth } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { 
     CalendarIcon, 
@@ -159,9 +159,12 @@ export function UnifiedSmartDatePicker({
 }: UnifiedSmartDatePickerProps) {
   const [open, setOpen] = useState(false)
   const [yearOpen, setYearOpen] = useState(false)
+  const [rangeMonthOpen, setRangeMonthOpen] = useState(false)
+  const [rangeYearOpen, setRangeYearOpen] = useState(false)
   const [localMode, setLocalMode] = useState<PickerMode>(mode)
   const [localDate, setLocalDate] = useState<Date>(date)
   const [localRange, setLocalRange] = useState<DateRange | undefined>(dateRange)
+  const [rangeViewMonth, setRangeViewMonth] = useState<Date>(startOfMonth(dateRange?.from || date))
   const [localCycle, setLocalCycle] = useState<string>(selectedCycleValue || 'all')
   const [cycleSearch, setCycleSearch] = useState('')
   const [typedInput, setTypedInput] = useState('')
@@ -194,6 +197,19 @@ export function UnifiedSmartDatePicker({
 
   const [localAllYear, setLocalAllYear] = useState<string>(selectedYearValue || 'all')
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthLabelLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+  const monthModeYears = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const years = new Set<number>([currentYear])
+    if (availableMonths) {
+      availableMonths.forEach((monthTag) => {
+        const year = Number(monthTag.slice(0, 4))
+        if (!Number.isNaN(year)) years.add(year)
+      })
+    }
+    return Array.from(years).sort((a, b) => b - a)
+  }, [availableMonths])
 
   const cyclesWithAll = useMemo(() => {
     const base = cycles || []
@@ -222,6 +238,7 @@ export function UnifiedSmartDatePicker({
     setLocalMode(mode)
     setLocalDate(date)
     setLocalRange(dateRange)
+    setRangeViewMonth(startOfMonth(dateRange?.from || date))
     setLocalCycle(selectedCycleValue || 'all')
     setTypedInput('')
     setInputWarning(null)
@@ -309,6 +326,26 @@ export function UnifiedSmartDatePicker({
     onModeChange('range')
     onRangeChange(localRange)
     setOpen(false)
+  }
+
+  const handleTodayDraft = () => {
+    const today = new Date()
+    if (localMode === 'range') {
+      setLocalRange({ from: today, to: today })
+      setRangeViewMonth(startOfMonth(today))
+      setTypedInput(`${format(today, 'dd-MM-yyyy')} - ${format(today, 'dd-MM-yyyy')}`)
+      return
+    }
+
+    if (localMode === 'month') {
+      const monthDate = new Date(today.getFullYear(), today.getMonth(), 1)
+      setLocalDate(monthDate)
+      setTypedInput(format(monthDate, 'MM-yyyy'))
+      return
+    }
+
+    setLocalDate(today)
+    setTypedInput(format(today, 'dd-MM-yyyy'))
   }
   
   const handleInternalSync = async (tag?: string) => {
@@ -687,7 +724,7 @@ export function UnifiedSmartDatePicker({
           localMode === 'cycle'
             ? 'w-[850px] max-w-[95vw]'
             : localMode === 'range'
-              ? 'w-[420px] max-w-[92vw]'
+              ? 'w-[640px] max-w-[95vw]'
               : localMode === 'date'
                 ? 'w-[350px] max-w-[92vw]'
                 : 'w-[390px] max-w-[92vw]'
@@ -737,7 +774,7 @@ export function UnifiedSmartDatePicker({
                   setLocalDate(d)
                   setTypedInput(format(d, 'dd-MM-yyyy'))
                 }}
-                captionLayout="label"
+                captionLayout="dropdown"
                 disabled={disabledMatchers}
               />
             </div>
@@ -746,25 +783,37 @@ export function UnifiedSmartDatePicker({
           {localMode === 'month' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  onClick={() => setLocalDate(new Date(localDate.getFullYear() - 1, localDate.getMonth(), 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-semibold text-slate-700">{localDate.getFullYear()}</span>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  onClick={() => setLocalDate(new Date(localDate.getFullYear() + 1, localDate.getMonth(), 1))}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <span className="text-xs font-semibold text-slate-600">Year</span>
+                <Popover open={yearOpen} onOpenChange={setYearOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 min-w-[110px] justify-between text-xs font-semibold">
+                      {localDate.getFullYear()}
+                      <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[170px] p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Find year" />
+                      <CommandList>
+                        <CommandEmpty>No year found.</CommandEmpty>
+                        {monthModeYears.map((year: number) => (
+                          <CommandItem
+                            key={year}
+                            value={String(year)}
+                            onSelect={() => {
+                              setLocalDate(new Date(year, localDate.getMonth(), 1))
+                              setYearOpen(false)
+                            }}
+                            className="flex items-center justify-between"
+                          >
+                            <span>{year}</span>
+                            {localDate.getFullYear() === year && <Check className="w-3.5 h-3.5" />}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-4 gap-2">
@@ -792,7 +841,71 @@ export function UnifiedSmartDatePicker({
           )}
 
           {localMode === 'range' && (
-            <div className="w-fit max-w-[calc(100vw-80px)] overflow-x-auto">
+            <div className="w-full">
+              <div className="mb-2 flex items-center gap-2">
+                <Popover open={rangeMonthOpen} onOpenChange={setRangeMonthOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 min-w-[130px] justify-between text-xs font-semibold">
+                      {monthLabelLong[rangeViewMonth.getMonth()]}
+                      <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[200px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Find month" />
+                      <CommandList>
+                        <CommandEmpty>No month found.</CommandEmpty>
+                        {monthLabelLong.map((monthName, monthIndex) => (
+                          <CommandItem
+                            key={monthName}
+                            value={monthName}
+                            onSelect={() => {
+                              setRangeViewMonth(new Date(rangeViewMonth.getFullYear(), monthIndex, 1))
+                              setRangeMonthOpen(false)
+                            }}
+                            className="flex items-center justify-between"
+                          >
+                            <span>{monthName}</span>
+                            {rangeViewMonth.getMonth() === monthIndex && <Check className="w-3.5 h-3.5" />}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                <Popover open={rangeYearOpen} onOpenChange={setRangeYearOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 min-w-[110px] justify-between text-xs font-semibold">
+                      {rangeViewMonth.getFullYear()}
+                      <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[170px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Find year" />
+                      <CommandList>
+                        <CommandEmpty>No year found.</CommandEmpty>
+                        {availableYears.map((year: number) => (
+                          <CommandItem
+                            key={year}
+                            value={String(year)}
+                            onSelect={() => {
+                              setRangeViewMonth(new Date(year, rangeViewMonth.getMonth(), 1))
+                              setRangeYearOpen(false)
+                            }}
+                            className="flex items-center justify-between"
+                          >
+                            <span>{year}</span>
+                            {rangeViewMonth.getFullYear() === year && <Check className="w-3.5 h-3.5" />}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               <Calendar
                 mode="range"
                 selected={localRange}
@@ -804,11 +917,14 @@ export function UnifiedSmartDatePicker({
                     setTypedInput(format(range.from, 'dd-MM-yyyy'))
                   }
                 }}
+                captionLayout="label"
                 disabled={disabledMatchers}
                 numberOfMonths={2}
-                className="w-fit"
+                month={rangeViewMonth}
+                onMonthChange={(month) => setRangeViewMonth(startOfMonth(month))}
+                className="mx-auto w-fit"
                 classNames={{
-                  months: 'flex flex-row gap-3 w-fit',
+                  months: 'flex flex-row gap-3',
                   month: 'space-y-4 w-[280px]'
                 }}
               />
@@ -879,6 +995,14 @@ export function UnifiedSmartDatePicker({
         </div>
 
         <div className="p-2 border-t flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTodayDraft}
+            disabled={localMode === 'cycle'}
+          >
+            Today
+          </Button>
           <Button
             variant="ghost"
             size="sm"

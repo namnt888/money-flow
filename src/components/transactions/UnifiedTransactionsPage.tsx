@@ -181,7 +181,6 @@ export function UnifiedTransactionsPage({
         refund: false,
         batch: false,
     })
-    const [queuesCollapsed, setQueuesCollapsed] = useState(false)
     const [pendingBatchSummary, setPendingBatchSummary] = useState<PendingBatchSummary[]>([])
     const [highlightedRefundTxnIds, setHighlightedRefundTxnIds] = useState<Set<string>>(new Set())
     const [pendingBatchModalOpen, setPendingBatchModalOpen] = useState(false)
@@ -955,12 +954,13 @@ export function UnifiedTransactionsPage({
         })
     }, [pendingBatchSummary, accounts])
 
-    const renderQueueRow = (item: QueueCardItem, kind: 'refund' | 'batch', expanded: boolean) => {
+    const renderQueueCollapsedPill = (item: QueueCardItem, kind: 'refund' | 'batch') => {
+        const fallbackInitial = item.title.trim().charAt(0).toUpperCase() || (kind === 'refund' ? 'R' : 'B')
         return (
             <CustomTooltip
                 key={item.id}
                 content={
-                    <div className="max-w-[280px] text-xs">
+                    <div className="max-w-[260px] text-xs">
                         <div className="font-semibold text-slate-200">{item.title}</div>
                         <div className="text-slate-400">{item.subtitle}</div>
                     </div>
@@ -968,31 +968,25 @@ export function UnifiedTransactionsPage({
             >
                 <button
                     type="button"
-                    onClick={item.onClick}
-                    className={cn(
-                        "inline-flex min-w-0 items-center gap-2 rounded-full border bg-white px-2 py-1 text-left shadow-sm transition",
-                        expanded ? "w-full border-slate-300 hover:bg-slate-50" : "w-[260px] max-w-full border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                    )}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        item.onClick()
+                    }}
+                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-white px-1.5 transition hover:bg-slate-50"
                 >
-                    <div className="shrink-0">
-                        {item.imageUrl ? (
-                            <img src={item.imageUrl} alt="" className="h-7 w-7 rounded-none border-none object-contain" />
-                        ) : (
-                            <div className={`flex h-7 w-7 items-center justify-center rounded-full border border-white text-[9px] font-black ${kind === 'refund' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'}`}>
-                                {kind === 'refund' ? 'S' : 'B'}
-                            </div>
-                        )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className={cn("truncate text-xs font-semibold text-slate-900", !expanded && "whitespace-nowrap")}>{item.title}</div>
-                        {expanded ? (
-                            <div className="truncate text-[10px] text-slate-500 whitespace-nowrap">{item.subtitle}</div>
-                        ) : null}
-                    </div>
-                    <div className="shrink-0 text-right">
-                        <div className="text-[10px] font-bold text-slate-700">{item.amount.toLocaleString('vi-VN')}</div>
-                        <div className="text-[9px] uppercase tracking-wide text-slate-400">{item.badge}</div>
-                    </div>
+                    {item.imageUrl ? (
+                        <img src={item.imageUrl} alt="" className="h-8 w-8 rounded-sm object-contain" />
+                    ) : (
+                        <div className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-sm text-[10px] font-black",
+                            kind === 'refund' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                        )}>
+                            {fallbackInitial}
+                        </div>
+                    )}
+                    <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-700">
+                        {item.amount.toLocaleString('vi-VN')}
+                    </span>
                 </button>
             </CustomTooltip>
         )
@@ -1008,59 +1002,103 @@ export function UnifiedTransactionsPage({
         accentClass: string,
         emptyHint: string,
     ) => {
-        const showInline = expanded ? items.slice(0, 12) : items.slice(0, 4)
         const hasItems = items.length > 0
+        const collapsedLimit = 5
+        const collapsedItems = items.slice(0, collapsedLimit)
+        const hiddenCount = Math.max(0, items.length - collapsedItems.length)
 
         return (
             <div className={cn(
-                "mb-3 rounded-2xl border px-3 py-2 shadow-sm transition-colors",
+                "mb-3 rounded-2xl border px-3 shadow-sm transition-colors",
                 hasItems ? `bg-white/90 ${accentClass}` : "bg-slate-50 border-slate-200 opacity-80"
             )}>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                        {icon}
-                        {title}
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                            {items.length}
-                        </span>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onToggle}
-                        disabled={!hasItems}
-                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
-                    >
-                        {!hasItems ? (
-                            <span>No items</span>
-                        ) : expanded ? (
-                            <>
-                                <ChevronUp className="h-3 w-3" />
-                                Collapse
-                            </>
-                        ) : (
-                            <>
-                                <ChevronDown className="h-3 w-3" />
-                                Expand
-                            </>
-                        )}
-                    </button>
-                </div>
-                {!hasItems ? (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
-                        {emptyHint}
-                    </div>
-                ) : (
-                    <div className={expanded ? 'flex flex-wrap gap-2' : 'flex flex-nowrap gap-2 overflow-hidden'}>
-                        {showInline.map((item) => renderQueueRow(item, kind, expanded))}
-                        {!expanded && items.length > showInline.length && (
+                {expanded ? (
+                    <>
+                        <div className="mb-2 flex items-center justify-between gap-2 pt-2">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                {icon}
+                                {title}
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                    {items.length}
+                                </span>
+                            </div>
                             <button
                                 type="button"
                                 onClick={onToggle}
-                                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-dashed border-slate-300 bg-slate-50 px-2 text-[10px] font-bold text-slate-500"
+                                disabled={!hasItems}
+                                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
                             >
-                                +{items.length - showInline.length}
+                                {!hasItems ? (
+                                    <span>No items</span>
+                                ) : (
+                                    <>
+                                        <ChevronUp className="h-3 w-3" />
+                                        Collapse
+                                    </>
+                                )}
                             </button>
+                        </div>
+                        {!hasItems ? (
+                            <div className="mb-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+                                {emptyHint}
+                            </div>
+                        ) : (
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                                {items.map((item) => renderQueueCollapsedPill(item, kind))}
+                            </div>
                         )}
+                    </>
+                ) : (
+                    <div className="flex h-11 items-center gap-2">
+                        <div className="flex shrink-0 items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            {icon}
+                            {title}
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                {items.length}
+                            </span>
+                        </div>
+                        <div
+                            className={cn('min-w-0 flex-1 overflow-hidden', hasItems && 'cursor-pointer')}
+                            onClick={hasItems ? onToggle : undefined}
+                            title={hasItems ? 'Click to expand queue' : undefined}
+                        >
+                            {hasItems ? (
+                                <div className="flex items-center gap-2 pr-1">
+                                    <div className="min-w-0 flex-1 overflow-hidden">
+                                        <div className="flex items-center gap-2">
+                                            {collapsedItems.map((item) => renderQueueCollapsedPill(item, kind))}
+                                        </div>
+                                    </div>
+                                    {hiddenCount > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                onToggle()
+                                            }}
+                                            className="inline-flex h-8 shrink-0 items-center rounded-full bg-slate-100 px-2 text-[10px] font-bold text-slate-700 transition hover:bg-slate-200"
+                                            title="Show all items"
+                                        >
+                                            +{hiddenCount}
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation()
+                                            onToggle()
+                                        }}
+                                        disabled={!hasItems}
+                                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        title={hasItems ? 'Expand' : 'No items'}
+                                    >
+                                        <ChevronDown className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="truncate text-[11px] text-slate-500">{emptyHint}</div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -1399,8 +1437,16 @@ export function UnifiedTransactionsPage({
                     availableDateRange={availableDateRange}
                     categories={categories}
                     isPending={isPending}
-                    queuesCollapsed={queuesCollapsed}
-                    onToggleQueuesCollapsed={() => setQueuesCollapsed((prev) => !prev)}
+                    queuesCollapsed={!expandedQueues.refund && !expandedQueues.batch}
+                    onToggleQueuesCollapsed={() => {
+                        setExpandedQueues((prev) => {
+                            const shouldExpandAll = !prev.refund && !prev.batch
+                            return {
+                                refund: shouldExpandAll,
+                                batch: shouldExpandAll,
+                            }
+                        })
+                    }}
                     statusSwitchLoading={statusSwitchLoading}
                     statusSwitchTarget={statusSwitchTarget}
                 />
@@ -1408,10 +1454,7 @@ export function UnifiedTransactionsPage({
 
             {/* Content Section */}
             <div className="flex-1 overflow-hidden p-0 sm:p-4 relative">
-                <div className={cn(
-                    "transition-all duration-300 ease-out",
-                    queuesCollapsed ? 'max-h-0 opacity-0 -translate-y-1 overflow-hidden mb-0' : 'max-h-[520px] opacity-100 translate-y-0 mb-2'
-                )}>
+                <div className={cn("transition-all duration-300 ease-out mb-2")}>
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                     {renderQueueSection(
                         'Pending Ref',

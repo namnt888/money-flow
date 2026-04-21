@@ -702,14 +702,13 @@ export function TransactionHeader({
         <div className="shrink-0 ml-auto">
           <AddTransactionDropdown onSelect={onAdd} />
         </div>
-
         {onToggleQueuesCollapsed && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleQueuesCollapsed}
-            className="h-9 px-2 gap-1.5 font-medium shrink-0"
-            title={queuesCollapsed ? 'Expand All' : 'Collapse All'}
+            className="h-9 min-w-[134px] justify-center gap-1.5 border border-slate-200 bg-white px-2 font-medium text-slate-700 hover:bg-slate-50 shrink-0"
+            title={queuesCollapsed ? 'Expand Queue' : 'Collapse Queue'}
           >
             {queuesCollapsed ? (
               <LayoutList className="w-4 h-4" />
@@ -717,7 +716,7 @@ export function TransactionHeader({
               <ChevronsUp className="w-4 h-4" />
             )}
             <span className="hidden sm:inline text-xs">
-              {queuesCollapsed ? 'Expand All' : 'Collapse All'}
+              {queuesCollapsed ? 'Expand Queue' : 'Collapse Queue'}
             </span>
           </Button>
         )}
