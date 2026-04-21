@@ -6,7 +6,7 @@ import { UnifiedSmartDatePicker } from '@/components/transactions-v2/header/Unif
 import { QuickFilterDropdown } from '@/components/transactions-v2/header/QuickFilterDropdown'
 import { TypeFilterDropdown } from '@/components/transactions-v2/header/TypeFilterDropdown'
 import { AddTransactionDropdown } from '@/components/transactions-v2/header/AddTransactionDropdown'
-import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, Clipboard, RefreshCw, Loader2, CheckCircle2, Ban, RotateCcw, RefreshCcw } from 'lucide-react'
+import { FilterX, ListFilter, X, Search, Filter, Trash2, ChevronDown, ChevronsUp, LayoutList, Clipboard, RefreshCw, Loader2, CheckCircle2, Ban, RotateCcw, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DateRange } from 'react-day-picker'
@@ -103,6 +103,10 @@ interface TransactionHeaderProps {
   
   // Loading State
   isPending?: boolean
+
+  // Queue Collapse State
+  queuesCollapsed?: boolean
+  onToggleQueuesCollapsed?: () => void
 }
 
 interface ClearDropdownButtonProps {
@@ -220,6 +224,8 @@ export function TransactionHeader({
   availableCategoryIds,
   categories = [],
   isPending = false,
+  queuesCollapsed = false,
+  onToggleQueuesCollapsed,
 }: TransactionHeaderProps) {
   // Local State Buffer
   const [localAccountId, setLocalAccountId] = useState(accountId)
@@ -437,12 +443,14 @@ export function TransactionHeader({
         <button
           type="button"
           onClick={() => {
-            const next = { ...localStatusFilter, active: !localStatusFilter.active }
-            setLocalStatusFilter(next)
-            if (hasActiveFilters) onStatusChange(next)
+            if (!localStatusFilter.active) {
+              const next = { active: true, void: false, refund: false }
+              setLocalStatusFilter(next)
+              if (hasActiveFilters) onStatusChange(next)
+            }
           }}
           className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
-            localStatusFilter.active
+            localStatusFilter.active && !localStatusFilter.void
               ? 'bg-emerald-100 text-emerald-700'
               : 'text-slate-500 hover:bg-slate-100'
           }`}
@@ -453,9 +461,11 @@ export function TransactionHeader({
         <button
           type="button"
           onClick={() => {
-            const next = { ...localStatusFilter, void: !localStatusFilter.void }
-            setLocalStatusFilter(next)
-            if (hasActiveFilters) onStatusChange(next)
+            if (!localStatusFilter.void) {
+              const next = { active: false, void: true, refund: false }
+              setLocalStatusFilter(next)
+              if (hasActiveFilters) onStatusChange(next)
+            }
           }}
           className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
             localStatusFilter.void
@@ -465,22 +475,6 @@ export function TransactionHeader({
         >
           <Ban className="h-3.5 w-3.5" />
           Void
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            const next = { ...localStatusFilter, refund: !localStatusFilter.refund }
-            setLocalStatusFilter(next)
-            if (hasActiveFilters) onStatusChange(next)
-          }}
-          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold transition-colors ${
-            localStatusFilter.refund
-              ? 'bg-amber-100 text-amber-700'
-              : 'text-slate-500 hover:bg-slate-100'
-          }`}
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Refund
         </button>
       </div>
 
@@ -597,6 +591,26 @@ export function TransactionHeader({
         <span className="hidden sm:inline text-xs">Reset</span>
       </Button>
 
+      {/* Collapse All / Expand All Button */}
+      {onToggleQueuesCollapsed && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleQueuesCollapsed}
+          className="h-9 px-2 gap-1.5 font-medium"
+          title={queuesCollapsed ? 'Expand All' : 'Collapse All'}
+        >
+          {queuesCollapsed ? (
+            <LayoutList className="w-4 h-4" />
+          ) : (
+            <ChevronsUp className="w-4 h-4" />
+          )}
+          <span className="hidden sm:inline text-xs">
+            {queuesCollapsed ? 'Expand All' : 'Collapse All'}
+          </span>
+        </Button>
+      )}
+
       {/* Legacy clear menu kept for mobile only */}
       {false && !hasActiveFilters ? (
         <Button
@@ -608,12 +622,7 @@ export function TransactionHeader({
           <Filter className="w-4 h-4" />
           <span className="hidden sm:inline text-xs">Filter</span>
         </Button>
-      ) : (
-        <ClearDropdownButton
-          onClearFilters={onClearFilters}
-          setConfirmClearOpen={setConfirmClearOpen}
-        />
-      )}
+      ) : null}
     </div>
   )
 
