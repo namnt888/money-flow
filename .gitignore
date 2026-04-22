@@ -1,58 +1,70 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+```
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnp.cjs
+.pnp.loader.mjs
 
-# testing
-/coverage
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
 
-# next.js
-/.next/
-/out/
-/.next-dev/
+# Environment
+.env
+.env.local
+*.env.*
 
-# production
-/build
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# local troubleshooting artifacts
-build_output*.txt
-build_errors.txt
-build.log
-push_output*.txt
-current_errors*.txt
-ts_error*.txt
-ts_errors.txt
-tsc*.txt
-tsc*.log
-
-# local throwaway scripts
-_*.py
-tmp_*.mjs
-tmp-*.ts
-temp_*.sql
-temp_*.txt
-fix_file.js
-fix-lady-config.mjs
-
-# duplicate editor/export leftovers
-.gitignore [0-9]*
-*.dmg
+node_modules/
+jspm_packages/
+web_modules/
+lib-cov/
+coverage/
+.nyc_output/
+.grunt
+bower_components/
+.sass-cache
+connect.lock
+.urlnr
+jspm_packages/
+jspm.browser.js
+config.jspm.js
+.npm
+node_modules/
+ typings/
+.nyc_output/
+istanbul.yml
+.coverage
+.coveralls.yml
+.travis.yml
+circle.yml
+appveyor.yml
+```

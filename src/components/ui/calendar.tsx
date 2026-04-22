@@ -16,13 +16,15 @@ function Calendar({
     showOutsideDays = true,
     ...props
 }: CalendarProps) {
+    const currentYear = new Date().getFullYear()
+
     return (
         <DayPicker
             showOutsideDays={showOutsideDays}
             className={cn("p-3 relative", className)}
             captionLayout="dropdown"
-            fromYear={1900}
-            toYear={2100}
+            fromYear={currentYear - 100}
+            toYear={currentYear}
             classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4 relative",
@@ -70,10 +72,17 @@ function Calendar({
             components={{
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 Dropdown: ({ value, onChange, options }: any) => {
-                    const items = options?.map((opt: any) => ({
+                    const rawItems = options?.map((opt: any) => ({
                         value: opt.value.toString(),
                         label: opt.label
                     })) || []
+
+                    const isYearOptions =
+                        rawItems.length > 20 && rawItems.every((opt: { value: string; label: string }) => /^\d{4}$/.test(opt.value))
+
+                    const items = isYearOptions
+                        ? [...rawItems].sort((a: { value: string }, b: { value: string }) => Number(b.value) - Number(a.value))
+                        : rawItems
 
                     const handleChange = (newValue: string | undefined) => {
                         if (!newValue) return

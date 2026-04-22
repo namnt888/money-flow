@@ -653,9 +653,12 @@ export async function loadTransactions(options: {
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<string | null> {
+  let normalized: Awaited<ReturnType<typeof normalizeInput>>;
+  let id: string;
+
   try {
-    const normalized = await normalizeInput(input);
-    const id = toPocketBaseId(crypto.randomUUID(), 'transactions');
+    normalized = await normalizeInput(input);
+    id = toPocketBaseId(crypto.randomUUID(), 'transactions');
     
     const pbPayload = {
       ...normalized,
@@ -668,55 +671,63 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     };
 
     await pocketbaseCreate('transactions', pbPayload);
-    
-    // Recalc Impacts
-    const affectedAccounts = new Set<string>();
-    affectedAccounts.add(normalized.account_id);
-    if (normalized.target_account_id) affectedAccounts.add(normalized.target_account_id);
-    await recalcForAccounts(affectedAccounts);
-
-    // Revalidate
-    revalidatePath("/transactions");
-    revalidatePath("/accounts");
-    revalidatePath("/people");
-    revalidatePersonPaths(input.person_id);
-
-    // Keep People Sheet in sync for debt-person flows.
-    if (normalized.person_id) {
-      await trySyncPeopleSheet(
-        normalized.person_id,
-        {
-          id,
-          occurred_at: normalized.occurred_at,
-          note: normalized.note ?? null,
-          tag: normalized.tag ?? normalized.debt_cycle_tag ?? null,
-          debt_cycle_tag: normalized.debt_cycle_tag ?? normalized.tag ?? null,
-          shop_id: normalized.shop_id ?? null,
-          amount: Math.abs(normalized.amount ?? 0),
-          original_amount: Math.abs(normalized.amount ?? 0),
-          cashback_share_percent: normalized.cashback_share_percent ?? null,
-          cashback_share_fixed: normalized.cashback_share_fixed ?? null,
-          type: normalized.type,
-          account_id: normalized.account_id ?? null,
-          target_account_id: normalized.target_account_id ?? normalized.to_account_id ?? null,
-          status: "posted",
-        },
-        "create",
-      );
-    }
-
-    // Integrate Cashback Sync (Real-time)
-    try {
-      await upsertPocketBaseTransactionCashback(id);
-    } catch (cbErr) {
-      console.warn("[Cashback Sync] Auto-sync failed:", cbErr);
-    }
-
-    return id;
   } catch (error) {
     console.error("[DB:PB] createTransaction failed:", error);
     return null;
   }
+
+  // Recalc impacts should not fail the transaction create path.
+  try {
+    const affectedAccounts = new Set<string>();
+    affectedAccounts.add(normalized.account_id);
+    if (normalized.target_account_id) affectedAccounts.add(normalized.target_account_id);
+    await recalcForAccounts(affectedAccounts);
+  } catch (recalcError) {
+    console.warn("[DB:PB] createTransaction recalc skipped:", recalcError);
+  }
+
+  // Revalidate should never block response.
+  try {
+    revalidatePath("/transactions");
+    revalidatePath("/accounts");
+    revalidatePath("/people");
+    revalidatePersonPaths(input.person_id);
+  } catch (revalidateError) {
+    console.warn("[DB:PB] createTransaction revalidate skipped:", revalidateError);
+  }
+
+  // Keep People Sheet in sync for debt-person flows without blocking create result.
+  if (normalized.person_id) {
+    void trySyncPeopleSheet(
+      normalized.person_id,
+      {
+        id,
+        occurred_at: normalized.occurred_at,
+        note: normalized.note ?? null,
+        tag: normalized.tag ?? normalized.debt_cycle_tag ?? null,
+        debt_cycle_tag: normalized.debt_cycle_tag ?? normalized.tag ?? null,
+        shop_id: normalized.shop_id ?? null,
+        amount: Math.abs(normalized.amount ?? 0),
+        original_amount: Math.abs(normalized.amount ?? 0),
+        cashback_share_percent: normalized.cashback_share_percent ?? null,
+        cashback_share_fixed: normalized.cashback_share_fixed ?? null,
+        type: normalized.type,
+        account_id: normalized.account_id ?? null,
+        target_account_id: normalized.target_account_id ?? normalized.to_account_id ?? null,
+        status: "posted",
+      },
+      "create",
+    ).catch((sheetSyncError) => {
+      console.warn("[Sheet Sync] createTransaction sync skipped:", sheetSyncError);
+    });
+  }
+
+  // Cashback sync should not fail main create flow.
+  void upsertPocketBaseTransactionCashback(id).catch((cbErr) => {
+    console.warn("[Cashback Sync] Auto-sync failed:", cbErr);
+  });
+
+  return id;
 }
 
 export async function createSplitTransactions(
@@ -1077,9 +1088,9 @@ export async function voidTransaction(
         : typeof (existingMeta as Record<string, unknown>).linked_transaction_id === 'string'
           ? ((existingMeta as Record<string, unknown>).linked_transaction_id as string)
           : null;
-    const linkedTxnId =
+    let linkedTxnId =
       linkedTxnIdRaw && linkedTxnIdRaw !== pbId
-        ? linkedTxnIdRaw
+        ? toPocketBaseId(linkedTxnIdRaw, 'transactions')
         : null;
     const originalTxnId =
       typeof (existingMeta as Record<string, unknown>).original_transaction_id === 'string'
@@ -1093,6 +1104,82 @@ export async function voidTransaction(
       (existingMeta as Record<string, unknown>).is_refund_confirmation === true;
     const isRefundRequestTxn =
       Boolean(originalTxnId) && (existingMeta as Record<string, unknown>).is_refund_confirmation !== true;
+
+    // Rollover pair must be voided together. Some legacy rows can miss forward link,
+    // so we also resolve by reverse link before executing any void update.
+    if (cascadeLinkedRollover && isRolloverTxn && !linkedTxnId) {
+      try {
+        const personScope = existing.person_id ? ` && person_id = "${existing.person_id}"` : '';
+        const reverseLinked = await pocketbaseList<any>('transactions', {
+          filter: `(status != "void") && ((linked_transaction_id = "${pbId}") || (metadata.linked_transaction_id = "${pbId}"))${personScope}`,
+          sort: '-created',
+          perPage: 1,
+        });
+        const candidate = reverseLinked.items?.[0];
+        if (candidate?.id && candidate.id !== pbId) {
+          linkedTxnId = String(candidate.id);
+        }
+      } catch (reverseLookupError) {
+        console.warn('[DB:PB] linked rollover reverse lookup failed:', reverseLookupError);
+      }
+
+      // Legacy fallback: find the counterpart rollover row even when explicit links are missing.
+      if (!linkedTxnId) {
+        try {
+          const cycleFields = [
+            String(existing.debt_cycle_tag || '').trim(),
+            String(existing.tag || '').trim(),
+            String(existing.persisted_cycle_tag || '').trim(),
+            String(existing.statement_cycle_tag || '').trim(),
+          ].filter(Boolean);
+          const noteText = String(existing.note || existing.description || '');
+          const amountAbs = Math.abs(Number(existing.amount || 0));
+          const accountId = String(existing.account_id || '').trim();
+          const personId = String(existing.person_id || '').trim();
+
+          const cycleInNote = Array.from(noteText.matchAll(/(\d{4}-\d{2})/g)).map((m) => m[1]);
+          const cycleCandidates = Array.from(new Set([...cycleFields, ...cycleInNote]));
+          const cycleClause = cycleCandidates.length
+            ? cycleCandidates
+                .flatMap((cycle) => [
+                  `debt_cycle_tag = "${cycle}"`,
+                  `tag = "${cycle}"`,
+                  `persisted_cycle_tag = "${cycle}"`,
+                  `statement_cycle_tag = "${cycle}"`,
+                ])
+                .join(' || ')
+            : '';
+
+          if (personId && accountId && amountAbs > 0) {
+            const fallbackFilter = [
+              `status != "void"`,
+              `id != "${pbId}"`,
+              `person_id = "${personId}"`,
+              `account_id = "${accountId}"`,
+              `amount = ${amountAbs}`,
+              `(note ~ "rollover" || description ~ "rollover")`,
+              cycleClause ? `(${cycleClause})` : '',
+            ].filter(Boolean).join(' && ');
+
+            const fallbackLinked = await pocketbaseList<any>('transactions', {
+              filter: fallbackFilter,
+              sort: '-created',
+              perPage: 1,
+            });
+            const fallbackCandidate = fallbackLinked.items?.[0];
+            if (fallbackCandidate?.id && fallbackCandidate.id !== pbId) {
+              linkedTxnId = String(fallbackCandidate.id);
+            }
+          }
+        } catch (fallbackLookupError) {
+          console.warn('[DB:PB] linked rollover legacy lookup failed:', fallbackLookupError);
+        }
+      }
+
+      if (!linkedTxnId) {
+        console.warn('[DB:PB] rollover pair not found; voiding current txn only', { pbId, person_id: existing.person_id });
+      }
+    }
 
     await logHistory(pbId, "void", existing);
     const effectiveVoidedAt =
@@ -1278,6 +1365,7 @@ export async function voidTransaction(
         if (linkedTxn && linkedTxn.status !== 'void') {
           const linkedVoided = await voidTransaction(linkedTxnId, {
             cascadeLinkedRollover: false,
+            voidedAt: effectiveVoidedAt,
           });
           if (!linkedVoided) {
             console.warn('[DB:PB] linked rollover void failed:', linkedTxnId);
@@ -1459,6 +1547,11 @@ export async function confirmRefund(
     const existing = await pocketbaseGetById<any>('transactions', pbTxnId);
     if (!existing) return { success: false, error: 'Transaction not found' };
 
+    const existingNote = String(existing.note || existing.description || '').toLowerCase();
+    if (existingNote.includes('rollover')) {
+      return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+    }
+
     const existingMeta =
       typeof existing.metadata === 'object' && existing.metadata !== null
         ? existing.metadata
@@ -1493,6 +1586,10 @@ export async function confirmRefund(
     if (originalTxnId) {
       try {
         originalTxn = await pocketbaseGetById<any>('transactions', originalTxnId);
+        const originalNote = String(originalTxn?.note || originalTxn?.description || '').toLowerCase();
+        if (originalNote.includes('rollover')) {
+          return { success: false, error: 'Refund flow is blocked for rollover transactions' };
+        }
       } catch {
         originalTxn = null;
       }

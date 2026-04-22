@@ -1573,7 +1573,6 @@ export const UnifiedTransactionTable = React.forwardRef<
       if (setIsGlobalLoading) setIsGlobalLoading(true);
       if (setLoadingMessage) setLoadingMessage("Voiding transaction...");
       const targetId = confirmVoidTarget.id;
-      setConfirmVoidTarget(null);
       setUpdatingTxnIds((prev) => new Set(prev).add(targetId));
 
       try {
@@ -1582,8 +1581,12 @@ export const UnifiedTransactionTable = React.forwardRef<
         });
         if (!ok) {
           setVoidError("Unable to void transaction. Please try again.");
+          toast.error("Unable to void transaction", {
+            description: "The transaction could not be voided. Please try again.",
+          });
           return;
         }
+        setConfirmVoidTarget(null);
         setStatusOverrides((prev) => ({ ...prev, [targetId]: "void" }));
         if (confirmVoidLinkedRolloverId) {
           toast.success("Rollover pair voided", {
@@ -2561,6 +2564,8 @@ export const UnifiedTransactionTable = React.forwardRef<
               typeof txn.metadata === "string"
                 ? parseMetadata(txn.metadata)
                 : (txn.metadata as any);
+            const rolloverText = String(txn.note || txn.description || "").toLowerCase();
+            const isRolloverTxn = rolloverText.includes("rollover");
             const stageTag = String(metadata?.refund_stage_tag || "").toUpperCase();
             const refundStatus = String(metadata?.refund_status || "").toLowerCase();
             const isRefundConfirmation = Boolean(metadata?.is_refund_confirmation);
@@ -2581,7 +2586,8 @@ export const UnifiedTransactionTable = React.forwardRef<
               !hasRefundRequest &&
               !isRefundChainChild &&
               !hasBlockedRefundStatus &&
-              !isBlockedByTxnStatus;
+              !isBlockedByTxnStatus &&
+              !isRolloverTxn;
 
             if (!canOpenRefundFlow) return null;
 
@@ -4060,6 +4066,26 @@ export const UnifiedTransactionTable = React.forwardRef<
                                       const displayNote = isConfirmed
                                         ? note.substring(4)
                                         : note;
+                                      const rolloverMatch = note.match(
+                                        /rollover(?:\s+credit)?\s+(from|to)\s+(\d{4}-\d{2})/i,
+                                      );
+                                      const rolloverDirectionRaw =
+                                        rolloverMatch?.[1]?.toLowerCase() || null;
+                                      const rolloverCycle = rolloverMatch?.[2] || null;
+                                      const rolloverMonthShort =
+                                        rolloverCycle?.split("-")?.[1] || null;
+                                      const rolloverDirectionLabel =
+                                        rolloverDirectionRaw === "from"
+                                          ? "From"
+                                          : rolloverDirectionRaw === "to"
+                                            ? "To"
+                                            : null;
+                                      const rolloverDirectionIcon =
+                                        rolloverDirectionLabel === "From" ? (
+                                          <Minus className="h-3 w-3" />
+                                        ) : rolloverDirectionLabel === "To" ? (
+                                          <Plus className="h-3 w-3" />
+                                        ) : null;
 
                                       if (!note) {
                                         return (
@@ -4073,6 +4099,30 @@ export const UnifiedTransactionTable = React.forwardRef<
 
                                       return (
                                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                          {rolloverDirectionLabel &&
+                                          rolloverDirectionIcon &&
+                                          rolloverMonthShort &&
+                                          rolloverCycle ? (
+                                            <CustomTooltip
+                                              content={`Roll-over ${rolloverDirectionLabel.toLowerCase()} ${rolloverCycle}`}
+                                            >
+                                              <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                  "h-[22px] px-2 min-w-[70px] justify-center text-[10px] font-bold shrink-0 inline-flex items-center gap-1",
+                                                  rolloverDirectionLabel ===
+                                                    "From"
+                                                    ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                                    : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                                                )}
+                                              >
+                                                <RotateCcw className="h-3 w-3" />
+                                                {rolloverDirectionIcon}
+                                                <span>{rolloverMonthShort}</span>
+                                              </Badge>
+                                            </CustomTooltip>
+                                          ) : null}
+
                                           {linkedRolloverId ? (
                                             <CustomTooltip
                                               content={`Copy linked rollover ID: ${linkedRolloverId}`}
@@ -4379,6 +4429,17 @@ export const UnifiedTransactionTable = React.forwardRef<
                             );
                           }
                           case "note": {
+                            const rolloverNoteText = String(txn.note || txn.description || "");
+                            const rolloverMatch = rolloverNoteText.match(/rollover(?:\s+credit)?\s+(from|to)\s+(\d{4}-\d{2})/i);
+                            const rolloverDirectionRaw = rolloverMatch?.[1]?.toLowerCase() || null;
+                            const rolloverCycle = rolloverMatch?.[2] || null;
+                            const rolloverMonthShort = rolloverCycle?.split("-")?.[1] || null;
+                            const rolloverDirectionLabel =
+                              rolloverDirectionRaw === "from"
+                                ? "From"
+                                : rolloverDirectionRaw === "to"
+                                  ? "To"
+                                  : null;
                             const linkedIdForCopy =
                               refundSeq === 2 || refundSeq === 3
                                 ? displayIdForBadge
@@ -4426,6 +4487,24 @@ export const UnifiedTransactionTable = React.forwardRef<
                                       ? txn.note.substring(4)
                                       : txn.note}
                                   </span>
+
+                                  {rolloverDirectionLabel && rolloverMonthShort && rolloverCycle && (
+                                    <CustomTooltip
+                                      content={`Roll-over ${rolloverDirectionLabel.toLowerCase()} ${rolloverCycle}`}
+                                    >
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          "h-5 px-1.5 text-[10px] font-bold shrink-0",
+                                          rolloverDirectionLabel === "From"
+                                            ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                                            : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                                        )}
+                                      >
+                                        {rolloverDirectionLabel} {rolloverMonthShort}
+                                      </Badge>
+                                    </CustomTooltip>
+                                  )}
 
                                   {txn.note && (
                                     <CustomTooltip

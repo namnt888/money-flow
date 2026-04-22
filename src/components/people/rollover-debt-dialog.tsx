@@ -228,7 +228,7 @@ export function RolloverDebtDialog({
                 toast.error(result.error || 'Failed to rollover debt')
                 // Re-open if failed? Maybe not, keep it simple.
             }
-        } catch (err) {
+        } catch (err: any) {
             toast.error('An unexpected error occurred')
             console.error(err)
         } finally {

@@ -6,8 +6,8 @@ import { getPersonDetails, getDebtByTags, syncPersonDebtCycle } from '@/services
 import { getAccounts, getAccountTransactions } from '@/services/account.service';
 import { getCategories } from '@/services/category.service';
 import { getShops, createShop } from '@/services/shop.service';
-import { syncAllTransactions, testConnection, syncTransactionToSheet } from '@/services/sheet.service';
-import { pocketbaseUpdate } from '@/services/pocketbase/server';
+import { syncAllTransactions, testConnection } from '@/services/sheet.service';
+import { pocketbaseGetById, pocketbaseUpdate } from '@/services/pocketbase/server';
 
 async function findOrCreateBankShop() {
   const shops = await getShops()
@@ -180,7 +180,7 @@ export async function syncAllPeopleSheetsAction() {
   return results;
 }
 
-import { createTransaction } from '@/services/transaction.service';
+import { createTransaction, voidTransaction } from '@/services/transaction.service';
 
 export type RolloverDebtState = {
   success: boolean
@@ -192,6 +192,7 @@ export async function rolloverDebtAction(
   prevState: RolloverDebtState,
   formData: FormData
 ): Promise<RolloverDebtState> {
+  const debugRunId = `rollover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const personId = formData.get('personId') as string
   const fromCycle = formData.get('fromCycle') as string
   const toCycle = formData.get('toCycle') as string
@@ -200,13 +201,25 @@ export async function rolloverDebtAction(
   const noteInput = formData.get('note') as string | null
   const rolloverDirectionInput = formData.get('rolloverDirection') as string | null
 
+  console.info('[rollover][start]', {
+    debugRunId,
+    personId,
+    fromCycle,
+    toCycle,
+    amountStr,
+    occurredAt,
+    rolloverDirectionInput,
+  })
+
   if (!personId || !fromCycle || !toCycle || !amountStr) {
-    return { success: false, error: 'Missing required fields' }
+    console.error('[rollover][invalid-input]', { debugRunId, personId, fromCycle, toCycle, amountStr })
+    return { success: false, error: `Missing required fields (${debugRunId})` }
   }
 
   const amount = Math.round(Number(amountStr))
   if (isNaN(amount) || amount <= 0) {
-    return { success: false, error: 'Invalid amount' }
+    console.error('[rollover][invalid-amount]', { debugRunId, amountStr, amount })
+    return { success: false, error: `Invalid amount (${debugRunId})` }
   }
 
   const isCreditCarry = rolloverDirectionInput === 'credit'
@@ -227,8 +240,11 @@ export async function rolloverDebtAction(
   // This is crucial because transactions must link to a valid account ID, not just a person ID
   const accountId = await ensureDebtAccount(personId)
   if (!accountId) {
-    return { success: false, error: 'Could not resolve debt account for person' }
+    console.error('[rollover][no-account]', { debugRunId, personId })
+    return { success: false, error: `Could not resolve debt account for person (${debugRunId})` }
   }
+
+  console.info('[rollover][account-resolved]', { debugRunId, accountId })
 
   // Ensure 'Rollover' shop exists
   const rolloverShopId = await (async () => {
@@ -239,9 +255,12 @@ export async function rolloverDebtAction(
     return newShop?.id
   })()
 
+  console.info('[rollover][shop-resolved]', { debugRunId, rolloverShopId })
+
   // Transaction 1: Settlement (IN) for the OLD cycle (Debt Repayment)
   // This reduces the balance of the old month to 0 (or less)
   const txDate = occurredAt ? new Date(occurredAt).toISOString() : new Date().toISOString()
+  console.info('[rollover][tx-date]', { debugRunId, txDate })
 
   const settleRes = await createTransaction({
     occurred_at: txDate,
@@ -258,25 +277,12 @@ export async function rolloverDebtAction(
     shop_id: rolloverShopId ?? undefined,
   })
 
-  if (!settleRes) {
-    return { success: false, error: 'Failed to create settlement transaction' }
-  }
+  console.info('[rollover][settle-created]', { debugRunId, settleRes, settleType, fromCycle })
 
-  void syncTransactionToSheet(personId, {
-    id: settleRes,
-    occurred_at: txDate,
-    note: settleNote,
-    tag: fromCycle,
-    debt_cycle_tag: fromCycle,
-    persisted_cycle_tag: fromCycle,
-    statement_cycle_tag: fromCycle,
-    shop_name: 'Rollover',
-    amount: amount,
-    original_amount: amount,
-    cashback_share_percent: 0,
-    cashback_share_fixed: 0,
-    type: settleType,
-  }, 'create').catch((err) => console.error('[rollover] sheet sync (settle) failed:', err))
+  if (!settleRes) {
+    console.error('[rollover][settle-failed]', { debugRunId })
+    return { success: false, error: `Failed to create settlement transaction (${debugRunId})` }
+  }
 
   // Transaction 2: Opening Balance (OUT) for the NEW cycle (Lending)
   // This increases the balance of the new month
@@ -291,37 +297,60 @@ export async function rolloverDebtAction(
     source_account_id: accountId,
     amount: amount,
     person_id: personId,
+    linked_transaction_id: settleRes,
     category_id: '71e71711-83e5-47ba-8ff5-85590f45a70c', // Rollover Category
     shop_id: rolloverShopId ?? undefined,
   })
 
+  console.info('[rollover][open-created]', { debugRunId, openRes, openType, toCycle })
+
   if (!openRes) {
-    return { success: false, error: 'Failed to create opening balance transaction' }
+    console.error('[rollover][open-failed]', { debugRunId, settleRes })
+    await voidTransaction(settleRes, { cascadeLinkedRollover: false }).catch(() => undefined)
+    return { success: false, error: `Failed to create opening balance transaction (${debugRunId})` }
   }
 
-  void syncTransactionToSheet(personId, {
-    id: openRes,
-    occurred_at: txDate,
-    note: openNote,
-    tag: toCycle,
-    debt_cycle_tag: toCycle,
-    persisted_cycle_tag: toCycle,
-    statement_cycle_tag: toCycle,
-    shop_name: 'Rollover',
-    amount: amount,
-    original_amount: amount,
-    cashback_share_percent: 0,
-    cashback_share_fixed: 0,
-    type: openType,
-  }, 'create').catch((err) => console.error('[rollover] sheet sync (open) failed:', err))
-
   // Link Transaction 1 to Transaction 2 (Bidirectional for easier voiding)
-  await pocketbaseUpdate('transactions', settleRes, { linked_transaction_id: openRes });
-  await pocketbaseUpdate('transactions', openRes, { linked_transaction_id: settleRes });
+  // Must not hard-fail here because transactions are already created.
+  // If linking degrades, we keep records and let fallback pair resolution handle later operations.
+  let linkDegraded = false
+  try {
+    await Promise.all([
+      pocketbaseUpdate('transactions', settleRes, { linked_transaction_id: openRes }),
+      pocketbaseUpdate('transactions', openRes, { linked_transaction_id: settleRes }),
+    ])
+
+    const [settleTxn, openTxn] = await Promise.all([
+      pocketbaseGetById<any>('transactions', settleRes),
+      pocketbaseGetById<any>('transactions', openRes),
+    ])
+
+    const settleLinked = String(settleTxn?.linked_transaction_id || '')
+    const openLinked = String(openTxn?.linked_transaction_id || '')
+    if (settleLinked !== openRes || openLinked !== settleRes) {
+      throw new Error('Rollover pair link verification failed')
+    }
+    console.info('[rollover][pair-linked]', {
+      debugRunId,
+      settleRes,
+      openRes,
+      settleLinked,
+      openLinked,
+    })
+  } catch (linkError) {
+    linkDegraded = true
+    console.error('[rollover][link-degraded]', { debugRunId, settleRes, openRes, linkError })
+  }
 
   revalidatePath(`/people/${personId}`)
   revalidatePath('/people')
-  return { success: true, message: 'Debt rolled over successfully' }
+  console.info('[rollover][done]', { debugRunId, settleRes, openRes, personId, linkDegraded })
+  return {
+    success: true,
+    message: linkDegraded
+      ? `Debt rolled over (link degraded: ${debugRunId})`
+      : 'Debt rolled over successfully'
+  }
 }
 
 export async function getPeopleAction() {
