@@ -29,6 +29,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.72.0(react@19.2.4))
+      '@qwen-code/sdk':
+        specifier: ^0.1.6
+        version: 0.1.6
       '@jridgewell/gen-mapping':
         specifier: ^0.3.5
         version: 0.3.13
@@ -462,6 +465,10 @@ packages:
 
   '@google/generative-ai@0.24.1':
     resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
+
+  '@qwen-code/sdk@0.1.6':
+    resolution: {integrity: sha512-HJLrZQ5jPEoZF7VjcMpj50LGx0lM/BPfOPiDDNxNnXa5RpDk/jlRh1Vyvn6eTcNZYlucEXuEil1m+hVAXYBaIg==}
     engines: {node: '>=18.0.0'}
 
   '@hookform/resolvers@3.10.0':
@@ -7634,3 +7641,5 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  '@qwen-code/sdk@0.1.6': {}
