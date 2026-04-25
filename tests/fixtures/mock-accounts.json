@@ -1,0 +1,55 @@
+[
+  {
+    "account_id": "ACC_VCB_01",
+    "account_name": "Vietcombank Checking",
+    "account_type": "STANDARD",
+    "institution": "Vietcombank",
+    "balance": 150000000,
+    "currency": "VND",
+    "status": "ACTIVE",
+    "last_synced": "2026-04-18T23:00:00Z"
+  },
+  {
+    "account_id": "ACC_VPB_01",
+    "account_name": "VPBank Savings",
+    "account_type": "STANDARD",
+    "institution": "VPBank",
+    "balance": 263422767,
+    "currency": "VND",
+    "status": "ACTIVE",
+    "last_synced": "2026-04-18T22:00:00Z"
+  },
+  {
+    "account_id": "ACC_VIB_01",
+    "account_name": "Vib Travel",
+    "account_type": "CREDIT",
+    "institution": "VIB",
+    "balance": -65713255,
+    "currency": "VND",
+    "status": "ACTIVE",
+    "credit_limit": 241395000,
+    "last_synced": "2026-04-18T21:00:00Z"
+  },
+  {
+    "account_id": "ACC_VIB_02",
+    "account_name": "Vib Super Card",
+    "account_type": "CREDIT",
+    "institution": "VIB",
+    "balance": -65713255,
+    "currency": "VND",
+    "status": "ACTIVE",
+    "credit_limit": 241395000,
+    "last_synced": "2026-04-18T21:00:00Z"
+  },
+  {
+    "account_id": "ACC_CHASE_01",
+    "account_name": "Chase Sapphire Reserve",
+    "account_type": "CREDIT",
+    "institution": "Chase",
+    "balance": -4006640,
+    "currency": "VND",
+    "status": "ACTIVE",
+    "credit_limit": 100000000,
+    "last_synced": "2026-04-15T23:00:00Z"
+  }
+]

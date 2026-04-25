@@ -89,7 +89,7 @@ export default function TransactionsPage() {
   const [isQueueCollapsed, setIsQueueCollapsed] = useState(false);
 
   return (
-    <div className="flex flex-col flex-1 bg-[#FFFFFF] overflow-y-auto w-full">
+    <div data-testid="txn-page" className="flex flex-col flex-1 bg-[#FFFFFF] overflow-y-auto w-full">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-40 flex shrink-0 h-16 items-center justify-between border-b border-[#E5E7EB] bg-[#FFFFFF] px-6">
         <div className="flex items-center gap-4 text-[#1F2937]">
@@ -102,9 +102,9 @@ export default function TransactionsPage() {
           <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 w-full">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex bg-gray-100 p-1 rounded-md border border-gray-200">
-              <button className="px-4 py-1 text-[11px] font-bold bg-white shadow-sm rounded text-gray-800">All</button>
-              <button className="px-4 py-1 text-[11px] font-bold text-gray-500 hover:text-gray-900 transition-colors">Active</button>
-              <button className="px-4 py-1 text-[11px] font-bold text-gray-500 hover:text-gray-900 transition-colors">Void</button>
+              <button data-testid="txn-filter-all" className="px-4 py-1 text-[11px] font-bold bg-white shadow-sm rounded text-gray-800">All</button>
+              <button data-testid="txn-filter-active" className="px-4 py-1 text-[11px] font-bold text-gray-500 hover:text-gray-900 transition-colors">Active</button>
+              <button data-testid="txn-filter-void" className="px-4 py-1 text-[11px] font-bold text-gray-500 hover:text-gray-900 transition-colors">Void</button>
             </div>
             
             <div className="flex items-center gap-1 border-l border-gray-200 pl-3 pr-2 hidden sm:flex">
@@ -114,13 +114,13 @@ export default function TransactionsPage() {
             </div>
             
             <div className="flex items-center gap-2 border-r border-gray-200 pr-3 pb-1 sm:pb-0 overflow-x-auto">
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs">
+              <Button data-testid="txn-filter-people" variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs">
                 People <ChevronDown className="ml-1 h-3.5 w-3.5" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden sm:flex">
+              <Button data-testid="txn-filter-category" variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden sm:flex">
                 Category <ChevronDown className="ml-1 h-3.5 w-3.5" />
               </Button>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden md:flex">
+              <Button data-testid="txn-filter-account" variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden md:flex">
                 Account <ChevronDown className="ml-1 h-3.5 w-3.5" />
               </Button>
               <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden xl:flex">
@@ -157,6 +157,7 @@ export default function TransactionsPage() {
             <div className="relative flex-1 w-full lg:max-w-xl">
               <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
               <Input 
+                data-testid="txn-search-input"
                 placeholder="Search transactions..." 
                 className="h-8 pl-8 pr-3 text-xs bg-white border border-gray-200 rounded-md shadow-sm w-full focus-visible:ring-1 focus-visible:ring-blue-500 transition-all" 
               />
@@ -282,7 +283,7 @@ function SelectMock({ value }: { value: string }) {
 }
 
 // Ensure the expanded row component matches the grid-cols-3 requirement
-function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: boolean, onToggle: () => void }) {
+function TransactionRow({ txn, isExpanded, onToggle }: { txn: typeof TRANSACTIONS[number], isExpanded: boolean, onToggle: () => void }) {
   const [hoverState, setHoverState] = useState<{x: number, position: 'top' | 'bottom'} | null>(null);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -301,6 +302,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
 
   return (
     <div 
+      data-testid={`txn-row-${txn.id}`}
       className={cn(
         "flex flex-col border-b border-gray-100 group relative transition-colors", 
         isExpanded ? "border-l-4 border-blue-500 bg-gray-50/50" : "hover:bg-blue-50/40"
@@ -345,7 +347,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
         onClick={onToggle}
       >
         <div className="flex justify-center" onClick={e => e.stopPropagation()}>
-          <Checkbox className="rounded border-gray-300 focus:ring-2 focus:ring-blue-500" aria-label="Select transaction" />
+          <Checkbox data-testid={`txn-expand-btn-${txn.id}`} className="rounded border-gray-300 focus:ring-2 focus:ring-blue-500" aria-label="Select transaction" />
         </div>
         <div className="hidden md:block">
           <span className="text-blue-600 font-medium text-xs">#{txn.id}</span>
@@ -386,16 +388,16 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
         </div>
 
         <div className="hidden md:flex flex-col items-end text-right justify-center h-full pr-4 md:pr-4">
-           <span className={cn("text-sm font-bold", txn.netValueColor || "text-red-600")}>
+           <span data-testid={`txn-amount-${txn.id}`} className={cn("text-sm font-bold", txn.netValueColor || "text-red-600")}>
              {txn.netValueColor === "text-red-600" && "-"}{txn.netValue}
            </span>
            {txn.cashback && <span className="text-[10px] font-semibold text-green-600 mt-0.5">BACK {txn.cashback}</span>}
         </div>
 
         <div className="hidden md:flex justify-center" onClick={e => e.stopPropagation()}>
-           {txn.state === 'DONE' && <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded border border-green-200">DONE</span>}
-           {txn.state === 'OK' && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold rounded">OK</span>}
-           {txn.state === 'SPLIT' && <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded">SPLIT</span>}
+           {txn.state === 'DONE' && <span data-testid={`txn-status-badge-${txn.id}`} className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded border border-green-200">DONE</span>}
+           {txn.state === 'OK' && <span data-testid={`txn-status-badge-${txn.id}`} className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold rounded">OK</span>}
+           {txn.state === 'SPLIT' && <span data-testid={`txn-status-badge-${txn.id}`} className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded">SPLIT</span>}
         </div>
         
         <div className="hidden md:block"></div>
@@ -426,7 +428,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
                 {/* Line 3 ID & Copy */}
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-xs text-slate-500 font-mono font-medium">TXN_8842_99_{txn.id}</span>
-                  <Button variant="outline" size="icon" className="h-6 w-6 border-gray-200 text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded" aria-label="Copy ID">
+                  <Button data-testid={`txn-copy-id-${txn.id}`} variant="outline" size="icon" className="h-6 w-6 border-gray-200 text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded" aria-label="Copy ID">
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
@@ -483,7 +485,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-medium">
                   <span className="text-gray-500">Gross</span>
-                  <span className="text-gray-900">${txn.baseAmount || txn.netValue}</span>
+                  <span className="text-gray-900">${txn.netValue}</span>
                 </div>
                 <div className="flex justify-between text-xs font-medium">
                   <span className="text-gray-500">Discount</span>
@@ -509,7 +511,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
       )}
       {isExpanded && (
         <div className="flex bg-white justify-end items-center gap-1 border-t border-gray-100 px-6 lg:px-6 py-3" onClick={e => e.stopPropagation()}>
-            <Button variant="ghost" size="sm" className="h-8 hover:bg-gray-100 text-gray-600 rounded-md text-xs font-medium px-3" aria-label="Edit">
+            <Button data-testid={`txn-edit-btn-${txn.id}`} variant="ghost" size="sm" className="h-8 hover:bg-gray-100 text-gray-600 rounded-md text-xs font-medium px-3" aria-label="Edit">
               <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
             </Button>
             <Button variant="ghost" size="sm" className="h-8 hover:bg-gray-100 text-gray-600 rounded-md text-xs font-medium px-3" aria-label="Copy">
@@ -522,7 +524,7 @@ function TransactionRow({ txn, isExpanded, onToggle }: { txn: any, isExpanded: b
             <Button variant="ghost" size="sm" className="h-8 hover:bg-gray-100 text-blue-600 rounded-md text-xs font-medium px-3 flex items-center" aria-label="History">
               <HistoryIcon className="h-3.5 w-3.5 mr-1.5" /> History
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-orange-600 hover:bg-orange-50 rounded-md text-xs font-medium px-3" aria-label="Void">
+            <Button data-testid={`txn-void-btn-${txn.id}`} variant="ghost" size="sm" className="h-8 text-orange-600 hover:bg-orange-50 rounded-md text-xs font-medium px-3" aria-label="Void">
               <Ban className="h-3.5 w-3.5 mr-1.5" /> Void
             </Button>
             <Button variant="ghost" size="sm" className="h-8 text-red-600 hover:bg-red-50 rounded-md text-xs font-medium px-3" aria-label="Delete">

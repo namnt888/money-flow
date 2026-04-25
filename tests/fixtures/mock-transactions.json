@@ -1,0 +1,57 @@
+[
+  {
+    "transaction_id": "TXN_001",
+    "posted_date": "2026-04-18T23:14:00Z",
+    "description_clean": "Refund for: 17 PM 512 bạc",
+    "amount": 40899000,
+    "transaction_type": "INTER",
+    "txn_status": "DONE",
+    "account_id": "ACC_VCB_01",
+    "category_id": "CAT_SHOPPING",
+    "person_id": "PER_TCB_01"
+  },
+  {
+    "transaction_id": "TXN_002",
+    "posted_date": "2026-04-17T20:33:00Z",
+    "description_clean": "Bank Final T4",
+    "amount": -2101372,
+    "transaction_type": "EXTER",
+    "txn_status": "OK",
+    "account_id": "ACC_VPB_01",
+    "category_id": "CAT_DEBT",
+    "person_id": "PER_ALEX_01"
+  },
+  {
+    "transaction_id": "TXN_003",
+    "posted_date": "2026-04-15T22:23:00Z",
+    "description_clean": "Vé Bay | Vietjet: Me",
+    "amount": -4006640,
+    "transaction_type": "INTER",
+    "txn_status": "SPLIT",
+    "account_id": "ACC_CHASE_01",
+    "category_id": "CAT_TRAVEL",
+    "person_id": "PER_ME"
+  },
+  {
+    "transaction_id": "TXN_004",
+    "posted_date": "2026-04-14T09:15:00Z",
+    "description_clean": "Salary April 2026",
+    "amount": 25000000,
+    "transaction_type": "INCOME",
+    "txn_status": "DONE",
+    "account_id": "ACC_VCB_01",
+    "category_id": "CAT_SALARY",
+    "person_id": "PER_COMPANY_01"
+  },
+  {
+    "transaction_id": "TXN_005",
+    "posted_date": "2026-04-12T14:30:00Z",
+    "description_clean": "Grab Food delivery",
+    "amount": -185000,
+    "transaction_type": "EXTER",
+    "txn_status": "OK",
+    "account_id": "ACC_VPB_01",
+    "category_id": "CAT_FOOD",
+    "person_id": null
+  }
+]

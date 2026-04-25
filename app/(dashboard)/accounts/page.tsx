@@ -72,7 +72,7 @@ export default function AccountsPage() {
   const [expandedId, setExpandedId] = useState<string | null>("1");
 
   return (
-    <div className="flex flex-col flex-1 bg-[#FFFFFF] overflow-y-auto w-full">
+    <div data-testid="accounts-page" className="flex flex-col flex-1 bg-[#FFFFFF] overflow-y-auto w-full">
       <header className="sticky top-0 z-40 flex shrink-0 h-16 items-center border-b border-[#E5E7EB] bg-[#FFFFFF] px-6">
         <div className="flex items-center gap-4 text-[#1F2937]">
           <h1 className="text-lg font-semibold">Accounts</h1>
@@ -95,9 +95,17 @@ export default function AccountsPage() {
           </div>
 
           <div className="flex items-center rounded-lg bg-gray-100 p-1">
-            {['STANDARD', 'CREDIT', 'ASSETS', 'DEBT', 'SYSTEM', 'CLOSED'].map((tab) => (
+            {['STANDARD', 'CREDIT', 'ASSETS', 'DEBT', 'SYSTEM', 'CLOSED'].map((tab) => {
+              const testIdMap: Record<string, string | undefined> = {
+                'STANDARD': 'accounts-filter-standard',
+                'CREDIT': 'accounts-filter-credit',
+                'ASSETS': 'accounts-filter-assets',
+                'DEBT': 'accounts-filter-debt',
+              };
+              return (
               <button 
                 key={tab}
+                data-testid={testIdMap[tab]}
                 className={cn(
                   "px-4 py-1.5 text-xs font-semibold rounded-md transition-all",
                   tab === 'CREDIT' ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
@@ -105,7 +113,8 @@ export default function AccountsPage() {
               >
                 {tab}
               </button>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -215,8 +224,9 @@ export default function AccountsPage() {
           {/* Rows */}
           <div className="flex flex-col min-w-0">
             {ACCOUNTS.map((acc) => (
-              <div key={acc.id} className="flex flex-col border-b border-gray-100">
+              <div key={acc.id} data-testid={`account-row-${acc.id}`} className="flex flex-col border-b border-gray-100">
                 <div 
+                  data-testid={`account-expand-btn-${acc.id}`}
                   className={cn("grid grid-cols-[300px_120px_160px_200px_220px_1fr_80px] items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer min-h-[80px]", expandedId === acc.id && "bg-gray-50/50")}
                   onClick={() => setExpandedId(expandedId === acc.id ? null : acc.id)}
                 >
@@ -237,7 +247,7 @@ export default function AccountsPage() {
                   {/* Balance */}
                   <div className="flex justify-center">
                     <div className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5">
-                      <span className={cn("text-xs font-bold", acc.balanceColor)}>{acc.balance}</span>
+                      <span data-testid={`account-balance-${acc.id}`} className={cn("text-xs font-bold", acc.balanceColor)}>{acc.balance}</span>
                     </div>
                   </div>
 
@@ -255,7 +265,7 @@ export default function AccountsPage() {
                   <div className="flex flex-col items-center justify-center gap-1.5">
                     <div className="text-[9px] font-bold text-blue-600">∑ Single Debt: {acc.debt}</div>
                     <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-md p-1 pl-2">
-                       <span className="text-[10px] font-bold text-gray-700 shrink-0">{acc.role}</span>
+                       <span data-testid={`account-status-badge-${acc.id}`} className="text-[10px] font-bold text-gray-700 shrink-0">{acc.role}</span>
                        <ChevronRight className="h-3 w-3 text-gray-300" />
                        <div className={cn("h-4 w-6 rounded-sm border border-gray-200 shrink-0", acc.cardColor)}></div>
                        <Building2 className="h-3 w-3 text-gray-400 ml-1" />
