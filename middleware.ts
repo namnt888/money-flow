@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const authCookie = request.cookies.get('auth');
   const isLoginPage = request.nextUrl.pathname === '/login';
+  const isRoot = request.nextUrl.pathname === '/';
 
   if (isLoginPage) {
     if (authCookie?.value === 'bypass') {
@@ -14,6 +15,10 @@ export function middleware(request: NextRequest) {
 
   if (authCookie?.value !== 'bypass') {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  if (isRoot) {
+    return NextResponse.redirect(new URL('/transactions', request.url));
   }
 
   return NextResponse.next();
