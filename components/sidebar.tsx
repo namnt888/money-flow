@@ -165,12 +165,23 @@ export function Sidebar() {
         )}
 
         {/* User Avatar */}
-        <button className={cn(
-          "flex items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 hover:bg-blue-200",
-          expanded ? "h-10 w-10 justify-center" : "h-8 w-8 justify-center"
+        <div className={cn(
+          "flex items-center",
+          expanded ? "w-full" : "justify-center"
         )}>
-          U
-        </button>
+          <button className={cn(
+            "flex items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 hover:bg-blue-200 shrink-0",
+            expanded ? "h-10 w-10 justify-center" : "h-8 w-8 justify-center"
+          )}>
+            U
+          </button>
+          {expanded && (
+            <div className="ml-3 flex flex-col">
+              <span className="text-sm font-medium text-white truncate w-32 text-left">User Name</span>
+              <span className="text-[10px] text-gray-500 truncate w-32 text-left">user@example.com</span>
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );
