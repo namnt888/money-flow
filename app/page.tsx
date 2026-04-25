@@ -21,17 +21,22 @@ import {
   Trash2,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
   History as HistoryIcon,
   Banknote,
   Undo2,
-  PanelRightClose
+  PanelRightClose,
+  Calendar as CalendarIcon,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Use some fake data
 const TRANSACTIONS = [
@@ -85,8 +90,9 @@ const TRANSACTIONS = [
 ];
 
 export default function TransactionsPage() {
-  const [expandedRowId, setExpandedRowId] = useState<string | null>("276");
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [isQueueCollapsed, setIsQueueCollapsed] = useState(false);
+  const [isRefundsExpanded, setIsRefundsExpanded] = useState(false);
 
   return (
     <div className="flex flex-col flex-1 bg-[#FFFFFF] overflow-y-auto w-full">
@@ -114,18 +120,121 @@ export default function TransactionsPage() {
             </div>
             
             <div className="flex items-center gap-2 border-r border-gray-200 pr-3 pb-1 sm:pb-0 overflow-x-auto">
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs">
-                People <ChevronDown className="ml-1 h-3.5 w-3.5" />
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden sm:flex">
-                Category <ChevronDown className="ml-1 h-3.5 w-3.5" />
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden md:flex">
-                Account <ChevronDown className="ml-1 h-3.5 w-3.5" />
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden xl:flex">
-                <HistoryIcon className="mr-1 h-3.5 w-3.5" /> 2026 <ChevronDown className="ml-1 h-3.5 w-3.5" />
-              </Button>
+              <Popover>
+                <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs")}>
+                  People <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <div className="flex items-center space-x-2 border-b border-gray-100 pb-2 mb-2">
+                    <Search className="w-4 h-4 text-gray-400" />
+                    <input placeholder="Search people..." className="w-full bg-transparent outline-none text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer flex justify-between">
+                      <span className="font-medium">Techcombank</span>
+                      <Check className="w-3.5 h-3.5 text-blue-600" />
+                    </div>
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer">Me</div>
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer">Alex Johnson</div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden sm:flex")}>
+                  Category <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <div className="flex items-center space-x-2 border-b border-gray-100 pb-2 mb-2">
+                    <Search className="w-4 h-4 text-gray-400" />
+                    <input placeholder="Search categories..." className="w-full bg-transparent outline-none text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer">Online Shopping</div>
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer text-blue-600 font-medium bg-blue-50">Debt Repayment</div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden md:flex")}>
+                  Account <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="start">
+                   <div className="space-y-1">
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer">Chase Sapphire</div>
+                    <div className="px-2 py-1.5 hover:bg-gray-100 rounded-md text-xs cursor-pointer">Vietcombank</div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-8 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-xs hidden xl:flex")}>
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" /> Apr 2026 <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3" align="start">
+                  <Tabs defaultValue="single">
+                    <TabsList className="grid w-full grid-cols-3 mb-4 h-8">
+                      <TabsTrigger value="single" className="text-xs">Single</TabsTrigger>
+                      <TabsTrigger value="range" className="text-xs">Range</TabsTrigger>
+                      <TabsTrigger value="cycle" className="text-xs">Cycle</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="single" className="mt-0">
+                      <div className="flex items-center justify-between mb-4">
+                         <Button variant="outline" size="sm" className="text-xs h-7 px-2 border-gray-200">Today</Button>
+                         <h4 className="text-sm font-semibold text-gray-800">April 2026</h4>
+                         <div className="flex gap-1">
+                           <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronLeft className="h-3.5 w-3.5" /></Button>
+                           <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronRight className="h-3.5 w-3.5" /></Button>
+                         </div>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                          <div key={day} className="text-[10px] font-medium text-gray-400">{day}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                        {Array.from({length: 30}).map((_, i) => (
+                           <button 
+                             key={i} 
+                             className={cn("h-7 w-full flex items-center justify-center rounded transition-colors hover:bg-gray-100 cursor-pointer text-gray-700", i === 15 && "bg-blue-600 text-white hover:bg-blue-700")}
+                           >
+                             {i + 1}
+                           </button>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Input className="h-8 text-xs font-mono" defaultValue="2026-04-16" />
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="range" className="mt-0 space-y-4">
+                      <div className="grid gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                           <div className="space-y-1">
+                             <label className="text-[10px] font-bold uppercase text-gray-500">From</label>
+                             <Input className="h-8 text-xs font-mono" defaultValue="2026-04-01" />
+                           </div>
+                           <div className="space-y-1">
+                             <label className="text-[10px] font-bold uppercase text-gray-500">To</label>
+                             <Input className="h-8 text-xs font-mono" defaultValue="2026-04-30" />
+                           </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="cycle" className="mt-0">
+                      <div className="text-xs text-gray-500 mb-3">(Future feature placeholder)</div>
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                        <p className="text-xs text-slate-700">Select statement cycle based on credit card billing dates.</p>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="flex items-center gap-2">
@@ -170,16 +279,52 @@ export default function TransactionsPage() {
         {/* Pending Alerts */}
         {!isQueueCollapsed && (
           <div className="flex space-x-4">
-            <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-orange-800">
-                <RotateCcw className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Pending Refund</span>
-                <span className="text-sm">Wait for 12 items to be returned</span>
+            <div className="flex-1 bg-orange-50/80 border border-orange-200 rounded-lg flex flex-col justify-between transition-all duration-200 overflow-hidden">
+              <div 
+                className="px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-orange-50 transition-colors h-[48px]"
+                onClick={() => setIsRefundsExpanded(!isRefundsExpanded)}
+              >
+                <div className="flex items-center space-x-2 text-orange-800">
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wider">Pending Refund</span>
+                  <span className="text-sm">Wait for 12 items to be returned</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-orange-900">$1,240.50</span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-orange-800 pointer-events-none">
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", isRefundsExpanded && "rotate-180")} />
+                  </Button>
+                </div>
               </div>
-              <span className="text-sm font-bold text-orange-900">$1,240.50</span>
+              
+              {isRefundsExpanded && (
+                <div className="border-t border-orange-200/50 bg-white/50 p-3 pt-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs p-2 hover:bg-white rounded border border-transparent hover:border-orange-100 transition-colors">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <ShoppingCart className="w-3.5 h-3.5 text-orange-400" />
+                        <span className="font-semibold text-gray-800">#276 Refund: PM 512</span>
+                        <span className="text-gray-500">Techcombank</span>
+                      </div>
+                      <span className="font-bold text-orange-700">$50.00</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs p-2 hover:bg-white rounded border border-transparent hover:border-orange-100 transition-colors">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <ShoppingCart className="w-3.5 h-3.5 text-orange-400" />
+                        <span className="font-semibold text-gray-800">#270 Refund: AWS Service</span>
+                        <span className="text-gray-500">Chase</span>
+                      </div>
+                      <span className="font-bold text-orange-700">$12.50</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-center">
+                    <button className="text-[10px] font-bold text-orange-600 hover:text-orange-800 uppercase tracking-wider">View all 12 items</button>
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 flex items-center justify-between">
+            <div className="flex-1 bg-yellow-50/80 border border-yellow-200 rounded-lg flex items-center justify-between h-[48px] px-4">
               <div className="flex items-center space-x-2 text-yellow-800">
                 <CheckCircle2 className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wider">Confirm Batch</span>
@@ -188,7 +333,7 @@ export default function TransactionsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-yellow-900">$4,890.00</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-yellow-800">
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
