@@ -60,6 +60,7 @@ Flow hoạt động: User nhắn chat → AI parse → tạo transaction → syn
 | **Budgets** | [docs/business/budgets.md](business/budgets.md) | Ngân sách theo tháng/category | id, month, category_id, allocated_amount, spent_amount, remaining_amount |
 | **BusinessCategory** | [docs/business/business-category.md](business/business-category.md) | Danh mục chi tiêu 2 cấp | id, code, name_vi, parent_id, level, affects_cashback |
 | **RecurringServices** | [docs/business/recurring-services.md](business/recurring-services.md) | Dịch vụ định kỳ (subscription) | id, name, amount, billing_cycle, next_due_date, is_auto_charge |
+| **BatchTransfer** | [docs/business/batch-transfer.md](business/batch-transfer.md) | Chuyển khoản theo lô (3-step flow) | id, bank_type, status, source_account_id, funding_transaction_id |
 
 ---
 
@@ -137,6 +138,23 @@ Flow hoạt động: User nhắn chat → AI parse → tạo transaction → syn
 - **Entities:** Refund → Transaction → Budget
 - **Mô tả:** GD3 confirmed refund làm giảm spent_amount trong budget tháng hiện tại.
 - **Chi tiết:** [docs/business/refund.md#section-5](business/refund.md)
+
+### Batch Transfer Rules
+
+**RULE-BCH-001: Funding (Step 1) locks source funds**
+- **Entities:** Batch → Account → Transaction
+- **Mô tả:** Khi fund batch, tạo 1 transfer từ source account sang BATCH_CLEARING account.
+- **Chi tiết:** [docs/business/batch-transfer.md#bước-1-funding-cấp-vốn---step-1](business/batch-transfer.md)
+
+**RULE-BCH-002: Confirmation (Step 3) release from clearing**
+- **Entities:** BatchItem → Account → Transaction
+- **Mô tả:** Khi confirm batch item, tạo 1 transfer từ BATCH_CLEARING sang target account.
+- **Chi tiết:** [docs/business/batch-transfer.md#bước-3-confirmation-xác-nhận---step-3](business/batch-transfer.md)
+
+**RULE-BCH-003: Batch clearing balance ideal is zero**
+- **Entities:** Account (BATCH_CLEARING)
+- **Mô tả:** Sau khi hoàn tất toàn bộ items trong lô, balance của BATCH_CLEARING phải về 0.
+- **Chi tiết:** [docs/business/batch-transfer.md#4-tài-khoản-trung-gian-batch_clearing](business/batch-transfer.md)
 
 ### Category Rules
 
@@ -248,6 +266,7 @@ Flow hoạt động: User nhắn chat → AI parse → tạo transaction → syn
 | Dịch vụ định kỳ | [recurring-services.md](business/recurring-services.md) |
 | Phân loại chi tiêu | [business-category.md](business/business-category.md) |
 | Ngân sách tháng | [budgets.md](business/budgets.md) |
+| Chuyển khoản theo lô | [batch-transfer.md](business/batch-transfer.md) |
 | Parse text → account/category | [account-keywords.md](keywords/account-keywords.md) (Section 2, 3, 5) |
 | Tư vấn thẻ tốt nhất | [account-keywords.md#section-4](keywords/account-keywords.md) |
 | Google Sheets formula | [sheets/](sheets/) (chọn theo entity) |
@@ -260,6 +279,10 @@ Flow hoạt động: User nhắn chat → AI parse → tạo transaction → syn
 // Refund
 REFUND_PENDING_ACCOUNT_ID = '99999999-9999-9999-9999-999999999999'
 // Dùng cho GD2 pending refund holding account
+
+// Batch Transfer
+BATCH_CLEARING_ACCOUNT_ID = '88888888-9999-9999-9999-888888888888'
+// Tài khoản trung gian dùng cho Chuyển khoản theo lô CKL
 
 // Budget defaults
 DEFAULT_BUDGET_WARNING_THRESHOLD = 0.8  // 80%
@@ -305,6 +328,8 @@ TXN_STATUS_VOID = 'void'
 | **billing_cycle** | Chu kỳ thanh toán (monthly/yearly/weekly) |
 | **statement_day** | Ngày sao kê thẻ tín dụng |
 | **internal_transfer** | Chuyển khoản giữa các account của mình |
+| **batch_funding** | Cấp vốn cho lô chuyển khoản (Step 1) |
+| **batch_confirmation**| Xác nhận đã chuyển khoản cho từng item (Step 3) |
 
 ---
 
